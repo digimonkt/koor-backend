@@ -1,0 +1,122 @@
+Project Koor {
+  database_type: 'PostgreSQL'
+  Note: '''
+    # Koor
+    ## Database Schema
+    ### Role and Profile
+     - [x] Job Seeker
+     - [x] Employer
+     - [x] Vendor
+     
+     ## Required Explaination
+      - job_seeker.employment_status enum value
+      - job_seeker.gender required transgender
+      - employer.organization_type enum value
+
+      ## Required Explaination on Feature
+      - How does job suggestion work, in figma we have one section [More Jobs Like This](https://www.figma.com/file/HKjAWx3CbMTTKwPzuzJiUZ/Koor?node-id=67%3A8498&t=ZKPbU1TMnHFi5nCA-0)
+  '''
+}
+// Public Schema
+Table Media [headercolor: #91D8E4]{
+  id bigint [primary key]
+  file_path varchar(255) [not null, unique]
+  upload_at datetime [default: `now`]
+}
+
+enum role {
+    job_seeker
+    employer
+    vendor
+}
+
+Table User [headercolor: #91D8E4]{
+    id bigint [primary key, increment]
+    email varchar(255)
+    mobile_number char(10)
+    password varchar(255) [not null]
+    display_name varchar(255)
+    display_image bigint [ref: - Media.id]
+    profile_role role
+}
+
+// Job Seeker Schema
+enum job_seeker.gender {
+    male
+    female
+}
+enum job_seeker.employment_status {
+    employed
+    other
+    fresher
+}
+Table job_seeker.JobSeekerProfile [headercolor: #eea23d]{
+    id bigint [primary key, increment]
+    user bigint [ref: - User.id]
+    gender job_seeker.gender
+    dob date
+    employment_status job_seeker.employment_status
+    description mediumtext
+    market_information_notification boolean
+    job_notification boolean
+    Note: '''Job Seeker Profile'''
+}
+Table job_seeker.EducationRecord [headercolor: #eea23d]{
+  id bigint [primary key, increment]
+  title varchar(255)
+  start_date date [not null]
+  end_date date [default: `now`]
+  organization varchar [default: 'other']
+  description mediumtext
+  user bigint [ref: > job_seeker.JobSeekerProfile.id ]
+}
+
+Table job_seeker.Resume [headercolor: #eea23d]{
+  id bigint [primary key, increment]
+  user bigint [ref: - job_seeker.JobSeekerProfile.id ]
+  title varchar(255) [not null]
+  file_path bigint [ref: - Media.id]
+  upload_at datetime [
+    default: `now`,
+    note: 'created at datetime'
+  ]
+  updated_at datetime [
+    default: `now`,
+    note: 'updated at datetime'
+  ]
+}
+
+
+// Employer Schema
+Enum employer.organization_type {
+  ITSoftware
+  Pharmacy
+  Bank
+  // ... more
+}
+Table employer.EmployerProfile [headercolor: #274593]{
+    id bigint [primary key, increment]
+    user bigint [ref: - User.id]
+    email varchar(255)
+    mobile_number char(10)
+    password varchar(255) [not null]
+}
+Table employer.OrganizationProfile [headercolor: #274593]{
+    id bigint [primary key, increment]
+    organization_name varchar(255) [not null]
+    description mediumtext
+    organization_type employer.organization_type
+    organization_logo bigint [ref: - Media.id]
+    market_information_notification boolean
+    other_notification boolean
+    user bigint [ref: > employer.EmployerProfile.id ]
+    Note: '''Organization Profile'''
+}
+Table employer.BusinessDetails [headercolor: #274593]{
+    id bigint [primary key]
+    license_id varchar(255) [not null]
+    license_id_file bigint [ref: - Media.id]
+    business_id varchar(255) [not null]
+    business_id_file bigint 
+    organization bigint [ref: - employer.OrganizationProfile.id]
+}
