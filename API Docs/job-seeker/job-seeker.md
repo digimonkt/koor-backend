@@ -24,6 +24,10 @@ These APIs are for the `CRUD` of a job seeker
 - **[Delete Skill](#delete-skills)**
 - **[Add Resume](#add-resume)**
 - **[Update Resume](#update-resume)**
+- **[Apply for a job](#apply-for-a-job)**
+- **[Get Applied jobs](#get-applied-jobs)**
+- **[Save a job](#save-a-job)**
+- **[Get Saved Jobs](#get-saved-jobs)**
 
 ## Edit About Me:
 
@@ -491,3 +495,26 @@ From this API users can update their resume
     }
   }
   ```
+
+## Apply for a job
+
+### Summary:
+
+This route is used to apply for a job by job-seeker
+
+- route: `apply-job/:jobId`,
+- method: `POST`
+- request:
+  ```
+  {
+    body: {
+
+    }
+  }
+  ```
+
+## Get Applied jobs
+
+## Save a job
+
+## Get Saved jobs

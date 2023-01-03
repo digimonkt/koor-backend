@@ -2,7 +2,7 @@
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>API DOCS</title>
+        <title>Job Seeker</title>
         <style>
 /* From extension vscode.github */
 /*---------------------------------------------------------------------------------------------
@@ -693,7 +693,8 @@ hue-6-2: #e6c07b
 }
 
 </style>
-        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
 <style>
@@ -717,25 +718,539 @@ hue-6-2: #e6c07b
         
     </head>
     <body class="vscode-body vscode-light">
-        <h1 id="api-docs">API DOCS</h1>
-<h2 id="introduction">Introduction</h2>
-<p>KOOR is a project that aims to connect employers, job seekers, and vendors in a single platform. It functions similar to a freelancer platform, where employers can create jobs and tenders, job seekers can apply for them, and vendors can apply for tenders.</p>
-<p>KOOR is designed to provide a convenient and efficient way for employers to find the right candidates or vendors for their projects. Employers can search for job seekers or vendors based on their skills, experience, and other criteria.</p>
-<p>Job seekers and vendors can use KOOR to find opportunities that match their expertise and preferences. They can create profiles, highlight their skills and experience, and apply for relevant jobs or tenders.</p>
-<p>Overall, KOOR is a platform that brings together employers, job seekers, and vendors to facilitate the hiring process and help people find the right opportunities for their skills and interests.</p>
-<h2 id="navigation">Navigation</h2>
-<p><a href="">Home</a> <a href="https://github.com/digimonktech/koor_backend/blob/db-design/README.html">Database Design</a></p>
+        <h1 id="job-seeker">Job Seeker</h1>
+<p>These APIs are for the <code>CRUD</code> of a job seeker</p>
+<blockquote>
+<p><strong>NOTE:</strong> The prefix of every <code>api</code>' s stated as <code>api/v1/user/job-seeker</code></p>
+<p><strong>NOTE:</strong> The user’s <code>id</code> can be accessed through this <code>token</code> only.</p>
+<p><strong>NOTE:</strong> All these API’s are protected and only can be access by the job-seeker.</p>
+</blockquote>
 <h2 id="table-of-content">Table Of Content</h2>
-<p>This is the koor api docs we have different section in this
-(some of the sections are listed below)</p>
-<ol>
-<li><a href="./user/user.html">User</a></li>
-<li><a href="./job-seeker/job-seeker.html">Job Seeker</a></li>
-<li><a href="./employer/employer.html">Employer</a></li>
-<li>Vendor</li>
-</ol>
+<ul>
+<li><strong><a href="#edit-about-me">Edit About Me</a></strong></li>
+<li><strong><a href="#add-education">Add Education</a></strong></li>
+<li><strong><a href="#update-education">Update Education</a></strong></li>
+<li><strong><a href="#delete-education">Delete Education</a></strong></li>
+<li><strong><a href="#add-language">Add Languages</a></strong></li>
+<li><strong><a href="#update-language">Update Language</a></strong></li>
+<li><strong><a href="#delete-language">Delete Language</a></strong></li>
+<li><strong><a href="#add-work-experience">Add Work experience</a></strong></li>
+<li><strong><a href="#update-work-experience">Update Work experience</a></strong></li>
+<li><strong><a href="#delete-work-experience">Delete Work experience</a></strong></li>
+<li><strong><a href="#add-skills">Add Skill</a></strong></li>
+<li><strong><a href="#delete-skills">Delete Skill</a></strong></li>
+<li><strong><a href="#add-resume">Add Resume</a></strong></li>
+<li><strong><a href="#update-resume">Update Resume</a></strong></li>
+<li><strong><a href="#apply-for-a-job">Apply for a job</a></strong></li>
+<li><strong><a href="#get-applied-jobs">Get Applied jobs</a></strong></li>
+<li><strong><a href="#save-a-job">Save a job</a></strong></li>
+<li><strong><a href="#get-saved-jobs">Get Saved Jobs</a></strong></li>
+</ul>
+<h2 id="edit-about-me">Edit About Me:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API <code>job-seeker</code> will be able to update only his profile.</p>
+<ul>
+<li>
+<p>route: <code>/about-me</code></p>
+</li>
+<li>
+<p>method: <code>PUT</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;gender&quot;</span>: <span class="hljs-string">&quot;male&quot;</span> || <span class="hljs-string">&quot;female&quot;</span>,
+    <span class="hljs-string">&quot;dob&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span>,
+    <span class="hljs-string">&quot;employmentStatus&quot;</span>: <span class="hljs-string">&quot;employed&quot;</span> || <span class="hljs-string">&quot;fresher&quot;</span> || <span class="hljs-string">&quot;other&quot;</span>,
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the user...&quot;</span>,
+    <span class="hljs-string">&quot;marketInformation&quot;</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">&quot;jobNotification&quot;</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">&quot;fullName&quot;</span>: <span class="hljs-string">&quot;Test User&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Updated Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="add-education">Add Education</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API <code>user</code> will be able to add new education to his profile</p>
+<ul>
+<li>
+<p>route: <code>/educations</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Software Engineer&quot;</span>,
+    <span class="hljs-string">&quot;startDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span>,
+    <span class="hljs-string">&quot;endDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span> || <span class="hljs-literal">null</span>,
+    <span class="hljs-string">&quot;present&quot;</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">&quot;organization&quot;</span>: <span class="hljs-string">&quot;MIT&quot;</span>,
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the education...&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Software Engineer&quot;</span>,
+    <span class="hljs-string">&quot;startDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span>,
+    <span class="hljs-string">&quot;endDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span> || <span class="hljs-literal">null</span>,
+    <span class="hljs-string">&quot;present&quot;</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">&quot;organization&quot;</span>: <span class="hljs-string">&quot;MIT&quot;</span>,
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the education...&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="update-education">Update Education:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API <code>users</code> can update their Education details</p>
+<ul>
+<li>
+<p>route: <code>/educations/:educationId</code></p>
+</li>
+<li>
+<p>method: <code>PATCH</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;educationId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  }
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the new description of the education...&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p><strong>NOTE:</strong> <em>Only those field will be sent that are going to update</em></p>
+</blockquote>
+<ul>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Update Successful&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="delete-education">Delete Education:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can delete their <code>education</code> details.</p>
+<ul>
+<li>
+<p>route: <code>/educations/:educationId</code></p>
+</li>
+<li>
+<p>method: <code>DELETE</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;educationId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="add-language">Add Language:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can add their <code>language</code> details.</p>
+<ul>
+<li>
+<p>route: <code>/languages</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;language&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+  <span class="hljs-string">&quot;written&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>,
+  <span class="hljs-string">&quot;spoken&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;language&quot;</span>: <span class="hljs-string">&quot;English&quot;</span>,
+    <span class="hljs-string">&quot;written&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>,
+    <span class="hljs-string">&quot;spoken&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="update-language">Update Language:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can update their <code>language</code> details.</p>
+<ul>
+<li>
+<p>route: <code>/languages/:languageId</code></p>
+</li>
+<li>
+<p>method: <code>PATCH</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-attr">languageId</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  },
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;written&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p><strong>Note:</strong> User can only update <code>written</code> and <code>spoken</code> fields. If he want to update <code>language</code> itself, he can add new <code>language</code> and delete current one.</p>
+<p><strong>Note:</strong> Only those <code>fields</code> were sent, which need to update.</p>
+</blockquote>
+<ul>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Updated Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="delete-language">Delete Language:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can delete their language</p>
+<ul>
+<li>
+<p>route: <code>/languages/:languageId</code></p>
+</li>
+<li>
+<p>method: <code>DELETE</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;languageId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="add-work-experience">Add Work Experience:</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can add new work experience.</p>
+<ul>
+<li>
+<p>route: <code>/work-experiences</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Software Engineer&quot;</span>,
+    <span class="hljs-string">&quot;startDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span>,
+    <span class="hljs-string">&quot;endDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span> || <span class="hljs-literal">null</span>,
+    <span class="hljs-string">&quot;present&quot;</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">&quot;organization&quot;</span>: <span class="hljs-string">&quot;MIT&quot;</span>,
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the work experience...&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Software Engineer&quot;</span>,
+    <span class="hljs-string">&quot;startDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span>,
+    <span class="hljs-string">&quot;endDate&quot;</span>: <span class="hljs-string">&quot;DD/MM/YYYY&quot;</span> || <span class="hljs-literal">null</span>,
+    <span class="hljs-string">&quot;present&quot;</span>: <span class="hljs-literal">false</span>,
+    <span class="hljs-string">&quot;organization&quot;</span>: <span class="hljs-string">&quot;MIT&quot;</span>,
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the work experience...&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="update-work-experience">Update Work Experience</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can update their existing work experiences.</p>
+<ul>
+<li>
+<p>route: <code>/work-experiences/:workExperienceId</code></p>
+</li>
+<li>
+<p>method: <code>PATCH</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;workExperienceId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  },
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the new description of the work experience...&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Updated Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="delete-work-experience">Delete Work Experience</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can delete their existing work experiences.</p>
+<ul>
+<li>
+<p>route: <code>/work-experiences/:workExperienceId</code></p>
+</li>
+<li>
+<p>method: <code>DELETE</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;workExperienceId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="add-skills">Add Skills</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users and add new skills to their profile</p>
+<ul>
+<li>
+<p>route: <code>/skills/:originalSkillId</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;originalSkillId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: ${<span class="hljs-variable constant_">UUID</span>},
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Software Engineer&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="delete-skills">Delete Skills</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can delete their existing skills</p>
+<ul>
+<li>
+<p>route: <code>/skills/:skillId</code></p>
+</li>
+<li>
+<p>method: <code>DELETE</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;skillId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="add-resume">Add Resume</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can add new resume</p>
+<ul>
+<li>
+<p>route: <code>/resumes</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;headers&quot;</span>: {
+    <span class="hljs-string">&quot;Content-Type&quot;</span>: <span class="hljs-string">&quot;multipart/form-data&quot;</span>
+  },
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Resume Title&quot;</span>,
+    <span class="hljs-string">&quot;resume&quot;</span>: <span class="hljs-title class_">File</span> <span class="hljs-comment">// acceptable .docs, .pdf, .docx</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>:<span class="hljs-string">&quot;Resume Title&quot;</span>,
+    <span class="hljs-string">&quot;path&quot;</span>: <span class="hljs-string">&quot;${FILE_PATH}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="update-resume">Update Resume</h2>
+<h3 id="summary">Summary:</h3>
+<p>From this API users can update their resume</p>
+<ul>
+<li>
+<p>route: <code>/resume/:resumeId</code></p>
+</li>
+<li>
+<p>method: <code>PATCH</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;resumeId&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  },
+  <span class="hljs-string">&quot;headers&quot;</span>: {
+    <span class="hljs-string">&quot;Content-Type&quot;</span>: <span class="hljs-string">&quot;multipart/form-data&quot;</span>
+  },
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;file&quot;</span>: <span class="hljs-variable constant_">FILE</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Resume Title&quot;</span>,
+    <span class="hljs-string">&quot;path&quot;</span>: <span class="hljs-string">&quot;${FILE_PATH}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="apply-for-a-job">Apply for a job</h2>
+<h3 id="summary">Summary:</h3>
+<p>This route is used to apply for a job by job-seeker</p>
+<ul>
+<li>route: <code>apply-job/:jobId</code>,</li>
+<li>method: <code>POST</code></li>
+<li>request:<pre><code>{
+  body: {
 
-        
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="get-applied-jobs">Get Applied jobs</h2>
+<h2 id="save-a-job">Save a job</h2>
+<h2 id="get-saved-jobs">Get Saved jobs</h2>
+
+        <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
         
     </body>
     </html>
