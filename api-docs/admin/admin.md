@@ -22,7 +22,7 @@
   - [Get Skills](#get-skills)
   - [Delete Skills](#delete-skills)
   - [Create Education Level](#create-education-level)
-  - [Get Skills](#get-skills-1)
+  - [Get Education Level](#get-education-level)
   - [Delete Education Level](#delete-education-level)
 
 ## Create Tag
@@ -321,9 +321,9 @@ This api is used to delete `language`.
   }
   ```
 
-## Get Skills
+## Get Education Level
 
-- route: `/skills`
+- route: `/education-level`
 - method: `GET`
 - request:
 
