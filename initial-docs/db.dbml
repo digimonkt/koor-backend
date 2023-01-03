@@ -11,112 +11,296 @@ Project Koor {
      ## Required Explaination
       - job_seeker.employment_status enum value
       - job_seeker.gender required transgender
-      - employer.organization_type enum value
-
-      ## Required Explaination on Feature
-      - How does job suggestion work, in figma we have one section [More Jobs Like This](https://www.figma.com/file/HKjAWx3CbMTTKwPzuzJiUZ/Koor?node-id=67%3A8498&t=ZKPbU1TMnHFi5nCA-0)
+      - job.JobDetails timing field implementation
   '''
 }
 // Public Schema
-Table Media [headercolor: #91D8E4]{
-  id bigint [primary key]
-  file_path varchar(255) [not null, unique]
-  upload_at datetime [default: `now`]
+Enum file_type {
+  image
+  video
+  document
 }
-
 enum role {
     job_seeker
     employer
     vendor
 }
-
-Table User [headercolor: #91D8E4]{
-    id bigint [primary key, increment]
-    email varchar(255)
-    mobile_number char(10)
-    password varchar(255) [not null]
-    display_name varchar(255)
-    display_image bigint [ref: - Media.id]
-    profile_role role
+enum language_fluency {
+    basic
+    conversational
+    fluent
 }
 
+enum pay_period{
+  yearly
+  quaterly
+  monthly
+  weekly
+  hourly
+}
+Table Media [headercolor: #91D8E4]{
+  id bigint [primary key]
+  file_path varchar(255) [not null, unique]
+  media_type file_type [not null]
+}
+Table Tag [headercolor: #91D8E4]{
+  id bigint [primary key]
+  title varchar [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+Table Language [headercolor: #91D8E4]{
+  id bigint [primary key]
+  title varchar [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+Table Skill [headercolor: #91D8E4]{
+  id bigint [primary key]
+  title varchar(255) [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+
+Table Country{
+  id bigint [primary key, increment]
+  title varchar(255) [not null]
+  curreny_code varchar(5) [not null]
+  country_code varchar(5) [not null]
+  iso_code2 varchar(10) [not null]
+  iso_code3 varchar(10) [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+
+Table City{
+  id bigint [primary key, increment]
+  name varchar(255) [not null]
+  country_id bigint [not null, ref: > Country.id]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+
+Table EducationLevel [headercolor: #91D8E4]{
+  id bigint [primary key, increment]
+  name varchar(255) [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+Table User [headercolor: #91D8E4]{
+  id bigint [primary key, increment]
+  email varchar(255) [unique]
+  mobile_number char(10) [unique]
+  country_code varchar(255)
+  password varchar(255) [not null]
+  display_name varchar(255)
+  display_image bigint [ref: - Media.id]
+  profile_role role
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
+
+Table UserSession [headercolor: #91D8E4]{
+  id bigint [primary key, increment]
+  user bigint [not null, ref: > User.id]
+  ip_address varchar(15) [not null]
+  agent varchar(255) [not null]
+  created_at datetime [not null]
+  expire_at datetime
+  active boolean [default: true]
+  deleted boolean [default: false]
+}
 // Job Seeker Schema
 enum job_seeker.gender {
     male
     female
 }
+
 enum job_seeker.employment_status {
     employed
     other
     fresher
 }
+
 Table job_seeker.JobSeekerProfile [headercolor: #eea23d]{
     id bigint [primary key, increment]
-    user bigint [ref: - User.id]
+    user bigint [not null, ref: - User.id]
     gender job_seeker.gender
     dob date
     employment_status job_seeker.employment_status
     description mediumtext
-    market_information_notification boolean
-    job_notification boolean
+    highest_education  bigint [ref: > EducationLevel.id]
+    market_information_notification boolean [not null]
+    job_notification boolean [not null]
     Note: '''Job Seeker Profile'''
 }
+
 Table job_seeker.EducationRecord [headercolor: #eea23d]{
   id bigint [primary key, increment]
-  title varchar(255)
+  title varchar(255) [not null]
   start_date date [not null]
-  end_date date [default: `now`]
-  organization varchar [default: 'other']
+  end_date date
+  institude varchar [not null]
+  organization varchar [not null]
   description mediumtext
-  user bigint [ref: > job_seeker.JobSeekerProfile.id ]
+  user bigint [not null, ref: > User.id ]
+}
+
+Table job_seeker.EmploymentRecord [headercolor: #eea23d]{
+  id bigint [primary key, increment]
+  title varchar(255) [not null]
+  start_date date [not null]
+  end_data date
+  present boolean [default: true]
+  organization varchar [not null]
+  description mediumtext
+  user bigint [not null, ref: > User.id ]
 }
 
 Table job_seeker.Resume [headercolor: #eea23d]{
   id bigint [primary key, increment]
-  user bigint [ref: - job_seeker.JobSeekerProfile.id ]
+  user bigint [not null, ref: - User.id ]
   title varchar(255) [not null]
-  file_path bigint [ref: - Media.id]
-  upload_at datetime [
-    default: `now`,
-    note: 'created at datetime'
-  ]
-  updated_at datetime [
-    default: `now`,
-    note: 'updated at datetime'
-  ]
+  active boolean [default: true]
+  path bigint [not null, ref: - Media.id]
 }
 
+Table job_seeker.JobSeekerLanguageProficiency [headercolor: #eea23d]{
+  id bigint [primary key]
+  language bigint [not null, ref: > Language.id]
+  written language_fluency [not null]
+  spoken language_fluency [not null]
+  user bigint [not null, ref: > User.id ]
+}
+
+Table job_seeker.JobSeekerSkill [headercolor: #eea23d]{
+  id bigint [primary key]
+  skill bigint [not null, ref: > Skill.id]
+  user bigint [not null, ref: > User.id ]
+}
 
 // Employer Schema
 Enum employer.organization_type {
-  ITSoftware
-  Pharmacy
-  Bank
-  // ... more
+  Government
+  NGO
+  Business
 }
+
 Table employer.EmployerProfile [headercolor: #274593]{
     id bigint [primary key, increment]
-    user bigint [ref: - User.id]
-    email varchar(255)
-    mobile_number char(10)
-    password varchar(255) [not null]
-}
-Table employer.OrganizationProfile [headercolor: #274593]{
-    id bigint [primary key, increment]
-    organization_name varchar(255) [not null]
+    user bigint [not null, ref: - User.id]
     description mediumtext
     organization_type employer.organization_type
-    organization_logo bigint [ref: - Media.id]
-    market_information_notification boolean
-    other_notification boolean
-    user bigint [ref: > employer.EmployerProfile.id ]
+    market_information_notification boolean [default: false]
+    other_notification boolean [default: false]
+    license_id varchar(255)
+    license_id_file bigint [ref: - Media.id]
     Note: '''Organization Profile'''
 }
-Table employer.BusinessDetails [headercolor: #274593]{
-    id bigint [primary key]
-    license_id varchar(255) [not null]
-    license_id_file bigint [ref: - Media.id]
-    business_id varchar(255) [not null]
-    business_id_file bigint 
-    organization bigint [ref: - employer.OrganizationProfile.id]
+
+Table employer.BlackList {
+  id bigint [primary key, increment]
+  blacklisted_user bigint [not null, ref: > User.id, note: "Role will be job_seeker"]
+  user bigint [not null, ref: > User.id, note: 'Role will be employer']
+}
+
+// Job Scheme
+Enum job.status{
+  active
+  inactive
+  deleted
+}
+Table job.JobCategory{
+  id bigint [primary key, increment]
+  title varchar(255) [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+}
+Table job.JobDetails [headercolor: #ADA2FF]{
+  id bigint [primary key, increment]
+  user bigint [not null, ref: > User.id]
+  title varchar(255) [not null]
+  budget_currency currency [default: 'KES']
+  budget_amount float [not null]
+  budget_pay_period pay_period [default: 'yearly']
+  description mediumtext
+  country bigint [not null, ref: > Country.id]
+  city bigint [not null, ref: > City.id]
+  address varchar(255) [not null]
+  job_category_1 bigint [not null,ref: > job.JobCategory.id, note: 'Required']
+  job_category_2 bigint [ref: > job.JobCategory.id, note: 'Optional']
+  is_fulltime boolean [default: false]
+  is_partime boolean [default: false]
+  has_contract boolean [default: false]
+  contact_email varchar(255)
+  contact_phone varchar(255)
+  contact_whatsapp varchar(255)
+  highest_education bigint [ref: > EducationLevel.id]
+  language_1 bigint [not null, ref: > Language.id, note: 'Required']
+  language_2 bigint [ref: > Language.id, note: 'Optional']
+  language_3 bigint [ref: > Language.id, note: 'Optional']
+  skill_1 bigint [not null, ref: > Skill.id]
+  skill_2 bigint [ref: > Skill.id]
+  skill_3 bigint [ref: > Skill.id]
+  status job.status
+}
+
+Table job.JobAttachmentsItem{
+  id bigint [primary key, increment]
+  job bigint [not null, ref: > job.JobDetails.id]
+  attachment bigint [not null, ref: - Media.id]
+}
+
+Table job_seeker.SavedJob {
+  id bigint [primary key, increment]
+  job bigint [not null, ref: > job.JobDetails.id]
+  user bigint [not null, ref: > User.id, note: 'role will be job_seeker']
+}
+
+Table job_seeker.AppliedJob {
+  id bigint [primary key, increment]
+  job bigint [not null, ref: > job.JobDetails.id]
+  user bigint [not null, ref: > User.id, note: 'role will be job_seeker']
+  shortlisted_at datetime
+  rejected_at datetime
+  resume bigint [ref: > Media.id]
+}
+Table tendor.TendorCategory{
+  id bigint [primary key, increment]
+  title varchar(255) [not null]
+  slug varchar(255) [not null, unique]
+  active boolean [default: true]
+}
+Table tendor.TendorDetails [headercolor: #ADA2FF]{
+  id bigint [primary key, increment]
+  user bigint [not null, ref: > User.id, note: "role will be employer"]
+  title varchar(255) [not null]
+  description mediumtext
+  budget_currency currency [default: 'KES']
+  budget_amount float [not null]
+  country bigint [not null, ref: > Country.id]
+  city bigint [not null, ref: > City.id]
+  tendor_category_1 bigint [not null,ref: > tendor.TendorCategory.id, note: 'Required, Strictly  Check Relationship']
+  tendor_category_2 bigint [ref: > tendor.TendorCategory.id, note: 'Optional, Strictly  Check Relationship']
+  Note:'''### Required Explaination on 
+- Sector: Enum or Admin Manageable
+- Type: Enum or Admin Manageable
+- Tag: Enum or Admin Manageable'''
+}
+Table tendor.TendorTag{
+  id bigint [primary key, increment]
+  tendor bigint [not null, ref: > tendor.TendorDetails.id]
+  tag bigint [not null, ref: > Tag.id]
+}
+
+Table tendor.TendorAttachmentsItem{
+  id bigint [primary key, increment]
+  tendor bigint [not null, ref: > tendor.TendorDetails.id]
+  attachment bigint [not null, ref: - Media.id]
 }
