@@ -32,7 +32,7 @@ This API is used to create `tags`.
 - route: `/tag`
 - method: `POST`
 - request:
-  ```json
+  ```js
   {
     "body": {
       "title": "Backend"
@@ -40,7 +40,7 @@ This API is used to create `tags`.
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -58,7 +58,7 @@ This api is used to get all `tags`
 - method: `GET`
 - request:
 
-  ```json
+  ```js
   // type one
   {
     "searchfilter": {
@@ -79,7 +79,7 @@ This api is used to get all `tags`
   ```
 
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -101,7 +101,7 @@ This api is used to `delete` tag
 - route: `/tag`
 - method: `DELETE`
 - request:
-  ```json
+  ```js
   {
     "params": {
       "tagId": ["${tagId}"]
@@ -109,7 +109,7 @@ This api is used to `delete` tag
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -125,7 +125,7 @@ This api is used to create language by admin for the `job-seeker` and `job-detai
 - route: `/language`
 - method: `POST`
 - request:
-  ```json
+  ```js
   {
     "body": {
       "title": "Hindi"
@@ -133,7 +133,7 @@ This api is used to create language by admin for the `job-seeker` and `job-detai
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -151,7 +151,7 @@ This api is used get list of `languages`
 - method: `GET`
 - request:
 
-  ```json
+  ```js
   // type one
   {
     "searchfilter": {
@@ -172,7 +172,7 @@ This api is used get list of `languages`
   ```
 
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -194,7 +194,7 @@ This api is used to delete `language`.
 - route: `/languages`
 - method: `DELETE`
 - request:
-  ```json
+  ```js
   {
     "query": {
       "languageIds": ["${UUID}"]
@@ -202,7 +202,7 @@ This api is used to delete `language`.
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -216,7 +216,7 @@ This api is used to delete `language`.
 - route: `/skills`
 - method: `POST`
 - request:
-  ```json
+  ```js
   {
     "body": {
       "title": "Python"
@@ -224,7 +224,7 @@ This api is used to delete `language`.
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -240,7 +240,7 @@ This api is used to delete `language`.
 - method: `GET`
 - request:
 
-  ```json
+  ```js
   // type one
   {
     "searchfilter": {
@@ -261,7 +261,7 @@ This api is used to delete `language`.
   ```
 
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -281,7 +281,7 @@ This api is used to delete `language`.
 - route: `/skills`
 - method: `DELETE`
 - request:
-  ```json
+  ```js
   {
     "query": {
       "skillsIds": ["${UUID}"]
@@ -289,7 +289,7 @@ This api is used to delete `language`.
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -303,7 +303,7 @@ This api is used to delete `language`.
 - route: `/education-level`
 - method: `POST`
 - request:
-  ```json
+  ```js
   {
     "body": {
       "title": "Bachelors"
@@ -311,7 +311,7 @@ This api is used to delete `language`.
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -327,7 +327,7 @@ This api is used to delete `language`.
 - method: `GET`
 - request:
 
-  ```json
+  ```js
   // type one
   {
     "searchfilter": {
@@ -348,7 +348,7 @@ This api is used to delete `language`.
   ```
 
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
@@ -368,7 +368,7 @@ This api is used to delete `language`.
 - route: `/skills`
 - method: `DELETE`
 - request:
-  ```json
+  ```js
   {
     "query": {
       "educationLevelIds": ["${UUID}"]
@@ -376,7 +376,7 @@ This api is used to delete `language`.
   }
   ```
 - response:
-  ```json
+  ```js
   {
     "code": 200,
     "data": {
