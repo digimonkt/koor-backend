@@ -1234,21 +1234,148 @@ hue-6-2: #e6c07b
 </ul>
 <h2 id="apply-for-a-job">Apply for a job</h2>
 <h3 id="summary">Summary:</h3>
-<p>This route is used to apply for a job by job-seeker</p>
+<p>This api is used to apply for a job by job-seeker</p>
 <ul>
-<li>route: <code>apply-job/:jobId</code>,</li>
+<li>route: <code>/jobs/apply/:jobId</code>,</li>
 <li>method: <code>POST</code></li>
-<li>request:<pre><code>{
-  body: {
-
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-attr">headers</span>: {
+    <span class="hljs-string">&quot;Content-Type&quot;</span>: <span class="hljs-string">&quot;multipart/form-data&quot;</span>
+  },
+  <span class="hljs-attr">params</span>: {
+    <span class="hljs-attr">jobId</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+  },
+  <span class="hljs-attr">body</span>: {
+    <span class="hljs-attr">shortLetter</span>: <span class="hljs-string">&quot;This is the sort letter....&quot;</span>,
+    <span class="hljs-attr">attachment</span>: <span class="hljs-title class_">File</span>[],
+  }
+}
+</code></pre>
+</li>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-attr">code</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">message</span>: <span class="hljs-string">&quot;Applied Successfully&quot;</span>
   }
 }
 </code></pre>
 </li>
 </ul>
 <h2 id="get-applied-jobs">Get Applied jobs</h2>
+<p>This api is used to get <code>user</code>'s applied jobs</p>
+<ul>
+<li>route: <code>/jobs/apply</code></li>
+<li>method: <code>GET</code></li>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-attr">query</span>: {
+    <span class="hljs-attr">page</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>,
+  }
+}
+</code></pre>
+</li>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-attr">code</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">appliedJobs</span>: [
+      {
+        <span class="hljs-attr">title</span>: <span class="hljs-string">&quot;RETAIL ASSISTANT CASHIER&quot;</span>,
+        <span class="hljs-attr">description</span>: <span class="hljs-string">&quot;Role and Responsibilities - Provide good ...&quot;</span>,
+        <span class="hljs-attr">city</span>: <span class="hljs-string">&quot;Geldern&quot;</span>,
+        <span class="hljs-attr">timing</span>: <span class="hljs-string">&quot;5 Day week&quot;</span>,
+        <span class="hljs-attr">is_fulltime</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">is_part_time</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">has_contract</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">user</span>: {
+          <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+          <span class="hljs-attr">display_name</span>: <span class="hljs-string">&quot;UTS Marketing Solution Sdn Bhd&quot;</span>,
+          <span class="hljs-attr">display_image</span>: <span class="hljs-string">&quot;${PATH}&quot;</span>
+        },
+        <span class="hljs-attr">budget_currency</span>: <span class="hljs-string">&quot;USD&quot;</span>,
+        <span class="hljs-attr">budget_amount</span>: <span class="hljs-number">15000</span>,
+        <span class="hljs-attr">budget_pay_period</span>: <span class="hljs-string">&quot;yearly&quot;</span> || <span class="hljs-string">&quot;quarterly&quot;</span> || <span class="hljs-string">&quot;monthly&quot;</span> || <span class="hljs-string">&quot;weekly&quot;</span> || <span class="hljs-string">&quot;hourly&quot;</span>
+        <span class="hljs-attr">created_at</span>: <span class="hljs-string">&quot;2023-01-04T09:56:23.144Z&quot;</span>
+      }
+    ],
+    <span class="hljs-attr">total</span>: <span class="hljs-number">20</span>, <span class="hljs-comment">// total number of applied jobs</span>
+    <span class="hljs-attr">current_page</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">current_limit</span>: <span class="hljs-number">10</span>,
+  }
+}
+</code></pre>
+</li>
+</ul>
 <h2 id="save-a-job">Save a job</h2>
+<p>This api is used to save a <code>job</code></p>
+<ul>
+<li>route: <code>/jobs/save/:jobId</code></li>
+<li>method: <code>POST</code></li>
+<li>request:<pre><code>{
+  jobId: &quot;${UUID}&quot;
+}
+</code></pre>
+</li>
+<li>response:<pre><code>{
+  code: 200,
+  data:{
+    message: &quot;Saved Successfully&quot;
+  }
+}
+</code></pre>
+</li>
+</ul>
 <h2 id="get-saved-jobs">Get Saved jobs</h2>
+<p>This api is used to get <code>user</code>'s applied jobs</p>
+<ul>
+<li>
+<p>route: <code>/jobs/save</code></p>
+</li>
+<li>
+<p>method: <code>GET</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">query</span>: {
+    <span class="hljs-attr">page</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">limit</span>: <span class="hljs-number">10</span>,
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-attr">code</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-attr">appliedJobs</span>: [
+      {
+        <span class="hljs-attr">title</span>: <span class="hljs-string">&quot;RETAIL ASSISTANT CASHIER&quot;</span>,
+        <span class="hljs-attr">description</span>: <span class="hljs-string">&quot;Role and Responsibilities - Provide good ...&quot;</span>,
+        <span class="hljs-attr">city</span>: <span class="hljs-string">&quot;Geldern&quot;</span>,
+        <span class="hljs-attr">timing</span>: <span class="hljs-string">&quot;5 Day week&quot;</span>,
+        <span class="hljs-attr">is_fulltime</span>: <span class="hljs-literal">true</span>,
+        <span class="hljs-attr">is_part_time</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">has_contract</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">user</span>: {
+          <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+          <span class="hljs-attr">display_name</span>: <span class="hljs-string">&quot;UTS Marketing Solution Sdn Bhd&quot;</span>,
+          <span class="hljs-attr">display_image</span>: <span class="hljs-string">&quot;${PATH}&quot;</span>
+        },
+        <span class="hljs-attr">budget_currency</span>: <span class="hljs-string">&quot;USD&quot;</span>,
+        <span class="hljs-attr">budget_amount</span>: <span class="hljs-number">15000</span>,
+        <span class="hljs-attr">budget_pay_period</span>: <span class="hljs-string">&quot;yearly&quot;</span> || <span class="hljs-string">&quot;quarterly&quot;</span> || <span class="hljs-string">&quot;monthly&quot;</span> || <span class="hljs-string">&quot;weekly&quot;</span> || <span class="hljs-string">&quot;hourly&quot;</span>
+        <span class="hljs-attr">created_at</span>: <span class="hljs-string">&quot;2023-01-04T09:56:23.144Z&quot;</span>
+      }
+    ],
+    <span class="hljs-attr">total</span>: <span class="hljs-number">20</span>, <span class="hljs-comment">// total number of applied jobs</span>
+    <span class="hljs-attr">current_page</span>: <span class="hljs-number">1</span>,
+    <span class="hljs-attr">current_limit</span>: <span class="hljs-number">10</span>,
+  }
+}
+</code></pre>
+</li>
+</ul>
 
         <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
         

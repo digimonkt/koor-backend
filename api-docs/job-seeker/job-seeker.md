@@ -500,21 +500,148 @@ From this API users can update their resume
 
 ### Summary:
 
-This route is used to apply for a job by job-seeker
+This api is used to apply for a job by job-seeker
 
-- route: `apply-job/:jobId`,
+- route: `/jobs/apply/:jobId`,
 - method: `POST`
 - request:
-  ```
+  ```js
   {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    },
+    params: {
+      jobId: "${UUID}"
+    },
     body: {
-
+      shortLetter: "This is the sort letter....",
+      attachment: File[],
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      message: "Applied Successfully"
     }
   }
   ```
 
 ## Get Applied jobs
 
+This api is used to get `user`'s applied jobs
+
+- route: `/jobs/apply`
+- method: `GET`
+- request:
+  ```js
+  {
+    query: {
+      page: 1,
+      limit: 10,
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      appliedJobs: [
+        {
+          title: "RETAIL ASSISTANT CASHIER",
+          description: "Role and Responsibilities - Provide good ...",
+          city: "Geldern",
+          timing: "5 Day week",
+          is_fulltime: true,
+          is_part_time: false,
+          has_contract: false,
+          user: {
+            id: "${UUID}",
+            display_name: "UTS Marketing Solution Sdn Bhd",
+            display_image: "${PATH}"
+          },
+          budget_currency: "USD",
+          budget_amount: 15000,
+          budget_pay_period: "yearly" || "quarterly" || "monthly" || "weekly" || "hourly"
+          created_at: "2023-01-04T09:56:23.144Z"
+        }
+      ],
+      total: 20, // total number of applied jobs
+      current_page: 1,
+      current_limit: 10,
+    }
+  }
+  ```
+
 ## Save a job
 
+This api is used to save a `job`
+
+- route: `/jobs/save/:jobId`
+- method: `POST`
+- request:
+  ```
+  {
+    jobId: "${UUID}"
+  }
+  ```
+- response:
+  ```
+  {
+    code: 200,
+    data:{
+      message: "Saved Successfully"
+    }
+  }
+  ```
+
 ## Get Saved jobs
+
+This api is used to get `user`'s applied jobs
+
+- route: `/jobs/save`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    query: {
+      page: 1,
+      limit: 10,
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      appliedJobs: [
+        {
+          title: "RETAIL ASSISTANT CASHIER",
+          description: "Role and Responsibilities - Provide good ...",
+          city: "Geldern",
+          timing: "5 Day week",
+          is_fulltime: true,
+          is_part_time: false,
+          has_contract: false,
+          user: {
+            id: "${UUID}",
+            display_name: "UTS Marketing Solution Sdn Bhd",
+            display_image: "${PATH}"
+          },
+          budget_currency: "USD",
+          budget_amount: 15000,
+          budget_pay_period: "yearly" || "quarterly" || "monthly" || "weekly" || "hourly"
+          created_at: "2023-01-04T09:56:23.144Z"
+        }
+      ],
+      total: 20, // total number of applied jobs
+      current_page: 1,
+      current_limit: 10,
+    }
+  }
+  ```

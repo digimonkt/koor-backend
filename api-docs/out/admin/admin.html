@@ -756,20 +756,20 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/tag</code></li>
 <li>method: <code>POST</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;body&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Backend&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Backend&quot;</span>
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Backend&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Backend&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -784,39 +784,39 @@ hue-6-2: #e6c07b
 </li>
 <li>
 <p>request:</p>
-<pre><code class="language-json"><span class="hljs-comment">// type one</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js"><span class="hljs-comment">// type one</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 
 <span class="hljs-comment">// type two</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-comment">// show only those results whose title includes `b` only</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-comment">// show only those results whose title includes `b` only</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 </code></pre>
 </li>
 <li>
 <p>response:</p>
-<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;tags&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span>
-      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Backend&quot;</span>
-    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;total&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// total number of skills available</span>
-    <span class="hljs-attr">&quot;current_page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// current page of which data is fetched</span>
-    <span class="hljs-attr">&quot;current_limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `tags` list</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;tags&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Backend&quot;</span>
+    }],
+    <span class="hljs-string">&quot;total&quot;</span>: <span class="hljs-number">200</span>, <span class="hljs-comment">// total number of skills available</span>
+    <span class="hljs-string">&quot;current_page&quot;</span>: <span class="hljs-number">1</span>, <span class="hljs-comment">// current page of which data is fetched</span>
+    <span class="hljs-string">&quot;current_limit&quot;</span>: <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `tags` list</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -825,19 +825,19 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/tag</code></li>
 <li>method: <code>DELETE</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;params&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;tagId&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;${tagId}&quot;</span><span class="hljs-punctuation">]</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;params&quot;</span>: {
+    <span class="hljs-string">&quot;tagId&quot;</span>: [<span class="hljs-string">&quot;${tagId}&quot;</span>]
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -846,20 +846,20 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/language</code></li>
 <li>method: <code>POST</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;body&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Hindi&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Hindi&quot;</span>
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Hindi&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Hindi&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -874,39 +874,39 @@ hue-6-2: #e6c07b
 </li>
 <li>
 <p>request:</p>
-<pre><code class="language-json"><span class="hljs-comment">// type one</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js"><span class="hljs-comment">// type one</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 
 <span class="hljs-comment">// type two</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-comment">// show only those results whose title includes `b` only</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-comment">// show only those results whose title includes `b` only</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 </code></pre>
 </li>
 <li>
 <p>response:</p>
-<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;languages&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span>
-      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Backend&quot;</span>
-    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;total&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// total number of skills available</span>
-    <span class="hljs-attr">&quot;current_page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// current page of which data is fetched</span>
-    <span class="hljs-attr">&quot;current_limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `languages` list</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;languages&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Backend&quot;</span>
+    }],
+    <span class="hljs-string">&quot;total&quot;</span>: <span class="hljs-number">200</span>, <span class="hljs-comment">// total number of skills available</span>
+    <span class="hljs-string">&quot;current_page&quot;</span>: <span class="hljs-number">1</span>, <span class="hljs-comment">// current page of which data is fetched</span>
+    <span class="hljs-string">&quot;current_limit&quot;</span>: <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `languages` list</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -915,19 +915,19 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/languages</code></li>
 <li>method: <code>DELETE</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;query&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;languageIds&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">]</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;query&quot;</span>: {
+    <span class="hljs-string">&quot;languageIds&quot;</span>: [<span class="hljs-string">&quot;${UUID}&quot;</span>]
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -935,20 +935,20 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/skills</code></li>
 <li>method: <code>POST</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;body&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Python&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Python&quot;</span>
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Python&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Python&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -962,39 +962,39 @@ hue-6-2: #e6c07b
 </li>
 <li>
 <p>request:</p>
-<pre><code class="language-json"><span class="hljs-comment">// type one</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js"><span class="hljs-comment">// type one</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 
 <span class="hljs-comment">// type two</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;p&quot;</span> <span class="hljs-comment">// show only those results whose title includes `p` only</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;p&quot;</span> <span class="hljs-comment">// show only those results whose title includes `p` only</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 </code></pre>
 </li>
 <li>
 <p>response:</p>
-<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;skills&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span>
-      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Python&quot;</span>
-    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;total&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// total number of skills available</span>
-    <span class="hljs-attr">&quot;current_page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// current page of which data is fetched</span>
-    <span class="hljs-attr">&quot;current_limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `skills` list</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;skills&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Python&quot;</span>
+    }],
+    <span class="hljs-string">&quot;total&quot;</span>: <span class="hljs-number">200</span>, <span class="hljs-comment">// total number of skills available</span>
+    <span class="hljs-string">&quot;current_page&quot;</span>: <span class="hljs-number">1</span>, <span class="hljs-comment">// current page of which data is fetched</span>
+    <span class="hljs-string">&quot;current_limit&quot;</span>: <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `skills` list</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -1002,19 +1002,19 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/skills</code></li>
 <li>method: <code>DELETE</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;query&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;skillsIds&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">]</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;query&quot;</span>: {
+    <span class="hljs-string">&quot;skillsIds&quot;</span>: [<span class="hljs-string">&quot;${UUID}&quot;</span>]
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -1022,20 +1022,20 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/education-level</code></li>
 <li>method: <code>POST</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;body&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Bachelors&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Bachelors&quot;</span>
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Bachelors&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>,
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Bachelors&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -1049,39 +1049,39 @@ hue-6-2: #e6c07b
 </li>
 <li>
 <p>request:</p>
-<pre><code class="language-json"><span class="hljs-comment">// type one</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js"><span class="hljs-comment">// type one</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;&quot;</span> <span class="hljs-comment">// show all results</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 
 <span class="hljs-comment">// type two</span>
-<span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;searchfilter&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-comment">// show only those results whose title includes `p` only</span>
-  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span><span class="hljs-punctuation">,</span>
-<span class="hljs-punctuation">}</span>
+{
+  <span class="hljs-string">&quot;searchfilter&quot;</span>: {
+    <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;b&quot;</span> <span class="hljs-comment">// show only those results whose title includes `p` only</span>
+  },
+  <span class="hljs-string">&quot;page&quot;</span>: <span class="hljs-number">1</span>,
+  <span class="hljs-string">&quot;limit&quot;</span>: <span class="hljs-number">10</span>,
+}
 </code></pre>
 </li>
 <li>
 <p>response:</p>
-<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;education_level&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-punctuation">{</span>
-      <span class="hljs-attr">&quot;id&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;${UUID}&quot;</span>
-      <span class="hljs-attr">&quot;title&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Bachelors&quot;</span>
-    <span class="hljs-punctuation">}</span><span class="hljs-punctuation">]</span><span class="hljs-punctuation">,</span>
-    <span class="hljs-attr">&quot;total&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// total number of skills available</span>
-    <span class="hljs-attr">&quot;current_page&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">1</span><span class="hljs-punctuation">,</span> <span class="hljs-comment">// current page of which data is fetched</span>
-    <span class="hljs-attr">&quot;current_limit&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `education_level` list</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;education_level&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Bachelors&quot;</span>
+    }],
+    <span class="hljs-string">&quot;total&quot;</span>: <span class="hljs-number">200</span>, <span class="hljs-comment">// total number of skills available</span>
+    <span class="hljs-string">&quot;current_page&quot;</span>: <span class="hljs-number">1</span>, <span class="hljs-comment">// current page of which data is fetched</span>
+    <span class="hljs-string">&quot;current_limit&quot;</span>: <span class="hljs-number">10</span> <span class="hljs-comment">// maximum number of data can be in `education_level` list</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
@@ -1089,19 +1089,19 @@ hue-6-2: #e6c07b
 <ul>
 <li>route: <code>/skills</code></li>
 <li>method: <code>DELETE</code></li>
-<li>request:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;query&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;educationLevelIds&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span><span class="hljs-string">&quot;${UUID}&quot;</span><span class="hljs-punctuation">]</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>request:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;query&quot;</span>: {
+    <span class="hljs-string">&quot;educationLevelIds&quot;</span>: [<span class="hljs-string">&quot;${UUID}&quot;</span>]
+  }
+}
 </code></pre>
 </li>
-<li>response:<pre><code class="language-json"><span class="hljs-punctuation">{</span>
-  <span class="hljs-attr">&quot;code&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">200</span><span class="hljs-punctuation">,</span>
-  <span class="hljs-attr">&quot;data&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
-    <span class="hljs-attr">&quot;message&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
-  <span class="hljs-punctuation">}</span>
-<span class="hljs-punctuation">}</span>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Deleted Successfully&quot;</span>
+  }
+}
 </code></pre>
 </li>
 </ul>
