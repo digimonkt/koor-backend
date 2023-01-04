@@ -46,6 +46,10 @@ class Common(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+        # To send broken link notification to MANAGERS
+        # https://docs.djangoproject.com/en/4.1/ref/middleware/#django.middleware.common.BrokenLinkEmailsMiddleware
+        "django.middleware.common.BrokenLinkEmailsMiddleware"
     ]
 
     ROOT_URLCONF = "KOOR.urls"
@@ -217,8 +221,8 @@ class Common(Configuration):
         'JWK_URL': None,
         'LEEWAY': 0,
 
-        'AUTH_HEADER_TYPES': ('Bearer',),
-        'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+        'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+        'AUTH_HEADER_NAME': 'HTTP_X_ACCESS_TOKEN ',
         'USER_ID_FIELD': 'id',
         'USER_ID_CLAIM': 'user_id',
         'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
@@ -275,7 +279,7 @@ class Local(Common):
 
         # Updating SIGNING_KEY based on Secret Key to generate token
         # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#signing-key
-        
+
         self.SIMPLE_JWT.update({
             'SIGNING_KEY': self.SECRET_KEY,
         })
