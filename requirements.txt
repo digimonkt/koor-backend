@@ -1,0 +1,33 @@
+# Project Package Dependencies
+
+# Core
+asgiref==3.6.0
+python-dateutil==2.8.2
+pytz==2022.7
+six==1.16.0
+tzdata==2022.7
+Django==4.1.5
+django-configurations==2.4
+
+# Databases and Persistence Connection
+psycopg2-binary==2.9.5
+sqlparse==0.4.3
+dj-database-url==1.2.0
+
+# Model Tools
+django-model-utils==4.3.1
+
+# Rest APIs
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+PyJWT==2.6.0
+
+# Testing
+factory-boy==3.2.1
+Faker==15.3.4
+
+# Static and Media
+Pillow==9.4.0
+
+# Miscellanenous Requirement
+# Add Your Package Here (if it's don't fit in the above classification)
