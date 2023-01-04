@@ -216,6 +216,15 @@ Enum job.status{
   inactive
   deleted
 }
+Enum job.timing{
+  1_day_week
+  2_days_week
+  3_days_week
+  4_days_week
+  5_days_week
+  6_days_week
+  7_days_week
+}
 Table job.JobCategory{
   id bigint [primary key, increment]
   title varchar(255) [not null]
@@ -235,9 +244,10 @@ Table job.JobDetails [headercolor: #ADA2FF]{
   address varchar(255) [not null]
   job_category_1 bigint [not null,ref: > job.JobCategory.id, note: 'Required']
   job_category_2 bigint [ref: > job.JobCategory.id, note: 'Optional']
-  is_fulltime boolean [default: false]
-  is_partime boolean [default: false]
+  is_full_time boolean [default: false]
+  is_part_time boolean [default: false]
   has_contract boolean [default: false]
+  timing job.timing
   contact_email varchar(255)
   contact_phone varchar(255)
   contact_whatsapp varchar(255)
@@ -270,7 +280,16 @@ Table job_seeker.AppliedJob {
   shortlisted_at datetime
   rejected_at datetime
   resume bigint [ref: > Media.id]
+  cover_letter longtext
 }
+
+Table job_seeker.AppliedJobAttachmentsItem{
+  id bigint [primary key, increment]
+  applied_job bigint [not null, ref: > job_seeker.AppliedJob.id]
+  attachment bigint [not null, ref: - Media.id]
+}
+
+// Tendor Schema
 Table tendor.TendorCategory{
   id bigint [primary key, increment]
   title varchar(255) [not null]
