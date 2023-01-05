@@ -210,13 +210,13 @@ class Common(Configuration):
     # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#
 
     SIMPLE_JWT = {
-        'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
-        'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+        'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(config('ACCESS_TOKEN_LIFETIME'))),
+        'REFRESH_TOKEN_LIFETIME': timedelta(days=int(config('REFRESH_TOKEN_LIFETIME'))),
         'ROTATE_REFRESH_TOKENS': False,
         'BLACKLIST_AFTER_ROTATION': False,
         'UPDATE_LAST_LOGIN': False,
 
-        'ALGORITHM': 'HS256',
+        'ALGORITHM': config('ALGORITHM'),
         'VERIFYING_KEY': None,
         'AUDIENCE': None,
         'ISSUER': None,

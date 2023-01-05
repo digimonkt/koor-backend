@@ -1,4 +1,4 @@
-from .local import Local
+from .local import Local, config
 
 class Development(Local):
     """
@@ -16,9 +16,10 @@ class Development(Local):
     # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-ADMINS
 
     ADMINS = [
-        ('Developer', 'keval.rajpal@digimonk.in'),
-        ('QA', 'saral.shrivastava@digimonk.in'),
-        ('DevOps', 'vishnu.gahlot@digimonk.in'),
+        ('Organization', config('ORAGANIZATION')),
+        ('DevOps', config('DEVOPS')),
+        ('TeamLeader', config('QA')),
+        ('Developer', config('DEVELOPER')),
     ]
 
 
@@ -26,7 +27,7 @@ class Development(Local):
     # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-MANAGERS
 
     MANAGERS = [
-        ('Developer', 'keval.rajpal@digimonk.in'),
+        ('Developer', config('DEVELOPER')),
     ]
 
 
@@ -34,4 +35,4 @@ class Development(Local):
     # The email address that error messages come from, such as those sent to ADMINS and MANAGERS.
     # https://docs.djangoproject.com/en/4.1/ref/settings/#server-email
 
-    SERVER_EMAIL = "support.koor@digimonk.co"
+    SERVER_EMAIL = config("SERVER_EMAIL")

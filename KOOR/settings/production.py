@@ -1,4 +1,4 @@
-from .local import Local
+from .local import Local, config
 
 class Production(Local):
     """
@@ -35,4 +35,4 @@ class Production(Local):
     # The email address that error messages come from, such as those sent to ADMINS and MANAGERS.
     # https://docs.djangoproject.com/en/4.1/ref/settings/#server-email
 
-    SERVER_EMAIL = "support@koor.com"
+    SERVER_EMAIL = config("SERVER_EMAIL")
