@@ -38,10 +38,25 @@
  - ### Setup `.env` File
     Create .env file add following variables. Detail about the variable based on the Configuration referenced [here](#configuration)
      ```
-     DEBUG=True
-     DATABASE_URI=postgres://<username>:<password>@<hostname>:<port>/<database-name>
-     POSTGRES_CONN_MAX_AGE=600
-     SECRET_KEY="<YOUR SECRET KEY HERE>"
+    # Core Settings
+    DEBUG=True
+    SECRET_KEY="<YOUR SECRET KEY HERE>"
+
+    # Databases
+    DATABASE_URI=postgres://<username>:<password>@<hostname>:<port>/<database-name>
+    POSTGRES_CONN_MAX_AGE=600
+
+    # JWT Settings
+    ACCESS_TOKEN_LIFETIME=5
+    REFRESH_TOKEN_LIFETIME=1
+    ALGORITHM=HS256
+
+    # Author, Manager and Stakeholder
+    ORAGANIZATION=info@digimonk.in
+    DEVOPS=vishnu.gahlot@digimonk.in
+    QA=saral.shrivastava@digimonk.in
+    DEVELOPER=keval.rajpal@digimonk.in
+    SERVER_EMAIL=support.koor@digimonk.co
      ```
 ## Configuration
 ### Local Configuration
