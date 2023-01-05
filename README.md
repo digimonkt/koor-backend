@@ -44,19 +44,19 @@
 
     # Databases
     DATABASE_URI=postgres://<username>:<password>@<hostname>:<port>/<database-name>
-    POSTGRES_CONN_MAX_AGE=600
+    POSTGRES_CONN_MAX_AGE=<seconds>
 
     # JWT Settings
-    ACCESS_TOKEN_LIFETIME=5
-    REFRESH_TOKEN_LIFETIME=1
-    ALGORITHM=HS256
+    ACCESS_TOKEN_LIFETIME=<minutes>
+    REFRESH_TOKEN_LIFETIME=<days>
+    ALGORITHM=<algorithm> # 'HS256', 'HS384', 'HS512'
 
     # Author, Manager and Stakeholder
-    ORAGANIZATION=info@digimonk.in
-    DEVOPS=vishnu.gahlot@digimonk.in
-    QA=saral.shrivastava@digimonk.in
-    DEVELOPER=keval.rajpal@digimonk.in
-    SERVER_EMAIL=support.koor@digimonk.co
+    ORAGANIZATION=organization@example.com
+    DEVOPS=devops@example.com
+    QA=qa@example.com
+    DEVELOPER=developer@example.com
+    SERVER_EMAIL=support@example.com
      ```
 ## Configuration
 ### Local Configuration
