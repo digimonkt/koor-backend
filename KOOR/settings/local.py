@@ -206,6 +206,8 @@ class Common(Configuration):
         )
     }
 
+    # Django Rest Framework Simple JWT
+    # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#
 
     SIMPLE_JWT = {
         'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
