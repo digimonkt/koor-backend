@@ -36,7 +36,13 @@ class Common(Configuration):
         # Third Party Apps
         'rest_framework',
         'rest_framework_simplejwt',
+
+        # Project Apps
+        'users.apps.UsersConfig',
+
     ]
+
+    AUTH_USER_MODEL = 'users.User'
 
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
@@ -72,6 +78,15 @@ class Common(Configuration):
         {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
     ]
 
+
+    
+    AUTHENTICATION_BACKENDS = [
+
+        # Custom Authentication Backend
+        'users.backends.MobileOrEmailBackend',
+
+        'django.contrib.auth.backends.ModelBackend',
+    ]
 
     # Internationalization
     # https://docs.djangoproject.com/en/4.1/topics/i18n/
