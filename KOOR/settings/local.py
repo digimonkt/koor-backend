@@ -7,7 +7,7 @@ from configurations import Configuration
 from pathlib import Path
 from decouple import config
 
-    
+
 class Common(Configuration):
     """
     Common settings for KOOR project.
@@ -19,10 +19,8 @@ class Common(Configuration):
     https://docs.djangoproject.com/en/4.1/ref/settings/
     """
 
-
     # Build paths inside the project like this: BASE_DIR / 'subdir'.
     BASE_DIR = Path(__file__).resolve().parent.parent
-
 
     # Application definition
     INSTALLED_APPS = [
@@ -38,6 +36,7 @@ class Common(Configuration):
         'rest_framework_simplejwt',
 
         # Project Apps
+        'core.apps.CoreConfig',
         'users.apps.UsersConfig',
 
     ]
@@ -62,24 +61,20 @@ class Common(Configuration):
 
     WSGI_APPLICATION = "KOOR.wsgi.application"
 
-
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
     ATOMIC_REQUESTS = True
-
 
     # Password validation
     # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
     AUTH_PASSWORD_VALIDATORS = [
-        {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},
-        {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-        {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-        {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+        {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator", },
+        {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
+        {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
+        {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
     ]
 
-
-    
     AUTHENTICATION_BACKENDS = [
 
         # Custom Authentication Backend
@@ -132,13 +127,11 @@ class Common(Configuration):
         },
     ]
 
-
     # Default primary key field type
     # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
     DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-    
     # Logging
     # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-LOGGING
 
@@ -200,11 +193,12 @@ class Common(Configuration):
         }
     }
 
-
     # Django Rest Framework
     # https://www.django-rest-framework.org/
 
     REST_FRAMEWORK = {
+        'EXCEPTION_HANDLER': 'core.utils.custom_exception_handler',
+
         'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
         'PAGE_SIZE': 20,
         'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
@@ -264,7 +258,6 @@ class Local(Common):
     Check the detail documentation for the variable @ https://docs.djangoproject.com/en/4.1/ref/settings
     """
 
-
     # Quick-start development settings - unsuitable for production
     # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -275,7 +268,7 @@ class Local(Common):
     DEBUG = strtobool(config('DEBUG'))
 
     ALLOWED_HOSTS = []
-    
+
     # Email Backend
     # https://docs.djangoproject.com/en/4.1/ref/settings/#email-backend
 

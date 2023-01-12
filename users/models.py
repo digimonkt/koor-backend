@@ -15,7 +15,7 @@ class User(AbstractUser, BaseModel):
         ('admin', "Admin"),
         ('job_seeker', "Job Seeker"),
         ('employer', "Employer"),
-        ('admin', "Admin"),
+        ('vendor', "Vendor"),
     )
 
     username = None
