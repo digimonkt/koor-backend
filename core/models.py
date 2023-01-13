@@ -1,24 +1,22 @@
-from django.db import models
-from django.utils.translation import gettext as _
+from model_utils import (
+    FieldTracker,
+)
 from model_utils.models import (
     SoftDeletableModel, UUIDModel, TimeStampedModel
 )
 
-from model_utils import (
-    FieldTracker,
-)
-from typing import Optional, Iterable
-import logging
-
-from .exceptions import UserNotPassed
 
 # Model Mixin
 
+def upload_directory_path(instance, filename):
+    return '{0}/{1}'.format(instance, filename)
+
+
 class BaseModel(
-        UUIDModel,
-        SoftDeletableModel,
-        TimeStampedModel
-    ):
+    UUIDModel,
+    SoftDeletableModel,
+    TimeStampedModel
+):
     """
     An abstract base class model that provides self updating, fields.
     

@@ -1,10 +1,11 @@
 # IMPORT PYTHON PACKAGE.
-from rest_framework import serializers
 from rest_framework import exceptions
-from rest_framework import response
-from rest_framework import status
-from .models import User
+from rest_framework import serializers
+
+# IMPORT CUSTOM AUTHENTICATE FUNCTION FORM BACKENDS.PY FILE.
 from .backends import MobileOrEmailBackend as cb
+# IMPORT SOME MODEL CLASS FROM SOME APP'S MODELS.PY FILE.
+from .models import User
 
 
 # CREATE SERIALIZER FOR USER REGISTRATION.
@@ -49,9 +50,6 @@ class UserRegistrationSerializers(serializers.ModelSerializer):
             raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
 
 
-# ======================================================================================================================
-
-
 # CREATE SERIALIZER FOR USER LOGIN.
 class UserLoginSerializers(serializers.Serializer):
     # CREATE FORM FOR GET USER DETAIL FROM FRONTEND..
@@ -64,23 +62,35 @@ class UserLoginSerializers(serializers.Serializer):
         email = data.get("email", "")
         mobile = data.get("mobile", "")
         password = data.get("password", "")
-
         user = ""
         try:
             if email:
-                user = cb.authenticate(identifier=email, password=password)
+                if User.objects.filter(mobile=mobile).filter(is_active=False).exists():
+                    mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
+                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                else:
+                    user = cb.authenticate(self, identifier=email, password=password)
             elif mobile:
-                user = cb.authenticate(identifier=mobile, password=password)
+                if User.objects.filter(mobile=mobile).filter(is_active=False).exists():
+                    mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
+                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                else:
+                    user = cb.authenticate(self, identifier=mobile, password=password)
             if user:
                 if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
-                    return user  # RETRUN USER INSTANCE FOR LOGIN.
+                    return user  # RETURN USER INSTANCE FOR LOGIN.
                 else:
                     return "Not Valid"
             else:
                 mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
-                exceptions.status_code = 200
-
-                raise exceptions.APIException(mes, 200)  # DISPLAY ERROR MESSAGE.
+                raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
         except Exception as e:
             raise exceptions.APIException(e)  # CALL MESSAGE IF USER NOT REGISTERED.
-# ======================================================================================================================
+
+
+# CREATE SERIALIZER FOR USER REGISTRATION.
+class UserDetailSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile', 'country_code', 'display_name', 'image', 'profile_role']
+

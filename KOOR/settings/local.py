@@ -34,6 +34,7 @@ class Common(Configuration):
         # Third Party Apps
         'rest_framework',
         'rest_framework_simplejwt',
+        'rest_framework_simplejwt.token_blacklist',
 
         # Project Apps
         'core.apps.CoreConfig',
@@ -47,7 +48,7 @@ class Common(Configuration):
         "django.middleware.security.SecurityMiddleware",
         "django.contrib.sessions.middleware.SessionMiddleware",
         "django.middleware.common.CommonMiddleware",
-        "django.middleware.csrf.CsrfViewMiddleware",
+        # "django.middleware.csrf.CsrfViewMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -210,9 +211,9 @@ class Common(Configuration):
             'rest_framework.permissions.IsAuthenticated',
         ],
         'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework.authentication.SessionAuthentication',
             'rest_framework_simplejwt.authentication.JWTAuthentication',
         )
+
     }
 
     # Django Rest Framework Simple JWT
@@ -232,8 +233,8 @@ class Common(Configuration):
         'JWK_URL': None,
         'LEEWAY': 0,
 
-        'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
-        'AUTH_HEADER_NAME': 'HTTP_X_ACCESS_TOKEN ',
+        # 'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+        # 'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION ',
         'USER_ID_FIELD': 'id',
         'USER_ID_CLAIM': 'user_id',
         'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
@@ -245,7 +246,7 @@ class Common(Configuration):
         'JTI_CLAIM': 'jti',
 
         'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-        'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+        'SLIDING_TOKEN_LIFETIME': timedelta(minutes=3),
         'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
     }
 
@@ -284,6 +285,11 @@ class Local(Common):
         )
     }
 
+    import sys
+    if 'test' in sys.argv or 'test_coverage' in sys.argv:  # Covers regular testing and django-coverage
+        DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
+
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -293,3 +299,4 @@ class Local(Common):
         self.SIMPLE_JWT.update({
             'SIGNING_KEY': self.SECRET_KEY,
         })
+
