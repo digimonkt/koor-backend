@@ -32,17 +32,19 @@ class Common(Configuration):
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
+        "corsheaders",
 
         # Third Party Apps
         'rest_framework',
         'rest_framework_simplejwt',
+        'rest_framework_simplejwt.token_blacklist',
     ]
 
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
         "django.contrib.sessions.middleware.SessionMiddleware",
         "django.middleware.common.CommonMiddleware",
-        "django.middleware.csrf.CsrfViewMiddleware",
+        "corsheaders.middleware.CorsMiddleware",
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -55,6 +57,14 @@ class Common(Configuration):
     ROOT_URLCONF = "KOOR.urls"
 
     WSGI_APPLICATION = "KOOR.wsgi.application"
+
+
+    # To prevent from the cross-origin resources sharing
+    # https://pypi.org/project/django-cors-headers/
+
+    CORS_ALLOW_CREDENTIALS = True
+
+    CORS_ORIGIN_WHITELIST = config('CORS_ORIGIN_WHITELIST').split(",")
 
 
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
@@ -201,7 +211,6 @@ class Common(Configuration):
             'rest_framework.permissions.IsAuthenticated',
         ],
         'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework.authentication.SessionAuthentication',
             'rest_framework_simplejwt.authentication.JWTAuthentication',
         )
     }
