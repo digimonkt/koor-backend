@@ -50,6 +50,9 @@
     ACCESS_TOKEN_LIFETIME=<minutes>
     REFRESH_TOKEN_LIFETIME=<days>
     ALGORITHM=<algorithm> # 'HS256', 'HS384', 'HS512'
+    
+    # CORS
+    CORS_ORIGIN_WHITELIST = <Your frontend domain>
 
     # Author, Manager and Stakeholder
     ORAGANIZATION=organization@example.com
