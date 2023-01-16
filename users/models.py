@@ -5,6 +5,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import BaseModel
+from .managers import UserManager
 from project_meta.models import Media
 
 
@@ -72,8 +73,7 @@ class User(AbstractUser, BaseModel):
     USERNAME_FIELD = 'email'  # set email as a username
     REQUIRED_FIELDS = []
 
-    # TODO: Add UserManager
-    # objects = UserManager()
+    objects = UserManager()
 
     def __str__(self):
         return str(self.id)  # return value when call model as primary key
@@ -82,3 +82,4 @@ class User(AbstractUser, BaseModel):
         verbose_name = "User"  # display table name
         verbose_name_plural = "Users"  # display table name as plural
         db_table = 'User'  # table name in DB
+
