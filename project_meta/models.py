@@ -108,3 +108,47 @@ class Skill(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Skill"
         verbose_name_plural = "Skills"
         db_table = "Skill"
+
+
+class Country(BaseModel, SoftDeleteModel, models.Model):
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = AutoSlugField(
+        populate_from='title',
+        always_update=True,
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+    currency_code = models.CharField(
+        verbose_name=_('Currency Code'),
+        max_length=5,
+        db_column="currency_code",
+    )
+    country_code = models.CharField(
+        verbose_name=_('Country Code'),
+        max_length=5,
+        db_column="country_code",
+    )
+    iso_code2 = models.CharField(
+        verbose_name=_('ISO Code 2'),
+        max_length=10,
+        db_column="iso_code2",
+    )
+    iso_code3 = models.CharField(
+        verbose_name=_('ISO Code 3'),
+        max_length=10,
+        db_column="iso_code3",
+    )
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Country"
+        verbose_name_plural = "Countries"
+        db_table = "Country"
