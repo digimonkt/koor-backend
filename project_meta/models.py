@@ -152,3 +152,33 @@ class Country(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Country"
         verbose_name_plural = "Countries"
         db_table = "Country"
+
+
+class City(BaseModel, SoftDeleteModel, models.Model):
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = AutoSlugField(
+        populate_from='title',
+        always_update=True,
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        on_delete=models.CASCADE(),
+        related_name='%(app_label)s_%(class)s'
+    )
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "City"
+        verbose_name_plural = "Cities"
+        db_table = "City"
