@@ -1,8 +1,11 @@
+from django.db import models
+from django.utils.translation import gettext as _
+
 from model_utils import (
     FieldTracker,
 )
 from model_utils.models import (
-    UUIDModel, TimeStampedModel
+    UUIDModel, TimeStampedModel, SoftDeletableModel
 )
 
 
@@ -41,6 +44,18 @@ class BaseModel(
     """
     # A FieldTracker allows querying for field changes since a model instance was last saved.
     tracker = FieldTracker()
+
+    class Meta:
+        abstract = True
+
+
+class SoftDeleteModel(SoftDeletableModel, models.Model):
+    active = models.BooleanField(
+        verbose_name=_('Active'),
+        default=True,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         abstract = True
