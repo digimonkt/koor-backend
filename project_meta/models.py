@@ -182,3 +182,27 @@ class City(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "City"
         verbose_name_plural = "Cities"
         db_table = "City"
+
+
+class EducationLevel(BaseModel, SoftDeleteModel, models.Model):
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = AutoSlugField(
+        populate_from='title',
+        always_update=True,
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Education Level"
+        verbose_name_plural = "Education Levels"
+        db_table = "EducationLevel"
