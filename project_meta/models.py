@@ -84,3 +84,27 @@ class Language(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Language"
         verbose_name_plural = "Languages"
         db_table = "Language"
+
+
+class Skill(BaseModel, SoftDeleteModel, models.Model):
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = AutoSlugField(
+        populate_from='title',
+        always_update=True,
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = "Skill"
+        verbose_name_plural = "Skills"
+        db_table = "Skill"
