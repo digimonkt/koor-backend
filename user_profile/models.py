@@ -57,6 +57,8 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         EducationLevel,
         verbose_name=_('Highest Education'),
         on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='%(app_label)s_%(class)sHighestEducations'
     )
     market_information_notification = models.BooleanField(
@@ -89,7 +91,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sJobSeeker'
+        related_name='%(app_label)s_%(class)sEmployer'
     )
     description = models.TextField(
         verbose_name=_('Description'),
@@ -126,6 +128,8 @@ class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
         Media,
         verbose_name=_('License File'),
         on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='%(app_label)s_%(class)sLicenseFiles'
     )
 
