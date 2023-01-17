@@ -6,7 +6,7 @@ from core.models import (
 )
 from users.models import User
 from project_meta.models import (
-    EducationLevel,
+    EducationLevel, Media
 )
 
 
@@ -77,3 +77,62 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Job Seeker Profile"
         verbose_name_plural = "Job Seeker Profiles"
         db_table = "JobSeekerProfile"
+
+
+class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
+    ORGANIZATION_TYPE_CHOICE = (
+        ('government', "Government"),
+        ('ngo', "NGO"),
+        ('business', "Business"),
+    )
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)sJobSeeker'
+    )
+    description = models.TextField(
+        verbose_name=_('Description'),
+        null=True,
+        blank=True,
+        db_column="description",
+    )
+    organization_type = models.CharField(
+        verbose_name=_('Organization Type'),
+        max_length=255,
+        db_column="organization_type",
+        choices=ORGANIZATION_TYPE_CHOICE,
+        blank=True,
+        null=True,
+    )
+    market_information_notification = models.BooleanField(
+        verbose_name=_('Market Information Notification'),
+        db_column="market_information_notification",
+        default=False
+    )
+    other_notification = models.BooleanField(
+        verbose_name=_('Other Notification'),
+        db_column="other_notification",
+        default=False
+    )
+    license_id = models.CharField(
+        verbose_name=_('License Id'),
+        max_length=255,
+        db_column="license_id",
+        null=True,
+        blank=True
+    )
+    license_id_file = models.ForeignKey(
+        Media,
+        verbose_name=_('License File'),
+        on_delete=models.SET_NULL,
+        related_name='%(app_label)s_%(class)sLicenseFiles'
+    )
+
+    def __str__(self):
+        return str(self.user) + "(" + str(self.organization_type) + ")"
+
+    class Meta:
+        verbose_name = "Employer Profile"
+        verbose_name_plural = "Employer Profiles"
+        db_table = "EmployerProfile"
