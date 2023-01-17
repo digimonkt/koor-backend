@@ -40,7 +40,10 @@ class Common(Configuration):
         # Project Apps
         'core.apps.CoreConfig',
         'project_meta.apps.ProjectMetaConfig',
+        'users.apps.UsersConfig',
     ]
+
+    AUTH_USER_MODEL = 'users.User'
 
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
@@ -79,6 +82,13 @@ class Common(Configuration):
         {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
         {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
         {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
+    ]
+
+    AUTHENTICATION_BACKENDS = [
+        # Custom Authentication Backend
+        'users.backends.MobileOrEmailBackend',
+
+        'django.contrib.auth.backends.ModelBackend',
     ]
 
     # Internationalization
