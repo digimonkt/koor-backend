@@ -171,7 +171,7 @@ class City(BaseModel, SoftDeleteModel, models.Model):
     country = models.ForeignKey(
         Country,
         verbose_name=_('Country'),
-        on_delete=models.CASCADE(),
+        on_delete=models.CASCADE,
         related_name='%(app_label)s_%(class)s'
     )
 

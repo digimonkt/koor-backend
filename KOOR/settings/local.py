@@ -36,6 +36,10 @@ class Common(Configuration):
         'rest_framework',
         'rest_framework_simplejwt',
         'rest_framework_simplejwt.token_blacklist',
+
+        # Project Apps
+        'core.apps.CoreConfig',
+        'project_meta.apps.ProjectMetaConfig',
     ]
 
     MIDDLEWARE = [
