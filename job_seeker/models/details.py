@@ -4,17 +4,17 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-from project_meta.models import Media, Language
+from project_meta.models import (
+    Media, Language, Skill)
 from users.models import User
 
 
 class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
-
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sEducationRecord'
+        related_name='%(app_label)s_%(class)sUser'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -58,12 +58,11 @@ class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
 
 
 class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
-
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sEmploymentRecord'
+        related_name='%(app_label)s_%(class)sUser'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -109,12 +108,11 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
 
 
 class Resume(BaseModel, SoftDeleteModel, models.Model):
-
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sResume'
+        related_name='%(app_label)s_%(class)sUser'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -147,7 +145,7 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sResume'
+        related_name='%(app_label)s_%(class)sUser'
     )
     language = models.ForeignKey(
         Language,
@@ -175,3 +173,28 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Job Seeker Language Proficiency"
         verbose_name_plural = "Job Seeker Language Proficiencies"
         db_table = "JobSeekerLanguageProficiency"
+
+
+class JobSeekerSkill(BaseModel, SoftDeleteModel, models.Model):
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)sUser'
+    )
+    skill = models.ForeignKey(
+        Skill,
+        verbose_name=_('Skill'),
+        on_delete=models.CASCADE,
+        db_column="skill",
+        related_name='%(app_label)s_%(class)sSkill'
+    )
+
+    def __str__(self):
+        return str(self.skill) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Job Seeker Skill"
+        verbose_name_plural = "Job Seeker Skills"
+        db_table = "JobSeekerSkill"
