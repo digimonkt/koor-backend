@@ -15,7 +15,7 @@ class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -64,7 +64,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -115,7 +115,7 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -127,7 +127,7 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('File Path'),
         on_delete=models.CASCADE,
         db_column="file_path",
-        related_name='%(app_label)s_%(class)sFilePath'
+        related_name='%(app_label)s_%(class)s_file_path'
     )
 
     def __str__(self):
@@ -150,14 +150,14 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     language = models.ForeignKey(
         Language,
         verbose_name=_('Language'),
         on_delete=models.CASCADE,
         db_column="language",
-        related_name='%(app_label)s_%(class)sLanguage'
+        related_name='%(app_label)s_%(class)s_language'
     )
     written = models.CharField(
         verbose_name=_('Written'),
@@ -187,14 +187,14 @@ class JobSeekerSkill(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     skill = models.ForeignKey(
         Skill,
         verbose_name=_('Skill'),
         on_delete=models.CASCADE,
         db_column="skill",
-        related_name='%(app_label)s_%(class)sSkill'
+        related_name='%(app_label)s_%(class)s_skill'
     )
 
     def __str__(self):
