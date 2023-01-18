@@ -14,7 +14,6 @@ class Media(BaseModel, models.Model):
         ('video', "Video"),
         ('document', "Document"),
     )
-
     file_path = models.FileField(
         verbose_name=_('File Path'),
         unique=True,
@@ -172,6 +171,7 @@ class City(BaseModel, SoftDeleteModel, models.Model):
         Country,
         verbose_name=_('Country'),
         on_delete=models.CASCADE,
+        db_column="country",
         related_name='%(app_label)s_%(class)sCountry'
     )
 
