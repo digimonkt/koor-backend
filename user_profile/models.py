@@ -38,14 +38,14 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('Date of Birth'),
         blank=True,
         null=True,
-        default='dob'
+        db_column='dob'
     )
     employment_status = models.CharField(
         verbose_name=_('Employment Status'),
         max_length=255,
         db_column="employment_status",
         choices=EMPLOYMENT_STATUS_CHOICE,
-        default='employment_status'
+        default='employed'
     )
     description = models.TextField(
         verbose_name=_('Description'),
