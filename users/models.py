@@ -26,6 +26,7 @@ class User(AbstractUser, BaseModel):
         verbose_name=_('Email Address'),
         blank=True,
         null=True,
+        db_column="email"
     )
     mobile_number = models.CharField(
         verbose_name=_('Mobile Number'),
@@ -63,6 +64,7 @@ class User(AbstractUser, BaseModel):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
+        db_column="image",
         related_name='%(app_label)s_%(class)sImage'
     )
     USERNAME_FIELD = 'email'  # set email as a username
@@ -84,6 +86,7 @@ class UserSession(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
+        db_column="user",
         related_name='%(app_label)s_%(class)sUser'
     )
     ip_address = models.GenericIPAddressField(
@@ -92,15 +95,19 @@ class UserSession(BaseModel, SoftDeleteModel, models.Model):
         unpack_ipv4=False,
         null=True,
         blank=True,
+        db_column="ip_address"
     )
     agent = models.JSONField(
         verbose_name=_('Agent'),
         null=True,
+        db_column="agent"
     )
     expire_at = models.DateTimeField(
-        verbose_name=_('Created At'),
+        verbose_name=_('Expire At'),
         blank=True,
-        null=True
+        null=True,
+        db_column="expire_at"
+
     )
 
     def __str__(self):
