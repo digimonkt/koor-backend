@@ -65,7 +65,7 @@ class User(AbstractUser, BaseModel):
         blank=True,
         on_delete=models.SET_NULL,
         db_column="image",
-        related_name='%(app_label)s_%(class)sImage'
+        related_name='%(app_label)s_%(class)s_image'
     )
     USERNAME_FIELD = 'email'  # set email as a username
     REQUIRED_FIELDS = []
@@ -87,7 +87,7 @@ class UserSession(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     ip_address = models.GenericIPAddressField(
         verbose_name=_('IP Address'),
