@@ -24,7 +24,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sJobSeeker'
+        related_name='%(app_label)s_%(class)sUser'
     )
     gender = models.CharField(
         verbose_name=_('Gender'),
@@ -91,7 +91,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)sEmployer'
+        related_name='%(app_label)s_%(class)sUser'
     )
     description = models.TextField(
         verbose_name=_('Description'),
