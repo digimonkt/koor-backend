@@ -76,6 +76,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="budget_pay_period",
         null=True,
         blank=True,
+        max_length=255,
         choices=PAY_PERIOD_CHOICE,
     )
     description = models.TextField(
@@ -223,6 +224,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="status",
         null=True,
         blank=True,
+        max_length=25,
         choices=STATUS_CHOICE,
     )
 
