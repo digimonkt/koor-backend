@@ -14,6 +14,7 @@ class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
+        db_column="user",
         related_name='%(app_label)s_%(class)sUser'
     )
     title = models.CharField(
@@ -62,6 +63,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
+        db_column="user",
         related_name='%(app_label)s_%(class)sUser'
     )
     title = models.CharField(
@@ -112,6 +114,7 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
+        db_column="user",
         related_name='%(app_label)s_%(class)sUser'
     )
     title = models.CharField(
@@ -123,6 +126,7 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         Media,
         verbose_name=_('File Path'),
         on_delete=models.CASCADE,
+        db_column="file_path",
         related_name='%(app_label)s_%(class)sFilePath'
     )
 
@@ -145,12 +149,14 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
+        db_column="user",
         related_name='%(app_label)s_%(class)sUser'
     )
     language = models.ForeignKey(
         Language,
         verbose_name=_('Language'),
         on_delete=models.CASCADE,
+        db_column="language",
         related_name='%(app_label)s_%(class)sLanguage'
     )
     written = models.CharField(
