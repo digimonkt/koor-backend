@@ -52,7 +52,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     title = models.CharField(
         verbose_name=_('Title'),
@@ -89,14 +89,14 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('Country'),
         on_delete=models.CASCADE,
         db_column="country",
-        related_name='%(app_label)s_%(class)sCountry'
+        related_name='%(app_label)s_%(class)s_country'
     )
     city = models.ForeignKey(
         City,
         verbose_name=_('City'),
         on_delete=models.CASCADE,
         db_column="city",
-        related_name='%(app_label)s_%(class)sCity'
+        related_name='%(app_label)s_%(class)s_city'
     )
     address = models.TextField(
         verbose_name=_('Address'),
@@ -107,7 +107,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('Job Category 1'),
         on_delete=models.CASCADE,
         db_column="job_category_1",
-        related_name='%(app_label)s_%(class)sJobCategory1'
+        related_name='%(app_label)s_%(class)s_job_category_1'
     )
     job_category_2 = models.ForeignKey(
         JobCategory,
@@ -116,7 +116,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="job_category_2",
         null=True,
         blank=True,
-        related_name='%(app_label)s_%(class)sJobCategory2'
+        related_name='%(app_label)s_%(class)s_job_category_2'
     )
     is_full_time = models.BooleanField(
         verbose_name=_('Is Full-time'),
@@ -166,14 +166,14 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="highest_education",
         null=True,
         blank=True,
-        related_name='%(app_label)s_%(class)sHighestEducation'
+        related_name='%(app_label)s_%(class)s_highest_education'
     )
     language_1 = models.ForeignKey(
         Language,
         verbose_name=_('Language 1'),
         on_delete=models.CASCADE,
         db_column="language_1",
-        related_name='%(app_label)s_%(class)sLanguage1'
+        related_name='%(app_label)s_%(class)s_language_1'
     )
     language_2 = models.ForeignKey(
         Language,
@@ -182,7 +182,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="language_2",
         null=True,
         blank=True,
-        related_name='%(app_label)s_%(class)sLanguage2'
+        related_name='%(app_label)s_%(class)s_language_2'
     )
     language_3 = models.ForeignKey(
         Language,
@@ -191,14 +191,14 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="language_3",
         null=True,
         blank=True,
-        related_name='%(app_label)s_%(class)sLanguage3'
+        related_name='%(app_label)s_%(class)s_language_3'
     )
     skill_1 = models.ForeignKey(
         Skill,
         verbose_name=_('Skill 1'),
         on_delete=models.CASCADE,
         db_column="skill_1",
-        related_name='%(app_label)s_%(class)sSkill1'
+        related_name='%(app_label)s_%(class)s_skill_1'
     )
     skill_2 = models.ForeignKey(
         Skill,
@@ -207,7 +207,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="skill_2",
         null=True,
         blank=True,
-        related_name='%(app_label)s_%(class)sSkill2'
+        related_name='%(app_label)s_%(class)s_skill_2'
     )
     skill_3 = models.ForeignKey(
         Skill,
@@ -216,7 +216,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_column="skill_3",
         null=True,
         blank=True,
-        related_name='%(app_label)s_%(class)sSkill3'
+        related_name='%(app_label)s_%(class)s_skill_3'
     )
     status = models.CharField(
         verbose_name=_('Status'),
@@ -233,3 +233,28 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Job Detail"
         verbose_name_plural = "Job Details"
         db_table = "JobDetails"
+
+
+class JobAttachmentsItem(BaseModel, SoftDeleteModel, models.Model):
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    attachment = models.ForeignKey(
+        Media,
+        verbose_name=_('Attachment'),
+        on_delete=models.CASCADE,
+        db_column="attachment",
+        related_name='%(app_label)s_%(class)s_attachment'
+    )
+
+    def __str__(self):
+        return str(self.job)
+
+    class Meta:
+        verbose_name = "Job Attachments Item"
+        verbose_name_plural = "Job Attachments Items"
+        db_table = "JobAttachmentsItem"
