@@ -43,6 +43,7 @@ class Common(Configuration):
         'users.apps.UsersConfig',
         'user_profile.apps.UserProfileConfig',
         'job_seeker.apps.JobSeekerConfig',
+        'job.apps.JobConfig',
     ]
 
     AUTH_USER_MODEL = 'users.User'
