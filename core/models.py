@@ -54,7 +54,8 @@ class SoftDeleteModel(SoftDeletableModel, models.Model):
         verbose_name=_('Active'),
         default=True,
         blank=True,
-        null=True
+        null=True,
+        db_column="active"
     )
 
     class Meta:
