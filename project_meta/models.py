@@ -172,7 +172,7 @@ class City(BaseModel, SoftDeleteModel, models.Model):
         Country,
         verbose_name=_('Country'),
         on_delete=models.CASCADE,
-        related_name='%(app_label)s_%(class)s'
+        related_name='%(app_label)s_%(class)sCountry'
     )
 
     def __str__(self):
