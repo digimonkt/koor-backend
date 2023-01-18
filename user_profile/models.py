@@ -25,7 +25,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     gender = models.CharField(
         verbose_name=_('Gender'),
@@ -61,7 +61,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         null=True,
         blank=True,
         db_column="highest_education",
-        related_name='%(app_label)s_%(class)sHighestEducations'
+        related_name='%(app_label)s_%(class)s_highest_educations'
     )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
@@ -94,7 +94,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
-        related_name='%(app_label)s_%(class)sUser'
+        related_name='%(app_label)s_%(class)s_user'
     )
     description = models.TextField(
         verbose_name=_('Description'),
@@ -134,7 +134,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
         null=True,
         blank=True,
         db_column="license_id_file",
-        related_name='%(app_label)s_%(class)sLicenseFiles'
+        related_name='%(app_label)s_%(class)s_license_files'
     )
 
     def __str__(self):
