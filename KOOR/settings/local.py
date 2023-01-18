@@ -42,6 +42,7 @@ class Common(Configuration):
         'project_meta.apps.ProjectMetaConfig',
         'users.apps.UsersConfig',
         'user_profile.apps.UserProfileConfig',
+        'job_seeker.apps.JobSeekerConfig',
     ]
 
     AUTH_USER_MODEL = 'users.User'
