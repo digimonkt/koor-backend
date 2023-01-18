@@ -22,7 +22,7 @@ class MobileOrEmailBackend(BaseBackend):
         try:
 
             # Try to fetch the user by searching the username or email field
-            user = UserModel.objects.get(Q(mobile=identifier) | Q(email=identifier))
+            user = UserModel.objects.get(Q(mobile_number=identifier) | Q(email=identifier))
             if user.check_password(password) and user.is_active:
                 return user
         except UserModel.DoesNotExist:
