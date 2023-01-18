@@ -4,7 +4,7 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-from project_meta.models import Media
+from project_meta.models import Media, Language
 from users.models import User
 
 
@@ -135,3 +135,43 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Resume"
         verbose_name_plural = "Resumes"
         db_table = "Resume"
+
+
+class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
+    FLUENCY_CHOICE = (
+        ('basic', "Basic"),
+        ('conversational', "Conversational"),
+        ('fluent', "Fluent"),
+    )
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)sResume'
+    )
+    language = models.ForeignKey(
+        Language,
+        verbose_name=_('Language'),
+        on_delete=models.CASCADE,
+        related_name='%(app_label)s_%(class)sLanguage'
+    )
+    written = models.CharField(
+        verbose_name=_('Written'),
+        max_length=255,
+        db_column="written",
+        choices=FLUENCY_CHOICE,
+    )
+    spoken = models.CharField(
+        verbose_name=_('Spoken'),
+        max_length=255,
+        db_column="spoken",
+        choices=FLUENCY_CHOICE,
+    )
+
+    def __str__(self):
+        return str(self.language) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Job Seeker Language Proficiency"
+        verbose_name_plural = "Job Seeker Language Proficiencies"
+        db_table = "JobSeekerLanguageProficiency"
