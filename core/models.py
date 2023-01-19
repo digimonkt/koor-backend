@@ -12,10 +12,6 @@ from model_utils.models import (
 # Model Mixin
 
 def upload_directory_path(instance, filename):
-    """
-    Directory path function: Return unique path name for file uploading.
-    Example:- instance_name/file_name
-    """
     return '{0}/{1}'.format(instance, filename)
 
 
@@ -54,12 +50,6 @@ class BaseModel(
 
 
 class SoftDeleteModel(SoftDeletableModel, models.Model):
-    """
-    Soft Delete Model Class: This is an abstract class model use for SoftDeletableModel and active field into model
-    class.
-    SoftDeletableModel : - with the help of this function we remove record partially, and we easily store this
-    partially removed record into table.
-    """
     active = models.BooleanField(
         verbose_name=_('Active'),
         default=True,

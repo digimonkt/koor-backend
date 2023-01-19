@@ -10,10 +10,6 @@ from users.models import User
 
 
 class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
-    """
-        This class created for get education record of the Job Seeker.
-        Here we have some useful field like:- user, title, start_date, end_date, institute, organization, description, .
-    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -63,10 +59,6 @@ class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
 
 
 class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
-    """
-        This class created for get employment record of the Job Seeker.
-        Here we have some useful field like:- user, title, start_date, end_date, present, organization, description, .
-    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -118,11 +110,6 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
 
 
 class Resume(BaseModel, SoftDeleteModel, models.Model):
-    """
-        This class created for resume of the Job Seeker.
-        Here we have some useful field like:- user, title, file_path.
-            - file_path is used for get file details.
-    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -153,10 +140,6 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
 
 
 class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
-    """
-        This class created for get Job Seeker language proficiency.
-        Here we have some useful field like:- user, language, written, spoken.
-    """
     FLUENCY_CHOICE = (
         ('basic', "Basic"),
         ('conversational', "Conversational"),
@@ -199,10 +182,6 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
 
 
 class JobSeekerSkill(BaseModel, SoftDeleteModel, models.Model):
-    """
-        This class created for get Job Seeker skill.
-        Here we have some useful field like:- user, skill.
-    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
