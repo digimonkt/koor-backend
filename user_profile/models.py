@@ -11,6 +11,13 @@ from project_meta.models import (
 
 
 class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
+    """
+    This class created for get JobSeeker profile detail.
+    Here we have some useful field like:- user, gender, dob, employment_status, description, highest_education,
+    market_information_notification, job_notification.
+        - user is used for JobSeeker authenticate detail like: email, mobile, display name, profile role etc.
+        - highest_education is used for get education level of JobSeeker.
+    """
     GENDER_CHOICE = (
         ('male', "Male"),
         ('female', "Female"),
@@ -84,6 +91,13 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
 
 
 class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
+    """
+    This class created for get employer profile detail.
+    Here we have some useful field like:- user, description, organization_type, market_information_notification,
+    other_notification, license_id, license_id_file.
+        - user is used for JobSeeker authenticate detail like: email, mobile, display name, profile role etc.
+        - license_id_file is used for get file of the license which is store in media table.
+    """
     ORGANIZATION_TYPE_CHOICE = (
         ('government', "Government"),
         ('ngo', "NGO"),

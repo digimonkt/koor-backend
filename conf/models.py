@@ -7,6 +7,11 @@ from core.models import (
 
 
 class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
+    """
+    This class created for get smtp settings information.
+    Here we have some useful field like:- smtp_host, smtp_user, smtp_port, smtp_password.
+    We return smtp_host as default string.
+    """
     smtp_host = models.CharField(
         verbose_name=_('SMTP Host'),
         max_length=255,
