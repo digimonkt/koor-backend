@@ -9,7 +9,7 @@ class Development(Local):
     Check the detail documentation for the variable @ https://docs.djangoproject.com/en/4.1/ref/settings
     """
 
-    ALLOWED_HOSTS = ["*", ]
+    ALLOWED_HOSTS = [config('ALLOWED_HOSTS')]
 
     # A list of all the people who get code error notifications.
     # Django emails these people the details of exceptions raised in the request/response cycle.
