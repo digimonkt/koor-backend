@@ -58,6 +58,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
     STATUS_CHOICE = (
         ('active', "Active"),
         ('inactive', "Inactive"),
+        ('hold', "Hold"),
         ('deleted', "Deleted"),
     )
     user = models.ForeignKey(
