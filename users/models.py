@@ -103,6 +103,9 @@ class UserStampedModel(models.Model):
         related_name="%(app_label)s_%(class)s_updated_by",
     )
 
+    class Meta:
+        abstract = True
+
 
 class UserSession(BaseModel, SoftDeleteModel, models.Model):
     user = models.ForeignKey(
