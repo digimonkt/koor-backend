@@ -16,6 +16,11 @@ from .managers import UserManager
 
 # Create Auth User Model Start
 class User(AbstractUser, BaseModel):
+    """
+    This class created for get detail of all user like: admin, JobSeeker, Employer etc.
+    Here we have some useful field like:- email, mobile_number, country_code, display_name, profile_role, image.
+        - we can get all other default authenticate filed in this user model class.
+    """
     ROLE_TYPE_CHOICE = (
         ('admin', "Admin"),
         ('job_seeker', "Job Seeker"),
@@ -113,6 +118,10 @@ class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
 
 
 class UserSession(BaseModel, SoftDeleteModel, models.Model):
+    """
+    This class created for get user session details like: login ip address, login agent, login is expired time etc.
+    Here we have some useful field like:- user, ip_address, agent, expire_at.
+    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),

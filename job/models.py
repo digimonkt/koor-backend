@@ -11,6 +11,12 @@ from users.models import User, TimeStampedModel
 
 
 class JobCategory(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This class created for get job category.
+    Here we have some useful field like:- title, slug.
+        - title is the job category name field.
+        - slug is used in url link for particular category.
+    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -35,6 +41,13 @@ class JobCategory(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
 
 
 class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This class created for get job details.
+        Here we have some useful field like:- user, title, budget_currency,
+    budget_amount, budget_pay_period, description, country, city, address, job_category_1, job_category_2,
+    is_full_time, is_part_time, has_contract, contact_email, contact_phone, contact_whatsapp, highest_education,
+    language_1, language_2, language_3, skill_1, skill_2, skill_3, status, .
+    """
     PAY_PERIOD_CHOICE = (
         ('yearly', "Yearly"),
         ('quarterly', "Quarterly"),
@@ -239,6 +252,12 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
 
 
 class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This class created for get attachments item detail which is uploaded for job.
+    Here we have some useful field like:- job, attachment.
+        - job is the used for get job details.
+        - attachment is used for get file details.
+    """
     job = models.ForeignKey(
         JobDetails,
         verbose_name=_('Job'),
