@@ -9,12 +9,6 @@ from core.models import (
 
 
 class Media(BaseModel, models.Model):
-    """
-        This class created for get media detail.
-        Here we have some useful field like:- file_path, media_type.
-            - file_path is the path of local storage where file are store.
-            - media_type show the file's type like Image, Video, Document.
-    """
     MEDIA_TYPE_CHOICE = (
         ('image', "Image"),
         ('video', "Video"),
@@ -44,12 +38,6 @@ class Media(BaseModel, models.Model):
 
 
 class Tag(BaseModel, SoftDeleteModel, models.Model):
-    """
-    This class created for get tag detail.
-    Here we have some useful field like:- title, slug.
-        - title is the tag name field.
-        - slug is used in url link for particular category.
-    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -74,12 +62,6 @@ class Tag(BaseModel, SoftDeleteModel, models.Model):
 
 
 class Language(BaseModel, SoftDeleteModel, models.Model):
-    """
-    This class created for get language detail.
-    Here we have some useful field like:- title, slug.
-        - title is the language name field.
-        - slug is used in url link for particular category.
-    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -104,12 +86,6 @@ class Language(BaseModel, SoftDeleteModel, models.Model):
 
 
 class Skill(BaseModel, SoftDeleteModel, models.Model):
-    """
-    This class created for get skill detail.
-    Here we have some useful field like:- title, slug.
-        - title is the skill name field.
-        - slug is used in url link for particular category.
-    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -134,10 +110,6 @@ class Skill(BaseModel, SoftDeleteModel, models.Model):
 
 
 class Country(BaseModel, SoftDeleteModel, models.Model):
-    """
-        This class created for get country detail.
-        Here we have some useful field like:- title, slug, currency_code, country_code, iso_code2, iso_code3.
-    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -182,11 +154,6 @@ class Country(BaseModel, SoftDeleteModel, models.Model):
 
 
 class City(BaseModel, SoftDeleteModel, models.Model):
-    """
-            This class created for get country detail.
-            Here we have some useful field like:- title, slug, country.
-                - country is used as a reference key field of Country table.
-    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -218,12 +185,6 @@ class City(BaseModel, SoftDeleteModel, models.Model):
 
 
 class EducationLevel(BaseModel, SoftDeleteModel, models.Model):
-    """
-    This class created for get education level detail.
-    Here we have some useful field like:- title, slug.
-        - title is the level name field.
-        - slug is used in url link for particular education level.
-    """
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
