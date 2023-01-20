@@ -4,6 +4,11 @@ from typing import Any
 
 # Create Auth User according to Developer Code
 class UserManager(BaseUserManager):
+    """
+    class UserManager is called by the django auth.
+    Whenever we create authenticate superuser with email and password, username is not needed for superuser.
+    We create authenticate user with 'email or mobile' and 'password', username is not required.
+    """
     use_in_migrations = True
 
     # function for create user or superuser
