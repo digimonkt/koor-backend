@@ -5,7 +5,7 @@ from model_utils import (
     FieldTracker,
 )
 from model_utils.models import (
-    UUIDModel, TimeStampedModel, SoftDeletableModel
+    UUIDModel, SoftDeletableModel
 )
 
 
@@ -19,10 +19,7 @@ def upload_directory_path(instance, filename):
     return '{0}/{1}'.format(instance, filename)
 
 
-class BaseModel(
-    UUIDModel,
-    TimeStampedModel
-):
+class BaseModel(UUIDModel):
     """
     An abstract base class model that provides self updating, fields.
 
@@ -36,7 +33,6 @@ class BaseModel(
     class Post(models.Model):
         title = models.CharField(max_length=100)
         tracker = FieldTracker()
-
     >>> a = Post.objects.create(title='First Post')
     >>> a.title = 'Welcome'
     >>> a.tracker.previous('title')

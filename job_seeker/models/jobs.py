@@ -6,7 +6,7 @@ from core.models import (
 )
 from job.models import JobDetails
 from project_meta.models import Media
-from users.models import User
+from users.models import User, TimeStampedModel
 
 
 class SavedJob(BaseModel, SoftDeleteModel, models.Model):

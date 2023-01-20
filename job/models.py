@@ -7,7 +7,7 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill, Country, City, EducationLevel)
-from users.models import User
+from users.models import User, TimeStampedModel
 
 
 class JobCategory(BaseModel, SoftDeleteModel, models.Model):
@@ -58,6 +58,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
     STATUS_CHOICE = (
         ('active', "Active"),
         ('inactive', "Inactive"),
+        ('hold', "Hold"),
         ('deleted', "Deleted"),
     )
     user = models.ForeignKey(
