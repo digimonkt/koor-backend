@@ -6,10 +6,10 @@ from core.models import (
 )
 from job.models import JobDetails
 from project_meta.models import Media
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 
 
-class SavedJob(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
+class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -34,7 +34,7 @@ class SavedJob(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
         db_table = "SavedJob"
 
 
-class AppliedJob(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
+class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
