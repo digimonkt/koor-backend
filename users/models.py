@@ -86,6 +86,32 @@ class User(AbstractUser, BaseModel):
         db_table = 'User'  # table name in DB
 
 
+class UserStampedModel(models.Model):
+    """
+    An abstract base class model that provides self updating ``created_by`` and ``updated_by`` fields.
+    """
+
+    created_by = models.ForeignKey(
+        User,
+        verbose_name=_('Created By'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='%(app_label)s_%(class)s_created_by'
+    )
+    updated_by = models.ForeignKey(
+        User,
+        verbose_name=_('Updated By'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="%(app_label)s_%(class)s_updated_by",
+    )
+
+    class Meta:
+        abstract = True
+
+
 class UserSession(BaseModel, SoftDeleteModel, models.Model):
     """
     This class created for get user session details like: login ip address, login agent, login is expired time etc.

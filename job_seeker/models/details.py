@@ -6,7 +6,7 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill)
-from users.models import User
+from users.models import User, UserStampedModel
 
 
 class EducationRecord(BaseModel, SoftDeleteModel, models.Model):

@@ -7,7 +7,7 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill, Country, City, EducationLevel)
-from users.models import User
+from users.models import User, UserStampedModel
 
 
 class JobCategory(BaseModel, SoftDeleteModel, models.Model):
