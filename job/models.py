@@ -7,10 +7,10 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill, Country, City, EducationLevel)
-from users.models import User
+from users.models import User, UserStampedModel
 
 
-class JobCategory(BaseModel, SoftDeleteModel, models.Model):
+class JobCategory(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
     title = models.CharField(
         verbose_name=_('Title'),
         max_length=255,
@@ -34,7 +34,7 @@ class JobCategory(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobCategory"
 
 
-class JobDetails(BaseModel, SoftDeleteModel, models.Model):
+class JobDetails(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
     PAY_PERIOD_CHOICE = (
         ('yearly', "Yearly"),
         ('quarterly', "Quarterly"),
@@ -45,6 +45,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
     STATUS_CHOICE = (
         ('active', "Active"),
         ('inactive', "Inactive"),
+        ('hold', "Hold"),
         ('deleted', "Deleted"),
     )
     user = models.ForeignKey(
@@ -237,7 +238,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobDetails"
 
 
-class JobAttachmentsItem(BaseModel, SoftDeleteModel, models.Model):
+class JobAttachmentsItem(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
     job = models.ForeignKey(
         JobDetails,
         verbose_name=_('Job'),
