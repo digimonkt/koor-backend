@@ -9,7 +9,7 @@ from project_meta.models import Media
 from users.models import User, TimeStampedModel
 
 
-class SavedJob(BaseModel, SoftDeleteModel, models.Model):
+class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for get saved job detail of JobSeeker.
         Here we have some useful field like:- user, job.
@@ -38,7 +38,7 @@ class SavedJob(BaseModel, SoftDeleteModel, models.Model):
         db_table = "SavedJob"
 
 
-class AppliedJob(BaseModel, SoftDeleteModel, models.Model):
+class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for get applied job detail of JobSeeker.
         Here we have some useful field like:- user, job, shortlisted_at, rejected_at, resume.

@@ -117,7 +117,7 @@ class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
         abstract = True
 
 
-class UserSession(BaseModel, SoftDeleteModel, models.Model):
+class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get user session details like: login ip address, login agent, login is expired time etc.
     Here we have some useful field like:- user, ip_address, agent, expire_at.
