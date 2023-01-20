@@ -7,7 +7,7 @@ from configurations import Configuration
 from pathlib import Path
 from decouple import config
 
-    
+
 class Common(Configuration):
     """
     Common settings for KOOR project.
@@ -19,10 +19,8 @@ class Common(Configuration):
     https://docs.djangoproject.com/en/4.1/ref/settings/
     """
 
-
     # Build paths inside the project like this: BASE_DIR / 'subdir'.
     BASE_DIR = Path(__file__).resolve().parent.parent
-
 
     # Application definition
     INSTALLED_APPS = [
@@ -39,9 +37,22 @@ class Common(Configuration):
         'rest_framework_simplejwt',
         'rest_framework_simplejwt.token_blacklist',
 
+<<<<<<< HEAD
         # Custom Apps
         "core.apps.CoreConfig",
+=======
+        # Project Apps
+        'core.apps.CoreConfig',
+        'project_meta.apps.ProjectMetaConfig',
+        'users.apps.UsersConfig',
+        'user_profile.apps.UserProfileConfig',
+        'job_seeker.apps.JobSeekerConfig',
+        'job.apps.JobConfig',
+        'employer.apps.EmployerConfig',
+>>>>>>> 1ef3429134d1dcebcc8bb852127891a050e905a5
     ]
+
+    AUTH_USER_MODEL = 'users.User'
 
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
@@ -61,7 +72,6 @@ class Common(Configuration):
 
     WSGI_APPLICATION = "KOOR.wsgi.application"
 
-
     # To prevent from the cross-origin resources sharing
     # https://pypi.org/project/django-cors-headers/
 
@@ -69,22 +79,26 @@ class Common(Configuration):
 
     CORS_ORIGIN_WHITELIST = config('CORS_ORIGIN_WHITELIST').split(",")
 
-
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
     ATOMIC_REQUESTS = True
-
 
     # Password validation
     # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
     AUTH_PASSWORD_VALIDATORS = [
-        {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",},
-        {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-        {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-        {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+        {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator", },
+        {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", },
+        {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator", },
+        {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator", },
     ]
 
+    AUTHENTICATION_BACKENDS = [
+        # Custom Authentication Backend
+        'users.backends.MobileOrEmailBackend',
+
+        'django.contrib.auth.backends.ModelBackend',
+    ]
 
     # Internationalization
     # https://docs.djangoproject.com/en/4.1/topics/i18n/
@@ -130,13 +144,11 @@ class Common(Configuration):
         },
     ]
 
-
     # Default primary key field type
     # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
     DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-    
     # Logging
     # https://docs.djangoproject.com/en/4.1/ref/settings/#std-setting-LOGGING
 
@@ -197,7 +209,6 @@ class Common(Configuration):
             },
         }
     }
-
 
     # Django Rest Framework
     # https://www.django-rest-framework.org/
@@ -261,7 +272,6 @@ class Local(Common):
     Check the detail documentation for the variable @ https://docs.djangoproject.com/en/4.1/ref/settings
     """
 
-
     # Quick-start development settings - unsuitable for production
     # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -272,7 +282,7 @@ class Local(Common):
     DEBUG = strtobool(config('DEBUG'))
 
     ALLOWED_HOSTS = []
-    
+
     # Email Backend
     # https://docs.djangoproject.com/en/4.1/ref/settings/#email-backend
 

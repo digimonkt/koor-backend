@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class ProjectMetaConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
-    name = "project_meta"
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'project_meta'

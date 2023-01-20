@@ -40,15 +40,15 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(
-            display_name=display_name,
             email=email,
+            display_name=display_name,
             mobile=mobile,
             password=password,
             profile_role=profile_role,
             **extra_fields
         )
 
-    # function for add super user's other field
+    # function for add superusers other field
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)

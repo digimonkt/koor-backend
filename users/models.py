@@ -4,9 +4,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext as _
 
-from core.models import BaseModel
-from .managers import UserManager
+from core.models import (
+    BaseModel, SoftDeleteModel
+)
 from project_meta.models import Media
+
+from .managers import UserManager
 
 
 # Create Auth User Model Start
@@ -22,26 +25,34 @@ class User(AbstractUser, BaseModel):
     first_name = None
     last_name = None
     email = models.EmailField(
-        _('Email Address'),
+        verbose_name=_('Email Address'),
         blank=True,
         null=True,
+        db_column="email"
     )
-    mobile = models.CharField(
-        _('Mobile Number'),
+    mobile_number = models.CharField(
+        verbose_name=_('Mobile Number'),
         max_length=13,
         blank=True,
         null=True,
         db_column="mobile_number"
     )
+    country_code = models.CharField(
+        verbose_name=_('Country Code'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="country_code"
+    )
     display_name = models.CharField(
-        _('Full Name'),
+        verbose_name=_('Display Name'),
         max_length=250,
         blank=True,
         null=True,
         db_column="display_name"
     )
     profile_role = models.CharField(
-        _('Role'),
+        verbose_name=_('Profile Role'),
         max_length=250,
         blank=True,
         null=True,
@@ -49,26 +60,14 @@ class User(AbstractUser, BaseModel):
         choices=ROLE_TYPE_CHOICE,
         default='admin'
     )
-    address = models.TextField(
-        _('Address'),
-        blank=True,
-        null=True,
-        db_column="address"
-    )
-    country_code = models.CharField(
-        _('Country Code'),
-        max_length=13,
-        blank=True,
-        null=True,
-        db_column="country_code"
-    )
     image = models.ForeignKey(
         Media,
-        verbose_name=_('Created By'),
+        verbose_name=_('Image'),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name='%(app_label)s_%(class)sCreatedBy'
+        db_column="image",
+        related_name='%(app_label)s_%(class)s_image'
     )
     USERNAME_FIELD = 'email'  # set email as a username
     REQUIRED_FIELDS = []
@@ -83,3 +82,66 @@ class User(AbstractUser, BaseModel):
         verbose_name_plural = "Users"  # display table name as plural
         db_table = 'User'  # table name in DB
 
+
+class UserStampedModel(models.Model):
+    """
+    An abstract base class model that provides self updating ``created_by`` and ``updated_by`` fields.
+    """
+
+    created_by = models.ForeignKey(
+        User,
+        verbose_name=_('Created By'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='%(app_label)s_%(class)s_created_by'
+    )
+    updated_by = models.ForeignKey(
+        User,
+        verbose_name=_('Updated By'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="%(app_label)s_%(class)s_updated_by",
+    )
+
+    class Meta:
+        abstract = True
+
+
+class UserSession(BaseModel, SoftDeleteModel, models.Model):
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    ip_address = models.GenericIPAddressField(
+        verbose_name=_('IP Address'),
+        protocol='both',
+        unpack_ipv4=False,
+        null=True,
+        blank=True,
+        db_column="ip_address"
+    )
+    agent = models.JSONField(
+        verbose_name=_('Agent'),
+        null=True,
+        db_column="agent"
+    )
+    expire_at = models.DateTimeField(
+        verbose_name=_('Expire At'),
+        blank=True,
+        null=True,
+        db_column="expire_at"
+
+    )
+
+    def __str__(self):
+        return str(self.ip_address) + "(" + str(self.agent) + ")"
+
+    class Meta:
+        verbose_name = "User Session"
+        verbose_name_plural = "User Sessions"
+        db_table = "UserSession"
