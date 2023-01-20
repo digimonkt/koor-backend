@@ -4,13 +4,13 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 from project_meta.models import (
     EducationLevel, Media
 )
 
 
-class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
+class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get JobSeeker profile detail.
     Here we have some useful field like:- user, gender, dob, employment_status, description, highest_education,
@@ -90,7 +90,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobSeekerProfile"
 
 
-class EmployerProfile(BaseModel, SoftDeleteModel, models.Model):
+class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get employer profile detail.
     Here we have some useful field like:- user, description, organization_type, market_information_notification,

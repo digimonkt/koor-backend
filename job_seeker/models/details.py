@@ -6,10 +6,10 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill)
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 
 
-class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
+class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for get education record of the Job Seeker.
         Here we have some useful field like:- user, title, start_date, end_date, institute, organization, description, .
@@ -62,7 +62,7 @@ class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
         db_table = "EducationRecord"
 
 
-class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
+class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for get employment record of the Job Seeker.
         Here we have some useful field like:- user, title, start_date, end_date, present, organization, description, .
@@ -117,7 +117,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
         db_table = "EmploymentRecord"
 
 
-class Resume(BaseModel, SoftDeleteModel, models.Model):
+class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for resume of the Job Seeker.
         Here we have some useful field like:- user, title, file_path.
@@ -152,7 +152,7 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         db_table = "Resume"
 
 
-class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
+class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for get Job Seeker language proficiency.
         Here we have some useful field like:- user, language, written, spoken.
@@ -198,7 +198,7 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobSeekerLanguageProficiency"
 
 
-class JobSeekerSkill(BaseModel, SoftDeleteModel, models.Model):
+class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
         This class created for get Job Seeker skill.
         Here we have some useful field like:- user, skill.

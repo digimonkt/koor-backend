@@ -1,12 +1,14 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
+from users.models import TimeStampedModel
+
 from core.models import (
     BaseModel, SoftDeleteModel
 )
 
 
-class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
+class SMTPSetting(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get smtp settings information.
     Here we have some useful field like:- smtp_host, smtp_user, smtp_port, smtp_password.

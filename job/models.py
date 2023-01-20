@@ -7,10 +7,10 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill, Country, City, EducationLevel)
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 
 
-class JobCategory(BaseModel, SoftDeleteModel, models.Model):
+class JobCategory(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get job category.
     Here we have some useful field like:- title, slug.
@@ -40,7 +40,7 @@ class JobCategory(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobCategory"
 
 
-class JobDetails(BaseModel, SoftDeleteModel, models.Model):
+class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get job details.
         Here we have some useful field like:- user, title, budget_currency,
@@ -251,7 +251,7 @@ class JobDetails(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobDetails"
 
 
-class JobAttachmentsItem(BaseModel, SoftDeleteModel, models.Model):
+class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get attachments item detail which is uploaded for job.
     Here we have some useful field like:- job, attachment.

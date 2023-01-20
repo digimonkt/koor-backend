@@ -4,10 +4,10 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 
 
-class BlackList(BaseModel, SoftDeleteModel, models.Model):
+class BlackList(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for user information who is black listed by employer.
     Here we have some useful field like:- user, blacklisted_user.

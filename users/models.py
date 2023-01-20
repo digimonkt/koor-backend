@@ -1,6 +1,10 @@
+import logging
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext as _
+
+from model_utils import models as misc_models
 
 from core.models import (
     BaseModel, SoftDeleteModel
@@ -86,9 +90,10 @@ class User(AbstractUser, BaseModel):
         db_table = 'User'  # table name in DB
 
 
-class UserStampedModel(models.Model):
+class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
     """
-    An abstract base class model that provides self updating ``created_by`` and ``updated_by`` fields.
+    An abstract base class model that provides self updating ``created_by`` and ``modified_by`` fields.
+    It also extrends from model_utils.TimeStampedModel which has ``created`` and ``modified`` fields.
     """
 
     created_by = models.ForeignKey(
@@ -99,20 +104,20 @@ class UserStampedModel(models.Model):
         on_delete=models.SET_NULL,
         related_name='%(app_label)s_%(class)s_created_by'
     )
-    updated_by = models.ForeignKey(
+    modified_by = models.ForeignKey(
         User,
-        verbose_name=_('Updated By'),
+        verbose_name=_('Modified By'),
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="%(app_label)s_%(class)s_updated_by",
+        related_name="%(app_label)s_%(class)s_modified_by",
     )
 
     class Meta:
         abstract = True
 
 
-class UserSession(BaseModel, SoftDeleteModel, models.Model):
+class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This class created for get user session details like: login ip address, login agent, login is expired time etc.
     Here we have some useful field like:- user, ip_address, agent, expire_at.
