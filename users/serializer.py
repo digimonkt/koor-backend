@@ -14,7 +14,7 @@ class UserRegistrationSerializers(serializers.ModelSerializer):
     Here we create some validation like:
         email or mobile_number is required.
         password is required.
-        check email or mobile_number is already exist or not.
+        checked email or mobile_number is already exist or not.
     After create user return user instance.
     """
     class Meta:
@@ -33,7 +33,8 @@ class UserRegistrationSerializers(serializers.ModelSerializer):
                 mes = "Email already exist."  # MESSAGE IF USER ALREADY REGISTERED.
                 raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
         if mobile_number:
-            if User.objects.filter(mobile_number=mobile_number).exists():  # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
+            # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
+            if User.objects.filter(mobile_number=mobile_number).exists():
                 mes = "Mobile number already exist."  # MESSAGE IF USER ALREADY REGISTERED.
                 raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
         if email or mobile_number:
