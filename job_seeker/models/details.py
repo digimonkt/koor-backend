@@ -6,10 +6,10 @@ from core.models import (
 )
 from project_meta.models import (
     Media, Language, Skill)
-from users.models import User
+from users.models import User, TimeStampedModel
 
 
-class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
+class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -58,7 +58,7 @@ class EducationRecord(BaseModel, SoftDeleteModel, models.Model):
         db_table = "EducationRecord"
 
 
-class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
+class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -109,7 +109,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, models.Model):
         db_table = "EmploymentRecord"
 
 
-class Resume(BaseModel, SoftDeleteModel, models.Model):
+class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -139,7 +139,7 @@ class Resume(BaseModel, SoftDeleteModel, models.Model):
         db_table = "Resume"
 
 
-class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
+class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     FLUENCY_CHOICE = (
         ('basic', "Basic"),
         ('conversational', "Conversational"),
@@ -181,7 +181,7 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, models.Model):
         db_table = "JobSeekerLanguageProficiency"
 
 
-class JobSeekerSkill(BaseModel, SoftDeleteModel, models.Model):
+class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
