@@ -14,7 +14,7 @@ schema_view = get_schema_view(
    openapi.Info(
       title="Koor API",
       default_version='v1',
-      description=render_to_string(os.path.join(DJANGO_CONFIGURATION.BASE_DIR,"..",'README.md')),
+      description=render_to_string('docs\index.md'),
       terms_of_service="https://www.google.com/policies/terms/",
       contact=openapi.Contact(email="info@digimonk.in"),
    ),

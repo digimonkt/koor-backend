@@ -2,7 +2,7 @@
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>API DOCS</title>
+        <title>User</title>
         <style>
 /* From extension vscode.github */
 /*---------------------------------------------------------------------------------------------
@@ -693,7 +693,8 @@ hue-6-2: #e6c07b
 }
 
 </style>
-        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex/dist/katex.min.css">
+<link href="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.css" rel="stylesheet" type="text/css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
 <style>
@@ -717,19 +718,347 @@ hue-6-2: #e6c07b
         
     </head>
     <body class="vscode-body vscode-light">
-        <h1 id="api-docs">API DOCS</h1>
-<h2 id="table-of-content">Table Of Content</h2>
-<p>This is the koor api docs we have different section in this
-(some of the sections are listed below)</p>
-<ol>
-<li><a href="./admin/admin.html">Admin</a></li>
-<li><a href="./user/user.html">User</a></li>
-<li><a href="./job-seeker/job-seeker.html">Job Seeker</a></li>
-<li><a href="./employer/employer.html">Employer</a></li>
-<li>Vendor</li>
-</ol>
+        <h1 id="user">User</h1>
+<h2 id="summary">Summary</h2>
+<p>These are the APIs for all 3 types of <code>users</code> <code>job-seeker</code>, <code>employer</code>, and <code>vendor</code>. This section includes the APIs for:</p>
+<ul>
+<li><strong><a href="#create-user">Create user</a></strong>: This route is used to create the user with a particular role</li>
+<li><strong><a href="#create-user-session-login">Create user session (login)</a>:</strong> This route is used to create a user session</li>
+<li><strong><a href="#delete-user-session-logout">Forget user password</a>:</strong> This route is used to reset the user's password</li>
+<li><strong><a href="#forget-user-password">Delete user session (logout)</a>:</strong> This route is used to delete the user session</li>
+<li><strong><a href="#get-user-details">Get user details</a>:</strong> This route is used to get user details by id or by token</li>
+<li><strong><a href="#update-profile-image">Update Profile Image</a>:</strong> This route is used to update profile Image</li>
+</ul>
+<h2 id="create-user"><strong>Create User</strong></h2>
+<h3 id="summary">Summary</h3>
+<ul>
+<li>
+<p>Route: <code>api/v1/user</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request :</p>
+<p>request can be one of the following types:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    	<span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;test@test.com&quot;</span>,
+		<span class="hljs-string">&quot;mobileNumber&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+		<span class="hljs-string">&quot;password&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>,
+		<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;job_seeker&quot;</span> || <span class="hljs-string">&quot;employer&quot;</span> || <span class="hljs-string">&quot;vendor&quot;</span>,
+		<span class="hljs-string">&quot;countryCode&quot;</span>: <span class="hljs-string">&quot;+91&quot;</span>
+  }
+}
 
-        
+{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+      <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;test@test.com&quot;</span>,
+		<span class="hljs-string">&quot;mobileNumber&quot;</span>: <span class="hljs-string">&quot;1234567890&quot;</span>,
+		<span class="hljs-string">&quot;password&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>,
+		<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;job_seeker&quot;</span> || <span class="hljs-string">&quot;employer&quot;</span> || <span class="hljs-string">&quot;vendor&quot;</span>,
+		<span class="hljs-string">&quot;countryCode&quot;</span>: <span class="hljs-string">&quot;+91&quot;</span>
+    }
+}
+
+{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    	<span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+		<span class="hljs-string">&quot;mobileNumber&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>,
+		<span class="hljs-string">&quot;password&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>,
+		<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;job_seeker&quot;</span> || <span class="hljs-string">&quot;employer&quot;</span> || <span class="hljs-string">&quot;vendor&quot;</span>,
+		<span class="hljs-string">&quot;countryCode&quot;</span>: <span class="hljs-string">&quot;+91&quot;</span>
+    }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;headers&quot;</span>: {
+    <span class="hljs-string">&quot;x-access&quot;</span>: <span class="hljs-string">&quot;${JWT_TOKEN}&quot;</span>,
+    <span class="hljs-string">&quot;x-refresh&quot;</span>: <span class="hljs-string">&quot;${JWT_TOKEN}&quot;</span>
+  },
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;User Created Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<blockquote>
+<p>Note: When a <code>user</code> is creating we need to create a <code>session</code> of the <code>user</code> also</p>
+</blockquote>
+<h2 id="create-user-session-login"><strong>Create user session (login):</strong></h2>
+<ul>
+<li>
+<p>Route: <code>api/v1/user/session</code></p>
+</li>
+<li>
+<p>method: <code>POST</code></p>
+</li>
+<li>
+<p>request:</p>
+<p>request can be one of the following types:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;test@test.com&quot;</span>,
+    <span class="hljs-string">&quot;mobile&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-string">&quot;password&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>
+  }
+}
+</code></pre>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+    <span class="hljs-string">&quot;mobile&quot;</span>: <span class="hljs-string">&quot;1234567890&quot;</span>,
+    <span class="hljs-string">&quot;password&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<ol>
+<li>
+<p>If Credentials match:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;headers&quot;</span>: {
+    <span class="hljs-string">&quot;x-access&quot;</span>: <span class="hljs-string">&quot;${JWT_TOKEN}&quot;</span>,
+    <span class="hljs-string">&quot;x-refresh&quot;</span>: <span class="hljs-string">&quot;${JWT_TOKEN}&quot;</span>
+  },
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;User LoggedIn Successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>If credentials did not match:</p>
+<pre><code class="language-js">{
+	<span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">401</span>,
+	<span class="hljs-string">&quot;data&quot;</span>: {
+		<span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Invalid Email or Mobile Number or Password&quot;</span>
+	}
+}
+</code></pre>
+</li>
+</ol>
+</li>
+</ul>
+<h2 id="forget-user-password"><strong>Forget user password:</strong></h2>
+<h3 id="summary">Summary:</h3>
+<p>These routes are used to reset the <code>user</code>’s <code>password</code>. This will be 2 step process</p>
+<ol>
+<li>get the <code>user</code>’s email and send a password reset link with <code>token</code></li>
+<li>when the user requests to update the password with the <code>token</code>, we will update it according to the <code>token</code> validity.</li>
+</ol>
+<h3 id="step-1">Step 1:</h3>
+<ul>
+<li>
+<p>route: <code>api/v1/user/forget-password</code></p>
+</li>
+<li>
+<p>method: <code>GET</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;query&quot;</span>: {
+    <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;test@gmail.com&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h3 id="step-2">Step 2:</h3>
+<ul>
+<li>
+<p>route: <code>api/v1/user/change-password/:token</code></p>
+</li>
+<li>
+<p>method: <code>PUT</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;body&quot;</span>: {
+	    <span class="hljs-string">&quot;password&quot;</span>: <span class="hljs-string">&quot;123456789&quot;</span>
+  },
+  <span class="hljs-string">&quot;params&quot;</span>: {
+	    <span class="hljs-string">&quot;token&quot;</span>: <span class="hljs-string">&quot;${TOKEN}&quot;</span> <span class="hljs-comment">// token from email link</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Password updated successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="delete-user-session-logout"><strong>Delete user session (logout)</strong></h2>
+<h3 id="summary">Summary</h3>
+<p>This route is used to delete <code>user</code> <code>sessions</code>. We are not exactly going to delete the <code>user</code>'s session, but we are going to mark them as invalid.</p>
+<ul>
+<li>
+<p>route: <code>api/v1/user/delete-session</code></p>
+</li>
+<li>
+<p>method: <code>DELETE</code></p>
+</li>
+<li>
+<p>response:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">204</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Logged Out successfully&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="get-user-details"><strong>Get User Details</strong></h2>
+<h3 id="summary">Summary</h3>
+<p>This route is used to get <code>user</code> details. If <code>userId</code> is provided inside the <code>query</code> then provide the user’s details of the given <code>userId</code> else provide the details of the <code>loggedIn</code> user.</p>
+<ul>
+<li>
+<p>route: <code>api/v1/user</code></p>
+</li>
+<li>
+<p>method: <code>GET</code></p>
+</li>
+<li>
+<p>request:</p>
+<pre><code class="language-js">{
+  <span class="hljs-string">&quot;query&quot;</span>: {
+    <span class="hljs-string">&quot;userId&quot;</span>: string || <span class="hljs-literal">null</span>
+  }
+}
+</code></pre>
+</li>
+<li>
+<p>response: data varies according to the <code>user’s</code> <code>role</code></p>
+<pre><code class="language-js"><span class="hljs-comment">// job seeker</span>
+{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+    <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;test@gmail.com&quot;</span>,
+    <span class="hljs-string">&quot;mobile_number&quot;</span>: <span class="hljs-string">&quot;1234567890&quot;</span>,
+    <span class="hljs-string">&quot;country_code&quot;</span>: <span class="hljs-string">&quot;+91&quot;</span>,
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Test User&quot;</span>,
+    <span class="hljs-string">&quot;image&quot;</span>: <span class="hljs-string">&quot;/${PATH}&quot;</span>,
+    <span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;job_seeker&quot;</span>,
+    <span class="hljs-string">&quot;profile&quot;</span>: {
+      <span class="hljs-string">&quot;gender&quot;</span>: <span class="hljs-string">&quot;male&quot;</span> || <span class="hljs-string">&quot;female&quot;</span>,
+      <span class="hljs-string">&quot;dob&quot;</span>: <span class="hljs-variable constant_">DD</span>/<span class="hljs-variable constant_">MM</span>/<span class="hljs-variable constant_">YYYY</span>,
+      <span class="hljs-string">&quot;employment_status&quot;</span>: <span class="hljs-string">&quot;employed&quot;</span> || <span class="hljs-string">&quot;fresher&quot;</span> || <span class="hljs-string">&quot;other&quot;</span>,
+      <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the user...&quot;</span>,
+      <span class="hljs-string">&quot;market_information&quot;</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-string">&quot;job_notification&quot;</span>: <span class="hljs-literal">false</span>,
+    },
+    <span class="hljs-string">&quot;education_record&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: ${<span class="hljs-variable constant_">UUID</span>}
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Bechlour of Engineer&quot;</span>,
+      <span class="hljs-string">&quot;start_date&quot;</span>: <span class="hljs-variable constant_">DD</span>/<span class="hljs-variable constant_">MM</span>/<span class="hljs-variable constant_">YYYY</span>,
+      <span class="hljs-string">&quot;end_date&quot;</span>: <span class="hljs-variable constant_">DD</span>/<span class="hljs-variable constant_">MM</span>/<span class="hljs-variable constant_">YYYY</span> || <span class="hljs-literal">null</span>,
+      <span class="hljs-string">&quot;present&quot;</span>: <span class="hljs-literal">false</span>,
+      <span class="hljs-string">&quot;organization&quot;</span>: <span class="hljs-string">&quot;MIT&quot;</span>,
+      <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the education...&quot;</span>
+    }],
+    <span class="hljs-string">&quot;work_experience&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: ${<span class="hljs-variable constant_">UUID</span>},
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Software Engineer&quot;</span>,
+      <span class="hljs-string">&quot;start_date&quot;</span>: <span class="hljs-variable constant_">DD</span>/<span class="hljs-variable constant_">MM</span>/<span class="hljs-variable constant_">YYYY</span>,
+      <span class="hljs-string">&quot;end_date&quot;</span>: <span class="hljs-variable constant_">DD</span>/<span class="hljs-variable constant_">MM</span>/<span class="hljs-variable constant_">YYYY</span> || <span class="hljs-literal">null</span>,
+      <span class="hljs-string">&quot;present&quot;</span>: <span class="hljs-literal">true</span>,
+      <span class="hljs-string">&quot;organization&quot;</span>: <span class="hljs-string">&quot;digimonk Technologies&quot;</span>,
+      <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of the work experience...&quot;</span>
+    }],
+    <span class="hljs-string">&quot;resume&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: ${<span class="hljs-variable constant_">UUID</span>},
+      <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Resume&quot;</span>,
+      <span class="hljs-string">&quot;file_path&quot;</span>: <span class="hljs-string">&quot;/${PATH}&quot;</span>,
+      <span class="hljs-string">&quot;created_at&quot;</span>: <span class="hljs-variable constant_">DD</span>/<span class="hljs-variable constant_">MM</span>/<span class="hljs-variable constant_">YYYY</span>,
+    }],
+    <span class="hljs-string">&quot;languages&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: ${<span class="hljs-variable constant_">UUID</span>},
+      <span class="hljs-string">&quot;language&quot;</span>: <span class="hljs-string">&quot;English&quot;</span>,
+      <span class="hljs-string">&quot;written&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>,
+      <span class="hljs-string">&quot;spoken&quot;</span>: <span class="hljs-string">&quot;basic&quot;</span> || <span class="hljs-string">&quot;conversational&quot;</span> || <span class="hljs-string">&quot;fluent&quot;</span>
+    }],
+    <span class="hljs-string">&quot;skills&quot;</span>: [{
+      <span class="hljs-string">&quot;id&quot;</span>: ${<span class="hljs-variable constant_">UUID</span>},
+      <span class="hljs-string">&quot;skill&quot;</span>: <span class="hljs-string">&quot;ReactJS&quot;</span>,
+    }]
+    <span class="hljs-comment">// pending job preferences</span>
+  }
+}
+
+<span class="hljs-comment">// employer</span>
+{
+  <span class="hljs-attr">code</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-attr">data</span>: {
+    <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;${UUID}&quot;</span>
+    <span class="hljs-string">&quot;email&quot;</span>: <span class="hljs-string">&quot;test@gmail.com&quot;</span>,
+    <span class="hljs-string">&quot;mobile_number&quot;</span>: <span class="hljs-string">&quot;1234567890&quot;</span>,
+    <span class="hljs-string">&quot;country_code&quot;</span>: <span class="hljs-string">&quot;+91&quot;</span>,
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Test User&quot;</span>,
+    <span class="hljs-string">&quot;image&quot;</span>: <span class="hljs-string">&quot;/${PATH}&quot;</span>,
+    <span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;employer&quot;</span>,
+    <span class="hljs-string">&quot;profile&quot;</span>: {
+      <span class="hljs-string">&quot;organization_name&quot;</span>: <span class="hljs-string">&quot;digimonk Technologies&quot;</span>,
+      <span class="hljs-string">&quot;description&quot;</span>: <span class="hljs-string">&quot;This is the description of organization...&quot;</span>,
+      <span class="hljs-string">&quot;organization_type&quot;</span>: <span class="hljs-string">&quot;business&quot;</span> || <span class="hljs-string">&quot;ngo&quot;</span> || <span class="hljs-string">&quot;government&quot;</span>,
+      <span class="hljs-string">&quot;license_id&quot;</span>: <span class="hljs-string">&quot;AB1235E5342&quot;</span>,
+      <span class="hljs-string">&quot;license_id_file&quot;</span>: <span class="hljs-string">&quot;${PATH}&quot;</span>
+    }
+  }
+}
+
+<span class="hljs-comment">// vendor pending</span>
+</code></pre>
+</li>
+</ul>
+<h2 id="update-profile-image">Update Profile Image</h2>
+<h3 id="summary">Summary</h3>
+<p>This API is used to update the <code>display_image</code> of the user.</p>
+<blockquote>
+<p><strong>Note</strong>: This will be the <code>authenticated</code> route i.e. if <code>user</code> is logged in then only be able to update profile image for some obvious reason.</p>
+</blockquote>
+<ul>
+<li>route: <code>api/v1/user/display-image</code></li>
+<li>method: <code>PATCH</code></li>
+<li>request<pre><code class="language-js">{
+  <span class="hljs-string">&quot;headers&quot;</span>: {
+    <span class="hljs-string">&quot;Content-Type&quot;</span>: <span class="hljs-string">&quot;multipart/form-data&quot;</span>,
+    <span class="hljs-string">&quot;Authorization&quot;</span>: <span class="hljs-string">&quot;${TOKEN}&quot;</span>
+  },
+  <span class="hljs-string">&quot;body&quot;</span>: {
+    <span class="hljs-string">&quot;image&quot;</span>: <span class="hljs-title class_">File</span>
+  }
+}
+</code></pre>
+</li>
+<li>response:<pre><code class="language-js">{
+  <span class="hljs-string">&quot;code&quot;</span>: <span class="hljs-number">200</span>,
+  <span class="hljs-string">&quot;data&quot;</span>: {
+    <span class="hljs-string">&quot;image&quot;</span>: <span class="hljs-string">&quot;${PATH}&quot;</span>
+  }
+}
+</code></pre>
+</li>
+</ul>
+
+        <script async src="https://cdn.jsdelivr.net/npm/katex-copytex@latest/dist/katex-copytex.min.js"></script>
         
     </body>
     </html>
