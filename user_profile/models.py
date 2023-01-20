@@ -4,13 +4,13 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 from project_meta.models import (
     EducationLevel, Media
 )
 
 
-class JobSeekerProfile(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
+class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     GENDER_CHOICE = (
         ('male', "Male"),
         ('female', "Female"),
@@ -83,7 +83,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, UserStampedModel, models.Mode
         db_table = "JobSeekerProfile"
 
 
-class EmployerProfile(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
+class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     ORGANIZATION_TYPE_CHOICE = (
         ('government', "Government"),
         ('ngo', "NGO"),

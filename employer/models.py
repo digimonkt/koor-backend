@@ -4,10 +4,10 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-from users.models import User, UserStampedModel
+from users.models import User, TimeStampedModel
 
 
-class BlackList(BaseModel, SoftDeleteModel, UserStampedModel, models.Model):
+class BlackList(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
