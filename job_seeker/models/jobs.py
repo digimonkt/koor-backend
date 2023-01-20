@@ -10,6 +10,10 @@ from users.models import User, TimeStampedModel
 
 
 class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+        This class created for get saved job detail of JobSeeker.
+        Here we have some useful field like:- user, job.
+    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -35,6 +39,10 @@ class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
 
 
 class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+        This class created for get applied job detail of JobSeeker.
+        Here we have some useful field like:- user, job, shortlisted_at, rejected_at, resume.
+    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),

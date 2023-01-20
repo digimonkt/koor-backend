@@ -8,6 +8,12 @@ from users.models import User, TimeStampedModel
 
 
 class BlackList(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This class created for user information who is black listed by employer.
+    Here we have some useful field like:- user, blacklisted_user.
+        - user is the employer detail field.
+        - blacklisted_user is black listed user detail field.
+    """
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
