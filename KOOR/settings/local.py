@@ -37,10 +37,6 @@ class Common(Configuration):
         'rest_framework_simplejwt',
         'rest_framework_simplejwt.token_blacklist',
 
-<<<<<<< HEAD
-        # Custom Apps
-        "core.apps.CoreConfig",
-=======
         # Project Apps
         'core.apps.CoreConfig',
         'project_meta.apps.ProjectMetaConfig',
@@ -49,7 +45,6 @@ class Common(Configuration):
         'job_seeker.apps.JobSeekerConfig',
         'job.apps.JobConfig',
         'employer.apps.EmployerConfig',
->>>>>>> 1ef3429134d1dcebcc8bb852127891a050e905a5
     ]
 
     AUTH_USER_MODEL = 'users.User'
