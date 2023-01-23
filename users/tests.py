@@ -5,9 +5,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 
-class RegisterTestCase(APITestCase):
+class CreateUserTestCase(APITestCase):
     """
-    Created a test case for registration module with all possible test requirements.
+    Created a test case for create user module with all possible test requirements.
     """
 
     def test_register_with_email(self):
@@ -21,7 +21,7 @@ class RegisterTestCase(APITestCase):
             "profile_role": "",
             "country_code": ""
         }
-        response = self.client.post(reverse('users_app_link:user_registration_view_link'), data)
+        response = self.client.post(reverse('user_app_link:create_user_view_link'), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_register_with_mobile(self):
@@ -35,5 +35,5 @@ class RegisterTestCase(APITestCase):
             "profile_role": "",
             "country_code": ""
         }
-        response = self.client.post(reverse('users_app_link:user_registration_view_link'), data)
+        response = self.client.post(reverse('user_app_link:create_user_view_link'), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
