@@ -264,8 +264,8 @@ class Common(Configuration):
     }
 
 
-    # Django Rest Framework Simple JWT
-    # https://drf-yasg.readthedocs.io/en/stable/settings.htm
+    # Swagger Settings
+    # https://drf-yasg.readthedocs.io/en/stable/settings.htm1
 
     SWAGGER_SETTINGS = {
         "DEFAULT_GENERATOR_CLASS": "rest_framework.schemas.generators.BaseSchemaGenerator",
