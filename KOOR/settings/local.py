@@ -128,7 +128,9 @@ class Common(Configuration):
     TEMPLATES = [
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': STATICFILES_DIRS,
+            'DIRS': [
+                "docs",
+            ],
             'APP_DIRS': True,
             'OPTIONS': {
                 'context_processors': [

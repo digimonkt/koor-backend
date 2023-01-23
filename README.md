@@ -1,4 +1,22 @@
 # Koor Backend
+
+## Introduction
+
+KOOR is a project that aims to connect employers, job seekers, and vendors in a single platform. It functions similar to a freelancer platform, where employers can create jobs and tenders, job seekers can apply for them, and vendors can apply for tenders.
+
+KOOR is designed to provide a convenient and efficient way for employers to find the right candidates or vendors for their projects. Employers can search for job seekers or vendors based on their skills, experience, and other criteria.
+
+Job seekers and vendors can use KOOR to find opportunities that match their expertise and preferences. They can create profiles, highlight their skills and experience, and apply for relevant jobs or tenders.
+
+Overall, KOOR is a platform that brings together employers, job seekers, and vendors to facilitate the hiring process and help people find the right opportunities for their skills and interests.
+
+## Navigation
+
+- [Home]() 
+- [Github Repo](#github-repo-🔗)
+- [Database Design](https://github.com/digimonktech/koor_backend/blob/db-design/README.md)
+- [API Docs](./docs/index.md)
+
 ## Github Repo [🔗](https://github.com/digimonkt/koor-backend/)
 
 ![Django](https://img.shields.io/badge/Django-0C4B33?style=for-the-badge&logo=django&logoColor=white)
@@ -51,6 +69,12 @@
     REFRESH_TOKEN_LIFETIME=<days>
     ALGORITHM=<algorithm> # 'HS256', 'HS384', 'HS512'
     
+    # Swagger Settings
+    DOCS_TITLE=<title>
+    DEFAULT_VERSION=<version>
+    DESCRIPTION=<description markdown file>
+    TERMS_OF_SERVICE=<license>
+
     # CORS
     CORS_ORIGIN_WHITELIST = <Your frontend domain>
 
