@@ -213,6 +213,7 @@ class Common(Configuration):
     # https://www.django-rest-framework.org/
 
     REST_FRAMEWORK = {
+        'EXCEPTION_HANDLER': 'core.utils.CustomExceptionHandler',
         'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
         'PAGE_SIZE': 20,
         'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
@@ -296,6 +297,10 @@ class Local(Common):
             conn_max_age=int(config('POSTGRES_CONN_MAX_AGE', 600))
         )
     }
+
+    import sys
+    if 'test' in sys.argv or 'test_coverage' in sys.argv:  # Covers regular testing and django-coverage
+        DATABASES['default']['ENGINE'] = 'django.db.backends.sqlite3'
 
     def __init__(self) -> None:
         super().__init__()
