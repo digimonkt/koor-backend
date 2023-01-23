@@ -8,21 +8,21 @@ from .models import User, UserSession
 
 # IMPORT SOME SERIALIZERS CLASS FROM SOME APP'S SERIALIZER.PY FILE.
 from .serializer import (
-    UserRegistrationSerializers, CreateSessionSerializers
+    CreateUserSerializers, CreateSessionSerializers
 )
 
 
 # CREATE CLASS FOR USER REGISTRATION.
-class UserRegistrationView(generics.GenericAPIView):
+class CreateUserView(generics.GenericAPIView):
     """
-    Created a class for user registration using a serializer function UserRegistrationSerializers. This Class is
+    Created a class for user registration using a serializer function CreateUserSerializers. This Class is
     permitted to any user.
         For User Registration, we use the post method.
             If registration is successfully complete, we send AccessToken and RefreshToken in response header with
             status code 201.
             If the user could not register, so we send an error message with a 400 status code.
     """
-    serializer_class = UserRegistrationSerializers  # CALL SERIALIZERS FOR REGISTRATION.
+    serializer_class = CreateUserSerializers  # CALL SERIALIZERS FOR REGISTRATION.
     permission_classes = [permissions.AllowAny]  # SET PERMISSION FOR ALL USER.
 
     def post(self, request):
