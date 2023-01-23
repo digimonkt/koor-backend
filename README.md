@@ -93,3 +93,6 @@ _Inherits from Local Configuration_
  ### Production Configuration
 _Inherits from Development Configuration_
 ![Pending](https://img.shields.io/badge/Pending-yellow)
+- [Home]() 
+- [Database Design](https://github.com/digimonktech/koor_backend/blob/db-design/README.md)
+- [API Docs](./docs/index.md)

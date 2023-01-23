@@ -1,3 +1,4 @@
+from decouple import config
 import os
 from django.contrib import admin
 from django.urls import path, re_path
@@ -12,11 +13,11 @@ from KOOR.settings import DJANGO_CONFIGURATION
 # Swagger OpenAPI View
 schema_view = get_schema_view(
    openapi.Info(
-      title="Koor API",
-      default_version='v1',
-      description=render_to_string('docs\index.md'),
-      terms_of_service="https://www.google.com/policies/terms/",
-      contact=openapi.Contact(email="info@digimonk.in"),
+      title=config('DOCS_TITLE'),
+      default_version=config('DEFAULT_VERSION'),
+      description=render_to_string(config('DESCRIPTION')),
+      terms_of_service=config('TERMS_OF_SERVICE'),
+      contact=openapi.Contact(email=config('ORGANIZATION')),
    ),
    public=True,
    permission_classes=[permissions.AllowAny],
