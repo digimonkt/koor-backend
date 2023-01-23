@@ -264,6 +264,13 @@ class Common(Configuration):
     }
 
 
+    # Django Rest Framework Simple JWT
+    # https://drf-yasg.readthedocs.io/en/stable/settings.htm
+
+    SWAGGER_SETTINGS = {
+        "DEFAULT_GENERATOR_CLASS": "rest_framework.schemas.generators.BaseSchemaGenerator",
+    }
+
 class Local(Common):
     """
     Local settings for KOOR project.
