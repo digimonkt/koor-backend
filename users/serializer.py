@@ -46,7 +46,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
                     email=email,
                     mobile_number=mobile_number,
                     country_code=country_code,
-                    is_active=False,
+                    is_active=True,
                     profile_role=profile_role
                 )  # SET DATA INTO USER TABLE FOR CRATE USER BUT USER NOT CREATED AT THAT MOMENT.
                 user_data.set_password(password)  # SET PASSWORD FOR USER.
