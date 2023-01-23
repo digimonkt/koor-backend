@@ -74,28 +74,28 @@ class CreateSessionSerializers(serializers.Serializer):
     """
     # CREATE FORM FOR GET USER DETAIL FROM FRONTEND..
     email = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
-    mobile = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
+    mobile_number = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
     password = serializers.CharField(style={"input_type": "text"}, write_only=True)
 
     # CREATE A VALIDATE FUNCTION FOR LOGIN VALIDATION.
     def validate(self, data):
         email = data.get("email", "")
-        mobile = data.get("mobile", "")
+        mobile_number = data.get("mobile_number", "")
         password = data.get("password", "")
         user = ""
         try:
             if email:
-                if User.objects.filter(mobile=mobile).filter(is_active=False).exists():
+                if User.objects.filter(email=email).filter(is_active=False).exists():
                     mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
                     raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
                 else:
                     user = cb.authenticate(self, identifier=email, password=password)
-            elif mobile:
-                if User.objects.filter(mobile=mobile).filter(is_active=False).exists():
+            elif mobile_number:
+                if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
                     mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
                     raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
                 else:
-                    user = cb.authenticate(self, identifier=mobile, password=password)
+                    user = cb.authenticate(self, identifier=mobile_number, password=password)
             if user:
                 if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
                     return user  # RETURN USER INSTANCE FOR LOGIN.
