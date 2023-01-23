@@ -10,9 +10,9 @@ from .models import User
 
 
 # CREATE SERIALIZER FOR USER REGISTRATION.
-class UserRegistrationSerializers(serializers.ModelSerializer):
+class CreateUserSerializers(serializers.ModelSerializer):
     """
-    Created a serializer class for user registration. Here we use ModelSerializer, using User model.
+    Created a serializer class for create user. Here we use ModelSerializer, using User model.
     Here we create some validation like:
         email or mobile_number is required.
         password is required.
