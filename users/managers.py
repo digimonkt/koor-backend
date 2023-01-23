@@ -19,7 +19,7 @@ class UserManager(BaseUserManager):
             password = None,
             profile_role = None,
             **extra_fields
-    ) -> Any:
+    ):
         if not (email or mobile):
             raise ValueError('Email or Mobile Number one must be set')
         else:
@@ -41,7 +41,7 @@ class UserManager(BaseUserManager):
             password = None,
             profile_role = None,
             **extra_fields
-    ) -> Any:
+    ):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(
