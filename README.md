@@ -14,4 +14,4 @@ Overall, KOOR is a platform that brings together employers, job seekers, and ven
 
 - [Home]() 
 - [Database Design](https://github.com/digimonktech/koor_backend/blob/db-design/README.md)
-- [API Docs](./api-docs/index.md)
+- [API Docs](./docs/index.md)
