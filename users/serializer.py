@@ -2,6 +2,8 @@
 from rest_framework import exceptions
 from rest_framework import serializers
 
+# IMPORT CUSTOM AUTHENTICATE FUNCTION FORM BACKENDS.PY FILE.
+from .backends import MobileOrEmailBackend as cb
 
 # IMPORT SOME MODEL CLASS FROM SOME APP'S MODELS.PY FILE.
 from .models import User
@@ -17,6 +19,7 @@ class UserRegistrationSerializers(serializers.ModelSerializer):
         checked email or mobile_number is already exist or not.
     After create user return user instance.
     """
+
     class Meta:
         model = User
         fields = ['email', 'mobile_number', 'password', 'profile_role', 'country_code']
@@ -56,3 +59,50 @@ class UserRegistrationSerializers(serializers.ModelSerializer):
             # MESSAGE IF EMAIL AND MOBILE NUMBER BOTH FIELD ARE BLANK.
             mes = "Mobile number or Email is required for user registration."
             raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+
+
+# CREATE SERIALIZER FOR USER LOGIN.
+class UserLoginSerializers(serializers.Serializer):
+    """
+    Created a serializer class for user authentication. Here we use Serializer.
+    Here we create some validation like:
+        email or mobile_number is required.
+        password is required.
+        checked email or mobile_number is already exist or not.
+        checked user is active or not.
+    If user is authenticated so we return user instance.
+    """
+    # CREATE FORM FOR GET USER DETAIL FROM FRONTEND..
+    email = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
+    mobile = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
+    password = serializers.CharField(style={"input_type": "text"}, write_only=True)
+
+    # CREATE A VALIDATE FUNCTION FOR LOGIN VALIDATION.
+    def validate(self, data):
+        email = data.get("email", "")
+        mobile = data.get("mobile", "")
+        password = data.get("password", "")
+        user = ""
+        try:
+            if email:
+                if User.objects.filter(mobile=mobile).filter(is_active=False).exists():
+                    mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
+                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                else:
+                    user = cb.authenticate(self, identifier=email, password=password)
+            elif mobile:
+                if User.objects.filter(mobile=mobile).filter(is_active=False).exists():
+                    mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
+                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                else:
+                    user = cb.authenticate(self, identifier=mobile, password=password)
+            if user:
+                if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
+                    return user  # RETURN USER INSTANCE FOR LOGIN.
+                else:
+                    return "Not Valid"
+            else:
+                mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
+                raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+        except Exception as e:
+            raise exceptions.APIException(e)  # CALL MESSAGE IF USER NOT REGISTERED.
