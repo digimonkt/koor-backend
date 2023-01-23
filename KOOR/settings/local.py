@@ -36,7 +36,6 @@ class Common(Configuration):
         'rest_framework',
         'rest_framework_simplejwt',
         'rest_framework_simplejwt.token_blacklist',
-        'drf_yasg2',
 
         # Project Apps
         'core.apps.CoreConfig',
