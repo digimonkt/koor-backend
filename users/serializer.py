@@ -62,7 +62,7 @@ class UserRegistrationSerializers(serializers.ModelSerializer):
 
 
 # CREATE SERIALIZER FOR USER LOGIN.
-class UserLoginSerializers(serializers.Serializer):
+class CreateSessionSerializers(serializers.Serializer):
     """
     Created a serializer class for user authentication. Here we use Serializer.
     Here we create some validation like:
