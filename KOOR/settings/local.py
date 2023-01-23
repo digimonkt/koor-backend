@@ -36,6 +36,7 @@ class Common(Configuration):
         'rest_framework',
         'rest_framework_simplejwt',
         'rest_framework_simplejwt.token_blacklist',
+        'drf_yasg',
 
         # Project Apps
         'core.apps.CoreConfig',
@@ -127,7 +128,9 @@ class Common(Configuration):
     TEMPLATES = [
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': STATICFILES_DIRS,
+            'DIRS': [
+                "docs",
+            ],
             'APP_DIRS': True,
             'OPTIONS': {
                 'context_processors': [
