@@ -14,10 +14,10 @@ class UserManager(BaseUserManager):
     # function for create user or superuser
     def _create_user(
             self,
-            email  = None,
-            mobile  = None,
-            password  = None,
-            profile_role  = None,
+            email: str | None = None,
+            mobile: str | None = None,
+            password: str | None = None,
+            profile_role: str | None = None,
             **extra_fields: dict[str, Any]
     ) -> Any:
         if not (email or mobile):
@@ -35,11 +35,11 @@ class UserManager(BaseUserManager):
     # function for add normal user's other field
     def create_user(
             self,
-            display_name  = None,
-            email  = None,
-            mobile  = None,
-            password  = None,
-            profile_role  = None,
+            display_name: str | None = None,
+            email: str | None = None,
+            mobile: str | None = None,
+            password: str | None = None,
+            profile_role: str | None = None,
             **extra_fields: dict[str, Any]
     ) -> Any:
         extra_fields.setdefault('is_staff', False)
