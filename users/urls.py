@@ -8,5 +8,6 @@ urlpatterns = [
 
     path('', views.CreateUserView.as_view(), name="create_user_view_link"),
 
+    path('session', views.CreateSessionView.as_view(), name="create_session_view_link"),
 
 ]
