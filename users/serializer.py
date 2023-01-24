@@ -74,7 +74,8 @@ class CreateSessionSerializers(serializers.Serializer):
     """
     # CREATE FORM FOR GET USER DETAIL FROM FRONTEND..
     email = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
-    mobile_number = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
+    mobile_number = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False,
+                                          allow_blank=True)
     password = serializers.CharField(style={"input_type": "text"}, write_only=True)
 
     # CREATE A VALIDATE FUNCTION FOR LOGIN VALIDATION.
