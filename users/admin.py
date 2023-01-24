@@ -10,10 +10,18 @@ from .models import User
 #  Function for Display Model into superuser page
 class UserAdmin(UserAdmin):
     fieldsets = (
-        (None, {'fields': ('email', 'password', 'mobile_number', 'profile_role',)}),
-        (_('Personal info'), {'fields': ('display_name', 'image')}),
-        (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',)}),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined',)}),
+        (None, {
+            'fields': ('email', 'password', 'mobile_number', 'profile_role',)
+        }),
+        (_('Personal info'), {
+            'fields': ('display_name', 'image')
+        }),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser',)
+        }),
+        (_('Important dates'), {
+            'fields': ('last_login', 'date_joined',)
+        }),
     )
     add_fieldsets = (
         (None, {
