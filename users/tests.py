@@ -65,7 +65,7 @@ class CreateSessionTestCase(APITestCase):
             "email": "example@email.com",
             "password": "NewPassword@123"
         }
-        response = self.client.post(reverse('users_app_link:create_session_view_link'), data)
+        response = self.client.post(reverse('user_app_link:create_session_view_link'), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_session_with_mobile(self):
@@ -76,5 +76,5 @@ class CreateSessionTestCase(APITestCase):
             "mobile_number": "1234567890",
             "password": "NewMobPassword@123"
         }
-        response = self.client.post(reverse('users_app_link:create_session_view_link'), data)
+        response = self.client.post(reverse('user_app_link:create_session_view_link'), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
