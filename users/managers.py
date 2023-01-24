@@ -14,20 +14,20 @@ class UserManager(BaseUserManager):
     # function for create user or superuser
     def _create_user(
             self,
-            email = None,
-            mobile = None,
-            password = None,
-            profile_role = None,
+            email=None,
+            mobile_number=None,
+            password=None,
+            profile_role=None,
             **extra_fields
     ):
-        if not (email or mobile):
+        if not (email or mobile_number):
             raise ValueError('Email or Mobile Number one must be set')
         else:
             if email:
                 email = self.normalize_email(email)
                 user = self.model(email=email, profile_role=profile_role, **extra_fields)
-            elif mobile:
-                user = self.model(mobile=mobile, **extra_fields)
+            elif mobile_number:
+                user = self.model(mobile_number=mobile_number, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
@@ -35,11 +35,11 @@ class UserManager(BaseUserManager):
     # function for add normal user's other field
     def create_user(
             self,
-            display_name = None,
-            email = None,
-            mobile = None,
-            password = None,
-            profile_role = None,
+            display_name=None,
+            email=None,
+            mobile_number=None,
+            password=None,
+            profile_role=None,
             **extra_fields
     ):
         extra_fields.setdefault('is_staff', False)
@@ -47,7 +47,7 @@ class UserManager(BaseUserManager):
         return self._create_user(
             email=email,
             display_name=display_name,
-            mobile=mobile,
+            mobile_number=mobile_number,
             password=password,
             profile_role=profile_role,
             **extra_fields
