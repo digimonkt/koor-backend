@@ -12,7 +12,7 @@ class CreateUserTestCase(APITestCase):
     Created a test case for create user module with all possible test requirements.
     """
 
-    def test_register_with_email(self):
+    def test_create_user_with_email(self):
         """
         This is first test function here we use email and password without mobile number.
         """
@@ -26,7 +26,7 @@ class CreateUserTestCase(APITestCase):
         response = self.client.post(reverse('user_app_link:create_user_view_link'), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_register_with_mobile(self):
+    def test_create_user_with_mobile(self):
         """
         This is second test function here we use mobile number and password without email.
         """
@@ -57,7 +57,7 @@ class CreateSessionTestCase(APITestCase):
                                              password='NewMobPassword@123'
                                              )
 
-    def test_login_with_email(self):
+    def test_create_session_with_email(self):
         """
             This is first test function here we use email and password as login credential.
         """
@@ -68,7 +68,7 @@ class CreateSessionTestCase(APITestCase):
         response = self.client.post(reverse('users_app_link:create_session_view_link'), data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_login_with_mobile(self):
+    def test_create_session_with_mobile(self):
         """
             This is second test function here we use mobile number and password as login credential.
         """
