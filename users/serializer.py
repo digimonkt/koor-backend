@@ -34,12 +34,18 @@ class CreateUserSerializers(serializers.ModelSerializer):
         if email:
             if User.objects.filter(email=email).exists():  # CHECK EMAIL ALREADY REGISTERED OR NOT.
                 mes = "Email already exist."  # MESSAGE IF USER ALREADY REGISTERED.
-                raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+                raise serializers.ValidationError(
+                    detail=mes,
+                    code='email'
+                )  # CALL MESSAGE IF USER ALREADY REGISTERED.
         if mobile_number:
             # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
             if User.objects.filter(mobile_number=mobile_number).exists():
                 mes = "Mobile number already exist."  # MESSAGE IF USER ALREADY REGISTERED.
-                raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+                raise serializers.ValidationError(
+                    detail=mes,
+                    code='mobile_number'
+                )  # CALL MESSAGE IF USER ALREADY REGISTERED.
         if email or mobile_number:
             try:
                 user_data = User(
@@ -58,7 +64,10 @@ class CreateUserSerializers(serializers.ModelSerializer):
         else:
             # MESSAGE IF EMAIL AND MOBILE NUMBER BOTH FIELD ARE BLANK.
             mes = "Mobile number or Email is required for user registration."
-            raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+            raise serializers.ValidationError(
+                detail=mes,
+                code='missing_fields'
+            )  # CALL MESSAGE IF USER ALREADY REGISTERED.
 
 
 # CREATE SERIALIZER FOR USER LOGIN.
@@ -88,13 +97,19 @@ class CreateSessionSerializers(serializers.Serializer):
             if email:
                 if User.objects.filter(email=email).filter(is_active=False).exists():
                     mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
-                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                    raise serializers.ValidationError(
+                        detail=mes,
+                        code='user'
+                    )  # DISPLAY ERROR MESSAGE.
                 else:
                     user = cb.authenticate(self, identifier=email, password=password)
             elif mobile_number:
                 if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
                     mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
-                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                    raise serializers.ValidationError(
+                        detail=mes,
+                        code='user'
+                    )  # DISPLAY ERROR MESSAGE.
                 else:
                     user = cb.authenticate(self, identifier=mobile_number, password=password)
             if user:
@@ -104,6 +119,9 @@ class CreateSessionSerializers(serializers.Serializer):
                     return "Not Valid"
             else:
                 mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
-                raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
+                raise serializers.ValidationError(
+                    detail=mes,
+                    code='missing_fields'
+                )  # DISPLAY ERROR MESSAGE.
         except Exception as e:
             raise exceptions.APIException(e)  # CALL MESSAGE IF USER NOT REGISTERED.
