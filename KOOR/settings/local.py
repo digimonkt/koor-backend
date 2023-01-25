@@ -53,8 +53,8 @@ class Common(Configuration):
     MIDDLEWARE = [
         "django.middleware.security.SecurityMiddleware",
         "django.contrib.sessions.middleware.SessionMiddleware",
-        "django.middleware.common.CommonMiddleware",
-        "corsheaders.middleware.CorsMiddleware",
+        'corsheaders.middleware.CorsMiddleware',
+        'django.middleware.common.CommonMiddleware',
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -71,9 +71,9 @@ class Common(Configuration):
     # To prevent from the cross-origin resources sharing
     # https://pypi.org/project/django-cors-headers/
 
-    CORS_ALLOW_CREDENTIALS = True
-
-    CORS_ORIGIN_WHITELIST = config('CORS_ORIGIN_WHITELIST').split(",")
+    # CORS_ALLOW_CREDENTIALS = True
+    CORS_ALLOW_ALL_ORIGINS = True   # For Development settings
+    # CORS_ORIGIN_WHITELIST = config('CORS_ORIGIN_WHITELIST').split(",")
 
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
@@ -107,7 +107,7 @@ class Common(Configuration):
 
     USE_TZ = True
 
-    APPEND_SLASH = True
+    APPEND_SLASH = False
 
     # Static files (CSS, JavaScript, Images)
     # https://docs.djangoproject.com/en/2.0/howto/static-files/
