@@ -107,38 +107,35 @@ class CreateSessionSerializers(serializers.Serializer):
         mobile_number = data.get("mobile_number", "")
         password = data.get("password", "")
         user = ""
-        try:
-            if email:
-                if User.objects.filter(email=email).filter(is_active=False).exists():
-                    mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
-                    raise CustomValidationError(
-                        mes,
-                        'message',
-                        status.HTTP_400_BAD_REQUEST
-                    )  # DISPLAY ERROR MESSAGE.
-                else:
-                    user = cb.authenticate(self, identifier=email, password=password)
-            elif mobile_number:
-                if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
-                    mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
-                    raise CustomValidationError(
-                        mes,
-                        'message',
-                        status.HTTP_400_BAD_REQUEST
-                    )  # DISPLAY ERROR MESSAGE.
-                else:
-                    user = cb.authenticate(self, identifier=mobile_number, password=password)
-            if user:
-                if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
-                    return user  # RETURN USER INSTANCE FOR LOGIN.
-                else:
-                    return "Not Valid"
-            else:
-                mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
+        if email:
+            if User.objects.filter(email=email).filter(is_active=False).exists():
+                mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
                 raise CustomValidationError(
                     mes,
-                    'email',
+                    'message',
                     status.HTTP_400_BAD_REQUEST
                 )  # DISPLAY ERROR MESSAGE.
-        except Exception as e:
-            raise exceptions.APIException(e)  # CALL MESSAGE IF USER NOT REGISTERED.
+            else:
+                user = cb.authenticate(self, identifier=email, password=password)
+        elif mobile_number:
+            if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
+                mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
+                raise CustomValidationError(
+                    mes,
+                    'message',
+                    status.HTTP_400_BAD_REQUEST
+                )  # DISPLAY ERROR MESSAGE.
+            else:
+                user = cb.authenticate(self, identifier=mobile_number, password=password)
+        if user:
+            if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
+                return user  # RETURN USER INSTANCE FOR LOGIN.
+            else:
+                return "Not Valid"
+        else:
+            mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
+            raise CustomValidationError(
+                mes,
+                'email',
+                status.HTTP_400_BAD_REQUEST
+            )  # DISPLAY ERROR MESSAGE.
