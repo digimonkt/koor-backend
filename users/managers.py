@@ -17,7 +17,7 @@ class UserManager(BaseUserManager):
             email=None,
             mobile_number=None,
             password=None,
-            profile_role=None,
+            role=None,
             **extra_fields
     ):
         if not (email or mobile_number):
@@ -25,7 +25,7 @@ class UserManager(BaseUserManager):
         else:
             if email:
                 email = self.normalize_email(email)
-                user = self.model(email=email, profile_role=profile_role, **extra_fields)
+                user = self.model(email=email, role=role, **extra_fields)
             elif mobile_number:
                 user = self.model(mobile_number=mobile_number, **extra_fields)
         user.set_password(password)
@@ -39,7 +39,7 @@ class UserManager(BaseUserManager):
             email=None,
             mobile_number=None,
             password=None,
-            profile_role=None,
+            role=None,
             **extra_fields
     ):
         extra_fields.setdefault('is_staff', False)
@@ -49,7 +49,7 @@ class UserManager(BaseUserManager):
             display_name=display_name,
             mobile_number=mobile_number,
             password=password,
-            profile_role=profile_role,
+            role=role,
             **extra_fields
         )
 
@@ -57,7 +57,7 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('profile_role', "admin")
+        extra_fields.setdefault('role', "admin")
         # display error message if is_staff and is_superuser is false for superuser.
         if extra_fields.get('is_staff') is not True:
             raise ValueError('Superuser must have is_staff = True.')

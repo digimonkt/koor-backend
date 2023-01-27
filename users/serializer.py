@@ -24,14 +24,14 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'mobile_number', 'password', 'profile_role', 'country_code']
+        fields = ['email', 'mobile_number', 'password', 'role', 'country_code']
 
     # CREATE A VALIDATION FUNCTION FOR INSERT USER RECORD INTO USER TABLE.
     def validate(self, data):
         email = data.get("email", "")
         mobile_number = data.get("mobile_number", "")
         password = data.get("password", "")
-        profile_role = data.get("profile_role", "")
+        role = data.get("role", "")
         country_code = data.get("country_code", "")
         if email:
             if User.objects.filter(email=email).exists():  # CHECK EMAIL ALREADY REGISTERED OR NOT.
@@ -66,7 +66,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
                     mobile_number=mobile_number,
                     country_code=country_code,
                     is_active=True,
-                    profile_role=profile_role
+                    role=role
                 )  # SET DATA INTO USER TABLE FOR CRATE USER BUT USER NOT CREATED AT THAT MOMENT.
                 user_data.set_password(password)  # SET PASSWORD FOR USER.
 

@@ -11,7 +11,7 @@ from .models import User
 class UserAdmin(UserAdmin):
     fieldsets = (
         (None, {
-            'fields': ('email', 'password', 'mobile_number', 'profile_role',)
+            'fields': ('email', 'password', 'mobile_number', 'role',)
         }),
         (_('Personal info'), {
             'fields': ('display_name', 'image')
@@ -26,9 +26,9 @@ class UserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'mobile_number', 'profile_role', 'password1', 'password2'),
+            'fields': ('email', 'mobile_number', 'role', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'mobile_number', 'is_active', 'profile_role',)
+    list_display = ('email', 'mobile_number', 'is_active', 'role',)
     list_display_links = ('email', 'mobile_number',)
     ordering = ('date_joined',)
