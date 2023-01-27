@@ -79,7 +79,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
             mes = "Mobile number or Email is required for user registration."
             raise CustomValidationError(
                 mes,
-                'missing_field',
+                'email',
                 status.HTTP_400_BAD_REQUEST
             )  # CALL MESSAGE IF USER ALREADY REGISTERED.
 
@@ -113,7 +113,7 @@ class CreateSessionSerializers(serializers.Serializer):
                     mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
                     raise CustomValidationError(
                         mes,
-                        'user',
+                        'message',
                         status.HTTP_400_BAD_REQUEST
                     )  # DISPLAY ERROR MESSAGE.
                 else:
@@ -123,7 +123,7 @@ class CreateSessionSerializers(serializers.Serializer):
                     mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
                     raise CustomValidationError(
                         mes,
-                        'user',
+                        'message',
                         status.HTTP_400_BAD_REQUEST
                     )  # DISPLAY ERROR MESSAGE.
                 else:
@@ -137,7 +137,7 @@ class CreateSessionSerializers(serializers.Serializer):
                 mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
                 raise CustomValidationError(
                     mes,
-                    'missing_field',
+                    'email',
                     status.HTTP_400_BAD_REQUEST
                 )  # DISPLAY ERROR MESSAGE.
         except Exception as e:
