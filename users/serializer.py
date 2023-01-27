@@ -1,6 +1,8 @@
 # IMPORT PYTHON PACKAGE.
-from rest_framework import exceptions
+from rest_framework import exceptions, status
 from rest_framework import serializers
+
+from core.utils import CustomValidationError
 
 # IMPORT CUSTOM AUTHENTICATE FUNCTION FORM BACKENDS.PY FILE.
 from .backends import MobileOrEmailBackend as cb
@@ -34,18 +36,29 @@ class CreateUserSerializers(serializers.ModelSerializer):
         if email:
             if User.objects.filter(email=email).exists():  # CHECK EMAIL ALREADY REGISTERED OR NOT.
                 mes = "Email already exist."  # MESSAGE IF USER ALREADY REGISTERED.
-                raise serializers.ValidationError(
-                    detail=mes,
-                    code='email'
+                raise CustomValidationError(
+                    mes,
+                    'email',
+                    status.HTTP_400_BAD_REQUEST
                 )  # CALL MESSAGE IF USER ALREADY REGISTERED.
         if mobile_number:
-            # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
-            if User.objects.filter(mobile_number=mobile_number).exists():
-                mes = "Mobile number already exist."  # MESSAGE IF USER ALREADY REGISTERED.
-                raise serializers.ValidationError(
-                    detail=mes,
-                    code='mobile_number'
+            if mobile_number.isnumeric():
+                # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
+                if User.objects.filter(mobile_number=mobile_number).exists():
+                    mes = "Mobile number already exist."  # MESSAGE IF USER ALREADY REGISTERED.
+                    raise CustomValidationError(
+                        mes,
+                        'mobile_number',
+                        status.HTTP_400_BAD_REQUEST
+                    )  # CALL MESSAGE IF USER ALREADY REGISTERED.
+            else:
+                mes = "Invalid mobile number."  # MESSAGE IF USER ALREADY REGISTERED.
+                raise CustomValidationError(
+                    mes,
+                    'mobile_number',
+                    status.HTTP_400_BAD_REQUEST
                 )  # CALL MESSAGE IF USER ALREADY REGISTERED.
+
         if email or mobile_number:
             try:
                 user_data = User(
@@ -64,9 +77,10 @@ class CreateUserSerializers(serializers.ModelSerializer):
         else:
             # MESSAGE IF EMAIL AND MOBILE NUMBER BOTH FIELD ARE BLANK.
             mes = "Mobile number or Email is required for user registration."
-            raise serializers.ValidationError(
-                detail=mes,
-                code='missing_fields'
+            raise CustomValidationError(
+                mes,
+                'missing_field',
+                status.HTTP_400_BAD_REQUEST
             )  # CALL MESSAGE IF USER ALREADY REGISTERED.
 
 
@@ -97,18 +111,20 @@ class CreateSessionSerializers(serializers.Serializer):
             if email:
                 if User.objects.filter(email=email).filter(is_active=False).exists():
                     mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
-                    raise serializers.ValidationError(
-                        detail=mes,
-                        code='user'
+                    raise CustomValidationError(
+                        mes,
+                        'user',
+                        status.HTTP_400_BAD_REQUEST
                     )  # DISPLAY ERROR MESSAGE.
                 else:
                     user = cb.authenticate(self, identifier=email, password=password)
             elif mobile_number:
                 if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
                     mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
-                    raise serializers.ValidationError(
-                        detail=mes,
-                        code='user'
+                    raise CustomValidationError(
+                        mes,
+                        'user',
+                        status.HTTP_400_BAD_REQUEST
                     )  # DISPLAY ERROR MESSAGE.
                 else:
                     user = cb.authenticate(self, identifier=mobile_number, password=password)
@@ -119,9 +135,10 @@ class CreateSessionSerializers(serializers.Serializer):
                     return "Not Valid"
             else:
                 mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
-                raise serializers.ValidationError(
-                    detail=mes,
-                    code='missing_fields'
+                raise CustomValidationError(
+                    mes,
+                    'missing_field',
+                    status.HTTP_400_BAD_REQUEST
                 )  # DISPLAY ERROR MESSAGE.
         except Exception as e:
             raise exceptions.APIException(e)  # CALL MESSAGE IF USER NOT REGISTERED.

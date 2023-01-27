@@ -45,8 +45,10 @@ class CreateUserView(generics.GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:  # RETURN ERROR MESSAGE IF SERIALIZER NOT VALID.
+            for field_name, field_errors in serializer.errors.items():
+                context[field_name] = field_errors[0]
             return response.Response(
-                data=serializer.errors,
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -104,7 +106,9 @@ class CreateSessionView(generics.GenericAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:  # RETURN ERROR MESSAGE IF SERIALIZER NOT VALID.
+            for field_name, field_errors in serializer.errors.items():
+                context[field_name] = field_errors[0]
             return response.Response(
-                data=serializer.errors,
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
