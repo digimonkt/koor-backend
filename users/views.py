@@ -1,14 +1,21 @@
 # IMPORT PYTHON PACKAGE.
 from django.contrib.auth import login
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from rest_framework import generics, response, status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
+
+import jwt
+
+# IMPORT SOME IMPORTANT FUNCTION AND DATA
+from KOOR.settings import DJANGO_CONFIGURATION
 
 # IMPORT SOME MODEL CLASS FORM SOME APP'S MODELS.PY FILE.
 from .models import User, UserSession
 
 # IMPORT SOME SERIALIZERS CLASS FROM SOME APP'S SERIALIZER.PY FILE.
 from .serializer import (
-    CreateUserSerializers, CreateSessionSerializers
+    CreateUserSerializers, CreateSessionSerializers, UserDetailSerializers
 )
 
 
@@ -24,6 +31,36 @@ class CreateUserView(generics.GenericAPIView):
     """
     serializer_class = CreateUserSerializers  # CALL SERIALIZERS FOR REGISTRATION.
     permission_classes = [permissions.AllowAny]  # SET PERMISSION FOR ALL USER.
+
+    def get(self, request):
+        context = dict()  # CREATE A BLANK DICTIONARY AS CONTEXT.
+        if self.request.user.is_authenticated:
+            context = dict()
+            user_id = request.data.get('userId', None)
+            try:
+                if not user_id:
+                    access_token = request.headers['Authorization'].replace('Bearer ', '')
+                    decoded = jwt.decode(access_token, DJANGO_CONFIGURATION.SECRET_KEY, algorithms=['HS256'])
+                    user_id = decoded.get('user_id')
+                user_data = User.objects.filter(id=user_id)
+                get_data = UserDetailSerializers(user_data, many=True)
+                context["data"] = get_data.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context["error"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context["detail"] = "Authentication credentials were not provided."
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def post(self, request):
         context = dict()  # CREATE A BLANK DICTIONARY AS CONTEXT.
