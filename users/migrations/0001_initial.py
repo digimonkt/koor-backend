@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
                 ('mobile_number', models.CharField(blank=True, db_column='mobile_number', max_length=13, null=True, verbose_name='Mobile Number')),
                 ('country_code', models.CharField(blank=True, db_column='country_code', max_length=250, null=True, verbose_name='Country Code')),
                 ('display_name', models.CharField(blank=True, db_column='display_name', max_length=250, null=True, verbose_name='Display Name')),
-                ('role', models.CharField(blank=True, choices=[('admin', 'Admin'), ('job_seeker', 'Job Seeker'), ('employer', 'Employer'), ('vendor', 'Vendor')], db_column='role', default='admin', max_length=250, null=True, verbose_name='Profile Role')),
+                ('profile_role', models.CharField(blank=True, choices=[('admin', 'Admin'), ('job_seeker', 'Job Seeker'), ('employer', 'Employer'), ('vendor', 'Vendor')], db_column='profile_role', default='admin', max_length=250, null=True, verbose_name='Profile Role')),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
                 ('image', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='%(app_label)s_%(class)s', to='project_meta.media', verbose_name='Image')),
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.permission', verbose_name='user permissions')),
