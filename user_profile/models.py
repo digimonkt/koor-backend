@@ -39,8 +39,6 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         max_length=255,
         db_column="gender",
         choices=GENDER_CHOICE,
-        blank=True,
-        null=True,
     )
     dob = models.DateField(
         verbose_name=_('Date of Birth'),
@@ -53,7 +51,6 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         max_length=255,
         db_column="employment_status",
         choices=EMPLOYMENT_STATUS_CHOICE,
-        default='employed'
     )
     description = models.TextField(
         verbose_name=_('Description'),
@@ -121,8 +118,6 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         max_length=255,
         db_column="organization_type",
         choices=ORGANIZATION_TYPE_CHOICE,
-        blank=True,
-        null=True,
     )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
