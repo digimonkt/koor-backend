@@ -33,13 +33,24 @@ class CreateUserView(generics.GenericAPIView):
                 user = User.objects.get(id=serializer.validated_data.id)
                 token = RefreshToken.for_user(user)  # GENERATING REFRESH TOKEN FOR THE USER.
                 context["message"] = "User Created Successfully"  # MESSAGE AFTER CREATE USER.
-                return response.Response(data=context, headers={"x-access": token.access_token, "x-refresh": token},
-                                         status=status.HTTP_201_CREATED)
+                return response.Response(
+                    data=context,
+                    headers={"x-access": token.access_token, "x-refresh": token},
+                    status=status.HTTP_201_CREATED
+                )
             except Exception as e:
                 context["error"] = str(e)
-                return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return response.Response(serializer.errors)  # RETURN ERROR MESSAGE IF SERIALIZER NOT VALID.
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:  # RETURN ERROR MESSAGE IF SERIALIZER NOT VALID.
+            for field_name, field_errors in serializer.errors.items():
+                context[field_name] = field_errors[0]
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 # CREATE CLASS FOR USER LOGIN.
@@ -65,7 +76,10 @@ class CreateSessionView(generics.GenericAPIView):
                 if serializer.validated_data == "Not Valid":  # FUNCTION IF SERIALIZER IS NOT VALID.
                     context = dict()  # CREATE A BLANK DICTIONARY AS CONTEXT.
                     context["message"] = "Invalid Email or Mobile Number or Password"  # MESSAGE AFTER CREATE USER.
-                    return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
                 else:
                     login(
                         request=request, user=serializer.validated_data, backend='users.backends.MobileOrEmailBackend'
@@ -80,10 +94,21 @@ class CreateSessionView(generics.GenericAPIView):
                     #  MANAGE USER SESSION DATA IN DATABASE AFTER LOGGING USER.
                     UserSession(user=serializer.validated_data, ip_address=IPAddr, agent=agent).save()
                     context["message"] = "User LoggedIn Successfully"  # MESSAGE AFTER USER LOGGING.
-                    return response.Response(data=context, headers={"x-access": token.access_token, "x-refresh": token},
-                                             status=status.HTTP_201_CREATED)
+                    return response.Response(
+                        data=context,
+                        headers={"x-access": token.access_token, "x-refresh": token},
+                        status=status.HTTP_201_CREATED
+                    )
             except Exception as e:
                 context["error"] = str(e)
-                return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return response.Response(serializer.errors)  # RETURN ERROR MESSAGE IF SERIALIZER NOT VALID.
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:  # RETURN ERROR MESSAGE IF SERIALIZER NOT VALID.
+            for field_name, field_errors in serializer.errors.items():
+                context[field_name] = field_errors[0]
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )

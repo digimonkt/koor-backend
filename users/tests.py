@@ -20,7 +20,7 @@ class CreateUserTestCase(APITestCase):
             "email": "testcase@example.com",
             "mobile_number": "",
             "password": "test@password1",
-            "profile_role": "",
+            "role": "",
             "country_code": ""
         }
         response = self.client.post(reverse('user_app_link:create_user_view_link'), data)
@@ -34,7 +34,7 @@ class CreateUserTestCase(APITestCase):
             "email": "",
             "mobile_number": "1234567890",
             "password": "test@password2",
-            "profile_role": "",
+            "role": "",
             "country_code": ""
         }
         response = self.client.post(reverse('user_app_link:create_user_view_link'), data)

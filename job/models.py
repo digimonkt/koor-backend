@@ -88,8 +88,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     budget_pay_period = models.CharField(
         verbose_name=_('Budget Pay Period'),
         db_column="budget_pay_period",
-        null=True,
-        blank=True,
         max_length=255,
         choices=PAY_PERIOD_CHOICE,
     )
@@ -236,8 +234,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     status = models.CharField(
         verbose_name=_('Status'),
         db_column="status",
-        null=True,
-        blank=True,
         max_length=25,
         choices=STATUS_CHOICE,
     )

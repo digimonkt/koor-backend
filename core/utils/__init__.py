@@ -1,2 +1,2 @@
 from .emails import SMTPSetting
-from .custom_exception_handler import CustomExceptionHandler
+from .custom_validation_error import CustomValidationError

@@ -1,6 +1,8 @@
 # IMPORT PYTHON PACKAGE.
-from rest_framework import exceptions
+from rest_framework import exceptions, status
 from rest_framework import serializers
+
+from core.utils import CustomValidationError
 
 # IMPORT CUSTOM AUTHENTICATE FUNCTION FORM BACKENDS.PY FILE.
 from .backends import MobileOrEmailBackend as cb
@@ -22,24 +24,41 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'mobile_number', 'password', 'profile_role', 'country_code']
+        fields = ['email', 'mobile_number', 'password', 'role', 'country_code']
 
     # CREATE A VALIDATION FUNCTION FOR INSERT USER RECORD INTO USER TABLE.
     def validate(self, data):
         email = data.get("email", "")
         mobile_number = data.get("mobile_number", "")
         password = data.get("password", "")
-        profile_role = data.get("profile_role", "")
+        role = data.get("role", "")
         country_code = data.get("country_code", "")
         if email:
             if User.objects.filter(email=email).exists():  # CHECK EMAIL ALREADY REGISTERED OR NOT.
                 mes = "Email already exist."  # MESSAGE IF USER ALREADY REGISTERED.
-                raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+                raise CustomValidationError(
+                    mes,
+                    'email',
+                    status.HTTP_400_BAD_REQUEST
+                )  # CALL MESSAGE IF USER ALREADY REGISTERED.
         if mobile_number:
-            # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
-            if User.objects.filter(mobile_number=mobile_number).exists():
-                mes = "Mobile number already exist."  # MESSAGE IF USER ALREADY REGISTERED.
-                raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+            if mobile_number.isnumeric():
+                # CHECK MOBILE NUMBER ALREADY REGISTERED OR NOT.
+                if User.objects.filter(mobile_number=mobile_number).exists():
+                    mes = "Mobile number already exist."  # MESSAGE IF USER ALREADY REGISTERED.
+                    raise CustomValidationError(
+                        mes,
+                        'mobile_number',
+                        status.HTTP_400_BAD_REQUEST
+                    )  # CALL MESSAGE IF USER ALREADY REGISTERED.
+            else:
+                mes = "Invalid mobile number."  # MESSAGE IF USER ALREADY REGISTERED.
+                raise CustomValidationError(
+                    mes,
+                    'mobile_number',
+                    status.HTTP_400_BAD_REQUEST
+                )  # CALL MESSAGE IF USER ALREADY REGISTERED.
+
         if email or mobile_number:
             try:
                 user_data = User(
@@ -47,7 +66,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
                     mobile_number=mobile_number,
                     country_code=country_code,
                     is_active=True,
-                    profile_role=profile_role
+                    role=role
                 )  # SET DATA INTO USER TABLE FOR CRATE USER BUT USER NOT CREATED AT THAT MOMENT.
                 user_data.set_password(password)  # SET PASSWORD FOR USER.
 
@@ -58,7 +77,11 @@ class CreateUserSerializers(serializers.ModelSerializer):
         else:
             # MESSAGE IF EMAIL AND MOBILE NUMBER BOTH FIELD ARE BLANK.
             mes = "Mobile number or Email is required for user registration."
-            raise exceptions.APIException(mes)  # CALL MESSAGE IF USER ALREADY REGISTERED.
+            raise CustomValidationError(
+                mes,
+                'email',
+                status.HTTP_400_BAD_REQUEST
+            )  # CALL MESSAGE IF USER ALREADY REGISTERED.
 
 
 # CREATE SERIALIZER FOR USER LOGIN.
@@ -84,26 +107,37 @@ class CreateSessionSerializers(serializers.Serializer):
         mobile_number = data.get("mobile_number", "")
         password = data.get("password", "")
         user = ""
-        try:
-            if email:
-                if User.objects.filter(email=email).filter(is_active=False).exists():
-                    mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
-                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
-                else:
-                    user = cb.authenticate(self, identifier=email, password=password)
-            elif mobile_number:
-                if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
-                    mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
-                    raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
-                else:
-                    user = cb.authenticate(self, identifier=mobile_number, password=password)
-            if user:
-                if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
-                    return user  # RETURN USER INSTANCE FOR LOGIN.
-                else:
-                    return "Not Valid"
+        if email:
+            if User.objects.filter(email=email).filter(is_active=False).exists():
+                mes = "User not activate."  # MESSAGE IF USER NOT ACTIVE.
+                raise CustomValidationError(
+                    mes,
+                    'message',
+                    status.HTTP_400_BAD_REQUEST
+                )  # DISPLAY ERROR MESSAGE.
             else:
-                mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
-                raise exceptions.APIException(mes)  # DISPLAY ERROR MESSAGE.
-        except Exception as e:
-            raise exceptions.APIException(e)  # CALL MESSAGE IF USER NOT REGISTERED.
+                user = cb.authenticate(self, identifier=email, password=password)
+        elif mobile_number:
+            if User.objects.filter(mobile_number=mobile_number).filter(is_active=False).exists():
+                mes = "User not activate"  # MESSAGE IF USER NOT ACTIVE.
+                raise CustomValidationError(
+                    mes,
+                    'message',
+                    status.HTTP_400_BAD_REQUEST
+                )  # DISPLAY ERROR MESSAGE.
+            else:
+                user = cb.authenticate(self, identifier=mobile_number, password=password)
+        else:
+            mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
+            raise CustomValidationError(
+                mes,
+                'email',
+                status.HTTP_400_BAD_REQUEST
+            )  # DISPLAY ERROR MESSAGE.
+        if user:
+            if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
+                return user  # RETURN USER INSTANCE FOR LOGIN.
+        else:
+            return "Not Valid"
+
+

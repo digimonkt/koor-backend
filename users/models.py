@@ -18,7 +18,7 @@ from .managers import UserManager
 class User(AbstractUser, BaseModel):
     """
     This class created for get detail of all user like: admin, JobSeeker, Employer etc.
-    Here we have some useful field like:- email, mobile_number, country_code, display_name, profile_role, image.
+    Here we have some useful field like:- email, mobile_number, country_code, display_name, role, image.
         - we can get all other default authenticate filed in this user model class.
     """
     ROLE_TYPE_CHOICE = (
@@ -58,14 +58,11 @@ class User(AbstractUser, BaseModel):
         null=True,
         db_column="display_name"
     )
-    profile_role = models.CharField(
-        verbose_name=_('Profile Role'),
+    role = models.CharField(
+        verbose_name=_('Role'),
         max_length=250,
-        blank=True,
-        null=True,
-        db_column="profile_role",
-        choices=ROLE_TYPE_CHOICE,
-        default='admin'
+        db_column="role",
+        choices=ROLE_TYPE_CHOICE
     )
     image = models.ForeignKey(
         Media,
