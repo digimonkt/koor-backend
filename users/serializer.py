@@ -127,11 +127,6 @@ class CreateSessionSerializers(serializers.Serializer):
                 )  # DISPLAY ERROR MESSAGE.
             else:
                 user = cb.authenticate(self, identifier=mobile_number, password=password)
-        if user:
-            if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
-                return user  # RETURN USER INSTANCE FOR LOGIN.
-            else:
-                return "Not Valid"
         else:
             mes = "Please enter email or mobile number for login."  # MESSAGE IF INVALID LOGIN DETAIL.
             raise CustomValidationError(
@@ -139,3 +134,10 @@ class CreateSessionSerializers(serializers.Serializer):
                 'email',
                 status.HTTP_400_BAD_REQUEST
             )  # DISPLAY ERROR MESSAGE.
+        if user:
+            if user is not None:  # CHECK LOGIN DETAIL VALID OR NOT.
+                return user  # RETURN USER INSTANCE FOR LOGIN.
+        else:
+            return "Not Valid"
+
+
