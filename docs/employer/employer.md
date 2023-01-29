@@ -31,12 +31,12 @@ This API is used to update `employer`'s about section
       "Content-Type": "multipart/form-data"
     },
     "body": {
-      "organizationName": "Digimonk Technologies",
-      "typeOfOrganization": "business" || "ngo" || "government",
-      "mobileNumber": "1234567890",
-      "countryCode": "+91",
-      "licenseId": "LAS001TA",
-      "license": File
+      "name": "Digimonk Technologies",
+      "organization_type": "business" || "ngo" || "government",
+      "mobile_number": "1234567890",
+      "country_code": "+91",
+      "license_id": "LAS001TA",
+      "license_id_file": File
     }
   }
   ```
@@ -64,29 +64,28 @@ This route is used to create `jobs`
   {
     body: {
       title: "Senior Software Developer",
-      budgetCurrency: "USD",
-      budgetAmount: 2000,
-      budgetPayPeriod: "yearly",
+      budget_currency: "USD",
+      budget_amount: 2000,
+      budget_pay_period: "yearly",
       description: "This is the job description...",
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
-      jobCategory1: "${jobCategoryId}",
-      jobCategory2: "${jobCategoryId}" || null,
-      jobCategory3: "${jobCategoryId}" || null,
-      isFulltime: true,
-      isPartime: false,
-      hasContract: false,
-      contactEmail: "saral.shrivastava@digimonk.in",
-      contactPhone: null,
-      contactWhatsapp: null,
-      highestEducation: "${educationLevelId}",
-      language1: "${languageId}",
-      language2: "${languageId}" || null,
-      language3: "${languageId}" || null,
-      skill1: "${skillId}",
-      skill2: "${skillId}" || null,
-      skill3: "${skillId}" || null,
+      job_category_1: "${jobCategoryId}",
+      job_category_2: "${jobCategoryId}" || null,
+      is_fulltime: true,
+      is_part_time: false,
+      has_contract: false,
+      contact_email: "saral.shrivastava@digimonk.in",
+      contact_phone: null,
+      contact_whatsapp: null,
+      highest_education: "${educationLevelId}",
+      language_1: "${languageId}",
+      language_2: "${languageId}" || null,
+      language_3: "${languageId}" || null,
+      skill_1: "${skillId}",
+      skill_2: "${skillId}" || null,
+      skill_3: "${skillId}" || null,
     }
   }
   ```
@@ -104,6 +103,7 @@ This route is used to create `jobs`
 ## Get Jobs
 
 This api is used to get all the `jobs` of the employer.
+
 - route: `/jobs`
 - method: `GET`
 - request:
@@ -114,7 +114,7 @@ This api is used to get all the `jobs` of the employer.
     }
   }
   ```
-  > Note: If `employerId` is present in query then return that `employer`'s jobs list else current `employer`'s job list. 
+  > Note: If `employerId` is present in query then return that `employer`'s jobs list else current `employer`'s job list.
 - response:
   ```js
   {
@@ -149,29 +149,28 @@ This `api` is used to update existing job
   {
     body: {
       title: "Senior Software Developer",
-      budgetCurrency: "USD",
-      budgetAmount: 2000,
-      budgetPayPeriod: "yearly",
+      budget_currency: "USD",
+      budget_amount: 2000,
+      budget_pay_period: "yearly",
       description: "This is the job description...",
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
-      jobCategory1: "${jobCategoryId}",
-      jobCategory2: "${jobCategoryId}" || null,
-      jobCategory3: "${jobCategoryId}" || null,
-      isFulltime: true,
-      isPartime: false,
-      hasContract: false,
-      contactEmail: "saral.shrivastava@digimonk.in",
-      contactPhone: null,
-      contactWhatsapp: null,
-      highestEducation: "${educationLevelId}",
-      language1: "${languageId}",
-      language2: "${languageId}" || null,
-      language3: "${languageId}" || null,
-      skill1: "${skillId}",
-      skill2: "${skillId}" || null,
-      skill3: "${skillId}" || null,
+      job_category_1: "${jobCategoryId}",
+      job_category_2: "${jobCategoryId}" || null,
+      is_full_time: true,
+      is_part_time: false,
+      has_contract: false,
+      contact_email: "saral.shrivastava@digimonk.in",
+      contact_phone: null,
+      contact_whatsapp: null,
+      highest_education: "${educationLevelId}",
+      language_1: "${languageId}",
+      language_2: "${languageId}" || null,
+      language_3: "${languageId}" || null,
+      skill_1: "${skillId}",
+      skill_2: "${skillId}" || null,
+      skill_3: "${skillId}" || null,
     }
   }
   ```
