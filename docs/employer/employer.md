@@ -66,14 +66,14 @@ This route is used to create `jobs`
       title: "Senior Software Developer",
       budget_currency: "USD",
       budget_amount: 2000,
-      budget_pay_period: "yearly",
+      budget_pay_period: "yearly" || "quarterly" || "monthly" || "weekly" || "hourly",
       description: "This is the job description...",
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
       job_category_1: "${jobCategoryId}",
       job_category_2: "${jobCategoryId}" || null,
-      is_fulltime: true,
+      is_full_time: true,
       is_part_time: false,
       has_contract: false,
       contact_email: "saral.shrivastava@digimonk.in",
@@ -86,6 +86,7 @@ This route is used to create `jobs`
       skill_1: "${skillId}",
       skill_2: "${skillId}" || null,
       skill_3: "${skillId}" || null,
+      attachments: [File]
     }
   }
   ```
@@ -147,11 +148,14 @@ This `api` is used to update existing job
 - request:
   ```js
   {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    },
     body: {
       title: "Senior Software Developer",
       budget_currency: "USD",
       budget_amount: 2000,
-      budget_pay_period: "yearly",
+      budget_pay_period: "yearly" || "quarterly" || "monthly" || "weekly" || "hourly",
       description: "This is the job description...",
       country: "${countryId}",
       city: "${cityId}",
@@ -171,6 +175,7 @@ This `api` is used to update existing job
       skill_1: "${skillId}",
       skill_2: "${skillId}" || null,
       skill_3: "${skillId}" || null,
+      attachments: [File]
     }
   }
   ```
