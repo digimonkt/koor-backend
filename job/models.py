@@ -175,10 +175,8 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     highest_education = models.ForeignKey(
         EducationLevel,
         verbose_name=_('Highest Education'),
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         db_column="highest_education",
-        null=True,
-        blank=True,
         related_name='%(app_label)s_%(class)s_highest_education'
     )
     language_1 = models.ForeignKey(
