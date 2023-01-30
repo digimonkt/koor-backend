@@ -1,11 +1,10 @@
 # IMPORT PYTHON PACKAGE.
+import jwt
+
 from django.contrib.auth import login
-from django.http import HttpResponseRedirect
-from django.urls import reverse
+
 from rest_framework import generics, response, status, permissions
 from rest_framework_simplejwt.tokens import RefreshToken
-
-import jwt
 
 # IMPORT SOME IMPORTANT FUNCTION AND DATA
 from KOOR.settings import DJANGO_CONFIGURATION
@@ -53,9 +52,10 @@ class CreateUserView(generics.GenericAPIView):
                 user_data = User.objects.filter(id=user_id)
                 if user_data[0].role == "job_seeker":
                     get_data = JobSeekerDetailSerializers(user_data, many=True)
+                    context["data"] = get_data.data
                 elif user_data[0].role == "employer":
                     get_data = EmployerDetailSerializers(user_data, many=True)
-                context["data"] = get_data.data
+                    context["data"] = get_data.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK

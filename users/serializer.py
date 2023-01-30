@@ -6,6 +6,9 @@ from core.utils import CustomValidationError
 
 # IMPORT SOME IMPORTANT FUNCTION AND DATA
 from user_profile.models import JobSeekerProfile, EmployerProfile
+
+# IMPORT SOME IMPORTANT FUNCTION AND DATA
+from user_profile.models import JobSeekerProfile
 from job_seeker.models import EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
 
 # IMPORT CUSTOM AUTHENTICATE FUNCTION FORM BACKENDS.PY FILE.
@@ -368,3 +371,4 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data[0]
         return context
+
