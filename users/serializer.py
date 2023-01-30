@@ -340,7 +340,6 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = EmployerProfile
         fields = (
-            'organization_name',
             'description',
             'organization_type',
             'license_id',

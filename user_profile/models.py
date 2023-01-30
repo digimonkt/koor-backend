@@ -107,11 +107,6 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         db_column="user",
         related_name='%(app_label)s_%(class)s_user'
     )
-    organization_name = models.CharField(
-        verbose_name=_('Organization Name'),
-        max_length=255,
-        db_column="organization_name",
-    )
     description = models.TextField(
         verbose_name=_('Description'),
         null=True,
