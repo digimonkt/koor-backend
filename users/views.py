@@ -165,11 +165,12 @@ class CreateSessionView(generics.GenericAPIView):
 
 class DeleteSessionView(APIView):
     """
-    Created a class for delete session. This Class is permitted to only authenticated user.
-        For delete session, we use the delete method.
-            Here we need refreshToken in request header, and we add this token into token's blacklist table.
-            If session delete successfully complete, we send a message with status code 200.
-            If we get any error and session not delete, so we send an error message with a 400 status code.
+        Here we create a class DeleteSessionView for deleting the user's session. This Class is permitted to only
+        authenticated users. For the delete session, we use the delete method.
+            Here we need refreshToken in the request header, and we add this token to the token's blacklist table.
+
+            - If the session deletes successfully completed, we send a message with status code 200.
+            - If we get any error and the session not delete, we send an error message with a 400 status code.
     """
     permission_classes = [permissions.IsAuthenticated]
 
