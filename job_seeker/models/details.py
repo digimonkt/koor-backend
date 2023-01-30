@@ -36,6 +36,13 @@ class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         null=True,
         db_column='end_date'
     )
+    present = models.BooleanField(
+        verbose_name=_('Present'),
+        null=True,
+        blank=True,
+        default=True,
+        db_column="present",
+    )
     institute = models.CharField(
         verbose_name=_('Institute'),
         max_length=255,

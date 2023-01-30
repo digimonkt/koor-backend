@@ -4,6 +4,13 @@ from rest_framework import serializers
 
 from core.utils import CustomValidationError
 
+# IMPORT SOME IMPORTANT FUNCTION AND DATA
+from user_profile.models import JobSeekerProfile, EmployerProfile
+
+# IMPORT SOME IMPORTANT FUNCTION AND DATA
+from user_profile.models import JobSeekerProfile
+from job_seeker.models import EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
+
 # IMPORT CUSTOM AUTHENTICATE FUNCTION FORM BACKENDS.PY FILE.
 from .backends import MobileOrEmailBackend as cb
 
@@ -11,7 +18,6 @@ from .backends import MobileOrEmailBackend as cb
 from .models import User
 
 
-# CREATE SERIALIZER FOR USER REGISTRATION.
 class CreateUserSerializers(serializers.ModelSerializer):
     """
     Created a serializer class for create user. Here we use ModelSerializer, using User model.
@@ -84,7 +90,6 @@ class CreateUserSerializers(serializers.ModelSerializer):
             )  # CALL MESSAGE IF USER ALREADY REGISTERED.
 
 
-# CREATE SERIALIZER FOR USER LOGIN.
 class CreateSessionSerializers(serializers.Serializer):
     """
     Created a serializer class for user authentication. Here we use Serializer.
@@ -95,7 +100,7 @@ class CreateSessionSerializers(serializers.Serializer):
         checked user is active or not.
     If user is authenticated so we return user instance.
     """
-    # CREATE FORM FOR GET USER DETAIL FROM FRONTEND..
+    # CREATE FORM FOR GET CREATE SESSION DETAIL FROM FRONTEND.
     email = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False, allow_blank=True)
     mobile_number = serializers.CharField(style={"input_type": "text"}, write_only=True, required=False,
                                           allow_blank=True)
@@ -140,4 +145,229 @@ class CreateSessionSerializers(serializers.Serializer):
         else:
             return "Not Valid"
 
+
+class JobSeekerProfileSerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get JobSeeker's profile data. Here we use serializers.ModelSerializer.
+    Here we get data from JobSeekerProfile table, and we get only some required field like:-
+        gender, dob, employment_status, description, market_information_notification, job_notification.
+    """
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = (
+            'gender',
+            'dob',
+            'employment_status',
+            'description',
+            'market_information_notification',
+            'job_notification'
+        )
+
+
+class EducationRecordSerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get education record data. Here we use serializers.ModelSerializer.
+    Here we get data from EducationRecord table, and we get only some required field like:-
+        id, title, start_date, end_date, present, organization, description.
+    """
+
+    class Meta:
+        model = EducationRecord
+        fields = (
+            'id',
+            'title',
+            'start_date',
+            'end_date',
+            'present',
+            'organization',
+            'description'
+        )
+
+
+class EmploymentRecordSerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get employment record data. Here we use serializers.ModelSerializer.
+    Here we get data from EmploymentRecord table, and we get only some required field like:-
+        id, title, start_date, end_date, present, organization, description.
+    """
+
+    class Meta:
+        model = EmploymentRecord
+        fields = (
+            'id',
+            'title',
+            'start_date',
+            'end_date',
+            'present',
+            'organization',
+            'description'
+        )
+
+
+class ResumeSerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get resume data. Here we use serializers.ModelSerializer.
+    Here we get data from Resume table, and we get only some required field like:-
+        id, title, file_path, created_at.
+    """
+
+    class Meta:
+        model = Resume
+        fields = (
+            'id',
+            'title',
+            'file_path',
+            'created_at'
+        )
+
+
+class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get JobSeeker language proficiency data. Here we use serializers.ModelSerializer.
+    Here we get data from JobSeekerLanguageProficiency table, and we get only some required field like:-
+        id, language, written, spoken.
+    """
+
+    class Meta:
+        model = Resume
+        fields = (
+            'id',
+            'language',
+            'written',
+            'spoken'
+        )
+
+
+class JobSeekerSkillSerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get JobSeeker skills data. Here we use serializers.ModelSerializer.
+    Here we get data from JobSeekerSkill table, and we get only some required field like:-
+        id, skill.
+    """
+
+    class Meta:
+        model = JobSeekerSkill
+        fields = (
+            'id',
+            'skill'
+        )
+
+
+class JobSeekerDetailSerializers(serializers.ModelSerializer):
+    """
+    Created a serializer class for get Job Seeker detail. Here we use serializers.ModelSerializer.
+    Here we need data form other serializers like:-
+        JobSeekerProfileSerializer
+        EducationRecordSerializer
+        EmploymentRecordSerializer
+        ResumeSerializer
+        JobSeekerLanguageProficiencySerializer
+        JobSeekerSkillSerializer,
+            so we create function and call data from these serializer classes.
+
+    Here we get data from user table, and we get only some required field from user table like:-
+        id, email, mobile_number, country_code, display_name, image, role.
+    """
+    profile = serializers.SerializerMethodField()
+    education_record = serializers.SerializerMethodField()
+    work_experience = serializers.SerializerMethodField()
+    resume = serializers.SerializerMethodField()
+    languages = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'display_name', 'image', 'role', 'profile',
+                  'education_record', 'work_experience', 'resume', 'languages', 'skills']
+
+    def get_profile(self, obj):
+        context = dict()
+        user_data = JobSeekerProfile.objects.filter(user=obj)
+        get_data = JobSeekerProfileSerializer(user_data, many=True)
+        if get_data.data:
+            context = get_data.data[0]
+        return context
+
+    def get_education_record(self, obj):
+        context = []
+        education_data = EducationRecord.objects.filter(user=obj)
+        get_data = EducationRecordSerializer(education_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_work_experience(self, obj):
+        context = []
+        employment_data = EmploymentRecord.objects.filter(user=obj)
+        get_data = EmploymentRecordSerializer(employment_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_resume(self, obj):
+        context = []
+        resume_data = Resume.objects.filter(user=obj)
+        get_data = ResumeSerializer(resume_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_languages(self, obj):
+        context = []
+        languages_data = JobSeekerLanguageProficiency.objects.filter(user=obj)
+        get_data = JobSeekerLanguageProficiencySerializer(languages_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_skills(self, obj):
+        context = []
+        skills_data = JobSeekerSkill.objects.filter(user=obj)
+        get_data = JobSeekerSkillSerializer(skills_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+
+class EmployerProfileSerializer(serializers.ModelSerializer):
+    """
+    Created a serializer class for get employer's profile data. Here we use serializers.ModelSerializer.
+    Here we get data from EmployerProfile table, and we get only some required field like:-
+        organization_name, description, organization_type, license_id, license_id_file.
+    """
+
+    class Meta:
+        model = EmployerProfile
+        fields = (
+            'description',
+            'organization_type',
+            'license_id',
+            'license_id_file'
+        )
+
+
+class EmployerDetailSerializers(serializers.ModelSerializer):
+    """
+    Created a serializer class for get employer detail. Here we use serializers.ModelSerializer.
+    Here we need data form other serializers like:-
+        EmployerProfileSerializer,
+            so we create function and call data from these serializer classes.
+
+    Here we get data from user table, and we get only some required field from user table like:-
+        id, email, mobile_number, country_code, display_name, image, role.
+    """
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'display_name', 'image', 'role', 'profile']
+
+    def get_profile(self, obj):
+        context = dict()
+        user_data = EmployerProfile.objects.filter(user=obj)
+        get_data = EmployerProfileSerializer(user_data, many=True)
+        if get_data.data:
+            context = get_data.data[0]
+        return context
 
