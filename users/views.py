@@ -177,13 +177,13 @@ class DeleteSessionView(APIView):
     def delete(self, request):
         context = dict()
         try:
-            refresh_token = request.headers['refreshToken']
+            refresh_token = request.headers['X-Refresh']
             token = RefreshToken(refresh_token)
             token.blacklist()
             context["message"] = "Logged Out successfully"
             return response.Response(data=context, status=status.HTTP_200_OK)
         except Exception as e:
-            if e == "refreshToken":
+            if e == "X-Refresh":
                 context["error"] = "Token is invalid or expired"
             else:
                 context["error"] = str(e)
