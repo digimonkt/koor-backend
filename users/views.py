@@ -43,7 +43,7 @@ class CreateUserView(generics.GenericAPIView):
         context = dict()  # CREATE A BLANK DICTIONARY AS CONTEXT.
         if self.request.user.is_authenticated:
             context = dict()
-            user_id = request.data.get('userId', None)
+            user_id = request.GET.get('userId', None)
             try:
                 if not user_id:
                     access_token = request.headers['Authorization'].replace('Bearer ', '')
