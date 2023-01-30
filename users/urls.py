@@ -11,4 +11,6 @@ urlpatterns = [
 
     path('/session', views.CreateSessionView.as_view(), name="create_session_view_link"),
 
+    path('/delete-session', views.DeleteSessionView.as_view(), name="delete_session_view_link"),
+
 ]
