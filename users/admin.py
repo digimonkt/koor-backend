@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext as _
 
-from .models import User
+from .models import User, UserSession
 
 
 # Register your models here.
@@ -32,3 +32,6 @@ class UserAdmin(UserAdmin):
     list_display = ('email', 'mobile_number', 'is_active', 'role',)
     list_display_links = ('email', 'mobile_number',)
     ordering = ('date_joined',)
+
+
+admin.site.register(UserSession)
