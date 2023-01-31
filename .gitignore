@@ -107,6 +107,7 @@ celerybeat.pid
 env/
 venv/
 ENV/
+media/
 env.bak/
 venv.bak/
 nohup.out
