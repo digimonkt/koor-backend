@@ -4,6 +4,7 @@ import jwt
 from django.contrib.auth import login
 
 from rest_framework import generics, response, status, permissions
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 # IMPORT SOME IMPORTANT FUNCTION AND DATA
@@ -160,3 +161,30 @@ class CreateSessionView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class DeleteSessionView(APIView):
+    """
+        Here we create a class DeleteSessionView for deleting the user's session. This Class is permitted to only
+        authenticated users. For the delete session, we use the delete method.
+            Here we need refreshToken in the request header, and we add this token to the token's blacklist table.
+
+            - If the session deletes successfully completed, we send a message with status code 200.
+            - If we get any error and the session not delete, we send an error message with a 400 status code.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        context = dict()
+        try:
+            refresh_token = request.headers['X-Refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            context["message"] = "Logged Out successfully"
+            return response.Response(data=context, status=status.HTTP_200_OK)
+        except Exception as e:
+            if e == "X-Refresh":
+                context["error"] = "Token is invalid or expired"
+            else:
+                context["error"] = str(e)
+            return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
