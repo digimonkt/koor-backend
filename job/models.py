@@ -259,7 +259,7 @@ class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mo
         db_column="job",
         related_name='%(app_label)s_%(class)s_job'
     )
-    attachment = models.ForeignKey(
+    attachment = models.OneToOneField(
         Media,
         verbose_name=_('Attachment'),
         on_delete=models.CASCADE,

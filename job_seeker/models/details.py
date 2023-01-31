@@ -130,7 +130,7 @@ class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         Here we have some useful field like:- user, title, file_path.
             - file_path is used for get file details.
     """
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
@@ -142,7 +142,7 @@ class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=255,
         db_column="title",
     )
-    file_path = models.ForeignKey(
+    file_path = models.OneToOneField(
         Media,
         verbose_name=_('File Path'),
         on_delete=models.CASCADE,

@@ -27,7 +27,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         ('other', "Other"),
         ('fresher', "Fresher"),
     )
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
@@ -100,7 +100,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         ('ngo', "NGO"),
         ('business', "Business"),
     )
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
@@ -136,7 +136,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         null=True,
         blank=True
     )
-    license_id_file = models.ForeignKey(
+    license_id_file = models.OneToOneField(
         Media,
         verbose_name=_('License File'),
         on_delete=models.SET_NULL,

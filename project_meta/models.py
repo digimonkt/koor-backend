@@ -35,7 +35,7 @@ class Media(BaseModel, models.Model):
     )
 
     def __str__(self):
-        return self.file_path
+        return str(self.file_path)
 
     class Meta:
         verbose_name = "Media"
