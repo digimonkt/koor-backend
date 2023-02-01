@@ -1,3 +1,4 @@
+from datetime import date
 from django.db import models
 from django.utils.translation import gettext as _
 
@@ -16,7 +17,7 @@ def upload_directory_path(instance, filename):
     Directory path function: Return unique path name for file uploading.
     Example:- instance_name/file_name
     """
-    return '{0}/{1}'.format(instance, filename)
+    return '{0}/{1}/{2}'.format(date.today(), instance, filename)
 
 
 class BaseModel(UUIDModel):
