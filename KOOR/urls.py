@@ -29,4 +29,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     path("api/v1/user", include(('users.urls', 'users'), namespace='user_app_link')),
+
+    path("api/v1/user/employer", include(('employer.urls', 'employer'), namespace='employer_app_link')),
+
 ]
