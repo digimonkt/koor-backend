@@ -26,6 +26,9 @@ class Common(Configuration):
         'django_filters',            # for filtering rest endpoints
         'rest_framework_simplejwt',  # for the JWT authentication 
         'rest_framework_simplejwt.token_blacklist',     # for token blacklisting from admin panel
+
+        "users.apps.UsersConfig",
+        "project_meta.apps.ProjectMetaConfig",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
