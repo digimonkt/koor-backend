@@ -66,3 +66,56 @@ class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         verbose_name_plural = "Education Records"
         db_table = "EducationRecord"
 
+class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This Django model class represents the employment record details for a job seeker.
+
+    Columns
+    - `user`: The user who this employment record belongs to.
+    - `title`: The title of the employment record.
+    - `start_date`: The start date of the employment record.
+    - `end_date`: The end date of the employment record.
+    - `organization`: The organization associated with the employment record.
+    - `description`: A description of the employment record.
+    """
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    start_date = models.DateField(
+        verbose_name=_('Start Date'),
+        db_column='start_date'
+    )
+    end_date = models.DateField(
+        verbose_name=_('End Date'),
+        blank=True,
+        null=True,
+        db_column='end_date'
+    )
+    organization = models.CharField(
+        verbose_name=_('Organization'),
+        max_length=255,
+        db_column="organization",
+    )
+    description = models.TextField(
+        verbose_name=_('Description'),
+        null=True,
+        blank=True,
+        db_column="description",
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Employment Record"
+        verbose_name_plural = "Employment Records"
+        db_table = "EmploymentRecord"
