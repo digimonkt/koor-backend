@@ -29,6 +29,7 @@ class Common(Configuration):
 
         "users.apps.UsersConfig",
         "project_meta.apps.ProjectMetaConfig",
+        "user_profile.apps.UserProfileConfig",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
