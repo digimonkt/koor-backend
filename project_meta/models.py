@@ -71,3 +71,17 @@ class Language(SlugBaseModel, models.Model):
         verbose_name = "Language"
         verbose_name_plural = "Langauges"
         db_table = "Language"
+
+class Skill(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a skill.
+
+    Columns: 
+    - `title`: A string representing the name of the skill. 
+    - `slug`: A string representing the slug for the skill, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Skill"
+        verbose_name_plural = "Skills"
+        db_table = "Skill"
