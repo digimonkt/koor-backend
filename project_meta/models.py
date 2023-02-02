@@ -85,3 +85,17 @@ class Skill(SlugBaseModel, models.Model):
         verbose_name = "Skill"
         verbose_name_plural = "Skills"
         db_table = "Skill"
+
+class EducationLevel(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a Education Level.
+
+    Columns: 
+    - `title`: A string representing the name of the education level. 
+    - `slug`: A string representing the slug for the education level, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Education Level"
+        verbose_name_plural = "Education Levels"
+        db_table = "EducationLevel"
