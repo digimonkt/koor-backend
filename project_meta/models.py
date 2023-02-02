@@ -57,3 +57,17 @@ class Tag(SlugBaseModel, models.Model):
         verbose_name = "Tag"
         verbose_name_plural = "Tags"
         db_table = "Tag"
+
+class Language(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a language.
+
+    Columns: 
+    - `title`: A string representing the name of the language. 
+    - `slug`: A string representing the slug for the language, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Language"
+        verbose_name_plural = "Langauges"
+        db_table = "Language"
