@@ -5,7 +5,9 @@ from core.models import (
     BaseModel, SoftDeleteModel
 )
 from users.models import User, TimeStampedModel
-from project_meta.models import Media
+from project_meta.models import (
+    Media, Language
+)
 
 class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -155,3 +157,52 @@ class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Resume"
         verbose_name_plural = "Resumes"
         db_table = "Resume"
+
+class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This Django model class represents the language proficiency of a job seeker. The fields are as follows:
+
+    - `user`: The user who this language proficiency belongs to.
+    - `language`: The language of the language proficiency.
+    - `written`: The written proficiency level of the language.
+    - `spoken`: The spoken proficiency level of the language.
+    """
+    FLUENCY_CHOICE = (
+        ('basic', "Basic"),
+        ('conversational', "Conversational"),
+        ('fluent', "Fluent"),
+    )
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    language = models.ForeignKey(
+        Language,
+        verbose_name=_('Language'),
+        on_delete=models.CASCADE,
+        db_column="language",
+        related_name='%(app_label)s_%(class)s_language'
+    )
+    written = models.CharField(
+        verbose_name=_('Written'),
+        max_length=255,
+        db_column="written",
+        choices=FLUENCY_CHOICE,
+    )
+    spoken = models.CharField(
+        verbose_name=_('Spoken'),
+        max_length=255,
+        db_column="spoken",
+        choices=FLUENCY_CHOICE,
+    )
+
+    def __str__(self):
+        return str(self.language) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Job Seeker Language Proficiency"
+        verbose_name_plural = "Job Seeker Language Proficiencies"
+        db_table = "JobSeekerLanguageProficiency"
