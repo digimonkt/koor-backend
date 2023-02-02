@@ -6,7 +6,7 @@ from core.models import (
 )
 from users.models import User, TimeStampedModel
 from project_meta.models import (
-    Media, Language
+    Media, Language, Skill
 )
 
 class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -206,3 +206,33 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel,
         verbose_name = "Job Seeker Language Proficiency"
         verbose_name_plural = "Job Seeker Language Proficiencies"
         db_table = "JobSeekerLanguageProficiency"
+
+class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This Django model class represents the skill of a job seeker. The fields are as follows:
+
+    - `user`: The user who this skill belongs to.
+    - `skill`: The skill of the job seeker.
+    """
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    skill = models.ForeignKey(
+        to=Skill,
+        verbose_name=_('Skill'),
+        on_delete=models.CASCADE,
+        db_column="skill",
+        related_name='%(app_label)s_%(class)s_skill'
+    )
+
+    def __str__(self):
+        return str(self.skill) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Job Seeker Skill"
+        verbose_name_plural = "Job Seeker Skills"
+        db_table = "JobSeekerSkill"
