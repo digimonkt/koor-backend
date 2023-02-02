@@ -99,3 +99,41 @@ class EducationLevel(SlugBaseModel, models.Model):
         verbose_name = "Education Level"
         verbose_name_plural = "Education Levels"
         db_table = "EducationLevel"
+
+class Country(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a Country.
+
+    Columns: 
+    - `title`: A string representing the name of the country. 
+    - `slug`: A string representing the slug for the country, used in URLs or filtering process.
+    - `iso_code2`: A string representing the two-letter ISO code for the country. 
+    - `iso_code3`: A string representing the three-letter ISO code for the country. 
+    - `currency_code`: A string representing the currency code for the country. 
+    - `country_code`: A string representing the country code for the country.
+    """
+    currency_code = models.CharField(
+        verbose_name=_('Currency Code'),
+        max_length=5,
+        db_column="currency_code",
+    )
+    country_code = models.CharField(
+        verbose_name=_('Country Code'),
+        max_length=5,
+        db_column="country_code",
+    )
+    iso_code2 = models.CharField(
+        verbose_name=_('ISO Code 2'),
+        max_length=10,
+        db_column="iso_code2",
+    )
+    iso_code3 = models.CharField(
+        verbose_name=_('ISO Code 3'),
+        max_length=10,
+        db_column="iso_code3",
+    )
+
+    class Meta:
+        verbose_name = "Country"
+        verbose_name_plural = "Countries"
+        db_table = "Country"
