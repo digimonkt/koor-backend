@@ -2,17 +2,20 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import (
-    BaseModel, upload_directory_path
+    BaseModel, SoftDeletableModel, upload_directory_path,
 )
 
 # Create your models here.
 
 class Media(BaseModel, models.Model):
-    """
-        This class created for get media detail.
-        Here we have some useful field like:- file_path, media_type.
-            - file_path is the path of local storage where file are store.
-            - media_type show the file's type like Image, Video, Document.
+    """ 
+    This table stores information about media files uploaded to the system.
+
+    Columns: 
+    - `filepath`: A string representing the path of the media file. 
+    - `mediatype`: A string representing the type of media (e.g. image, video, audio).
+
+    Returns: mddels.Model. 
     """
     MEDIA_TYPE_CHOICE = (
         ('image', "Image"),
