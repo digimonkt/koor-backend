@@ -1,11 +1,12 @@
 from datetime import date
+from django.db import models
 from django.utils.translation import gettext as _
 
 from model_utils import (
     FieldTracker,
 )
 from model_utils.models import (
-    UUIDModel
+    UUIDModel, SoftDeletableModel
 )
 
 
@@ -43,6 +44,24 @@ class BaseModel(UUIDModel):
     """
     # A FieldTracker allows querying for field changes since a model instance was last saved.
     tracker = FieldTracker()
+
+    class Meta:
+        abstract = True
+
+class SoftDeleteModel(SoftDeletableModel, models.Model):
+    """
+    Soft Delete Model Class: This is an abstract class model use for SoftDeletableModel and active field into model
+    class.
+    SoftDeletableModel : - with the help of this function we remove record partially, and we easily store this
+    partially removed record into table.
+    """
+    active = models.BooleanField(
+        verbose_name=_('Active'),
+        default=True,
+        blank=True,
+        null=True,
+        db_column="active"
+    )
 
     class Meta:
         abstract = True
