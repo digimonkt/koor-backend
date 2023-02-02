@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import (
-    BaseModel, SoftDeletableModel, upload_directory_path,
+    BaseModel, SoftDeleteModel, upload_directory_path,
 )
 
 # Create your models here.

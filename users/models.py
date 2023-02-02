@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext as _
 
 from core.models import (
-    BaseModel, SoftDeletableModel
+    BaseModel, SoftDeleteModel
 )
 from project_meta.models import Media
 
@@ -11,7 +11,7 @@ from .managers import UserManager
 
 
 # Create Auth User Model Start
-class User(AbstractUser, BaseModel, SoftDeletableModel):
+class User(AbstractUser, BaseModel, SoftDeleteModel):
     """
     This class created for get detail of all user like: admin, JobSeeker, Employer etc.
     Here we have some useful field like:- email, mobile_number, country_code, name, role, image.

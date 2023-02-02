@@ -52,7 +52,7 @@ class SoftDeleteModel(SoftDeletableModel, models.Model):
     """
     Soft Delete Model Class: This is an abstract class model use for SoftDeletableModel and active field into model
     class.
-    SoftDeletableModel : - with the help of this function we remove record partially, and we easily store this
+    SoftDeleteModel : - with the help of this function we remove record partially, and we easily store this
     partially removed record into table.
     """
     active = models.BooleanField(
