@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
+from django.template.defaultfilters import slugify
 
 from core.models import (
     BaseModel, SoftDeleteModel, upload_directory_path,
@@ -15,7 +16,7 @@ class Media(BaseModel, models.Model):
     - `filepath`: A string representing the path of the media file. 
     - `mediatype`: A string representing the type of media (e.g. image, video, audio).
 
-    Returns: mddels.Model. 
+    Returns: models.Model. 
     """
     MEDIA_TYPE_CHOICE = (
         ('image', "Image"),
@@ -43,3 +44,36 @@ class Media(BaseModel, models.Model):
         verbose_name = "Media"
         verbose_name_plural = "Media"
         db_table = "Media"
+
+class Tag(BaseModel, SoftDeleteModel, models.Model):
+    """
+    This table is used to store details about a tag.
+
+    Columns: 
+    - `title`: A string representing the name of the tag. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    """
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = models.SlugField(
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+        db_table = "Tag"
