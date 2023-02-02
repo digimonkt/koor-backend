@@ -77,3 +77,36 @@ class Tag(BaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Tag"
         verbose_name_plural = "Tags"
         db_table = "Tag"
+
+class Language(BaseModel, SoftDeleteModel, models.Model):
+    """ 
+    This table stores information about languages in a Django Model.
+
+    Columns: 
+    - `title`: A string representing the name of the language. 
+    - `slug`: A string representing the slug for the language, used in URLs and filtering record.
+    """
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = models.SlugField(
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Language"
+        verbose_name_plural = "Languages"
+        db_table = "Language"
