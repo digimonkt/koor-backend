@@ -62,7 +62,7 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         db_column="role",
         choices=ROLE_TYPE_CHOICE
     )
-    image = models.ForeignKey(
+    image = models.OneToOneField(
         Media,
         verbose_name=_('Image'),
         null=True,
