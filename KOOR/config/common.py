@@ -150,6 +150,15 @@ class Common(Configuration):
         },
     ]
 
+    AUTH_USER_MODEL = 'users.User'
+
+    AUTHENTICATION_BACKENDS = [
+        # Custom Authentication Backend
+        'users.backends.MobileOrEmailBackend',
+
+        'django.contrib.auth.backends.ModelBackend',
+    ]
+
     # Logging
     LOGGING = {
         'version': 1,
