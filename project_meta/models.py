@@ -137,3 +137,24 @@ class Country(SlugBaseModel, models.Model):
         verbose_name = "Country"
         verbose_name_plural = "Countries"
         db_table = "Country"
+
+class City(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a City.
+
+    Columns: 
+    - `title`: A string representing the name of the city. 
+    - `slug`: A string representing the slug for the city, used in URLs or filtering process.
+    - `country`: A foreign key reference to the country table.
+    """
+    country = models.ForeignKey(
+        to=Country,
+        verbose_name=_('Country'),
+        on_delete=models.CASCADE,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    class Meta:
+        verbose_name = "City"
+        verbose_name_plural = "Cities"
+        db_table = "City"
