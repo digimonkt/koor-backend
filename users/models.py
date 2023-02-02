@@ -114,3 +114,50 @@ class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
+
+class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This model is used to store user session details in a Django Model.
+
+    Columns:
+
+    - `user`: A foreign key refrence with user table.
+    - `ip_address`: IP address of the user when they logged in.
+    - `agent`: A json data for the user-agent (i.e. Browser) when the user logged in.
+    - `expired_at`: A datetime object representing the expiration time of the login.
+    """
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    ip_address = models.GenericIPAddressField(
+        verbose_name=_('IP Address'),
+        protocol='both',
+        unpack_ipv4=False,
+        null=True,
+        blank=True,
+        db_column="ip_address"
+    )
+    agent = models.JSONField(
+        verbose_name=_('Agent'),
+        null=True,
+        db_column="agent"
+    )
+    expire_at = models.DateTimeField(
+        verbose_name=_('Expire At'),
+        blank=True,
+        null=True,
+        db_column="expire_at"
+
+    )
+
+    def __str__(self):
+        return str(self.ip_address) + "(" + str(self.agent) + ")"
+
+    class Meta:
+        verbose_name = "User Session"
+        verbose_name_plural = "User Sessions"
+        db_table = "UserSession"
