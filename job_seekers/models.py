@@ -267,3 +267,63 @@ class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Saved Job"
         verbose_name_plural = "Saved Jobs"
         db_table = "SavedJob"
+
+class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This is a Django model for an Applied Job object, associated with a JobSeeker user, with the following fields:
+
+    - `user`: the user associated with the applied job
+    - `job`: the job associated with the applied job
+    - `shortlisted_at`: the date and time when the job was shortlisted
+    - `rejected_at`: the date and time when the job was rejected
+    - `resume`: the resume submitted for the job
+    - `cover_letter`: the cover letter submitted for the job
+    """
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    shortlisted_at = models.DateTimeField(
+        verbose_name=_('Short Listed At'),
+        null=True,
+        blank=True,
+        db_column="shortlisted_at"
+    )
+    rejected_at = models.DateTimeField(
+        verbose_name=_('Rejected At'),
+        null=True,
+        blank=True,
+        db_column="rejected_at"
+    )
+    resume = models.ForeignKey(
+        Media,
+        verbose_name=_('Resume'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="resume",
+        related_name='%(app_label)s_%(class)s_resume'
+    )
+    cover_letter = models.TextField(
+        verbose_name=_('Cover Letter'),
+        null=True,
+        blank=True,
+        db_column="cover_letter",
+    )
+    def __str__(self):
+        return str(self.job) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Applied Job"
+        verbose_name_plural = "Applied Jobs"
+        db_table = "AppliedJob"
