@@ -8,7 +8,7 @@ from users.models import (
     TimeStampedModel, User
 )
 from project_meta.models import (
-    EducationLevel, Country, City, Language, Skill
+    EducationLevel, Country, City, Language, Skill, Media
 )
 
 class JobCategory(SlugBaseModel, TimeStampedModel, models.Model):
@@ -203,3 +203,33 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Job Detail"
         verbose_name_plural = "Job Details"
         db_table = "JobDetails"
+
+class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This is a Django model for a Job Attachment object, associated with a specific Job item, with the following fields:
+
+    - `job`: the job associated with the attachment
+    - `attachment`: the attachment uploaded for the job
+    """
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    attachment = models.OneToOneField(
+        Media,
+        verbose_name=_('Attachment'),
+        on_delete=models.CASCADE,
+        db_column="attachment",
+        related_name='%(app_label)s_%(class)s_attachment'
+    )
+
+    def __str__(self):
+        return str(self.job)
+
+    class Meta:
+        verbose_name = "Job Attachments Item"
+        verbose_name_plural = "Job Attachments Items"
+        db_table = "JobAttachmentsItem"
