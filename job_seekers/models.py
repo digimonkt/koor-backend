@@ -327,3 +327,27 @@ class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Applied Job"
         verbose_name_plural = "Applied Jobs"
         db_table = "AppliedJob"
+
+class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This is a Django model for an Applied Job Attachment object, associated with an Applied Job item, with the following fields:
+
+    - `applied_job`: the applied job associated with the attachment
+    - `attachment`: the attachments uploaded for the applied job
+    """
+    applied_job = models.ForeignKey(
+        AppliedJob,
+        verbose_name=_('Applied Job'),
+        on_delete=models.CASCADE,
+        db_column="applied_job",
+        related_name='%(app_label)s_%(class)s_applied_job'
+    )
+    attachment = models.OneToOneField(
+        Media,
+        verbose_name=_('Attachment'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="attachment",
+        related_name='%(app_label)s_%(class)s_attachment'
+    )
