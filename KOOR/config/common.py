@@ -26,6 +26,13 @@ class Common(Configuration):
         'django_filters',            # for filtering rest endpoints
         'rest_framework_simplejwt',  # for the JWT authentication 
         'rest_framework_simplejwt.token_blacklist',     # for token blacklisting from admin panel
+
+        "users.apps.UsersConfig",
+        "project_meta.apps.ProjectMetaConfig",
+        "user_profile.apps.UserProfileConfig",
+        "job_seekers.apps.JobSeekersConfig",
+        "jobs.apps.JobsConfig",
+        "employers.apps.EmployersConfig",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -145,6 +152,15 @@ class Common(Configuration):
         {
             'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
         },
+    ]
+
+    AUTH_USER_MODEL = 'users.User'
+
+    AUTHENTICATION_BACKENDS = [
+        # Custom Authentication Backend
+        'users.backends.MobileOrEmailBackend',
+
+        'django.contrib.auth.backends.ModelBackend',
     ]
 
     # Logging
