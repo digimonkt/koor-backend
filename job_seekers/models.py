@@ -5,6 +5,7 @@ from core.models import (
     BaseModel, SoftDeleteModel
 )
 from users.models import User, TimeStampedModel
+from jobs.models import JobDetails
 from project_meta.models import (
     Media, Language, Skill
 )
@@ -236,3 +237,33 @@ class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         verbose_name = "Job Seeker Skill"
         verbose_name_plural = "Job Seeker Skills"
         db_table = "JobSeekerSkill"
+
+class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This is a Django model for a Saved Job object, associated with a JobSeeker user, with the following fields:
+
+    - `user`: the user associated with the saved job
+    - `job`: the job associated with the saved job
+    """
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+
+    def __str__(self):
+        return str(self.job) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Saved Job"
+        verbose_name_plural = "Saved Jobs"
+        db_table = "SavedJob"
