@@ -242,8 +242,7 @@ Table job.JobDetails [headercolor: #ADA2FF]{
   country bigint [not null, ref: > Country.id]
   city bigint [not null, ref: > City.id]
   address varchar(255) [not null]
-  job_category_1 bigint [not null,ref: > job.JobCategory.id, note: 'Required']
-  job_category_2 bigint [ref: > job.JobCategory.id, note: 'Optional']
+  job_category bigint [not null,ref: > job.JobCategory.id, note: 'Limited to maximum 2']
   is_full_time boolean [default: false]
   is_part_time boolean [default: false]
   has_contract boolean [default: false]
@@ -252,12 +251,8 @@ Table job.JobDetails [headercolor: #ADA2FF]{
   contact_phone varchar(255)
   contact_whatsapp varchar(255)
   highest_education bigint [ref: > EducationLevel.id]
-  language_1 bigint [not null, ref: > Language.id, note: 'Required']
-  language_2 bigint [ref: > Language.id, note: 'Optional']
-  language_3 bigint [ref: > Language.id, note: 'Optional']
-  skill_1 bigint [not null, ref: > Skill.id]
-  skill_2 bigint [ref: > Skill.id]
-  skill_3 bigint [ref: > Skill.id]
+  language bigint [not null, ref: > Language.id, note: 'Limited to maximum 3']
+  skill bigint [not null, ref: > Skill.id, note:'Limited to maximum 3']
   status job.status
 }
 
