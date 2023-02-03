@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext as _
+from django.core.validators import RegexValidator
 
 from model_utils import models as misc_models
 
@@ -47,7 +48,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         max_length=250,
         blank=True,
         null=True,
-        db_column="country_code"
+        db_column="country_code",
+        validators=[
+            RegexValidator(
+                regex='^\+[1-9]\d{0,2}$',
+                message='Invalid country code',
+            ),
+        ]
     )
     name = models.CharField(
         verbose_name=_('Name'),
