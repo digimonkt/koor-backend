@@ -351,3 +351,11 @@ class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, mo
         db_column="attachment",
         related_name='%(app_label)s_%(class)s_attachment'
     )
+    
+    def __str__(self):
+        return str(self.applied_job)
+
+    class Meta:
+        verbose_name = "Applied Job Attachment Item"
+        verbose_name_plural = "Applied Job Attachment Items"
+        db_table = "AppliedJobAttachmentsItem"
