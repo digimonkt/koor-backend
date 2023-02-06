@@ -44,6 +44,10 @@ class Common(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        # CUSTOM MIDDLEWARE
+
+        # To validate the token signature and authenticate each request.
+        "core.middleware.JWTMiddleware",
 
         # To send broken link notification to MANAGERS
         # https://docs.djangoproject.com/en/4.1/ref/middleware/#django.middleware.common.BrokenLinkEmailsMiddleware
@@ -249,7 +253,7 @@ class Common(Configuration):
         'BLACKLIST_AFTER_ROTATION': False,
         'UPDATE_LAST_LOGIN': False,
 
-        'ALGORITHM': config('JWT_ALGORITHM').split(','),
+        'ALGORITHM': config('JWT_ALGORITHM'),
         'VERIFYING_KEY': None,
         'AUDIENCE': None,
         'ISSUER': None,
@@ -258,7 +262,7 @@ class Common(Configuration):
 
         'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
         'USER_ID_FIELD': 'id',
-        'USER_ID_CLAIM': 'user_id',
+        'USER_ID_CLAIM': 'session_id',
         'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
 
         'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
