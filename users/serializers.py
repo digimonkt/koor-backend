@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
+from job_seekers.models import EducationRecord
 from user_profile.models import JobSeekerProfile
+
 from .backends import MobileOrEmailBackend as cb
 from .models import User
 
@@ -136,16 +138,13 @@ class CreateSessionSerializers(serializers.Serializer):
 
 class JobSeekerProfileSerializer(serializers.ModelSerializer):
     """
-    Serializer class for JobSeekerProfile model.
+    JobSeekerProfileSerializer is a serializer class that serializes and deserializes the JobSeekerProfile model into JSON format.
 
-    Serializes the fields of the JobSeekerProfile model.
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based on the model.
 
     Attributes:
-        Meta: Inner class for additional options.
-
-    Meta Attributes:
-        model (JobSeekerProfile): The model to be serialized.
-        fields (Tuple[str, ...]): The fields to be serialized from the model.
+    model (JobSeekerProfile): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
     """
 
     class Meta:
@@ -157,4 +156,30 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'description',
             'market_information_notification',
             'job_notification'
+        )
+
+
+class EducationRecordSerializer(serializers.ModelSerializer):
+    """
+    EducationRecordSerializer is a serializer class that serializes and deserializes the EducationRecord model into
+    JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields
+    based on the model.
+
+    Attributes:
+    model (EducationRecord): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = EducationRecord
+        fields = (
+            'id',
+            'title',
+            'start_date',
+            'end_date',
+            'present',
+            'organization',
+            'description'
         )
