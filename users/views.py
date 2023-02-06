@@ -5,7 +5,10 @@ from rest_framework import (
 from core.tokens import SessionTokenObtainPairSerializer
 
 from .models import UserSession, User
-from .serializers import CreateUserSerializers
+from .serializers import (
+    CreateUserSerializers,
+    CreateSessionSerializers
+    )
 
 def create_user_session(request, user):
         """
@@ -36,6 +39,8 @@ class CreateUserView(generics.CreateAPIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             user = User.objects.get(id=serializer.data['id'])
+            user.set_password(serializer.data['password'])
+            user.save()
             user_session = create_user_session(request, user,)
 
             token = SessionTokenObtainPairSerializer.get_token(
