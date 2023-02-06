@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate
 from rest_framework import exceptions, status
 from rest_framework import serializers
 
+from user_profile.models import JobSeekerProfile
+
 from .models import User
 
 from .backends import MobileOrEmailBackend as cb
@@ -137,3 +139,29 @@ class CreateSessionSerializers(serializers.Serializer):
                 raise serializers.ValidationError({'message':'Invalid login credentials.'})
         except:
             raise serializers.ValidationError({'message':'Invalid login credentials.'})
+
+
+class JobSeekerProfileSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for JobSeekerProfile model.
+
+    Serializes the fields of the JobSeekerProfile model.
+
+    Attributes:
+        Meta: Inner class for additional options.
+
+    Meta Attributes:
+        model (JobSeekerProfile): The model to be serialized.
+        fields (Tuple[str, ...]): The fields to be serialized from the model.
+    """
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = (
+            'gender',
+            'dob',
+            'employment_status',
+            'description',
+            'market_information_notification',
+            'job_notification'
+        )
