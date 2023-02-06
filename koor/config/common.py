@@ -253,7 +253,7 @@ class Common(Configuration):
         'BLACKLIST_AFTER_ROTATION': False,
         'UPDATE_LAST_LOGIN': False,
 
-        'ALGORITHM': config('JWT_ALGORITHM').split(','),
+        'ALGORITHM': config('JWT_ALGORITHM'),
         'VERIFYING_KEY': None,
         'AUDIENCE': None,
         'ISSUER': None,
