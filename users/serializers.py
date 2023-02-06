@@ -25,6 +25,8 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
+            if country_code == '':
+                raise serializers.ValidationError('country_code can not be blank', code='country_code')
             if mobile_number.isdigit():
                 try:
                     if User.objects.get(mobile_number=mobile_number):
