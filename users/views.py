@@ -2,9 +2,9 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions
 )
-from core.tokens import SessionTokenObtainPairView
+from core.tokens import SessionTokenObtainPairSerializer
 
-from .models import UserSession
+from .models import UserSession, User
 from .serializers import CreateUserSerializers
 
 def create_user_session(request, user):
@@ -35,11 +35,11 @@ class CreateUserView(generics.CreateAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            user = User.objects.get(id=serializer.data['id'])
+            user_session = create_user_session(request, user,)
 
-            user_session = create_user_session(request, serializer.validated_data,)
-
-            token = SessionTokenObtainPairView.get_token(
-                serializer.validated_data,
+            token = SessionTokenObtainPairSerializer.get_token(
+                user=user,
                 session_id=user_session.id
             )
             context["message"] = "User Created Successfully"

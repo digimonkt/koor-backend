@@ -21,7 +21,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'mobile_number', 'password', 'role', 'country_code']
+        fields = ['id','email', 'mobile_number', 'password', 'role', 'country_code']
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
