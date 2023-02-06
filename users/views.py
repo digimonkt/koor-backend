@@ -60,9 +60,9 @@ class CreateUserView(generics.CreateAPIView):
             )
 
 
-class CreateSessionView(generics.CreateAPIView):
+class CreateSessionView(generics.GenericAPIView):
     """
-    CreateAPIView for creating a session for a user.
+    GenericAPIView for creating a session for a user.
 
     Uses the CreateSessionSerializers serializer class to validate and
     handle user data. 
