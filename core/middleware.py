@@ -14,7 +14,7 @@ from koor.config.common import Common
 from users.models import UserSession
 
 # Get JWT secret key
-SECRET_KEY = config("SECRET_KEY")
+SECRET_KEY = config("DJANGO_SECRET_KEY")
 
 
 class JWTMiddleware(MiddlewareMixin):
