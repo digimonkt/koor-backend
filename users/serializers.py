@@ -1,13 +1,8 @@
-from django.contrib.auth import authenticate
-
-from rest_framework import exceptions, status
 from rest_framework import serializers
 
 from user_profile.models import JobSeekerProfile
-
-from .models import User
-
 from .backends import MobileOrEmailBackend as cb
+from .models import User
 
 
 class CreateUserSerializers(serializers.ModelSerializer):
@@ -25,7 +20,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id','email', 'mobile_number', 'password', 'role', 'country_code']
+        fields = ['id', 'email', 'mobile_number', 'password', 'role', 'country_code']
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
@@ -54,13 +49,11 @@ class CreateUserSerializers(serializers.ModelSerializer):
         country_code = data.get("country_code")
         mobile_number = data.get("mobile_number")
         if mobile_number and country_code in ["", None]:
-            raise serializers.ValidationError({'country_code':'country code can not be blank'})
+            raise serializers.ValidationError({'country_code': 'country code can not be blank'})
         return data
 
 
-
 class CreateSessionSerializers(serializers.Serializer):
-
     """
     Serializer for creating a session for a user.
 
@@ -76,21 +69,21 @@ class CreateSessionSerializers(serializers.Serializer):
     """
 
     email = serializers.CharField(
-        style={"input_type": "text"}, 
-        write_only=True, 
-        required=False, 
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
         allow_blank=True
-        )
+    )
     mobile_number = serializers.CharField(
         style={"input_type": "text"},
         write_only=True,
         required=False,
         allow_blank=True
-        )
+    )
     password = serializers.CharField(
-        style={"input_type": "text"}, 
+        style={"input_type": "text"},
         write_only=True
-        )
+    )
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
@@ -130,15 +123,15 @@ class CreateSessionSerializers(serializers.Serializer):
                 user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_active=False)
                 identifier = mobile_number
             if user_instance.exists():
-                raise serializers.ValidationError({'message':'User not activate.'})
+                raise serializers.ValidationError({'message': 'User not activate.'})
             else:
                 user = cb.authenticate(self, identifier=identifier, password=password)
             if user:
                 return user
             else:
-                raise serializers.ValidationError({'message':'Invalid login credentials.'})
+                raise serializers.ValidationError({'message': 'Invalid login credentials.'})
         except:
-            raise serializers.ValidationError({'message':'Invalid login credentials.'})
+            raise serializers.ValidationError({'message': 'Invalid login credentials.'})
 
 
 class JobSeekerProfileSerializer(serializers.ModelSerializer):
