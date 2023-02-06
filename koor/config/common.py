@@ -44,6 +44,10 @@ class Common(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        # CUSTOM MIDDLEWARE
+
+        # To validate the token signature and authenticate each request.
+        "core.middleware.JWTMiddleware",
 
         # To send broken link notification to MANAGERS
         # https://docs.djangoproject.com/en/4.1/ref/middleware/#django.middleware.common.BrokenLinkEmailsMiddleware
