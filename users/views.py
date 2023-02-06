@@ -5,7 +5,10 @@ from rest_framework import (
 from core.tokens import SessionTokenObtainPairSerializer
 
 from .models import UserSession, User
-from .serializers import CreateUserSerializers
+from .serializers import (
+    CreateUserSerializers,
+    CreateSessionSerializers
+    )
 
 def create_user_session(request, user):
         """
@@ -36,6 +39,8 @@ class CreateUserView(generics.CreateAPIView):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             user = User.objects.get(id=serializer.data['id'])
+            user.set_password(serializer.data['password'])
+            user.save()
             user_session = create_user_session(request, user,)
 
             token = SessionTokenObtainPairSerializer.get_token(
@@ -43,6 +48,47 @@ class CreateUserView(generics.CreateAPIView):
                 session_id=user_session.id
             )
             context["message"] = "User Created Successfully"
+            return response.Response(
+                data=context,
+                headers={"x-access": token.access_token, "x-refresh": token},
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class CreateSessionView(generics.GenericAPIView):
+    """
+    GenericAPIView for creating a session for a user.
+
+    Uses the CreateSessionSerializers serializer class to validate and
+    handle user data. 
+
+    Attributes:
+        serializer_class (CreateSessionSerializers): The serializer class to use.
+        permission_classes ([permissions.AllowAny]): The permission classes.
+
+    Methods:
+        post(request): Handles the POST request to create a user session.
+    """
+
+    serializer_class = CreateSessionSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        context = dict()  
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            user_session = create_user_session(request, serializer.validated_data)
+            token = SessionTokenObtainPairSerializer.get_token(
+                user=serializer.validated_data,
+                session_id=user_session.id
+            )
+            context["message"] = "User LoggedIn Successfully"
             return response.Response(
                 data=context,
                 headers={"x-access": token.access_token, "x-refresh": token},
