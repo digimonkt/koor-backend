@@ -1,9 +1,8 @@
 from rest_framework import serializers
 
 from job_seekers.models import (
-    EducationRecord, 
-    EmploymentRecord
-    )
+    EducationRecord, EmploymentRecord, Resume
+)
 from user_profile.models import JobSeekerProfile
 
 from .backends import MobileOrEmailBackend as cb
@@ -212,4 +211,27 @@ class EmploymentRecordSerializer(serializers.ModelSerializer):
             'present',
             'organization',
             'description'
+        )
+
+
+class ResumeSerializer(serializers.ModelSerializer):
+    """
+    ResumeSerializer is a serializer class that serializes and deserializes the Resume model into
+     JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (Resume): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = Resume
+        fields = (
+            'id',
+            'title',
+            'file_path',
+            'created_at'
         )
