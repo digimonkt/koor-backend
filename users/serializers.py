@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from job_seekers.models import (
-    EducationRecord, EmploymentRecord, Resume
+    EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency
 )
 from user_profile.models import JobSeekerProfile
 
@@ -201,6 +201,7 @@ class EmploymentRecordSerializer(serializers.ModelSerializer):
     model (EmploymentRecord): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
+
     class Meta:
         model = EmploymentRecord
         fields = (
@@ -234,4 +235,27 @@ class ResumeSerializer(serializers.ModelSerializer):
             'title',
             'file_path',
             'created_at'
+        )
+
+
+class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
+    """
+    JobSeekerLanguageProficiencySerializer is a serializer class that serializes and deserializes the
+    JobSeekerLanguageProficiency model into JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (JobSeekerLanguageProficiency): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = JobSeekerLanguageProficiency
+        fields = (
+            'id',
+            'language',
+            'written',
+            'spoken'
         )
