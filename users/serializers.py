@@ -3,7 +3,7 @@ from rest_framework import serializers
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
 )
-from user_profile.models import JobSeekerProfile
+from user_profile.models import JobSeekerProfile, EmployerProfile
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
@@ -375,3 +375,25 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class EmployerProfileSerializer(serializers.ModelSerializer):
+    """
+    EmployerProfileSerializer is a serializer class that serializes and deserializes the EmployerProfile model into JSON
+    format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (EmployerProfile): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+    class Meta:
+        model = EmployerProfile
+        fields = (
+            'description',
+            'organization_type',
+            'license_id',
+            'license_id_file'
+        )
