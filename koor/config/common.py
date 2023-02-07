@@ -239,7 +239,7 @@ class Common(Configuration):
             'rest_framework.permissions.IsAuthenticated',
         ],
         'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework_simplejwt.authentication.JWTAuthentication',
+            'core.authentications.CustomJWTAuthentication',
         )
     }
 
@@ -260,6 +260,7 @@ class Common(Configuration):
         'JWK_URL': None,
         'LEEWAY': 0,
 
+        # 'AUTH_HEADER_TYPES': ('Bearer',),
         'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
         'USER_ID_FIELD': 'id',
         'USER_ID_CLAIM': 'session_id',
@@ -284,3 +285,14 @@ class Common(Configuration):
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
     ATOMIC_REQUESTS = True
+
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        # Updating SIGNING_KEY based on Secret Key to generate token
+        # https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#signing-key
+
+        self.SIMPLE_JWT.update({
+            'SIGNING_KEY': config("DJANGO_SECRET_KEY"),
+        })
