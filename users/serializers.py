@@ -2,8 +2,10 @@ from rest_framework import serializers
 
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
-)
-from user_profile.models import JobSeekerProfile, EmployerProfile
+    )
+from user_profile.models import (
+    JobSeekerProfile, EmployerProfile
+    )
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
