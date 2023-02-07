@@ -4,6 +4,7 @@ File in which we have the middleware for Django for Authenticating API requests
 import jwt
 from decouple import config
 
+from django.http import HttpResponseRedirect
 from django.contrib.auth import get_user_model
 from django.utils.deprecation import MiddlewareMixin
 
@@ -12,6 +13,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from koor.config.common import Common
 
 from users.models import UserSession
+
+from core.tokens import SessionTokenObtainPairSerializer
 
 # Get JWT secret key
 SECRET_KEY = config("DJANGO_SECRET_KEY")
@@ -32,11 +35,15 @@ class JWTMiddleware(MiddlewareMixin):
     claim_id = Common.SIMPLE_JWT.get('USER_ID_CLAIM', 'user_id')
     algorithms = Common.SIMPLE_JWT.get('ALGORITHM', ['HS256',])
 
-    def get_access_token_for_user(self, user):
+    def get_access_token_for_user(self, user, session_id):
         '''
         Return the access token for the user.
         '''
-        refresh = RefreshToken.for_user(user)
+        refresh = SessionTokenObtainPairSerializer.get_token(
+                user=user,
+                session_id=session_id
+            )
+        # refresh = RefreshToken.for_user(user)
         return str(refresh.access_token)
 
     def decode_token(self, token):
@@ -63,7 +70,6 @@ class JWTMiddleware(MiddlewareMixin):
         :return: HTTP Response if authorization fails, else response.status_code = 401
         """
         if 'Authorization' in request.headers:  # Check if the Authorization in the request
-
             # Get the Authorization from the header
             access_token = request.headers.get('Authorization') \
             .replace('Bearer ','')
@@ -71,8 +77,8 @@ class JWTMiddleware(MiddlewareMixin):
                 # Try to decode the access token and if not possible handle the respective Exception 
                 access_token_payload = self.decode_token(access_token)
                 session = self.get_session(access_token_payload)
-                if session:
-                    response.headers.setdefault('user', session.user)
+                # if session:
+                # response.headers.setdefault('Authorization', f"Bearer {access_token}")
                 # Return the response to respective endpoint
                 return response
 
@@ -83,8 +89,8 @@ class JWTMiddleware(MiddlewareMixin):
                     refresh_token_payload = self.decode_token(refresh_token)
                     session = self.get_session(refresh_token_payload)
                     if session:
-                        response.headers.setdefault(self.access_token_lookup, self.get_access_token_for_user(session.user))
-                        response.headers.setdefault('user', session.user)
+                        response.headers.setdefault(self.access_token_lookup, self.get_access_token_for_user(session.user, session.id))
+                    response.status_code = 200
                     return response
 
                 # if the session does not exists
