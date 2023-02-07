@@ -298,7 +298,7 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         - email: the email address of the user
         - mobile_number: the mobile number of the user
         - country_code: the country code of the user
-        - display_name: the display name of the user
+        - name: the display name of the user
         - image: the image of the user
         - role: the role of the user
         - profile: the profile of the job seeker
@@ -327,7 +327,7 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'country_code', 'display_name', 'image', 'role', 'profile',
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
                   'education_record', 'work_experience', 'resume', 'languages', 'skills']
 
     def get_profile(self, obj):
@@ -423,7 +423,7 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'country_code', 'display_name', 'image', 'role', 'profile']
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
 
     def get_profile(self, obj):
         context = dict()
