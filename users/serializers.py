@@ -2,10 +2,10 @@ from rest_framework import serializers
 
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
-    )
+)
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile
-    )
+)
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
@@ -391,6 +391,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     model (EmployerProfile): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
+
     class Meta:
         model = EmployerProfile
         fields = (
@@ -399,3 +400,35 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'license_id',
             'license_id_file'
         )
+
+
+class EmployerDetailSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for Employer Detail
+
+    Serializes and deserializes employer detail data from/to python objects and JSON format.
+    The fields are defined in the 'Meta' class and correspond to the User model.
+
+    Attributes:
+        serializers (Module): The serializers module from the Django REST framework.
+        ModelSerializer (class): The base serializer class from the Django REST framework.
+
+    Methods:
+        get_profile(self, obj):
+            Returns employer profile data serialized into JSON format
+
+    """
+
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'display_name', 'image', 'role', 'profile']
+
+    def get_profile(self, obj):
+        context = dict()
+        user_data = EmployerProfile.objects.filter(user=obj)
+        get_data = EmployerProfileSerializer(user_data, many=True)
+        if get_data.data:
+            context = get_data.data[0]
+        return context
