@@ -28,7 +28,7 @@ def create_user_session(request, user):
         user_session.save()
         return user_session
 
-class CreateUserView(generics.CreateAPIView):
+class UserView(generics.GenericAPIView):
     serializer_class = CreateUserSerializers
     permission_classes = [permissions.AllowAny]
 
