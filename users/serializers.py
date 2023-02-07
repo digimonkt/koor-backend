@@ -280,3 +280,98 @@ class JobSeekerSkillSerializer(serializers.ModelSerializer):
             'id',
             'skill'
         )
+
+
+class JobSeekerDetailSerializers(serializers.ModelSerializer):
+    """
+    JobSeekerDetailSerializers
+
+    A class-based serializer for the User model. The serializer includes various fields such as profile,
+    education_record, work_experience, resume, languages, and skills. These fields are serialized using the
+    SerializerMethodField and are populated by the get_* methods defined in the class.
+
+    The fields returned by the serializer include:
+
+        - id: the primary key of the User model
+        - email: the email address of the user
+        - mobile_number: the mobile number of the user
+        - country_code: the country code of the user
+        - display_name: the display name of the user
+        - image: the image of the user
+        - role: the role of the user
+        - profile: the profile of the job seeker
+        - education_record: the education record of the job seeker
+        - work_experience: the work experience of the job seeker
+        - resume: the resume of the job seeker
+        - languages: the languages spoken by the job seeker
+        - skills: the skills of the job seeker
+
+    Methods:
+
+        - get_profile(self, obj): returns the profile of the job seeker
+        - get_education_record(self, obj): returns the education record of the job seeker
+        - get_work_experience(self, obj): returns the work experience of the job seeker
+        - get_resume(self, obj): returns the resume of the job seeker
+        - get_languages(self, obj): returns the languages spoken by the job seeker
+        - get_skills(self, obj): returns the skills of the job seeker
+    """
+
+    profile = serializers.SerializerMethodField()
+    education_record = serializers.SerializerMethodField()
+    work_experience = serializers.SerializerMethodField()
+    resume = serializers.SerializerMethodField()
+    languages = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'display_name', 'image', 'role', 'profile',
+                  'education_record', 'work_experience', 'resume', 'languages', 'skills']
+
+    def get_profile(self, obj):
+        context = dict()
+        user_data = JobSeekerProfile.objects.filter(user=obj)
+        get_data = JobSeekerProfileSerializer(user_data, many=True)
+        if get_data.data:
+            context = get_data.data[0]
+        return context
+
+    def get_education_record(self, obj):
+        context = []
+        education_data = EducationRecord.objects.filter(user=obj)
+        get_data = EducationRecordSerializer(education_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_work_experience(self, obj):
+        context = []
+        employment_data = EmploymentRecord.objects.filter(user=obj)
+        get_data = EmploymentRecordSerializer(employment_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_resume(self, obj):
+        context = []
+        resume_data = Resume.objects.filter(user=obj)
+        get_data = ResumeSerializer(resume_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_languages(self, obj):
+        context = []
+        languages_data = JobSeekerLanguageProficiency.objects.filter(user=obj)
+        get_data = JobSeekerLanguageProficiencySerializer(languages_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_skills(self, obj):
+        context = []
+        skills_data = JobSeekerSkill.objects.filter(user=obj)
+        get_data = JobSeekerSkillSerializer(skills_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
