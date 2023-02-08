@@ -1,31 +1,12 @@
-<<<<<<< HEAD
-# IMPORT PYTHON PACKAGE.
-import jwt
+from datetime import datetime
 
-from django.contrib.auth import login
-
-from rest_framework import generics, response, status, permissions
-from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
-
-# IMPORT SOME IMPORTANT FUNCTION AND DATA
-from KOOR.settings import DJANGO_CONFIGURATION
-
-# IMPORT SOME MODEL CLASS FORM SOME APP'S MODELS.PY FILE.
-from .models import User, UserSession
-
-# IMPORT SOME SERIALIZERS CLASS FROM SOME APP'S SERIALIZER.PY FILE.
-from .serializer import (
-    CreateUserSerializers, CreateSessionSerializers, JobSeekerDetailSerializers, EmployerDetailSerializers
-=======
 from rest_framework import (
     status, generics, serializers,
     response, permissions
->>>>>>> b6c4e2cff68ff6f1a5f87b6fafc46e529900c624
 )
 
+from core.middleware import JWTMiddleware
 from core.tokens import SessionTokenObtainPairSerializer
-
 from user_profile.models import (
     JobSeekerProfile,
     EmployerProfile
@@ -206,27 +187,35 @@ class CreateSessionView(generics.GenericAPIView):
             )
 
 
-class DeleteSessionView(APIView):
+class DeleteSessionView(generics.GenericAPIView):
     """
-        Here we create a class DeleteSessionView for deleting the user's session. This Class is permitted to only
-        authenticated users. For the delete session, we use the delete method.
-            Here we need refreshToken in the request header, and we add this token to the token's blacklist table.
+    DeleteSessionView:
+        A generic API view that handles the deletion of user sessions.
 
-            - If the session deletes successfully completed, we send a message with status code 200.
-            - If we get any error and the session not delete, we send an error message with a 400 status code.
+    Attributes:
+        - permission_classes (List): A list of permission classes that control access to this view.
+
+    Methods:
+        - delete(self, request): Handles the deletion of user sessions based on the provided 'x-refresh' header. If the
+          header is invalid or expired, an error message will be returned in the response. If the session is successfully
+          deleted, a success message will be returned.
+
+    Returns:
+        - response.Response: A response object containing either an error message or a success message.
     """
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
         context = dict()
         try:
-            refresh_token = request.headers['X-Refresh']
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            refresh_token = request.headers.get('x-refresh')
+            payload = JWTMiddleware.decode_token(refresh_token)
+            print("delete function")
+            UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
             context["message"] = "Logged Out successfully"
             return response.Response(data=context, status=status.HTTP_200_OK)
         except Exception as e:
-            if e == "X-Refresh":
+            if e == "x-refresh":
                 context["error"] = "Token is invalid or expired"
             else:
                 context["error"] = str(e)
