@@ -40,6 +40,7 @@ class JWTMiddleware(MiddlewareMixin):
         )
         return str(refresh.access_token)
 
+    @classmethod
     def decode_token(self, token):
         # If the token expired this raise jwt.ExpiredSignatureError
         payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=self.algorithms)
@@ -86,7 +87,7 @@ class JWTMiddleware(MiddlewareMixin):
                     response.status_code = 200
                     return response
 
-                # if the session does not exists
+                # if the session does not exist
                 except UserSession.DoesNotExist:
                     response.status_code = 401
                     return response

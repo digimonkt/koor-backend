@@ -1,4 +1,8 @@
+from django.utils.translation import gettext as _
+
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 from koor.config.common import Common
 
@@ -24,13 +28,17 @@ class CustomJWTAuthentication(JWTAuthentication):
         """
         try:
             session_id = validated_token[self.claim_id]
+            user_session = UserSession.objects.get(id=session_id)
             user = UserSession.objects.get(id=session_id).user
         except KeyError:
-            raise InvalidToken(_("Token contained no recognizable user identification"))
+            raise InvalidToken({"message":_("Token contained no recognizable user identification")})
         except self.user_model.DoesNotExist:
-            raise AuthenticationFailed(_("User not found"), code="user_not_found")
+            raise AuthenticationFailed({"message":_("User not found")})
 
         if not user.is_active:
-            raise AuthenticationFailed(_("User is inactive"), code="user_inactive")
+            raise AuthenticationFailed({"message":_("User is inactive")})
+        
+        if user_session.expire_at is not None:
+            raise AuthenticationFailed({"message":_("Session is expired")})
 
         return user
