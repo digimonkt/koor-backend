@@ -149,8 +149,8 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
     on the model.
 
     Attributes:
-    model (JobSeekerProfile): The model that will be serialized.
-    fields (tuple): The fields from the model that will be serialized.
+        model (JobSeekerProfile): The model that will be serialized.
+        fields (tuple): The fields from the model that will be serialized.
     """
 
     class Meta:
@@ -332,11 +332,15 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
 
     def get_profile(self, obj):
         context = dict()
-        user_data = JobSeekerProfile.objects.filter(user=obj)
-        get_data = JobSeekerProfileSerializer(user_data, many=True)
-        if get_data.data:
-            context = get_data.data[0]
-        return context
+        try:
+            user_data = JobSeekerProfile.objects.get(user=obj)
+            get_data = JobSeekerProfileSerializer(user_data)
+            if get_data.data:
+                context = get_data.data
+        except JobSeekerProfile.DoesNotExist:
+            pass
+        finally:
+            return context
 
     def get_education_record(self, obj):
         context = []
@@ -427,8 +431,13 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
 
     def get_profile(self, obj):
         context = dict()
-        user_data = EmployerProfile.objects.filter(user=obj)
-        get_data = EmployerProfileSerializer(user_data, many=True)
-        if get_data.data:
-            context = get_data.data[0]
-        return context
+        try:
+            user_data = EmployerProfile.objects.get(user=obj)
+            get_data = EmployerProfileSerializer(user_data)
+            if get_data.data:
+                context = get_data.data
+        except EmployerProfile.DoesNotExist:
+            pass
+        finally:
+            return context
+
