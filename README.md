@@ -14,7 +14,8 @@ Overall, KOOR is a platform that brings together employers, job seekers, and ven
 
 - [Home]() 
 - [Github Repo](#github-repo-🔗)
-- [Database Design](https://github.com/digimonktech/koor_backend/blob/db-design/README.md)
+- [Figma Design](https://www.figma.com/file/HKjAWx3CbMTTKwPzuzJiUZ/Koor?node-id=124%3A9630)
+- [Database Design](https://dbdocs.io/keval.rajpal/Koor)
 - [API Docs](./docs/index.md)
 
 ## Github Repo [🔗](https://github.com/digimonkt/koor-backend/)
@@ -22,7 +23,7 @@ Overall, KOOR is a platform that brings together employers, job seekers, and ven
 ![Django](https://img.shields.io/badge/Django-0C4B33?style=for-the-badge&logo=django&logoColor=white)
 
 ## Prerequisites
- - Python >= 3.10
+ - Python >= 3.8
 
 ## Project Setup
  - ### Clone the Git Repo 
@@ -56,37 +57,40 @@ Overall, KOOR is a platform that brings together employers, job seekers, and ven
  - ### Setup `.env` File
     Create .env file add following variables. Detail about the variable based on the Configuration referenced [here](#configuration)
      ```
-    # Core Settings
-    DEBUG=True
-    SECRET_KEY="<YOUR SECRET KEY HERE>"
-
-    # Databases
-    DATABASE_URI=postgres://<username>:<password>@<hostname>:<port>/<database-name>
-    POSTGRES_CONN_MAX_AGE=<seconds>
-
-    # JWT Settings
-    ACCESS_TOKEN_LIFETIME=<minutes>
-    REFRESH_TOKEN_LIFETIME=<days>
-    ALGORITHM=<algorithm> # 'HS256', 'HS384', 'HS512'
+     # Django Configuration
+    DJANGO_SETTINGS_MODULE=koor.config
+    DJANGO_CONFIGURATION=Production or Local
+    DJANGO_SECRET_KEY="<django-security-key>"
+    DJANGO_DEBUG=True or False
+    DJANGO_PAGINATION_LIMIT=10
+    DJANGO_ALLOWED_HOSTS="*"
     
-    # Swagger Settings
-    DOCS_TITLE=<title>
-    DEFAULT_VERSION=<version>
-    DESCRIPTION=<description markdown file>
-    TERMS_OF_SERVICE=<license>
-
+    # Databases Configuration
+    DATABASE_URI="postgres://<database-host>:<database-password>@<database-host>:5432/<database-name>"
+    POSTGRES_CONN_MAX_AGE=600
+    
+    # IN MINUTES
+    JWT_ACCESS_TOKEN_LIFETIME=1
+    # IN DAYS
+    JWT_REFRESH_TOKEN_LIFETIME=30
+    JWT_ALGORITHM=SH256,
+    # IN MINUTES
+    JWT_SLIDING_TOKEN_LIFETIME=1
+    # IN DAYS
+    JWT_SLIDING_TOKEN_REFRESH_LIFETIME=1
+    
+    
     # CORS
-    CORS_ORIGIN_WHITELIST = <Your frontend domain>
-
+    CORS_ORIGIN_WHITELIST = <frontend-url>
+    
     # Author, Manager and Stakeholder
-    ORAGANIZATION=organization@example.com
-    DEVOPS=devops@example.com
-    QA=qa@example.com
-    DEVELOPER=developer@example.com
-    SERVER_EMAIL=support@example.com
+    ORGANIZATION=ORGANIZATION@email.com
+    DEVOPS=DEVOPS@email.com
+    QA=QA@email.com
+    DEVELOPER=DEVELOPER@email.com
+    SERVER_EMAIL=SERVER_EMAIL@email.com
      ```
 ## Configuration
-### Local Configuration
 - #### DEBUG
     Boolean value (i.e. True or False). You’re certainly developing your project with DEBUG = True, since this enables handy features like full tracebacks in your browser. _Used from .env_
 
@@ -99,9 +103,6 @@ Overall, KOOR is a platform that brings together employers, job seekers, and ven
 - #### ATOMIC_REQUESTS
     Boolean value, Set this to True to wrap each view in a transaction on this database.
 
- ### Development Configuration
-_Inherits from Local Configuration_
-**Additional Configuration**
 - #### ALLOWED_HOSTS
     List value, A list of strings representing the host/domain names that this Django site can serve.
 
@@ -115,8 +116,5 @@ _Inherits from Local Configuration_
     String value, The email address that error messages come from, such as those sent to [ADMINS](#admins) and [MANAGERS](#managers).
  
  ### Production Configuration
-_Inherits from Development Configuration_
+_Inherits from Local Configuration_
 ![Pending](https://img.shields.io/badge/Pending-yellow)
-- [Home]() 
-- [Database Design](https://github.com/digimonktech/koor_backend/blob/db-design/README.md)
-- [API Docs](./docs/index.md)

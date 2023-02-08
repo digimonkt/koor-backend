@@ -1,19 +1,21 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
-from autoslug import AutoSlugField
-
 from core.models import (
-    BaseModel, upload_directory_path, SoftDeleteModel
+    BaseModel, SlugBaseModel, upload_directory_path,
 )
 
+# Create your models here.
 
 class Media(BaseModel, models.Model):
-    """
-        This class created for get media detail.
-        Here we have some useful field like:- file_path, media_type.
-            - file_path is the path of local storage where file are store.
-            - media_type show the file's type like Image, Video, Document.
+    """ 
+    This table stores information about media files uploaded to the system.
+
+    Columns: 
+    - `filepath`: A string representing the path of the media file. 
+    - `mediatype`: A string representing the type of media (e.g. image, video, audio).
+
+    Returns: models.Model. 
     """
     MEDIA_TYPE_CHOICE = (
         ('image', "Image"),
@@ -42,115 +44,74 @@ class Media(BaseModel, models.Model):
         verbose_name_plural = "Media"
         db_table = "Media"
 
-
-class Tag(BaseModel, SoftDeleteModel, models.Model):
+class Tag(SlugBaseModel, models.Model):
     """
-    This class created for get tag detail.
-    Here we have some useful field like:- title, slug.
-        - title is the tag name field.
-        - slug is used in url link for particular category.
-    """
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-        db_column="title",
-    )
-    slug = AutoSlugField(
-        populate_from='title',
-        always_update=True,
-        unique=True,
-        null=True,
-        blank=True,
-        db_column="slug",
-    )
+    This table is used to store details about a tag.
 
-    def __str__(self):
-        return self.title
+    Columns: 
+    - `title`: A string representing the name of the tag. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    """
 
     class Meta:
         verbose_name = "Tag"
         verbose_name_plural = "Tags"
         db_table = "Tag"
 
-
-class Language(BaseModel, SoftDeleteModel, models.Model):
+class Language(SlugBaseModel, models.Model):
     """
-    This class created for get language detail.
-    Here we have some useful field like:- title, slug.
-        - title is the language name field.
-        - slug is used in url link for particular category.
-    """
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-        db_column="title",
-    )
-    slug = AutoSlugField(
-        populate_from='title',
-        always_update=True,
-        unique=True,
-        null=True,
-        blank=True,
-        db_column="slug",
-    )
+    This table is used to store details about a language.
 
-    def __str__(self):
-        return self.title
+    Columns: 
+    - `title`: A string representing the name of the language. 
+    - `slug`: A string representing the slug for the language, used in URLs or filtering process.
+    """
 
     class Meta:
         verbose_name = "Language"
-        verbose_name_plural = "Languages"
+        verbose_name_plural = "Langauges"
         db_table = "Language"
 
-
-class Skill(BaseModel, SoftDeleteModel, models.Model):
+class Skill(SlugBaseModel, models.Model):
     """
-    This class created for get skill detail.
-    Here we have some useful field like:- title, slug.
-        - title is the skill name field.
-        - slug is used in url link for particular category.
-    """
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-        db_column="title",
-    )
-    slug = AutoSlugField(
-        populate_from='title',
-        always_update=True,
-        unique=True,
-        null=True,
-        blank=True,
-        db_column="slug",
-    )
+    This table is used to store details about a skill.
 
-    def __str__(self):
-        return self.title
+    Columns: 
+    - `title`: A string representing the name of the skill. 
+    - `slug`: A string representing the slug for the skill, used in URLs or filtering process.
+    """
 
     class Meta:
         verbose_name = "Skill"
         verbose_name_plural = "Skills"
         db_table = "Skill"
 
+class EducationLevel(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a Education Level.
 
-class Country(BaseModel, SoftDeleteModel, models.Model):
+    Columns: 
+    - `title`: A string representing the name of the education level. 
+    - `slug`: A string representing the slug for the education level, used in URLs or filtering process.
     """
-        This class created for get country detail.
-        Here we have some useful field like:- title, slug, currency_code, country_code, iso_code2, iso_code3.
+
+    class Meta:
+        verbose_name = "Education Level"
+        verbose_name_plural = "Education Levels"
+        db_table = "EducationLevel"
+
+class Country(SlugBaseModel, models.Model):
     """
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-        db_column="title",
-    )
-    slug = AutoSlugField(
-        populate_from='title',
-        always_update=True,
-        unique=True,
-        null=True,
-        blank=True,
-        db_column="slug",
-    )
+    This table is used to store details about a Country.
+
+    Columns: 
+    - `title`: A string representing the name of the country. 
+    - `slug`: A string representing the slug for the country, used in URLs or filtering process.
+    - `iso_code2`: A string representing the two-letter ISO code for the country. 
+    - `iso_code3`: A string representing the three-letter ISO code for the country. 
+    - `currency_code`: A string representing the currency code for the country. 
+    - `country_code`: A string representing the country code for the country.
+    """
     currency_code = models.CharField(
         verbose_name=_('Currency Code'),
         max_length=5,
@@ -172,76 +133,28 @@ class Country(BaseModel, SoftDeleteModel, models.Model):
         db_column="iso_code3",
     )
 
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name = "Country"
         verbose_name_plural = "Countries"
         db_table = "Country"
 
+class City(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a City.
 
-class City(BaseModel, SoftDeleteModel, models.Model):
+    Columns: 
+    - `title`: A string representing the name of the city. 
+    - `slug`: A string representing the slug for the city, used in URLs or filtering process.
+    - `country`: A foreign key reference to the country table.
     """
-            This class created for get country detail.
-            Here we have some useful field like:- title, slug, country.
-                - country is used as a reference key field of Country table.
-    """
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-        db_column="title",
-    )
-    slug = AutoSlugField(
-        populate_from='title',
-        always_update=True,
-        unique=True,
-        null=True,
-        blank=True,
-        db_column="slug",
-    )
     country = models.ForeignKey(
-        Country,
+        to=Country,
         verbose_name=_('Country'),
         on_delete=models.CASCADE,
         db_column="country",
         related_name='%(app_label)s_%(class)s_country'
     )
-
-    def __str__(self):
-        return self.title
-
     class Meta:
         verbose_name = "City"
         verbose_name_plural = "Cities"
         db_table = "City"
-
-
-class EducationLevel(BaseModel, SoftDeleteModel, models.Model):
-    """
-    This class created for get education level detail.
-    Here we have some useful field like:- title, slug.
-        - title is the level name field.
-        - slug is used in url link for particular education level.
-    """
-    title = models.CharField(
-        verbose_name=_('Title'),
-        max_length=255,
-        db_column="title",
-    )
-    slug = AutoSlugField(
-        populate_from='title',
-        always_update=True,
-        unique=True,
-        null=True,
-        blank=True,
-        db_column="slug",
-    )
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        verbose_name = "Education Level"
-        verbose_name_plural = "Education Levels"
-        db_table = "EducationLevel"

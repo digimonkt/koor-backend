@@ -1,13 +1,12 @@
 from django.contrib.auth.models import BaseUserManager
-from typing import Any
-
 
 # Create Auth User according to Developer Code
 class UserManager(BaseUserManager):
     """
     class UserManager is called by the django auth.
     Whenever we create authenticate superuser with email and password, username is not needed for superuser.
-    We create authenticate user with 'email or mobile' and 'password', username is not required.
+    - We create authenticate user with `email` or `mobile` and `password`. 
+    - `username` is not required.
     """
     use_in_migrations = True
 
@@ -34,19 +33,19 @@ class UserManager(BaseUserManager):
 
     # function for add normal user's other field
     def create_user(
-            self,
-            display_name=None,
-            email=None,
-            mobile_number=None,
-            password=None,
-            role=None,
-            **extra_fields
+        self,
+        name=None,
+        email=None,
+        mobile_number=None,
+        password=None,
+        role=None,
+        **extra_fields
     ):
         extra_fields.setdefault('is_staff', False)
         extra_fields.setdefault('is_superuser', False)
         return self._create_user(
             email=email,
-            display_name=display_name,
+            name=name,
             mobile_number=mobile_number,
             password=password,
             role=role,

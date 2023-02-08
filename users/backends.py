@@ -15,7 +15,6 @@ class MobileOrEmailBackend(BaseBackend):
     This class require two method implementation
     `authenticate` and `get_user`
 
-
     """
 
     def authenticate(self, identifier=None, password=None, **kwargs):

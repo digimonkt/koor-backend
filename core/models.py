@@ -1,5 +1,7 @@
+from datetime import date
 from django.db import models
 from django.utils.translation import gettext as _
+from django.template.defaultfilters import slugify
 
 from model_utils import (
     FieldTracker,
@@ -14,10 +16,9 @@ from model_utils.models import (
 def upload_directory_path(instance, filename):
     """
     Directory path function: Return unique path name for file uploading.
-    Example:- instance_name/file_name
+    Example:- YYYT-MM-DD/instance_name/file_name
     """
-    return '{0}/{1}'.format(instance, filename)
-
+    return '{0}/{1}/{2}'.format(date.today(), instance, filename)
 
 class BaseModel(UUIDModel):
     """
@@ -48,12 +49,11 @@ class BaseModel(UUIDModel):
     class Meta:
         abstract = True
 
-
 class SoftDeleteModel(SoftDeletableModel, models.Model):
     """
     Soft Delete Model Class: This is an abstract class model use for SoftDeletableModel and active field into model
     class.
-    SoftDeletableModel : - with the help of this function we remove record partially, and we easily store this
+    SoftDeleteModel : - with the help of this function we remove record partially, and we easily store this
     partially removed record into table.
     """
     active = models.BooleanField(
@@ -63,6 +63,37 @@ class SoftDeleteModel(SoftDeletableModel, models.Model):
         null=True,
         db_column="active"
     )
+
+    class Meta:
+        abstract = True
+
+class SlugBaseModel(BaseModel, SoftDeleteModel, models.Model):
+    """ 
+    This abstract base model is used to store information in a Django Model.
+
+    Columns: 
+    - `title`: A string representing the name of the model. 
+    - `slug`: A string representing the slug for the model, used in URLs and filtering record.
+    """
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    slug = models.SlugField(
+        unique=True,
+        null=True,
+        blank=True,
+        db_column="slug",
+    )
+
+    def __str__(self):
+        return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        return super().save(*args, **kwargs)
 
     class Meta:
         abstract = True

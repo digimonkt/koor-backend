@@ -1,8 +1,7 @@
-import logging
-
-from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext as _
+from django.core.validators import RegexValidator
 
 from model_utils import models as misc_models
 
@@ -15,10 +14,10 @@ from .managers import UserManager
 
 
 # Create Auth User Model Start
-class User(AbstractUser, BaseModel):
+class User(AbstractUser, BaseModel, SoftDeleteModel):
     """
     This class created for get detail of all user like: admin, JobSeeker, Employer etc.
-    Here we have some useful field like:- email, mobile_number, country_code, display_name, role, image.
+    Here we have some useful field like:- email, mobile_number, country_code, name, role, image.
         - we can get all other default authenticate filed in this user model class.
     """
     ROLE_TYPE_CHOICE = (
@@ -49,14 +48,20 @@ class User(AbstractUser, BaseModel):
         max_length=250,
         blank=True,
         null=True,
-        db_column="country_code"
+        db_column="country_code",
+        validators=[
+            RegexValidator(
+                regex='^\+[1-9]\d{0,2}$',
+                message='Invalid country code',
+            ),
+        ]
     )
-    display_name = models.CharField(
-        verbose_name=_('Display Name'),
+    name = models.CharField(
+        verbose_name=_('Name'),
         max_length=250,
         blank=True,
         null=True,
-        db_column="display_name"
+        db_column="name"
     )
     role = models.CharField(
         verbose_name=_('Role'),
@@ -64,7 +69,7 @@ class User(AbstractUser, BaseModel):
         db_column="role",
         choices=ROLE_TYPE_CHOICE
     )
-    image = models.ForeignKey(
+    image = models.OneToOneField(
         Media,
         verbose_name=_('Image'),
         null=True,
@@ -86,11 +91,15 @@ class User(AbstractUser, BaseModel):
         verbose_name_plural = "Users"  # display table name as plural
         db_table = 'User'  # table name in DB
 
-
 class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
     """
-    An abstract base class model that provides self updating ``created_by`` and ``modified_by`` fields.
-    It also extrends from model_utils.TimeStampedModel which has ``created`` and ``modified`` fields.
+    This abstract base model is used to store timestamps for model creation and modification in a Django Model.
+
+    Columns:
+    - `created`: A datetime object representing the creation time of the model.
+    - `modified`: A datetime object representing the last modification time of the model.
+    - `created_by`: A string representing the user who created the model.
+    - `modified_by`: A string representing the user who last modified the model.
     """
 
     created_by = models.ForeignKey(
@@ -113,11 +122,16 @@ class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
     class Meta:
         abstract = True
 
-
 class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
-    This class created for get user session details like: login ip address, login agent, login is expired time etc.
-    Here we have some useful field like:- user, ip_address, agent, expire_at.
+    This model is used to store user session details in a Django Model.
+
+    Columns:
+
+    - `user`: A foreign key refrence with user table.
+    - `ip_address`: IP address of the user when they logged in.
+    - `agent`: A json data for the user-agent (i.e. Browser) when the user logged in.
+    - `expired_at`: A datetime object representing the expiration time of the login.
     """
     user = models.ForeignKey(
         User,

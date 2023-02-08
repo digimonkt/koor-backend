@@ -9,14 +9,20 @@ from project_meta.models import (
     EducationLevel, Media
 )
 
-
 class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
-    This class created for get JobSeeker profile detail.
-    Here we have some useful field like:- user, gender, dob, employment_status, description, highest_education,
-    market_information_notification, job_notification.
-        - user is used for JobSeeker authenticate detail like: email, mobile, display name, profile role etc.
-        - highest_education is used for get education level of JobSeeker.
+    This model is used to store profile details of JobSeekers.
+
+    Columns:
+
+    - `user`: A User object representing the user.
+    - `gender`: A string representing the user's gender.
+    - `dob`: A date object representing the user's date of birth.
+    - `employment_status`: A string representing the user's current employment status.
+    - `description`: A string containing a description of the user.
+    - `highest_education`: A  foreign key refrence to `project_meta.models.EducationLevel` representing the user's highest educational qualification.
+    - `market_information_notification`: A boolean value indicating whether the user has opted to receive market information notifications.
+    - `job_notification`: A boolean value indicating whether the user has opted to receive job notifications.
     """
     GENDER_CHOICE = (
         ('male', "Male"),
@@ -27,8 +33,8 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         ('other', "Other"),
         ('fresher', "Fresher"),
     )
-    user = models.ForeignKey(
-        User,
+    user = models.OneToOneField(
+        to=User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
@@ -79,21 +85,26 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
     )
 
     def __str__(self):
-        return str(self.user) + "(" + str(self.employment_status) + ")"
+        return str(self.user)
 
     class Meta:
         verbose_name = "Job Seeker Profile"
         verbose_name_plural = "Job Seeker Profiles"
         db_table = "JobSeekerProfile"
 
-
 class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
-    This class created for get employer profile detail.
-    Here we have some useful field like:- user, description, organization_type, market_information_notification,
-    other_notification, license_id, license_id_file.
-        - user is used for JobSeeker authenticate detail like: email, mobile, display name, profile role etc.
-        - license_id_file is used for get file of the license which is store in media table.
+    This model is used to store profile details of Employers.
+
+    Columns:
+
+    - `user`: A User object representing the user.
+    - `description`: A string containing a description of the user.
+    - `organization_type`: A string representing the organization type the user is affiliated with.
+    - `market_information_notification`: A boolean value indicating whether the user has opted to receive market information notifications.
+    - `other_notification`: A boolean value indicating whether the user has opted to receive other information notifications.
+    - `license_id`: A string representing the user's license ID.
+    - `license_id_file`: A Media object representing the user's license ID file.
     """
     ORGANIZATION_TYPE_CHOICE = (
         ('government', "Government"),
@@ -101,7 +112,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         ('business', "Business"),
     )
     user = models.ForeignKey(
-        User,
+        to=User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
@@ -136,7 +147,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         null=True,
         blank=True
     )
-    license_id_file = models.ForeignKey(
+    license_id_file = models.OneToOneField(
         Media,
         verbose_name=_('License File'),
         on_delete=models.SET_NULL,

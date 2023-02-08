@@ -7,14 +7,13 @@ from .models import User
 
 # Register your models here.
 @admin.register(User)  # Register User model created by developer
-#  Function for Display Model into superuser page
 class UserAdmin(UserAdmin):
     fieldsets = (
         (None, {
-            'fields': ('email', 'password', 'mobile_number', 'role',)
+            'fields': ('email', 'password', 'mobile_number', 'country_code', 'role',)
         }),
         (_('Personal info'), {
-            'fields': ('display_name', 'image')
+            'fields': ('name', 'image')
         }),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser',)
@@ -26,7 +25,7 @@ class UserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'mobile_number', 'role', 'password1', 'password2'),
+            'fields': ('email', 'mobile_number', 'role', 'country_code', 'password1', 'password2'),
         }),
     )
     list_display = ('email', 'mobile_number', 'is_active', 'role',)
