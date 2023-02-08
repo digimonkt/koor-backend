@@ -1,11 +1,14 @@
-from django.contrib.auth import authenticate
-
-from rest_framework import exceptions, status
 from rest_framework import serializers
 
-from .models import User
+from job_seekers.models import (
+    EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
+)
+from user_profile.models import (
+    JobSeekerProfile, EmployerProfile
+)
 
 from .backends import MobileOrEmailBackend as cb
+from .models import User
 
 
 class CreateUserSerializers(serializers.ModelSerializer):
@@ -23,7 +26,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id','email', 'mobile_number', 'password', 'role', 'country_code']
+        fields = ['id', 'email', 'mobile_number', 'password', 'role', 'country_code']
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
@@ -52,13 +55,11 @@ class CreateUserSerializers(serializers.ModelSerializer):
         country_code = data.get("country_code")
         mobile_number = data.get("mobile_number")
         if mobile_number and country_code in ["", None]:
-            raise serializers.ValidationError({'country_code':'country code can not be blank'})
+            raise serializers.ValidationError({'country_code': 'country code can not be blank'})
         return data
 
 
-
 class CreateSessionSerializers(serializers.Serializer):
-
     """
     Serializer for creating a session for a user.
 
@@ -74,21 +75,21 @@ class CreateSessionSerializers(serializers.Serializer):
     """
 
     email = serializers.CharField(
-        style={"input_type": "text"}, 
-        write_only=True, 
-        required=False, 
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
         allow_blank=True
-        )
+    )
     mobile_number = serializers.CharField(
         style={"input_type": "text"},
         write_only=True,
         required=False,
         allow_blank=True
-        )
+    )
     password = serializers.CharField(
-        style={"input_type": "text"}, 
+        style={"input_type": "text"},
         write_only=True
-        )
+    )
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
@@ -128,12 +129,315 @@ class CreateSessionSerializers(serializers.Serializer):
                 user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_active=False)
                 identifier = mobile_number
             if user_instance.exists():
-                raise serializers.ValidationError({'message':'User not activate.'})
+                raise serializers.ValidationError({'message': 'User not activate.'})
             else:
                 user = cb.authenticate(self, identifier=identifier, password=password)
             if user:
                 return user
             else:
-                raise serializers.ValidationError({'message':'Invalid login credentials.'})
+                raise serializers.ValidationError({'message': 'Invalid login credentials.'})
         except:
-            raise serializers.ValidationError({'message':'Invalid login credentials.'})
+            raise serializers.ValidationError({'message': 'Invalid login credentials.'})
+
+
+class JobSeekerProfileSerializer(serializers.ModelSerializer):
+    """
+    JobSeekerProfileSerializer is a serializer class that serializes and deserializes the JobSeekerProfile model into
+     JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+    on the model.
+
+    Attributes:
+        model (JobSeekerProfile): The model that will be serialized.
+        fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = (
+            'gender',
+            'dob',
+            'employment_status',
+            'description',
+            'market_information_notification',
+            'job_notification'
+        )
+
+
+class EducationRecordSerializer(serializers.ModelSerializer):
+    """
+    EducationRecordSerializer is a serializer class that serializes and deserializes the EducationRecord model into
+    JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields
+    based on the model.
+
+    Attributes:
+    model (EducationRecord): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = EducationRecord
+        fields = (
+            'id',
+            'title',
+            'start_date',
+            'end_date',
+            'present',
+            'organization',
+            'description'
+        )
+
+
+class EmploymentRecordSerializer(serializers.ModelSerializer):
+    """
+    EmploymentRecordSerializer is a serializer class that serializes and deserializes the EmploymentRecord model into
+     JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (EmploymentRecord): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = EmploymentRecord
+        fields = (
+            'id',
+            'title',
+            'start_date',
+            'end_date',
+            'present',
+            'organization',
+            'description'
+        )
+
+
+class ResumeSerializer(serializers.ModelSerializer):
+    """
+    ResumeSerializer is a serializer class that serializes and deserializes the Resume model into
+     JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (Resume): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = Resume
+        fields = (
+            'id',
+            'title',
+            'file_path',
+            'created_at'
+        )
+
+
+class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
+    """
+    JobSeekerLanguageProficiencySerializer is a serializer class that serializes and deserializes the
+    JobSeekerLanguageProficiency model into JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (JobSeekerLanguageProficiency): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = JobSeekerLanguageProficiency
+        fields = (
+            'id',
+            'language',
+            'written',
+            'spoken'
+        )
+
+
+class JobSeekerSkillSerializer(serializers.ModelSerializer):
+    """
+    JobSeekerSkillSerializer is a serializer class that serializes and deserializes the JobSeekerSkill model into JSON
+    format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (JobSeekerSkill): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = JobSeekerSkill
+        fields = (
+            'id',
+            'skill'
+        )
+
+
+class JobSeekerDetailSerializers(serializers.ModelSerializer):
+    """
+    JobSeekerDetailSerializers
+
+    A class-based serializer for the User model. The serializer includes various fields such as profile,
+    education_record, work_experience, resume, languages, and skills. These fields are serialized using the
+    SerializerMethodField and are populated by the get_* methods defined in the class.
+
+    The fields returned by the serializer include:
+
+        - id: the primary key of the User model
+        - email: the email address of the user
+        - mobile_number: the mobile number of the user
+        - country_code: the country code of the user
+        - name: the display name of the user
+        - image: the image of the user
+        - role: the role of the user
+        - profile: the profile of the job seeker
+        - education_record: the education record of the job seeker
+        - work_experience: the work experience of the job seeker
+        - resume: the resume of the job seeker
+        - languages: the languages spoken by the job seeker
+        - skills: the skills of the job seeker
+
+    Methods:
+
+        - get_profile(self, obj): returns the profile of the job seeker
+        - get_education_record(self, obj): returns the education record of the job seeker
+        - get_work_experience(self, obj): returns the work experience of the job seeker
+        - get_resume(self, obj): returns the resume of the job seeker
+        - get_languages(self, obj): returns the languages spoken by the job seeker
+        - get_skills(self, obj): returns the skills of the job seeker
+    """
+
+    profile = serializers.SerializerMethodField()
+    education_record = serializers.SerializerMethodField()
+    work_experience = serializers.SerializerMethodField()
+    resume = serializers.SerializerMethodField()
+    languages = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
+                  'education_record', 'work_experience', 'resume', 'languages', 'skills']
+
+    def get_profile(self, obj):
+        context = dict()
+        try:
+            user_data = JobSeekerProfile.objects.get(user=obj)
+            get_data = JobSeekerProfileSerializer(user_data)
+            if get_data.data:
+                context = get_data.data
+        except JobSeekerProfile.DoesNotExist:
+            pass
+        finally:
+            return context
+
+    def get_education_record(self, obj):
+        context = []
+        education_data = EducationRecord.objects.filter(user=obj)
+        get_data = EducationRecordSerializer(education_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_work_experience(self, obj):
+        context = []
+        employment_data = EmploymentRecord.objects.filter(user=obj)
+        get_data = EmploymentRecordSerializer(employment_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_resume(self, obj):
+        context = []
+        resume_data = Resume.objects.filter(user=obj)
+        get_data = ResumeSerializer(resume_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_languages(self, obj):
+        context = []
+        languages_data = JobSeekerLanguageProficiency.objects.filter(user=obj)
+        get_data = JobSeekerLanguageProficiencySerializer(languages_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_skills(self, obj):
+        context = []
+        skills_data = JobSeekerSkill.objects.filter(user=obj)
+        get_data = JobSeekerSkillSerializer(skills_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+
+class EmployerProfileSerializer(serializers.ModelSerializer):
+    """
+    EmployerProfileSerializer is a serializer class that serializes and deserializes the EmployerProfile model into JSON
+    format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (EmployerProfile): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = EmployerProfile
+        fields = (
+            'description',
+            'organization_type',
+            'license_id',
+            'license_id_file'
+        )
+
+
+class EmployerDetailSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for Employer Detail
+
+    Serializes and deserializes employer detail data from/to python objects and JSON format.
+    The fields are defined in the 'Meta' class and correspond to the User model.
+
+    Attributes:
+        serializers (Module): The serializers module from the Django REST framework.
+        ModelSerializer (class): The base serializer class from the Django REST framework.
+
+    Methods:
+        get_profile(self, obj):
+            Returns employer profile data serialized into JSON format
+
+    """
+
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
+
+    def get_profile(self, obj):
+        context = dict()
+        try:
+            user_data = EmployerProfile.objects.get(user=obj)
+            get_data = EmployerProfileSerializer(user_data)
+            if get_data.data:
+                context = get_data.data
+        except EmployerProfile.DoesNotExist:
+            pass
+        finally:
+            return context
+

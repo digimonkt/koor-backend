@@ -5,11 +5,11 @@ from distutils.util import strtobool
 from decouple import config
 import dj_database_url
 from configurations import Configuration
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Common(Configuration):
-
     INSTALLED_APPS = (
         'django.contrib.admin',
         'django.contrib.auth',
@@ -18,14 +18,13 @@ class Common(Configuration):
         'django.contrib.messages',
         'django.contrib.staticfiles',
 
-
         # Third party apps
-        "corsheaders",               # for Cross-Origin Resource Sharing
-        'rest_framework',            # utilities for rest apis
+        "corsheaders",  # for Cross-Origin Resource Sharing
+        'rest_framework',  # utilities for rest apis
         'rest_framework.authtoken',  # token authentication
-        'django_filters',            # for filtering rest endpoints
+        'django_filters',  # for filtering rest endpoints
         'rest_framework_simplejwt',  # for the JWT authentication 
-        'rest_framework_simplejwt.token_blacklist',     # for token blacklisting from admin panel
+        'rest_framework_simplejwt.token_blacklist',  # for token blacklisting from admin panel
 
         "users.apps.UsersConfig",
         "project_meta.apps.ProjectMetaConfig",
@@ -239,7 +238,7 @@ class Common(Configuration):
             'rest_framework.permissions.IsAuthenticated',
         ],
         'DEFAULT_AUTHENTICATION_CLASSES': (
-            'rest_framework_simplejwt.authentication.JWTAuthentication',
+            'core.authentications.CustomJWTAuthentication',
         )
     }
 
@@ -274,12 +273,14 @@ class Common(Configuration):
         'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
         'SLIDING_TOKEN_LIFETIME': timedelta(minutes=int(config('JWT_SLIDING_TOKEN_LIFETIME'))),
         'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=int(config('JWT_SLIDING_TOKEN_REFRESH_LIFETIME'))),
+
+        'SIGNING_KEY': config("DJANGO_SECRET_KEY"),
     }
 
     # To prevent from the cross-origin resources sharing
     # https://pypi.org/project/django-cors-headers/
 
-    CORS_ALLOW_ALL_ORIGINS = True   # For Development settings
+    CORS_ALLOW_ALL_ORIGINS = True  # For Development settings
 
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
