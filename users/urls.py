@@ -1,11 +1,12 @@
 from django.urls import path
 
-from .views import CreateUserView, CreateSessionView
+from .views import UserView, CreateSessionView
 
 app_name = "users"
 
 urlpatterns = [
-    path('', CreateUserView.as_view(), name="create_user"),
+
+    path('', UserView.as_view(), name="get_user"),
 
 <<<<<<< HEAD
     path('', views.CreateUserView.as_view(), name="create_user_view_link"),
