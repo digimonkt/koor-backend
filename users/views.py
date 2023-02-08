@@ -4,6 +4,12 @@ from rest_framework import (
 )
 
 from core.tokens import SessionTokenObtainPairSerializer
+
+from user_profile.models import (
+    JobSeekerProfile,
+    EmployerProfile
+)
+
 from .models import UserSession, User
 from .serializers import (
     CreateUserSerializers,
@@ -65,7 +71,11 @@ class UserView(generics.GenericAPIView):
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
             user.save()
-            user_session = create_user_session(request, user, )
+            if user.role == "job_seeker":
+                JobSeekerProfile.objects.create(user=user)
+            elif user.role == "employer":
+                EmployerProfile.objects.create(user=user)
+            user_session = create_user_session(request, user)
 
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
@@ -108,14 +118,14 @@ class UserView(generics.GenericAPIView):
                     user_id = request.user.id
                 user_data = User.objects.get(id=user_id)
                 if user_data.role == "job_seeker":
-                   
+
                     get_data = JobSeekerDetailSerializers(user_data)
                     context["data"] = get_data.data
 
                 elif user_data.role == "employer":
                     get_data = EmployerDetailSerializers(user_data)
                     context["data"] = get_data.data
-                
+
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
