@@ -210,13 +210,9 @@ class DeleteSessionView(generics.GenericAPIView):
         try:
             refresh_token = request.headers.get('x-refresh')
             payload = JWTMiddleware.decode_token(refresh_token)
-            print("delete function")
             UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
             context["message"] = "Logged Out successfully"
             return response.Response(data=context, status=status.HTTP_200_OK)
         except Exception as e:
-            if e == "x-refresh":
-                context["error"] = "Token is invalid or expired"
-            else:
-                context["error"] = str(e)
+            context["error"] = str(e)
             return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
