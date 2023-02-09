@@ -4,4 +4,6 @@ app_name="v1"
 
 urlpatterns = [
     path('users', include('users.urls')),
+    
+    path('users/employer', include('employers.urls')),
 ]
