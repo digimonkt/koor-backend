@@ -31,6 +31,7 @@ class Common(Configuration):
         "job_seekers.apps.JobSeekersConfig",
         "jobs.apps.JobsConfig",
         "employers.apps.EmployersConfig",
+        "superadmin.apps.SuperadminConfig",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
