@@ -131,3 +131,5 @@ dmypy.json
 .idea/
 
 docs/out/*
+
+media
