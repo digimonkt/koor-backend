@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from jobs.models import JobDetails
 from project_meta.models import Media
 from user_profile.models import EmployerProfile
 from users.models import User
@@ -58,20 +59,20 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = EmployerProfile
-        fields = ['organization_name', 'mobile_number',  'country_code', 'organization_type',
+        fields = ['organization_name', 'mobile_number', 'country_code', 'organization_type',
                   'market_information_notification', 'other_notification', 'license_id', 'license']
-        
+
     def validate_license_id(self, license_id):
         if license_id == '':
             raise serializers.ValidationError('License id can not be blank sfs', code='license_id')
         else:
             return license_id
-    
+
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
             if mobile_number.isdigit():
                 try:
-                    if len(mobile_number) > 13 :
+                    if len(mobile_number) > 13:
                         raise serializers.ValidationError('This is an invalid mobile number.', code='mobile_number')
                     else:
                         if User.objects.get(mobile_number=mobile_number):
@@ -82,7 +83,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError('Mobile number must contain only numbers', code='mobile_number')
         else:
             raise serializers.ValidationError('Mobile number can not be blank', code='mobile_number')
-        
+
     def validate(self, data):
         country_code = data.get("country_code")
         mobile_number = data.get("mobile_number")
@@ -119,3 +120,43 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             instance.license_id_file = media_instance
             instance.save()
         return instance
+
+
+class CreateJobsSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for creating job details.
+
+    This serializer class is based on the `serializers.ModelSerializer` class and extends its functionality to handle
+    the creation of job details objects. The serializer handles the following fields:
+        - `title`: title of the job
+        - `budget_currency`: currency of the budget amount
+        - `budget_amount`: amount of the budget
+        - `budget_pay_period`: period of payment for the budget
+        - `description`: description of the job
+        - `country`: country where the job is located
+        - `city`: city where the job is located
+        - `address`: address of the job location
+        - `job_category`: categories related to the job
+        - `is_full_time`: boolean indicating if the job is full-time
+        - `is_part_time`: boolean indicating if the job is part-time
+        - `has_contract`: boolean indicating if the job has a contract
+        - `contact_email`: contact email for the job
+        - `contact_phone`: contact phone for the job
+        - `contact_whatsapp`: contact WhatsApp for the job
+        - `highest_education`: highest education required for the job
+        - `language`: languages required for the job
+        - `skill`: skills required for the job
+
+    The `job_category`, `language`, and `skill` fields are related fields that are read-only.
+    """
+    job_category = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    language = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    skill = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = JobDetails
+        fields = [
+            'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
+            'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill'
+        ]
