@@ -1,10 +1,12 @@
+from datetime import datetime
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions
 )
 
+from core.middleware import JWTMiddleware
 from core.tokens import SessionTokenObtainPairSerializer
-
 from user_profile.models import (
     JobSeekerProfile,
     EmployerProfile
@@ -183,3 +185,34 @@ class CreateSessionView(generics.GenericAPIView):
                 data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class DeleteSessionView(generics.GenericAPIView):
+    """
+    DeleteSessionView:
+        A generic API view that handles the deletion of user sessions.
+
+    Attributes:
+        - permission_classes (List): A list of permission classes that control access to this view.
+
+    Methods:
+        - delete(self, request): Handles the deletion of user sessions based on the provided 'x-refresh' header. If the
+          header is invalid or expired, an error message will be returned in the response. If the session is successfully
+          deleted, a success message will be returned.
+
+    Returns:
+        - response.Response: A response object containing either an error message or a success message.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        context = dict()
+        try:
+            refresh_token = request.headers.get('x-refresh')
+            payload = JWTMiddleware.decode_token(refresh_token)
+            UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
+            context["message"] = "Logged Out successfully"
+            return response.Response(data=context, status=status.HTTP_200_OK)
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
