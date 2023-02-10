@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from project_meta.models import (
-    Country
+    Country, City
 )
 
 
@@ -17,3 +17,58 @@ class CountrySerializers(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ['id', 'title', 'currency_code', 'country_code', 'iso_code2', 'iso_code3']
+
+
+class CitySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for City model.
+    
+    This serializer class is based on Django Rest Framework's ModelSerializer and it is used to represent the City model in the API.
+    The serializer defines the fields that should be included in the API representation using the fields attribute.
+    The serializer also includes a validation method (validate) to validate the data before it is saved to the database.
+    The validate method checks if the country field is blank and raises a validation error if it is.
+    It also checks if a city with the same title and country already exists and raises a validation error if it does.
+    Finally, it checks if the country exists in the database and raises a validation error if it does not.
+
+    Attributes:
+        model (City): The model class that this serializer is based on.
+        fields (list): List of fields from the City model that should be included in the API representation.
+    """
+
+    class Meta:
+        model = City
+        fields = ['id', 'title', 'country']
+        
+    def validate(self, data):
+        """
+        Validate the data before saving to the database.
+        
+        The validate method checks if the country field is blank and raises a validation error if it is.
+        It also checks if a city with the same title and country already exists and raises a validation error if it does.
+        Finally, it checks if the country exists in the database and raises a validation error if it does not.
+
+        Args:
+            data (dict): Dictionary of data to be validated.
+
+        Raises:
+            serializers.ValidationError: Raised if the country field is blank or if a city with the same title and country already exists or if the country does not exist in the database.
+
+        Returns:
+            data (dict): The validated data.
+        """
+        country = data.get("country")
+        title = data.get("title")
+        if country in ["", None]:
+            raise serializers.ValidationError({'country': 'Country can not be blank'})
+        else:
+            try:
+                if City.objects.filter(title=title).filter(country=country).exists():
+                    raise serializers.ValidationError({'title': title + ' in '+ country.title +' already exist.'})
+                if Country.objects.get(title=country.title):
+                    return data
+            except Country.DoesNotExist:
+                raise serializers.ValidationError('Country not available.', code='country')
+                
+            
+            
+            
