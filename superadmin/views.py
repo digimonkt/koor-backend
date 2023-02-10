@@ -59,7 +59,8 @@ class CountryView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            context['message'] = str(e)
             return response.Response(
-                data=str(e),
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
