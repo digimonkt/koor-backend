@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
+from django.template.defaultfilters import slugify
 
 from core.models import (
     BaseModel, SlugBaseModel, upload_directory_path
