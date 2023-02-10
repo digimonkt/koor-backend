@@ -10,29 +10,32 @@ from .serializers import (
 
 class CountryView(generics.GenericAPIView):
     """
-    API View class for creating a new country.
+    A generic API view for creating and retrieving countries.
 
-    The `CountryView` class extends the `generics.GenericAPIView` and is used to create a new country in the system.
-    The `post` method is overridden to handle the creation of the country. The serializer class used for this view is
-    `CreateCountrySerializers`. The view requires authentication and only allows users with the role "admin" and staff
-    status to create a new country.
-
-    - If the request is successful, a 201 CREATED response is returned with a message indicating that the country was
-      added successfully.
-
-    - If the user does not have the required permissions, a 401 UNAUTHORIZED response is returned with a message
-      indicating that the user does not have permission to perform the action.
-
-    - If the serializer raises a validation error, a 400 BAD REQUEST response is returned with the error messages.
-
-    - If an exception is raised, a 400 BAD REQUEST response is returned with the exception message as a string.
-    
+    This class is based on the Django REST framework's `generics.GenericAPIView` class and is used to handle the creation
+    and retrieval of country objects. It enforces authentication using the `permissions.IsAuthenticated` permission class
+    and uses the `CreateCountrySerializers` serializer class to validate and serialize data.
     """
     
     serializer_class = CreateCountrySerializers
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """
+        Handle POST request to create a new country.
+        The request must contain valid data for the country to be created.
+
+        Only users with `admin` role and `is_staff` attribute set to True are authorized to create a country.
+
+        Returns:
+            - HTTP 201 CREATED with a message "Country added successfully" if the country is created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+
         context = dict()
         serializer = self.serializer_class(data=request.data)
         try:
