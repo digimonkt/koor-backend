@@ -62,13 +62,10 @@ class CitySerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'country': 'Country can not be blank'})
         else:
             try:
-                if City.objects.filter(title=title).filter(country=country).exists():
-                    raise serializers.ValidationError({'title': title + ' in '+ country.title +' already exist.'})
                 if Country.objects.get(title=country.title):
+                    if City.objects.filter(title=title, country=country).exists():
+                        raise serializers.ValidationError({'title': title + ' in '+ country.title +' already exist.'})
                     return data
             except Country.DoesNotExist:
                 raise serializers.ValidationError('Country not available.', code='country')
-                
-            
-            
-            
+ 
