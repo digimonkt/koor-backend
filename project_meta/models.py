@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import (
-    BaseModel, SlugBaseModel, upload_directory_path, CitySlugBaseModel
+    BaseModel, SlugBaseModel, upload_directory_path
 )
 
 # Create your models here.
@@ -138,7 +138,7 @@ class Country(SlugBaseModel, models.Model):
         verbose_name_plural = "Countries"
         db_table = "Country"
 
-class City(CitySlugBaseModel, models.Model):
+class City(SlugBaseModel, models.Model):
     """
     This table is used to store details about a City.
 
