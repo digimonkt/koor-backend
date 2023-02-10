@@ -1,6 +1,12 @@
 from rest_framework import (
     status, generics, serializers,
-    response, permissions
+    response, permissions, filters
+)
+
+from core.pagination import CustomPagination
+
+from project_meta.models import (
+    Country
 )
 
 from .serializers import (
@@ -8,17 +14,33 @@ from .serializers import (
 )
 
 
-class CountryView(generics.GenericAPIView):
+class CountryView(generics.ListAPIView):
     """
-    A generic API view for creating and retrieving countries.
+    A view for displaying a list of countries.
 
-    This class is based on the Django REST framework's `generics.GenericAPIView` class and is used to handle the creation
-    and retrieval of country objects. It enforces authentication using the `permissions.IsAuthenticated` permission class
-    and uses the `CreateCountrySerializers` serializer class to validate and serialize data.
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (CreateCountrySerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `Country.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
+
     """
-    
-    serializer_class = CreateCountrySerializers
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CreateCountrySerializers
+    queryset = Country.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
 
     def post(self, request):
         """
