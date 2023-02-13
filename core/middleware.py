@@ -82,9 +82,9 @@ class JWTMiddleware(MiddlewareMixin):
                     refresh_token_payload = self.decode_token(refresh_token)
                     session = self.get_session(refresh_token_payload)
                     if session:
-                        response.headers.setdefault(self.access_token_lookup,
-                                                    self.get_access_token_for_user(session.user, session.id))
-                    response.status_code = 200
+                        new_access_token = self.get_access_token_for_user(session.user, session.id)
+                        response.headers['Authorization'] = f'Bearer {new_access_token}'
+                        response.headers.setdefault(self.access_token_lookup, new_access_token)
                     return response
 
                 # if the session does not exist
