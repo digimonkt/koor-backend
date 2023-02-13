@@ -113,7 +113,6 @@ class UserView(generics.GenericAPIView):
         """
         context = dict()
         if request.user and request.user.is_authenticated:
-            context = dict()
             user_id = request.GET.get('userId', None)
             try:
                 if not user_id:

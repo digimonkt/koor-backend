@@ -1,8 +1,9 @@
 from django.db import models
 from django.utils.translation import gettext as _
+from django.template.defaultfilters import slugify
 
 from core.models import (
-    BaseModel, SlugBaseModel, upload_directory_path,
+    BaseModel, SlugBaseModel, upload_directory_path
 )
 
 # Create your models here.
@@ -147,6 +148,7 @@ class City(SlugBaseModel, models.Model):
     - `slug`: A string representing the slug for the city, used in URLs or filtering process.
     - `country`: A foreign key reference to the country table.
     """
+
     country = models.ForeignKey(
         to=Country,
         verbose_name=_('Country'),
@@ -158,3 +160,8 @@ class City(SlugBaseModel, models.Model):
         verbose_name = "City"
         verbose_name_plural = "Cities"
         db_table = "City"
+        
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title) + "-" + slugify(self.country)
+        return super().save(*args, **kwargs)
