@@ -280,6 +280,14 @@ class Common(Configuration):
     # https://pypi.org/project/django-cors-headers/
 
     CORS_ALLOW_ALL_ORIGINS = True  # For Development settings
+    
+    CORS_ALLOW_HEADERS = [
+    '*',
+]
+    
+    CORS_EXPOSE_HEADERS = [
+        "*",
+    ]
 
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
