@@ -322,7 +322,7 @@ class EducationLevelView(generics.ListAPIView):
 
 class LanguageView(generics.ListAPIView):
     """
-    A view for displaying a list of education levels .
+    A view for displaying a list of languages .
 
     Attributes:
         - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
