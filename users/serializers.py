@@ -7,6 +7,8 @@ from user_profile.models import (
     JobSeekerProfile, EmployerProfile
 )
 
+from project_meta.models import Media
+
 from .backends import MobileOrEmailBackend as cb
 from .models import User
 
@@ -229,7 +231,7 @@ class ResumeSerializer(serializers.ModelSerializer):
     model (Resume): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
-
+    file_path = serializers.SerializerMethodField()
     class Meta:
         model = Resume
         fields = (
@@ -238,6 +240,9 @@ class ResumeSerializer(serializers.ModelSerializer):
             'file_path',
             'created_at'
         )
+    
+    def get_file_path(self, obj):
+        return obj.file_path.file_path.url
 
 
 class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
@@ -395,16 +400,18 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     model (EmployerProfile): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
-
+    license_id_file = serializers.SerializerMethodField()
     class Meta:
         model = EmployerProfile
         fields = (
             'description',
             'organization_type',
             'license_id',
-            'license_id_file'
+            'license_id_file',
         )
-
+    def get_license_id_file(self, obj):
+        return obj.license_id_file.file_path.url
+    
 
 class EmployerDetailSerializers(serializers.ModelSerializer):
     """
