@@ -351,13 +351,13 @@ class LanguageView(generics.ListAPIView):
 
     def post(self, request):
         """
-        Handle POST request to create a new education level.
-        The request must contain valid data for the education level to be created.
+        Handle POST request to create a new language.
+        The request must contain valid data for the language to be created.
 
-        Only users with `is_staff` attribute set to True are authorized to create a education level.
+        Only users with `is_staff` attribute set to True are authorized to create a language.
 
         Returns:
-            - HTTP 201 CREATED with a message "Language added successfully" if the education level is created
+            - HTTP 201 CREATED with a message "Language added successfully" if the language is created
             successfully.
             - HTTP 400 BAD REQUEST with error message if data validation fails.
             - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
