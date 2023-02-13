@@ -118,7 +118,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     job_category = models.ManyToManyField(
         to=JobCategory,
-        limit_choices_to=2,
         verbose_name=_('Job Category'),
         db_column="job_category",
         related_name='%(app_label)s_%(class)s_job_category'
@@ -175,7 +174,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     language = models.ManyToManyField(
         to=Language,
-        limit_choices_to=3,
         verbose_name=_('Language'),
         db_column="language",
         null=True,
@@ -184,7 +182,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     skill = models.ManyToManyField(
         to=Skill,
-        limit_choices_to=2,
         verbose_name=_('Skill'),
         db_column="skill",
         related_name='%(app_label)s_%(class)s_skill'

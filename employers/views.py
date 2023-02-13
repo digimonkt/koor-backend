@@ -7,7 +7,8 @@ from rest_framework import (
 from user_profile.models import EmployerProfile
 
 from .serializers import (
-    UpdateAboutSerializers
+    UpdateAboutSerializers,
+    CreateJobsSerializers
 )
 
 
@@ -27,7 +28,7 @@ class UpdateAboutView(generics.GenericAPIView):
         - permission_classes (list): The permission classes required for accessing this view, where only authenticated 
                                       users are allowed.
     """
-    
+
     serializer_class = UpdateAboutSerializers
     permission_classes = [permissions.IsAuthenticated]
 
@@ -46,5 +47,56 @@ class UpdateAboutView(generics.GenericAPIView):
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class CreateJobsView(generics.CreateAPIView):
+    """
+    CreateJobsView - A view to handle the creation of jobs.
+
+    This class inherits from generics.CreateAPIView and is responsible for creating jobs in the system. It uses the
+    CreateJobsSerializers serializer to validate and save the job data. Only authenticated users with the role of
+    "employer" are allowed to create jobs.
+
+    If the job data is valid and the user is authorized, a 201 status code with a success message is returned. If
+    there is a validation error, a 400 status code with the validation error message is returned. If there is any
+    other exception, a 400 status code with the exception message is returned.
+
+    Attributes:
+        serializer_class (CreateJobsSerializers): The serializer class responsible for validating and saving the job
+        data.
+        permission_classes (list): A list of permission classes with only permissions.IsAuthenticated to ensure that
+        only authenticated users can create jobs.
+    """
+    serializer_class = CreateJobsSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.role == "employer":
+                serializer.is_valid(raise_exception=True)
+                serializer.save(self.request.user)
+                context["message"] = "Job added successfully."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You are not authorized for create job."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return response.Response(
+                data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
             )

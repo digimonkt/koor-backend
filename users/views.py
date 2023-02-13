@@ -121,11 +121,11 @@ class UserView(generics.GenericAPIView):
                 if user_data.role == "job_seeker":
 
                     get_data = JobSeekerDetailSerializers(user_data)
-                    context["data"] = get_data.data
+                    context = get_data.data
 
                 elif user_data.role == "employer":
                     get_data = EmployerDetailSerializers(user_data)
-                    context["data"] = get_data.data
+                    context = get_data.data
 
                 return response.Response(
                     data=context,
