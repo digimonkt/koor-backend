@@ -4,7 +4,8 @@ from jobs.models import (
     JobCategory
 )
 from project_meta.models import (
-    Country, City, EducationLevel
+    Country, City, EducationLevel,
+    Language, Skill
 )
 
 
@@ -88,6 +89,7 @@ class JobCategorySerializers(serializers.ModelSerializer):
         model = JobCategory
         fields = ['id', 'title']
 
+
 class EducationLevelSerializers(serializers.ModelSerializer):
     """
     Serializer class for the `EducationLevel` model.
@@ -99,4 +101,32 @@ class EducationLevelSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = EducationLevel
+        fields = ['id', 'title']
+
+
+class LanguageSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the ` Language` model.
+
+    The `LanguageSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `Language` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = Language
+        fields = ['id', 'title']
+
+
+class SkillSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the ` Skill` model.
+
+    The `SkillSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `Skill` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = Skill
         fields = ['id', 'title']
