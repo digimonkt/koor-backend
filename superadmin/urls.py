@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import (
     CountryView, CityView, JobCategoryView, 
-    EducationLevelView
+    EducationLevelView, LanguageView
     )
 
 app_name = "superadmin"
@@ -16,5 +16,7 @@ urlpatterns = [
     path('/job-category', JobCategoryView.as_view(), name="job_category"),
     
     path('/education-level', EducationLevelView.as_view(), name="education_level"),
+    
+    path('/language', LanguageView.as_view(), name="language"),
     
 ]
