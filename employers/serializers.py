@@ -1,9 +1,11 @@
 from rest_framework import serializers
 
 from jobs.models import JobDetails
-from project_meta.models import Media
+from project_meta.models import Media, Skill, Language
 from user_profile.models import EmployerProfile
 from users.models import User
+
+from jobs.models import JobCategory, JobAttachmentsItem
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -149,14 +151,137 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 
     The `job_category`, `language`, and `skill` fields are related fields that are read-only.
     """
-    job_category = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    language = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    skill = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    job_category = serializers.PrimaryKeyRelatedField(
+        queryset=JobCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    language = serializers.PrimaryKeyRelatedField(
+        queryset=Language.objects.all(),
+        many=True,
+        write_only=True
+    )
+    skill = serializers.PrimaryKeyRelatedField(
+        queryset=Skill.objects.all(),
+        many=True,
+        write_only=True
+    )
+    attachments = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
 
     class Meta:
         model = JobDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill'
+            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'attachments'
         ]
+
+    def validate_job_category(self, job_category):
+        """
+        validate_job_category - A function to validate the job category for a job instance.
+
+        Parameters:
+            job_category (str): The job category to be validated.
+
+        Returns:
+            job_category (str): The validated job category.
+
+            This function validates the job category of a job instance. If the job category is an empty string, a
+        ValidationError is raised with a message indicating that the job category cannot be blank. If the length of
+        the job category string is greater than 3, a ValidationError is raised with a message indicating that the
+        choices are limited to 3. If the job category is not blank and its length is within limits, the job category
+        is returned.
+        """
+        if job_category == '':
+            limit = 3
+            if len(job_category) > limit:
+                raise serializers.ValidationError({'job_category': 'Choices limited to ' + str(limit)})
+            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
+        else:
+            return job_category
+
+    def validate_language(self, language):
+        """
+        validate_language - A function to validate the language for a job instance.
+
+        Parameters:
+            language (str): The language to be validated.
+
+        Returns:
+            language (str): The validated language.
+
+        This function validates the language of a job instance. If the language is an empty string, a ValidationError
+        is raised with a message indicating that the language cannot be blank. If the length of the language string is
+        greater than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If
+        the language is not blank and its length is within limits, the language is returned.
+        """
+        if language == '':
+            limit = 3
+            if len(language) > limit:
+                raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
+            raise serializers.ValidationError({'language': 'Language can not be blank.'})
+        else:
+            return language
+
+    def validate_skill(self, skill):
+        """
+        validate_skill - A function to validate the skill for a job instance.
+
+        Parameters:
+            skill (str): The skill to be validated.
+
+        Returns:
+            skill (str): The validated skill.
+
+        This function validates the skill of a job instance. If the skill is an empty string, a ValidationError is
+        raised with a message indicating that the skill cannot be blank. If the length of the skill string is greater
+        than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If the skill
+        is not blank and its length is within limits, the skill is returned.
+        """
+        if skill == '':
+            limit = 3
+            if len(skill) > limit:
+                raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
+            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
+        else:
+            return skill
+
+    def save(self, user):
+        """
+            save - A function to save the validated data and its attachments (if any) for a job instance.
+        
+        Parameters:
+            - user (object): The user for whom the job instance is being saved.
+        
+        Returns:
+            - self (object): The instance of the class.
+        
+        This function saves the validated data of a job instance, and if there are any attachments in the validated
+        data, it saves them as well. The attachments are saved in the 'Media' table and the relation between the job
+        instance and the attachments is saved in the 'JobAttachmentsItem' table. The media type of the attachment is
+        determined based on its content type, with application types being saved as 'documents' and other types being
+        saved as their content type.
+        """
+        attachments = None
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        job_instance = super().save(user=user)
+        if attachments:
+            content_type = str(attachments.content_type).split("/")
+            if content_type[0] == "application":
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(file_path=attachments, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
+            attachments_instance.save()
+        return self
