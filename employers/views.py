@@ -96,9 +96,7 @@ class CreateJobsView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            print(e)
             return response.Response(
-                
                 data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
             )
