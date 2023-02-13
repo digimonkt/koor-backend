@@ -53,25 +53,22 @@ class UpdateAboutView(generics.GenericAPIView):
 
 class CreateJobsView(generics.CreateAPIView):
     """
-    View class for creating job details.
+    CreateJobsView - A view to handle the creation of jobs.
 
-    This view class is based on the `generics.CreateAPIView` class and extends its functionality to handle the creation
-    of job details objects. The view requires authentication and only allows users with the "employer" role to create
-    job details. The view uses the `CreateJobsSerializers` serializer class to validate and save the job details.
+    This class inherits from generics.CreateAPIView and is responsible for creating jobs in the system. It uses the
+    CreateJobsSerializers serializer to validate and save the job data. Only authenticated users with the role of
+    "employer" are allowed to create jobs.
 
-    In case of a successful creation, the view returns a response with a status code of `HTTP_201_CREATED` and a
-    message indicating that the job was added successfully.
+    If the job data is valid and the user is authorized, a 201 status code with a success message is returned. If
+    there is a validation error, a 400 status code with the validation error message is returned. If there is any
+    other exception, a 400 status code with the exception message is returned.
 
-    In case of validation errors, the view returns a response with a status code of `HTTP_400_BAD_REQUEST` and a message
-    indicating the validation errors.
-
-    In case of unauthorized access, the view returns a response with a status code of `HTTP_401_UNAUTHORIZED` and a
-    message indicating that the user is not authorized to create a job.
-
-    In case of any other exceptions, the view returns a response with a status code of `HTTP_400_BAD_REQUEST` and a
-    message indicating the exception that occurred.
+    Attributes:
+        serializer_class (CreateJobsSerializers): The serializer class responsible for validating and saving the job
+        data.
+        permission_classes (list): A list of permission classes with only permissions.IsAuthenticated to ensure that
+        only authenticated users can create jobs.
     """
-
     serializer_class = CreateJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
 
@@ -81,7 +78,7 @@ class CreateJobsView(generics.CreateAPIView):
         try:
             if self.request.user.role == "employer":
                 serializer.is_valid(raise_exception=True)
-                serializer.save(user=self.request.user)
+                serializer.save(self.request.user)
                 context["message"] = "Job added successfully."
                 return response.Response(
                     data=context,
@@ -99,7 +96,9 @@ class CreateJobsView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
+            print(e)
             return response.Response(
+                
                 data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
             )
