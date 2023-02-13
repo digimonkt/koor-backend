@@ -231,7 +231,7 @@ class ResumeSerializer(serializers.ModelSerializer):
     model (Resume): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
-
+    file_path = serializers.SerializerMethodField()
     class Meta:
         model = Resume
         fields = (
@@ -240,6 +240,9 @@ class ResumeSerializer(serializers.ModelSerializer):
             'file_path',
             'created_at'
         )
+    
+    def get_file_path(self, obj):
+        return obj.file_path.file_path.url
 
 
 class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
