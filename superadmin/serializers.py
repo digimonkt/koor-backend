@@ -4,7 +4,7 @@ from jobs.models import (
     JobCategory
 )
 from project_meta.models import (
-    Country, City
+    Country, City, EducationLevel
 )
 
 
@@ -86,4 +86,17 @@ class JobCategorySerializers(serializers.ModelSerializer):
 
     class Meta:
         model = JobCategory
+        fields = ['id', 'title']
+
+class EducationLevelSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `EducationLevel` model.
+
+    The `EducationLevelSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `EducationLevel` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = EducationLevel
         fields = ['id', 'title']
