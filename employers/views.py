@@ -143,5 +143,5 @@ class JobsView(generics.ListAPIView):
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
         if user_data.role == "employer":
-            return JobDetails.objects.filter(user=user_data)
+            return JobDetails.objects.filter(user=user_data).order_by('-created')
         return None
