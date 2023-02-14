@@ -410,7 +410,10 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'license_id_file',
         )
     def get_license_id_file(self, obj):
-        return obj.license_id_file.file_path.url
+        if obj.license_id_file:
+            return obj.license_id_file.file_path.url
+        return None
+    
     
 
 class EmployerDetailSerializers(serializers.ModelSerializer):
@@ -435,7 +438,7 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
-
+        
     def get_profile(self, obj):
         context = dict()
         try:
