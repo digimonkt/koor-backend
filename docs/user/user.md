@@ -25,10 +25,8 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
   {
     "body": {
       	"email": "test@test.com",
-  		"mobileNumber": "",
   		"password": "123456789",
-  		"role": "job_seeker" || "employer" || "vendor",
-  		"countryCode": "+91"
+  		"role": "job_seeker" || "employer" || "vendor"
     }
   }
 
@@ -44,7 +42,6 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 
   {
     "body": {
-      	"email": "",
   		"mobileNumber": "123456789",
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor",
@@ -57,7 +54,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 
   ```js
   {
-    "code": 204,
+    "code": 201,
     "headers": {
       "x-access": "${JWT_TOKEN}",
       "x-refresh": "${JWT_TOKEN}"
@@ -82,7 +79,6 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
   {
     "body": {
       "email": "test@test.com",
-      "mobile": "",
       "password": "123456789"
     }
   }
@@ -91,7 +87,6 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
   ```js
   {
     "body": {
-      "email": "",
       "mobile": "1234567890",
       "password": "123456789"
     }
@@ -104,7 +99,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 
       ```js
       {
-        "code": 204,
+        "code": 201,
         "headers": {
           "x-access": "${JWT_TOKEN}",
           "x-refresh": "${JWT_TOKEN}"
@@ -119,9 +114,9 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 
       ```js
       {
-      	"code": 401,
+      	"code": 400,
       	"data": {
-      		"message": "Invalid Email or Mobile Number or Password"
+      		"message": "Invalid login credentials."
       	}
       }
       ```
@@ -189,7 +184,7 @@ This route is used to delete `user` `sessions`. We are not exactly going to dele
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Logged Out successfully"
     }

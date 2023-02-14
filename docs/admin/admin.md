@@ -24,8 +24,12 @@
   - [Create Education Level](#create-education-level)
   - [Get Education Level](#get-education-level)
   - [Delete Education Level](#delete-education-level)
-  - [Create City](#create-city)
+  - [Create Country](#create-country)
   - [Get City](#get-city)
+  - [Create City](#create-city)
+  - [Get City](#get-city-1)
+  - [Create Job Category](#create-job-category)
+  - [Get City](#get-city-2)
 
 ## Create Tag
 
@@ -137,7 +141,7 @@ This api is used to create language by admin for the `job-seeker` and `job-detai
 - response:
   ```js
   {
-    "code": 200,
+    "code": 201,
     "data": {
       "id": "${UUID}",
       "title": "Hindi"
@@ -156,20 +160,16 @@ This api is used get list of `languages`
   ```js
   // type one
   {
-    "searchfilter": {
+    "query": {
       "title": "" // show all results
     },
-    "page": 1,
-    "limit": 10,
   }
 
   // type two
   {
-    "searchfilter": {
+    "query": {
       "title": "b" // show only those results whose title includes `b` only
     },
-    "page": 1,
-    "limit": 10,
   }
   ```
 
@@ -178,13 +178,10 @@ This api is used get list of `languages`
   {
     "code": 200,
     "data": {
-      "languages": [{
+      "results": [{
         "id": "${UUID}"
         "title": "Backend"
       }],
-      "total": 200, // total number of skills available
-      "current_page": 1, // current page of which data is fetched
-      "current_limit": 10 // maximum number of data can be in `languages` list
     }
   }
   ```
@@ -228,7 +225,7 @@ This api is used to delete `language`.
 - response:
   ```js
   {
-    "code": 200,
+    "code": 201,
     "data": {
       "id": "${UUID}",
       "title": "Python"
@@ -245,20 +242,16 @@ This api is used to delete `language`.
   ```js
   // type one
   {
-    "searchfilter": {
+    "query": {
       "title": "" // show all results
     },
-    "page": 1,
-    "limit": 10,
   }
 
   // type two
   {
-    "searchfilter": {
+    "query": {
       "title": "p" // show only those results whose title includes `p` only
     },
-    "page": 1,
-    "limit": 10,
   }
   ```
 
@@ -267,13 +260,10 @@ This api is used to delete `language`.
   {
     "code": 200,
     "data": {
-      "skills": [{
+      "results": [{
         "id": "${UUID}"
         "title": "Python"
       }],
-      "total": 200, // total number of skills available
-      "current_page": 1, // current page of which data is fetched
-      "current_limit": 10 // maximum number of data can be in `skills` list
     }
   }
   ```
@@ -332,20 +322,16 @@ This api is used to delete `language`.
   ```js
   // type one
   {
-    "searchfilter": {
+    "query": {
       "title": "" // show all results
     },
-    "page": 1,
-    "limit": 10,
   }
 
   // type two
   {
-    "searchfilter": {
+    "query": {
       "title": "b" // show only those results whose title includes `p` only
     },
-    "page": 1,
-    "limit": 10,
   }
   ```
 
@@ -354,13 +340,10 @@ This api is used to delete `language`.
   {
     "code": 200,
     "data": {
-      "education_level": [{
+      "results": [{
         "id": "${UUID}"
         "title": "Bachelors"
       }],
-      "total": 200, // total number of skills available
-      "current_page": 1, // current page of which data is fetched
-      "current_limit": 10 // maximum number of data can be in `education_level` list
     }
   }
   ```
@@ -388,9 +371,87 @@ This api is used to delete `language`.
   ```
 
 
+## Create Country
+
+This API is used to create `country`.
+
+- route: `/country`
+- method: `POST`
+- request:
+  ```js
+  {
+    "body": {
+      "title": "Russia",
+      "currency_code":"RUR",
+      "country_code":"+7",
+      "iso_code2":"test iso 2",
+      "iso_code3":"test iso 3"
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 201,
+    "data": {
+      "id": "${UUID}",
+      "title": "Nepal1",
+      "currency_code": "NPR",
+      "country_code": "+977",
+      "iso_code2": "test iso 2",
+      "iso_code3": "test iso 3"
+    }
+  }
+  ```
+
+## Get City
+
+This api is used to get all `countries`
+
+- route: `/country`
+- method: `GET`
+- request:
+
+  ```js
+  // type one
+  {
+    "query": 
+    {
+      "search": "" // show all results
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "title": "b" // show only those results whose title includes `b` only
+    },
+  }
+
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "results": [{
+        "id": "${UUID}"
+        "title": "India",
+        "currency_code": "INR",
+        "country_code": "+91",
+        "iso_code2": "123",
+        "iso_code3": "456"
+      }],
+    }
+  }
+  ```
+
 ## Create City
 
-This API is used to create `cities`.
+This API is used to create `city`.
 
 - route: `/city`
 - method: `POST`
@@ -424,20 +485,23 @@ This api is used to get all `cities`
 
   ```js
   // type one
-    "searchfilter": 
+  {
+    "query": 
     {
       "search": "", // show all results
       "countryId":"${UUID}"
     },
+  }
  
 
   // type two
-
-    "searchfilter": 
+  {
+    "query": 
     {
       "title": "b" // show only those results whose title includes `b` only
       "countryId":"${UUID}"
     },
+  }
 
   ```
 
@@ -447,9 +511,75 @@ This api is used to get all `cities`
     "code": 200,
     "data": {
       "results": [{
-        "id": "${UUID}"
-        "title": "Gwalior"
+        "id": "${UUID}",
+        "title": "Gwalior",
         "country": "${UUID}"
+      }],
+    }
+  }
+  ```
+
+## Create Job Category
+
+This API is used to create `Job Category`.
+
+- route: `/job-category`
+- method: `POST`
+- request:
+  ```js
+  {
+    "body": {
+      "title": "Teacher"
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 201,
+    "data": {
+      "id": "${UUID}",
+      "title": "Teacher"
+    }
+  }
+  ```
+
+## Get City
+
+This api is used to get all `Job Categories`
+
+- route: `/job-category`
+- method: `GET`
+- request:
+
+  ```js
+  // type one
+  {
+    "query": 
+    {
+      "search": "" // show all results
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "title": "b" // show only those results whose title includes `b` only
+    },
+  }
+
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "results": [{
+        "id": "${UUID}",
+        "title": "Teacher"
       }],
     }
   }
