@@ -45,7 +45,11 @@ class CountryView(generics.ListAPIView):
     queryset = Country.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+    
+    def list(self, request):        
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results':serializer.data})
 
     def post(self, request):
         """
