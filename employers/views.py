@@ -139,8 +139,9 @@ class JobsView(generics.ListAPIView):
 
         """  
         user_id = self.request.GET.get('employerId', None)
-        if not user_id in ["", None]:
-            user_data = User.objects.get(id=user_id)
+        if not user_id:
+            user_id = request.user.id
+        user_data = User.objects.get(id=user_id)
+        if user_data.role == "employer":
             return JobDetails.objects.filter(user=user_data)
-        else:
-            return JobDetails.objects.all()        
+        return None
