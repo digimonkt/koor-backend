@@ -179,7 +179,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'attachments'
+            'working_days', 'attachments'
         ]
 
     def validate_job_category(self, job_category):
@@ -285,3 +285,85 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
             attachments_instance.save()
         return self
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    A serializer class for User model that includes `'id'`, `'name'`, `'email'`, `'country_code'`, `'mobile_number'`,
+    and `'image'` fields.
+    The 'image' field is a `SerializerMethodField` that returns the URL of the user's image if it exists, otherwise None.
+
+    Attributes:
+        - `image (serializers.SerializerMethodField)`: a SerializerMethodField that returns the URL of the user's image
+        if it exists, otherwise None.
+
+    Methods:
+        - `get_image(obj)`: A method that takes a User instance and returns the URL of the user's image if it exists,
+        otherwise None.
+
+    """
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'name',
+            'email',
+            'country_code',
+            'mobile_number',
+            'image',
+        )
+
+    def get_image(self, obj):
+        if obj.image:
+            return obj.image.file_path.url
+        return None
+
+
+class GetJobsSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for `JobDetails` model that includes fields such as 'id', 'title', 'description',
+    'budget_currency', 'budget_amount', 'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
+    'has_contract', 'working_days', 'status', 'user'.
+
+    The fields `'country'`, `'city'`, and `'user'` are `SerializerMethodFields` that return the respective fields of the
+    related models.
+
+    Attributes:
+        - `country (serializers.SerializerMethodField)`: A SerializerMethodField that returns the title of the related
+        country.
+        - `city (serializers.SerializerMethodField)`: A SerializerMethodField that returns the title of the related
+        city.
+        - `user (serializers.SerializerMethodField)`: A SerializerMethodField that returns a serialized user object.
+
+    Methods:
+        - `get_country(obj)`: A method that takes a JobDetails instance and returns the title of the related country.
+        - `get_city(obj)`: A method that takes a JobDetails instance and returns the title of the related city.
+        - `get_user(obj)`: A method that takes a JobDetails instance and returns a serialized user object.
+
+    """
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobDetails
+        fields = [
+            'id', 'title', 'description', 'budget_currency', 'budget_amount',
+            'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
+            'has_contract', 'working_days', 'status', 'user'
+        ]
+
+    def get_country(self, obj):
+        return obj.country.title
+
+    def get_city(self, obj):
+        return obj.city.title
+
+    def get_user(self, obj):
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context

@@ -56,6 +56,7 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('weekly', "Weekly"),
         ('hourly', "Hourly"),
     )
+    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,7)]
     STATUS_CHOICE = (
         ('active', "Active"),
         ('inactive', "Inactive"),
@@ -185,6 +186,12 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('Skill'),
         db_column="skill",
         related_name='%(app_label)s_%(class)s_skill'
+    )
+    working_days = models.CharField(
+        verbose_name=_('Working Days'),
+        db_column="working_days",
+        max_length=25,
+        choices=WORKING_DAYS_CHOICE,
     )
     status = models.CharField(
         verbose_name=_('Status'),

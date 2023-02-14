@@ -1,14 +1,23 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 
 from rest_framework import (
-    generics, response, status, permissions, serializers
+    generics, response, status, 
+    permissions, serializers, filters
 )
+
+from core.pagination import CustomPagination
+
+from users.models import User
 
 from user_profile.models import EmployerProfile
 
+from jobs.models import JobDetails
+
 from .serializers import (
     UpdateAboutSerializers,
-    CreateJobsSerializers
+    CreateJobsSerializers,
+    GetJobsSerializers
 )
 
 
@@ -51,30 +60,44 @@ class UpdateAboutView(generics.GenericAPIView):
             )
 
 
-class CreateJobsView(generics.CreateAPIView):
+class JobsView(generics.ListAPIView):
     """
-    CreateJobsView - A view to handle the creation of jobs.
-
-    This class inherits from generics.CreateAPIView and is responsible for creating jobs in the system. It uses the
-    CreateJobsSerializers serializer to validate and save the job data. Only authenticated users with the role of
-    "employer" are allowed to create jobs.
-
-    If the job data is valid and the user is authorized, a 201 status code with a success message is returned. If
-    there is a validation error, a 400 status code with the validation error message is returned. If there is any
-    other exception, a 400 status code with the exception message is returned.
+    A view class that returns a list of JobDetails instances.
 
     Attributes:
-        serializer_class (CreateJobsSerializers): The serializer class responsible for validating and saving the job
-        data.
-        permission_classes (list): A list of permission classes with only permissions.IsAuthenticated to ensure that
-        only authenticated users can create jobs.
+            - `serializer_class`: A serializer class used to serialize the JobDetails instances.
+            - `permission_classes`: A list of permission classes that a user must pass in order to access the view.
+            - `queryset`: A QuerySet instance representing the list of JobDetails instances. The queryset is not
+                defined in the class, but it can be defined in the get_queryset method or set dynamically in the
+                dispatch method.
+            - `filter_backends`: A list of filter backend classes used to filter the queryset.
+            - `search_fields`: A list of fields on which the search filtering is applied.
+            - `pagination_class`: A pagination class that is used to paginate the result set.
+
     """
-    serializer_class = CreateJobsSerializers
+    serializer_class = GetJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
 
     def post(self, request):
+        """
+        Create a new job post for an employer.
+
+        Args:
+            - `request`: HTTP request object containing the job post data.
+
+        Returns:
+            - HTTP response object with a success or error message and status code.
+
+        Raises:
+            - `ValidationError`: If the job post data is invalid.
+            - `Exception`: If there is an unexpected error during job post creation.
+        """
         context = dict()
-        serializer = self.serializer_class(data=request.data)
+        serializer = CreateJobsSerializers(data=request.data)
         try:
             if self.request.user.role == "employer":
                 serializer.is_valid(raise_exception=True)
@@ -100,3 +123,24 @@ class CreateJobsView(generics.CreateAPIView):
                 data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
             )
+            
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `JobDetails instances`. It filters the queryset based on the `employer ID`
+        provided in the `request query parameters`.
+        If the `'employerId'` parameter is provided, it filters the queryset to include only the JobDetails instances
+        associated with the specified `user ID`. Otherwise, it returns `all JobDetails` instances.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of JobDetails instances.
+
+        """  
+        user_id = self.request.GET.get('employerId', None)
+        if not user_id in ["", None]:
+            user_data = User.objects.get(id=user_id)
+            return JobDetails.objects.filter(user=user_data)
+        else:
+            return JobDetails.objects.all()        
