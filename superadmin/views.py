@@ -125,8 +125,16 @@ class CityView(generics.ListAPIView):
     queryset = City.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
-
+    
+    def list(self, request):
+        country_id = request.GET.get('countryId', None)
+        queryset = City.objects.all()
+        if country_id:
+            queryset = City.objects.filter(country_id=country_id)
+        queryset = self.filter_queryset(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results':serializer.data})
+    
     def post(self, request):
         """
         Handle POST request to create a new city.
@@ -149,7 +157,7 @@ class CityView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["message"] = "City added successfully."
+                context["data"] = serializer.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
