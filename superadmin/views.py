@@ -69,7 +69,7 @@ class CountryView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["message"] = "Country added successfully."
+                context["data"] = serializer.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -228,7 +228,7 @@ class JobCategoryView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["message"] = "Job category added successfully."
+                context["data"] = serializer.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
