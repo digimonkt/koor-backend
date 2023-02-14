@@ -3,16 +3,13 @@ from rest_framework import (
     response, permissions, filters
 )
 
-from core.pagination import CustomPagination
-
 from jobs.models import (
     JobCategory
 )
 from project_meta.models import (
-    Country, City, EducationLevel, 
+    Country, City, EducationLevel,
     Language, Skill
 )
-
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers
@@ -37,19 +34,17 @@ class CountryView(generics.ListAPIView):
 
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
-        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
-
     """
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CountrySerializers
     queryset = Country.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    
-    def list(self, request):        
+
+    def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results':serializer.data})
+        return response.Response({'results': serializer.data})
 
     def post(self, request):
         """
@@ -74,7 +69,7 @@ class CountryView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["message"] = "Country added successfully."
+                context["data"] = serializer.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -116,8 +111,6 @@ class CityView(generics.ListAPIView):
 
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
-        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
-
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -125,7 +118,15 @@ class CityView(generics.ListAPIView):
     queryset = City.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        country_id = request.GET.get('countryId', None)
+        queryset = City.objects.all()
+        if country_id:
+            queryset = City.objects.filter(country_id=country_id)
+        queryset = self.filter_queryset(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
 
     def post(self, request):
         """
@@ -149,7 +150,7 @@ class CityView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["message"] = "City added successfully."
+                context["data"] = serializer.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -191,8 +192,6 @@ class JobCategoryView(generics.ListAPIView):
 
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
-        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
-
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -200,7 +199,11 @@ class JobCategoryView(generics.ListAPIView):
     queryset = JobCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
 
     def post(self, request):
         """
@@ -225,7 +228,7 @@ class JobCategoryView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["message"] = "Job category added successfully."
+                context["data"] = serializer.data
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -267,8 +270,6 @@ class EducationLevelView(generics.ListAPIView):
 
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
-        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
-
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -276,7 +277,11 @@ class EducationLevelView(generics.ListAPIView):
     queryset = EducationLevel.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
 
     def post(self, request):
         """
@@ -342,8 +347,6 @@ class LanguageView(generics.ListAPIView):
 
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
-        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
-
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -351,7 +354,11 @@ class LanguageView(generics.ListAPIView):
     queryset = Language.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
 
     def post(self, request):
         """
@@ -417,8 +424,6 @@ class SkillView(generics.ListAPIView):
 
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
-        - pagination_class (CustomPagination): The pagination class to use for paginating the queryset results.
-
     """
 
     permission_classes = [permissions.IsAuthenticated]
@@ -426,7 +431,11 @@ class SkillView(generics.ListAPIView):
     queryset = Skill.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
 
     def post(self, request):
         """

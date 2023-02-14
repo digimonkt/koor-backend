@@ -31,11 +31,13 @@ This API is used to update `employer`'s about section
       "Content-Type": "multipart/form-data"
     },
     "body": {
-      "organizationName": "Digimonk Technologies",
-      "typeOfOrganization": "business" || "ngo" || "government",
-      "mobileNumber": "1234567890",
-      "countryCode": "+91",
-      "licenseId": "LAS001TA",
+      "organization_name": "Digimonk Technologies",
+      "organization_type": "business" || "ngo" || "government",
+      "mobile_number": "1234567890",
+      "country_code": "+91",
+      "market_information_notification":true,
+      "other_notification":true,
+      "license_id": "LAS001TA",
       "license": File
     }
   }
@@ -45,7 +47,7 @@ This API is used to update `employer`'s about section
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Updated Successfully"
     }
@@ -71,9 +73,7 @@ This route is used to create `jobs`
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
-      jobCategory1: "${jobCategoryId}",
-      jobCategory2: "${jobCategoryId}" || null,
-      jobCategory3: "${jobCategoryId}" || null,
+      jobCategory: ["${jobCategoryId}"],
       isFulltime: true,
       isPartime: false,
       hasContract: false,
@@ -81,12 +81,10 @@ This route is used to create `jobs`
       contactPhone: null,
       contactWhatsapp: null,
       highestEducation: "${educationLevelId}",
-      language1: "${languageId}",
-      language2: "${languageId}" || null,
-      language3: "${languageId}" || null,
-      skill1: "${skillId}",
-      skill2: "${skillId}" || null,
-      skill3: "${skillId}" || null,
+      language: ["${languageId}"],
+      skill: ["${skillId}"],
+      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      attachments: File
     }
   }
   ```
@@ -108,11 +106,29 @@ This api is used to get all the `jobs` of the employer.
 - method: `GET`
 - request:
   ```js
+    // type one
   {
-    query: {
-      employerId: "${UUID}" || null;
-    }
+    "query": 
+    {
+      "employerId": "${UUID}" || null;,
+      "search": "", // show all results
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
   }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "employerId": "${UUID}" || null;,
+      "search": "b", // show only those results whose title includes `b` only
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+
   ```
   > Note: If `employerId` is present in query then return that `employer`'s jobs list else current `employer`'s job list. 
 - response:
@@ -131,7 +147,7 @@ This api is used to get all the `jobs` of the employer.
       is_fulltime: true,
       is_partime: false,
       has_contract: false,
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7"
+      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
       status: "active" || "inactive" || "hold",
       user: {...userDetails} // full user details
     }]
