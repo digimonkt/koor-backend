@@ -83,7 +83,9 @@ class JWTMiddleware(MiddlewareMixin):
                     session = self.get_session(refresh_token_payload)
                     if session:
                         new_access_token = self.get_access_token_for_user(session.user, session.id)
-                        response.headers['Authorization'] = f'Bearer {new_access_token}'
+                        request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
+                        request.META[self.access_token_lookup] = new_access_token
+                        response = self.get_response(request)
                         response.headers.setdefault(self.access_token_lookup, new_access_token)
                     return response
 
