@@ -24,6 +24,8 @@
   - [Create Education Level](#create-education-level)
   - [Get Education Level](#get-education-level)
   - [Delete Education Level](#delete-education-level)
+  - [Create City](#create-city)
+  - [Get City](#get-city)
 
 ## Create Tag
 
@@ -381,6 +383,74 @@ This api is used to delete `language`.
     "code": 200,
     "data": {
       "message": "Deleted Successfully"
+    }
+  }
+  ```
+
+
+## Create City
+
+This API is used to create `cities`.
+
+- route: `/city`
+- method: `POST`
+- request:
+  ```js
+  {
+    "body": {
+      "title": "Indore",
+      "country":"${UUID}"
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 201,
+    "data": {
+      "id": "${UUID}",
+      "title": "Indore"
+    }
+  }
+  ```
+
+## Get City
+
+This api is used to get all `cities`
+
+- route: `/city`
+- method: `GET`
+- request:
+
+  ```js
+  // type one
+    "searchfilter": 
+    {
+      "search": "", // show all results
+      "countryId":"${UUID}"
+    },
+ 
+
+  // type two
+
+    "searchfilter": 
+    {
+      "title": "b" // show only those results whose title includes `b` only
+      "countryId":"${UUID}"
+    },
+
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "results": [{
+        "id": "${UUID}"
+        "title": "Gwalior"
+        "country": "${UUID}"
+      }],
     }
   }
   ```
