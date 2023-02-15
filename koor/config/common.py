@@ -97,12 +97,14 @@ class Common(Configuration):
     # General
     APPEND_SLASH = False
     TIME_ZONE = 'UTC'
+    DATETIME_FORMAT = "%Y-%m-%d%H:%M:%S"
+    DATETIME_INPUT_FORMATS ="%Y-%m-%d%H:%M:%S"
     LANGUAGE_CODE = 'en-us'
     # If you set this to False, Django will make some optimizations so as not
     # to load the internationalization machinery.
     USE_I18N = False
-    USE_L10N = True
-    USE_TZ = True
+    USE_L10N = False
+    USE_TZ = False
     LOGIN_REDIRECT_URL = '/'
 
     # Static files (CSS, JavaScript, Images)
@@ -227,7 +229,7 @@ class Common(Configuration):
     # Django Rest Framework
     REST_FRAMEWORK = {
         'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-        'PAGE_SIZE': int(config('DJANGO_PAGINATION_LIMIT', 10)),
+        # 'PAGE_SIZE': int(config('DJANGO_PAGINATION_LIMIT', 10)),
         'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S%z',
         'DEFAULT_RENDERER_CLASSES': (
             'rest_framework.renderers.JSONRenderer',
@@ -292,3 +294,4 @@ class Common(Configuration):
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
     ATOMIC_REQUESTS = True
+

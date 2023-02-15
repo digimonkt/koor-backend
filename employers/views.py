@@ -2,9 +2,10 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
 from rest_framework import (
-    generics, response, status, 
+    generics, response, status,
     permissions, serializers, filters
 )
+from rest_framework.pagination import _divide_with_ceil, LimitOffsetPagination
 
 from core.pagination import CustomPagination
 
@@ -80,7 +81,27 @@ class JobsView(generics.ListAPIView):
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True, context={"request": request})
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
 
     def post(self, request):
         """
@@ -123,7 +144,7 @@ class JobsView(generics.ListAPIView):
                 data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
     def get_queryset(self, **kwargs):
         """
         A method that returns a queryset of `JobDetails instances`. It filters the queryset based on the `employer ID`
@@ -137,7 +158,7 @@ class JobsView(generics.ListAPIView):
         Returns:
             QuerySet: A filtered queryset of JobDetails instances.
 
-        """  
+        """
         user_id = self.request.GET.get('employerId', None)
         if not user_id:
             user_id = self.request.user.id
