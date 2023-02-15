@@ -346,13 +346,14 @@ class GetJobsSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    applicant = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'user'
+            'has_contract', 'working_days', 'status', 'applicant', 'created', 'user'
         ]
 
     def get_country(self, obj):
@@ -367,3 +368,6 @@ class GetJobsSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+    
+    def get_applicant(self, obj):
+        return 0
