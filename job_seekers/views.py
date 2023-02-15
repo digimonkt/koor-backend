@@ -71,7 +71,7 @@ class JobSearchView(generics.ListAPIView):
         - `pagination_class`: The pagination class used to paginate job details data.
     """
     serializer_class = GetJobsSerializers
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     queryset = JobDetails.objects.all().order_by('-created')
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
