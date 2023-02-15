@@ -4,6 +4,7 @@ from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from core.pagination import CustomPagination
 
@@ -75,7 +76,27 @@ class JobSearchView(generics.ListAPIView):
     queryset = JobDetails.objects.all().order_by('-created')
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True, context={"request": request})
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
 
 
 class GetJobDetailsView(generics.GenericAPIView):
