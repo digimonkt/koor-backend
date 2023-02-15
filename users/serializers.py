@@ -88,6 +88,10 @@ class CreateSessionSerializers(serializers.Serializer):
         required=False,
         allow_blank=True
     )
+    role = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True
+    )
     password = serializers.CharField(
         style={"input_type": "text"},
         write_only=True
@@ -119,6 +123,7 @@ class CreateSessionSerializers(serializers.Serializer):
     def validate(self, data):
         email = data.get("email", "")
         mobile_number = data.get("mobile_number", "")
+        role = data.get("role", "")
         password = data.get("password", "")
         user = None
         user_instance = None
@@ -133,7 +138,7 @@ class CreateSessionSerializers(serializers.Serializer):
             if user_instance.exists():
                 raise serializers.ValidationError({'message': 'User not activate.'})
             else:
-                user = cb.authenticate(self, identifier=identifier, password=password)
+                user = cb.authenticate(self, identifier=identifier, password=password, role=role)
             if user:
                 return user
             else:
