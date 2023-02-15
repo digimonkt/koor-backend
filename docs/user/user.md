@@ -79,6 +79,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
   {
     "body": {
       "email": "test@test.com",
+      "role":"job_seeker",
       "password": "123456789"
     }
   }
@@ -88,6 +89,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
   {
     "body": {
       "mobile": "1234567890",
+      "role":"job_seeker",
       "password": "123456789"
     }
   }
