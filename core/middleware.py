@@ -79,14 +79,17 @@ class JWTMiddleware(MiddlewareMixin):
                 # If the access token expired then we process the refresh token
                 try:
                     refresh_token = request.headers.get(self.refresh_token_lookup)
-                    refresh_token_payload = self.decode_token(refresh_token)
-                    session = self.get_session(refresh_token_payload)
-                    if session:
-                        new_access_token = self.get_access_token_for_user(session.user, session.id)
-                        request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
-                        request.META[self.access_token_lookup] = new_access_token
-                        response = self.get_response(request)
-                        response.headers.setdefault(self.access_token_lookup, new_access_token)
+                    if refresh_token:
+                        refresh_token_payload = self.decode_token(refresh_token)
+                        session = self.get_session(refresh_token_payload)
+                        if session:
+                            new_access_token = self.get_access_token_for_user(session.user, session.id)
+                            request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
+                            request.META[self.access_token_lookup] = new_access_token
+                            response = self.get_response(request)
+                            response.headers.setdefault(self.access_token_lookup, new_access_token)
+                        return response
+                    response.status_code = 401
                     return response
 
                 # if the session does not exist
