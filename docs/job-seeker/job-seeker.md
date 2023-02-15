@@ -43,7 +43,7 @@ From this API `job-seeker` will be able to update only his profile.
   {
     "body": {
       "gender": "male" || "female",
-      "dob": "DD/MM/YYYY",
+      "dob": "YYYY-MM-DD",
       "employmentStatus": "employed" || "fresher" || "other",
       "description": "This is the description of the user...",
       "marketInformation": false,
