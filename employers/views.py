@@ -142,6 +142,4 @@ class JobsView(generics.ListAPIView):
         if not user_id:
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
-        if user_data.role == "employer":
-            return JobDetails.objects.filter(user=user_data).order_by('-created')
-        return None
+        return JobDetails.objects.filter(user=user_data).order_by('-created')
