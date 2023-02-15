@@ -83,20 +83,20 @@ class JobsView(generics.ListAPIView):
     search_fields = ['title']
 
     def list(self, request):
-        queryset = self.get_queryset()
-        count =  queryset.count()
-        next =None
+        queryset = self.filter_queryset(self.get_queryset())
+        count = queryset.count()
+        next = None
         previous = None
         paginator = LimitOffsetPagination()
         limit = self.request.query_params.get('limit')
         if limit:
             queryset = paginator.paginate_queryset(queryset, request)
-            count =  paginator.count
+            count = paginator.count
             next = paginator.get_next_link()
             previous = paginator.get_previous_link()
         serializer = self.serializer_class(queryset, many=True, context={"request": request})
         return response.Response(
-            {'count':count,
+            {'count': count,
              "next": next,
              "previous": previous,
              "results": serializer.data
