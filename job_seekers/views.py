@@ -14,7 +14,7 @@ from employers.serializers import GetJobsSerializers
 from jobs.models import JobDetails
 
 from .serializers import (
-    UpdateAboutSerializers
+    UpdateAboutSerializers, GetJobsDetailSerializers
 )
 
 
@@ -76,3 +76,27 @@ class JobSearchView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
+
+
+class GetJobDetailsView(generics.GenericAPIView):
+    serializer_class = GetJobsDetailSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        context = dict()
+        job_id = request.GET.get('jobId', None)
+        try:
+            if job_id:
+                job_data = JobDetails.objects.get(id=job_id)
+                get_data = self.serializer_class(job_data)
+                context = get_data.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
