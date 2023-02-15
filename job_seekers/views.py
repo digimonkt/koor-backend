@@ -1,27 +1,31 @@
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
 
 from rest_framework import (
-    generics, response, status, 
-    permissions, serializers, filters
+    generics, response, status,
+    permissions, serializers
 )
 
-from core.pagination import CustomPagination
-
-from users.models import User
-
-from user_profile.models import EmployerProfile
-
-from jobs.models import JobDetails
+from user_profile.models import JobSeekerProfile
 
 from .serializers import (
-    UpdateAboutSerializers,
-    CreateJobsSerializers,
-    GetJobsSerializers
+    UpdateAboutSerializers
 )
 
 
 class UpdateAboutView(generics.GenericAPIView):
+    """
+    A view for updating the JobSeekerProfile of the currently authenticated User.
+
+    Attributes:
+        serializer_class: The serializer class to use for updating the JobSeekerProfile.
+        permission_classes: The permission classes required to access this view.
+
+    Methods:
+        patch: Handle PATCH requests to update the JobSeekerProfile of the authenticated User.
+
+    Returns:
+        A Response object with a success or error message, and an appropriate status code.
+    """
 
     serializer_class = UpdateAboutSerializers
     permission_classes = [permissions.IsAuthenticated]
