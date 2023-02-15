@@ -10,6 +10,6 @@ class CustomPagination(PageNumberPagination):
         page_size_query_param (str): The name of the query parameter used to specify the number of items to be displayed per page. Default is "limit".
         max_page_size (int): The maximum number of items that can be displayed per page. Default is 1000.
     """
-    page_size = 10
+    page_size = 9999999999
     page_size_query_param = 'limit'
-    max_page_size = 1000
+    max_page_size = 9999999999
