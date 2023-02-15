@@ -2,6 +2,9 @@ from rest_framework import serializers
 
 from user_profile.models import JobSeekerProfile
 
+from jobs.models import JobDetails, JobAttachmentsItem
+from employers.serializers import UserSerializer
+
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
     """
@@ -38,3 +41,59 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             instance.user.name = validated_data['full_name']
             instance.user.save()
         return instance
+
+class AttachmentsSerializer(serializers.ModelSerializer):
+    attachment = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobAttachmentsItem
+        fields = (
+            'attachment',
+        )
+
+    def get_attachment(self, obj):
+        if obj.attachment:
+            return obj.attachment.file_path.url
+        return None
+
+class GetJobsDetailSerializers(serializers.ModelSerializer):
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    applicant = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobDetails
+        fields = [
+            'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period', 
+            'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'working_days', 'status', 'applicant', 'created', 'user', 'attachments'
+            
+        ]
+
+    def get_country(self, obj):
+        return obj.country.title
+
+    def get_city(self, obj):
+        return obj.city.title
+
+    def get_user(self, obj):
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_applicant(self, obj):
+        return 0
+    
+    
+    def get_attachments(self, obj):
+        context = []
+        attachments_data = JobAttachmentsItem.objects.filter(job=obj)
+        get_data = AttachmentsSerializer(attachments_data, many=True)
+        if get_data.data:
+            context.append(get_data.data[0]['attachment'])
+        return context
