@@ -17,11 +17,11 @@ class MobileOrEmailBackend(BaseBackend):
 
     """
 
-    def authenticate(self, identifier=None, password=None, **kwargs):
+    def authenticate(self, identifier=None, password=None, role=None, **kwargs):
         try:
 
             # Try to fetch the user by searching the username or email field
-            user = UserModel.objects.get(Q(mobile_number=identifier) | Q(email=identifier))
+            user = UserModel.objects.filter(role=role).get(Q(mobile_number=identifier) | Q(email=identifier))
             if user.check_password(password) and user.is_active:
                 return user
         except UserModel.DoesNotExist:
