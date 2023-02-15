@@ -645,3 +645,55 @@ This api is used to get `user`'s applied jobs
     }
   }
   ```
+
+## Get Jobs Search
+
+This api is used to get all the `jobs search` of the employer.
+- route: `/job-search`
+- method: `GET`
+- request:
+  ```js
+    // type one
+  {
+    "query": 
+    {
+      "search": "", // show all results
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "search": "b", // show only those results whose title includes `b` only
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: [{
+      id: "${UUID}",
+      title: "Retail Assistant Cashier",
+      description: "This is the description of job...",
+      budget_currency: "$",
+      budget_amount: 3500,
+      budget_pay_period: "UP TO",
+      country: "India",
+      city: "Gwalior",
+      is_fulltime: true,
+      is_partime: false,
+      has_contract: false,
+      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      status: "active" || "inactive" || "hold",
+      user: {...userDetails} // full user details
+    }]
+  }
+  ```
