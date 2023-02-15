@@ -42,6 +42,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             instance.user.save()
         return instance
 
+
 class AttachmentsSerializer(serializers.ModelSerializer):
     attachment = serializers.SerializerMethodField()
 
@@ -56,6 +57,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
             return obj.attachment.file_path.url
         return None
 
+
 class GetJobsDetailSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
@@ -66,11 +68,11 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobDetails
         fields = [
-            'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period', 
+            'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'working_days', 'status', 'applicant', 'created', 'user', 'attachments'
-            
+
         ]
 
     def get_country(self, obj):
@@ -85,11 +87,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
-    
+
     def get_applicant(self, obj):
         return 0
-    
-    
+
     def get_attachments(self, obj):
         context = []
         attachments_data = JobAttachmentsItem.objects.filter(job=obj)
