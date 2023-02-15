@@ -25,11 +25,11 @@
   - [Get Education Level](#get-education-level)
   - [Delete Education Level](#delete-education-level)
   - [Create Country](#create-country)
-  - [Get City](#get-city)
+  - [Get Country](#get-country)
   - [Create City](#create-city)
-  - [Get City](#get-city-1)
+  - [Get City](#get-city)
   - [Create Job Category](#create-job-category)
-  - [Get City](#get-city-2)
+  - [Get Job Category](#get-job-category)
 
 ## Create Tag
 
@@ -404,7 +404,7 @@ This API is used to create `country`.
   }
   ```
 
-## Get City
+## Get Country
 
 This api is used to get all `countries`
 
@@ -544,7 +544,7 @@ This API is used to create `Job Category`.
   }
   ```
 
-## Get City
+## Get Job Category
 
 This api is used to get all `Job Categories`
 
