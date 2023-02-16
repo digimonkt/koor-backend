@@ -179,7 +179,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'attachments'
+            'working_days', 'attachments','deadline'
         ]
 
     def validate_job_category(self, job_category):
@@ -354,7 +354,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'applicant', 'created', 'user'
+            'has_contract', 'working_days', 'status', 'applicant', 'created','deadline', 'user'
         ]
 
     def get_country(self, obj):
@@ -436,7 +436,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days','status', 'attachments', 'attachments_remove'
+            'working_days','status', 'attachments', 'attachments_remove', 'deadline'
         ]
     def validate_job_category(self, job_category):
 
