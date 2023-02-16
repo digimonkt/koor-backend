@@ -45,16 +45,24 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
 
 class AttachmentsSerializer(serializers.ModelSerializer):
     attachment = serializers.SerializerMethodField()
+    file_type = serializers.SerializerMethodField()
 
     class Meta:
         model = JobAttachmentsItem
         fields = (
+            'id',
             'attachment',
+            'file_type'
         )
 
     def get_attachment(self, obj):
         if obj.attachment:
             return obj.attachment.file_path.url
+        return None
+    
+    def get_file_type(self, obj):
+        if obj.attachment:
+            return obj.attachment.media_type
         return None
 
 
@@ -92,9 +100,9 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         return 0
 
     def get_attachments(self, obj):
-        context = []
+        context = dict()
         attachments_data = JobAttachmentsItem.objects.filter(job=obj)
         get_data = AttachmentsSerializer(attachments_data, many=True)
         if get_data.data:
-            context.append(get_data.data[0]['attachment'])
+            context = get_data.data
         return context
