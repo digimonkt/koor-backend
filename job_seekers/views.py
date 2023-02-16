@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from datetime import date
 
 from rest_framework import (
     generics, response, status,
@@ -73,7 +74,7 @@ class JobSearchView(generics.ListAPIView):
     """
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.all().order_by('-created')
+    queryset = JobDetails.objects.filter(deadline__gte=date.today()).order_by('-created')
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
 
