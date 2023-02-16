@@ -418,8 +418,11 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
         )
 
     def get_license_id_file(self, obj):
+        context = {}
         if obj.license_id_file:
-            return obj.license_id_file.file_path.url
+            context['license_path'] = obj.license_id_file.file_path.url
+            context['license_type'] = obj.license_id_file.media_type
+            return context
         return None
 
 
