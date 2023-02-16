@@ -23,6 +23,13 @@ class Media(BaseModel, models.Model):
         ('video', "Video"),
         ('document', "Document"),
     )
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=250,
+        db_column="title",
+        null=True,
+        blank=True
+    )
     file_path = models.FileField(
         verbose_name=_('File Path'),
         unique=True,

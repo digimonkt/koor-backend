@@ -111,13 +111,12 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         if 'license' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['license'].content_type).split("/")
-            print(content_type)
             if content_type[0] != "image" or content_type[0] != "video" :
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(file_path=validated_data['license'], media_type=media_type)
+            media_instance = Media(title=validated_data['license'].name, file_path=validated_data['license'], media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.license_id_file = media_instance
@@ -281,7 +280,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                 else:
                     media_type = content_type[0]
                 # save media file into media table and get instance of saved data.
-                media_instance = Media(file_path=attachment, media_type=media_type)
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 # save media instance into license id file into employer profile table.
                 attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
@@ -318,8 +317,12 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_image(self, obj):
+        context = {}
         if obj.image:
-            return obj.image.file_path.url
+            context['title'] = obj.image.title
+            context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
         return None
 
 
@@ -489,7 +492,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
                 else:
                     media_type = content_type[0]
                 # save media file into media table and get instance of saved data.
-                media_instance = Media(file_path=attachment, media_type=media_type)
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 # save media instance into license id file into employer profile table.
                 attachments_instance = JobAttachmentsItem.objects.create(job=instance, attachment=media_instance)
