@@ -523,7 +523,7 @@ class UpdateImageSerializers(serializers.ModelSerializer):
         if 'profile_image' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['profile_image'].content_type).split("/")
-            if content_type[0] != "image" or content_type[0] != "video" :
+            if content_type[0] not in ["video", "image" ] :
                 media_type = 'document'
             else:
                 media_type = content_type[0]
