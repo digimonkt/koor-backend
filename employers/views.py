@@ -18,7 +18,8 @@ from jobs.models import JobDetails
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
-    GetJobsSerializers
+    GetJobsSerializers,
+    UpdateJobSerializers
 )
 
 
@@ -129,7 +130,7 @@ class JobsView(generics.ListAPIView):
                     status=status.HTTP_201_CREATED
                 )
             else:
-                context['message'] = "You are not authorized for create job."
+                context['message'] = "You do not have permission to perform this action."
                 return response.Response(
                     data=context,
                     status=status.HTTP_401_UNAUTHORIZED
@@ -164,3 +165,48 @@ class JobsView(generics.ListAPIView):
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
         return JobDetails.objects.filter(user=user_data).order_by('-created')
+    
+    def put(self, request):
+        """
+        Update an existing job instance with the provided request data.
+
+        Args:
+            - `request`: An instance of the Django Request object.
+
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
+            was updated successfully or not.
+
+        Raises:
+            - `Http404`: If the JobDetails instance with the provided jobId does not exist.
+
+        Notes:
+            This method requires a jobId to be included in the request data, and will only update the job if the
+            authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
+            used to serialize the request data and update the job instance. If the serializer is invalid or the user
+            does not have permission to update the job instance, an appropriate error response is returned.
+        """
+        context = dict()
+        job_id = request.data['jobId']
+        job_instance = get_object_or_404(JobDetails, id=job_id)
+        if request.user == job_instance.user:
+            serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
