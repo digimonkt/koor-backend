@@ -77,8 +77,12 @@ class AttachmentsSerializer(serializers.ModelSerializer):
         )
 
     def get_attachment(self, obj):
+        context = {}
         if obj.attachment:
-            return obj.attachment.file_path.url
+            context['title'] = obj.attachment.title
+            context['path'] = obj.attachment.file_path.url
+            context['type'] = obj.attachment.media_type
+            return context
         return None
 
     def get_file_type(self, obj):

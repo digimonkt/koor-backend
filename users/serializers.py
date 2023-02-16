@@ -248,7 +248,14 @@ class ResumeSerializer(serializers.ModelSerializer):
         )
 
     def get_file_path(self, obj):
-        return obj.file_path.file_path.url
+        context = {}
+        if obj.file_path:
+            context['title'] = obj.attachment.title
+            context['path'] = obj.file_path.file_path.url
+            context['type'] = obj.file_path.media_type
+            return context
+        return None
+
 
 
 class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
@@ -418,8 +425,12 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
         )
 
     def get_license_id_file(self, obj):
+        context = {}
         if obj.license_id_file:
-            return obj.license_id_file.file_path.url
+            context['title'] = obj.attachment.title
+            context['path'] = obj.license_id_file.file_path.url
+            context['type'] = obj.license_id_file.media_type
+            return context
         return None
 
 
@@ -512,12 +523,12 @@ class UpdateImageSerializers(serializers.ModelSerializer):
         if 'profile_image' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['profile_image'].content_type).split("/")
-            if content_type[0] == "application":
+            if content_type[0] not in ["video", "image" ] :
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(file_path=validated_data['profile_image'], media_type=media_type)
+            media_instance = Media(title=validated_data['profile_image'].name, file_path=validated_data['profile_image'], media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.image = media_instance
