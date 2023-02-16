@@ -193,7 +193,7 @@ class EducationRecordSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'present',
-            'organization',
+            'institute',
             'description'
         )
 
