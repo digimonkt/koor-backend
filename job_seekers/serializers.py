@@ -5,6 +5,10 @@ from user_profile.models import JobSeekerProfile
 from jobs.models import JobDetails, JobAttachmentsItem
 from employers.serializers import UserSerializer
 
+from .models import (
+    EducationRecord
+)
+
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
     """
@@ -44,6 +48,23 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
 
 
 class AttachmentsSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to retrieve job attachment data.
+
+    This serializer class is used to retrieve job attachment data, such as the attachment URL and media type.
+
+    Attributes:
+        - `attachment`: A SerializerMethodField that retrieves the attachment URL from the related Attachment model.
+        - `file_type`: A SerializerMethodField that retrieves the media type from the related Attachment model.
+
+    Meta:
+        - `model`: The model to be serialized, which is JobAttachmentsItem.
+        - `fields`: A tuple of fields to be included in the serialized output.
+
+    Methods:
+        - `get_attachment`: A method that retrieves the attachment URL from the related Attachment model.
+        - `get_file_type`: A method that retrieves the media type from the related Attachment model.
+    """
     attachment = serializers.SerializerMethodField()
     file_type = serializers.SerializerMethodField()
 
@@ -59,7 +80,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
         if obj.attachment:
             return obj.attachment.file_path.url
         return None
-    
+
     def get_file_type(self, obj):
         if obj.attachment:
             return obj.attachment.media_type
@@ -67,6 +88,30 @@ class AttachmentsSerializer(serializers.ModelSerializer):
 
 
 class GetJobsDetailSerializers(serializers.ModelSerializer):
+    """Serializer class to retrieve job details with related data.
+
+    This serializer class is used to retrieve job details along with related data, such as country and city names,
+    user information, attachments, and more.
+
+    Attributes:
+        - `country`: A SerializerMethodField that retrieves the country name from the related Country model.
+        - `city`: A SerializerMethodField that retrieves the city name from the related City model.
+        - `user`: A SerializerMethodField that retrieves the user information from the related User model.
+        - `applicant`: A SerializerMethodField that returns a default value of 0.
+        - `attachments`: A SerializerMethodField that retrieves the attachments data from the related JobAttachmentsItem
+        model.
+
+    Meta:
+        - `model`: The model to be serialized, which is JobDetails.
+        - `fields`: A list of fields to be included in the serialized output.
+
+    Methods:
+        - `get_country`: A method that retrieves the country name from the related Country model.
+        - `get_city`: A method that retrieves the city name from the related City model.
+        - `get_user`: A method that retrieves the user information from the related User model.
+        - `get_applicant`: A method that returns a default value of 0.
+        - `get_attachments`: A method that retrieves the attachments data from the related JobAttachmentsItem model.
+    """
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -106,3 +151,25 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class EducationSerializers(serializers.ModelSerializer):
+    """ 
+    A serializer class for the `EducationRecord` model to convert model instances into JSON serializable data and vice
+    versa.
+
+    Attributes: 
+        - `Meta (inner class)`: Specifies the metadata for the serializer, including the model to use, and the fields
+                                to include in the serialized data.
+
+        - `model (EducationRecord)`: The model class that the serializer should use.
+
+        - `fields (list)`: The list of fields to include in the serialized data. 
+
+    Returns: 
+        Serialized data of the EducationRecord model instance in `JSON format`. 
+    """
+
+    class Meta:
+        model = EducationRecord
+        fields = ['id', 'title', 'start_date', 'end_date', 'institute', 'description']
