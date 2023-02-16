@@ -80,8 +80,7 @@ From this API `user` will be able to add new education to his profile
       "title": "Software Engineer",
       "startDate": "DD/MM/YYYY",
       "endDate": "DD/MM/YYYY" || null,
-      "present": false,
-      "organization": "MIT",
+      "institute": "MIT",
       "description": "This is the description of the education..."
     }
   }
@@ -97,8 +96,7 @@ From this API `user` will be able to add new education to his profile
       "title": "Software Engineer",
       "startDate": "DD/MM/YYYY",
       "endDate": "DD/MM/YYYY" || null,
-      "present": false,
-      "organization": "MIT",
+      "institute": "MIT",
       "description": "This is the description of the education..."
     }
   }

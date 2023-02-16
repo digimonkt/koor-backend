@@ -15,7 +15,7 @@ from employers.serializers import GetJobsSerializers
 from jobs.models import JobDetails
 
 from .serializers import (
-    UpdateAboutSerializers, GetJobsDetailSerializers
+    UpdateAboutSerializers, GetJobsDetailSerializers, EducationSerializers
 )
 
 
@@ -100,6 +100,18 @@ class JobSearchView(generics.ListAPIView):
 
 
 class GetJobDetailsView(generics.GenericAPIView):
+    """API view to retrieve job details.
+
+    This API view is used to retrieve job details by ID. The returned data includes related data such as country and
+    city names, user information, attachments, and more.
+
+    Attributes:
+        - `serializer_class`: The serializer class to use for the returned data, which is GetJobsDetailSerializers.
+        - `permission_classes`: The permission classes to use for the view, which allow any user to access the data.
+
+    Methods:
+        - `get`: A method that retrieves job details by ID and returns the data as a response.
+    """
     serializer_class = GetJobsDetailSerializers
     permission_classes = [permissions.AllowAny]
 
@@ -121,3 +133,72 @@ class GetJobDetailsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class EducationsView(generics.GenericAPIView):
+    """
+    A generic API view for handling education records.
+
+    Attributes:
+        - `permission_classes (list)`: The list of permission classes that the user must have to access this view.
+                                In this case, only authenticated users can access this view.
+
+        - `serializer_class (EducationSerializers)`: The serializer class that the view uses to serialize and
+                                                deserialize the EducationRecord model.
+
+    Returns:
+        Serialized education records in JSON format, with authentication required to access the view. 
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = EducationSerializers
+    
+    def post(self, request):
+        """
+        Handles HTTP POST requests for creating a new education record.
+
+        Args:
+            request (HttpRequest): The request object sent to the server.
+
+        Returns:
+            HTTP response with serialized data in JSON format, and status codes indicating whether the request was
+            successful or not.
+
+        Raises:
+            serializers.ValidationError: If the data in the request is invalid or incomplete.
+
+            Exception: If an error occurs while processing the request.
+
+        Notes:
+            This function creates a new education record using the serializer class specified in the `serializer_class`
+            attribute of the view. The serializer is first validated and then saved to the database. The `user` field
+            of the education record is set to the currently logged-in user.
+            If the serializer is not valid, a `serializers.ValidationError` is raised and a response with a status code
+            of 400 is returned. If any other error occurs, a response with a status code of 400 is returned along with
+            an error message in the `message` field of the response data. If the serializer is valid and the record is
+            successfully created, a response with the serialized data and a status code of 201 is returned.
+        """
+
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            context["data"] = serializer.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
