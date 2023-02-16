@@ -288,8 +288,8 @@ This route is used to get `user` details. If `userId` is provided inside the `qu
         "organization_type": "business" || "ngo" || "government",
         "license_id": "AB1235E5342",
         "license_id_file": {
-            "license_path": "/media/2023-02-16/tst/tst_Kj1oVRs.txt",
-            "license_type": "text"
+            "path": "/media/2023-02-16/tst/tst_Kj1oVRs.txt",
+            "type": "text"
         }
       }
     }

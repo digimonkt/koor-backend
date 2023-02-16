@@ -111,7 +111,8 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         if 'license' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['license'].content_type).split("/")
-            if content_type[0] == "application":
+            print(content_type)
+            if content_type[0] != "image" or content_type[0] != "video" :
                 media_type = 'document'
             else:
                 media_type = content_type[0]
@@ -275,7 +276,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
-                if content_type[0] == "application":
+                if content_type[0] != "image" or content_type[0] != "video" :
                     media_type = 'document'
                 else:
                     media_type = content_type[0]
@@ -483,7 +484,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
-                if content_type[0] == "application":
+                if content_type[0] != "image" or content_type[0] != "video" :
                     media_type = 'document'
                 else:
                     media_type = content_type[0]
