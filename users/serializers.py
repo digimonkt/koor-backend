@@ -257,7 +257,6 @@ class ResumeSerializer(serializers.ModelSerializer):
         return None
 
 
-
 class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
     """
     JobSeekerLanguageProficiencySerializer is a serializer class that serializes and deserializes the
@@ -523,14 +522,53 @@ class UpdateImageSerializers(serializers.ModelSerializer):
         if 'profile_image' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['profile_image'].content_type).split("/")
-            if content_type[0] not in ["video", "image" ] :
+            if content_type[0] not in ["video", "image"]:
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(title=validated_data['profile_image'].name, file_path=validated_data['profile_image'], media_type=media_type)
+            media_instance = Media(title=validated_data['profile_image'].name,
+                                   file_path=validated_data['profile_image'], media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.image = media_instance
             instance.save()
         return instance
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """
+    A serializer class for User model that includes `'id'`, `'name'`, `'email'`, `'country_code'`, `'mobile_number'`,
+    and `'image'` fields.
+    The 'image' field is a `SerializerMethodField` that returns the URL of the user's image if it exists, otherwise None.
+
+    Attributes:
+        - `image (serializers.SerializerMethodField)`: a SerializerMethodField that returns the URL of the user's image
+        if it exists, otherwise None.
+
+    Methods:
+        - `get_image(obj)`: A method that takes a User instance and returns the URL of the user's image if it exists,
+        otherwise None.
+
+    """
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'name',
+            'email',
+            'country_code',
+            'mobile_number',
+            'image',
+        )
+
+    def get_image(self, obj):
+        context = {}
+        if obj.image:
+            context['title'] = obj.image.title
+            context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
+        return None

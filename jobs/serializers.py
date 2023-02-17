@@ -1,15 +1,11 @@
 from rest_framework import serializers
 
-from user_profile.models import JobSeekerProfile
-
+from jobs.models import JobDetails, JobAttachmentsItem, JobCategory
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, LanguageSerializer,
-    SkillSerializer
+    SkillSerializer, HighestEducationSerializer
 )
-
-from employers.serializers import UserSerializer
-
-from jobs.models import JobDetails, JobAttachmentsItem, JobCategory
+from users.serializers import UserSerializer
 
 
 class JobCategorySerializer(serializers.ModelSerializer):
@@ -94,7 +90,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'applicant', 'created', 'user'
+            'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'created', 'user'
         ]
 
     def get_country(self, obj):
@@ -178,6 +174,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     job_category = serializers.SerializerMethodField()
+    highest_education = serializers.SerializerMethodField()
     language = serializers.SerializerMethodField()
     skill = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
@@ -190,7 +187,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'status', 'applicant', 'created', 'user', 'attachments'
+            'working_days', 'status', 'applicant', 'deadline', 'created', 'user', 'attachments'
 
         ]
 
@@ -250,8 +247,29 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = {}
+        context = []
         get_data = JobCategorySerializer(obj.job_category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_highest_education(self, obj):
+        """Get the serialized highest education data for a JobDetails object.
+
+        This method uses the HighestEducationSerializer to serialize the highest educations associated with a JobDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobDetails object whose highest education data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized highest education data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        get_data = HighestEducationSerializer(obj.highest_education)
         if get_data.data:
             context = get_data.data
         return context
@@ -271,7 +289,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = {}
+        context = []
         get_data = LanguageSerializer(obj.language, many=True)
         if get_data.data:
             context = get_data.data
@@ -292,7 +310,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = {}
+        context = []
         get_data = SkillSerializer(obj.skill, many=True)
         if get_data.data:
             context = get_data.data

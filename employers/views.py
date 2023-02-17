@@ -166,7 +166,7 @@ class JobsView(generics.ListAPIView):
         user_data = User.objects.get(id=user_id)
         return JobDetails.objects.filter(user=user_data).order_by('-created')
     
-    def put(self, request):
+    def put(self, request, jobId):
         """
         Update an existing job instance with the provided request data.
 
@@ -187,8 +187,7 @@ class JobsView(generics.ListAPIView):
             does not have permission to update the job instance, an appropriate error response is returned.
         """
         context = dict()
-        job_id = request.data['jobId']
-        job_instance = get_object_or_404(JobDetails, id=job_id)
+        job_instance = get_object_or_404(JobDetails, id=jobId)
         if request.user == job_instance.user:
             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
             try:
