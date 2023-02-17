@@ -46,3 +46,24 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             instance.user.save()
         return instance
 
+
+class EducationSerializers(serializers.ModelSerializer):
+    """ 
+    A serializer class for the `EducationRecord` model to convert model instances into JSON serializable data and vice
+    versa.
+
+    Attributes: 
+        - `Meta (inner class)`: Specifies the metadata for the serializer, including the model to use, and the fields
+                                to include in the serialized data.
+
+        - `model (EducationRecord)`: The model class that the serializer should use.
+
+        - `fields (list)`: The list of fields to include in the serialized data. 
+
+    Returns: 
+        Serialized data of the EducationRecord model instance in `JSON format`. 
+    """
+
+    class Meta:
+        model = EducationRecord
+        fields = ['id', 'title', 'start_date', 'end_date', 'institute', 'description']
