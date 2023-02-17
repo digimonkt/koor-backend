@@ -12,6 +12,7 @@ from core.pagination import CustomPagination
 from user_profile.models import JobSeekerProfile
 
 from jobs.models import JobDetails
+from .models import EducationRecord
 
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers
@@ -72,7 +73,7 @@ class EducationsView(generics.GenericAPIView):
 
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = EducationSerializers
-    
+
     def post(self, request):
         """
         Handles HTTP POST requests for creating a new education record.
@@ -100,25 +101,91 @@ class EducationsView(generics.GenericAPIView):
         """
 
         context = dict()
-        serializer = self.serializer_class(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-            serializer.save(user=request.user)
-            context["data"] = serializer.data
+        if request.user.role == "job_seeker":
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user=request.user)
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
             return response.Response(
                 data=context,
-                status=status.HTTP_201_CREATED
+                status=status.HTTP_401_UNAUTHORIZED
             )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            context['message'] = str(e)
+
+    def patch(self, request, educationId):
+        """
+        Update an `EducationRecord` instance for a `job seeker`.
+
+        Args:
+            - `request`: The HTTP request object.
+            - `educationId`: The ID of the `EducationRecord` instance to update.
+
+        Returns:
+            - A Response object with a message and HTTP status code indicating the result of the update.
+
+        Raises:
+            - `ValidationError`: If the request data is not valid.
+            - `NotFound`: If the EducationRecord instance does not exist.
+            - `Exception`: If an error occurs during the update.
+
+        Note:
+            - This function is only accessible to job seekers. If the user has a role other than `'job_seeker'`, an
+            error message is returned indicating that the user does not have permission to perform the action.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                education_instance = EducationRecord.objects.get(id=educationId, user=request.user)
+                serializer = self.serializer_class(data=request.data, instance=education_instance, partial=True)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(education_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except EducationRecord.DoesNotExist:
+                return response.Response(
+                    data={"education record": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
             return response.Response(
                 data=context,
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_401_UNAUTHORIZED
             )
-
-

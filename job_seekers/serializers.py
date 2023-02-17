@@ -66,4 +66,25 @@ class EducationSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = EducationRecord
-        fields = ['id', 'title', 'start_date', 'end_date', 'institute', 'description']
+        fields = ['id', 'title', 'start_date', 'end_date', 'institute', 'education_level']
+
+    def update(self, instance, validated_data):
+        """
+        Update the given instance with the validated data and return it.
+
+        Parameters:
+            instance : object
+                The instance to be updated.
+            validated_data : dict
+                The validated data to be used to update the instance.
+
+        Returns:
+            object
+                The updated instance.
+
+        Note:
+            This method overrides the update() method of the superclass.
+        """
+
+        super().update(instance, validated_data)
+        return instance
