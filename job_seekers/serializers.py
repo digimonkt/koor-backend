@@ -75,7 +75,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'path',
-            'type'
+            'type',
             'title'
         )
 
