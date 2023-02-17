@@ -7,20 +7,20 @@ from core.models import (
 from users.models import User, TimeStampedModel
 from jobs.models import JobDetails
 from project_meta.models import (
-    Media, Language, Skill
+    Media, Language, Skill,
+    EducationLevel
 )
 
 class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
-    This Django model class represents the education record details for a job seeker. The fields are as follows:
+    This Django model class represents the education record details for a jobseeker. The fields are as follows:
 
     - `user`: The user who this education record belongs to.
     - `title`: The title of the education record.
     - `start_date`: The start date of the education record.
     - `end_date`: The end date of the education record.
     - `institute`: The institute associated with the education record.
-    - `organization`: The organization associated with the education record.
-    - `description`: A description of the education record.
+    - `education_level`: The education level which is education record belongs to.
     """
     user = models.ForeignKey(
         to=User,
@@ -49,11 +49,12 @@ class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         max_length=255,
         db_column="institute",
     )
-    description = models.TextField(
-        verbose_name=_('Description'),
-        null=True,
-        blank=True,
-        db_column="description",
+    education_level = models.ForeignKey(
+        to=EducationLevel,
+        verbose_name=_('Education Level'),
+        on_delete=models.CASCADE,
+        db_column="education_level",
+        related_name='%(app_label)s_%(class)s_education'
     )
 
     def __str__(self):
