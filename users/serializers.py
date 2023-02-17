@@ -193,7 +193,7 @@ class EducationRecordSerializer(serializers.ModelSerializer):
             'start_date',
             'end_date',
             'present',
-            'organization',
+            'institute',
             'description'
         )
 
@@ -237,6 +237,7 @@ class ResumeSerializer(serializers.ModelSerializer):
     fields (tuple): The fields from the model that will be serialized.
     """
     file_path = serializers.SerializerMethodField()
+
     class Meta:
         model = Resume
         fields = (
@@ -245,9 +246,16 @@ class ResumeSerializer(serializers.ModelSerializer):
             'file_path',
             'created_at'
         )
-    
+
     def get_file_path(self, obj):
-        return obj.file_path.file_path.url
+        context = {}
+        if obj.file_path:
+            context['title'] = obj.attachment.title
+            context['path'] = obj.file_path.file_path.url
+            context['type'] = obj.file_path.media_type
+            return context
+        return None
+
 
 
 class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
@@ -406,6 +414,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     fields (tuple): The fields from the model that will be serialized.
     """
     license_id_file = serializers.SerializerMethodField()
+
     class Meta:
         model = EmployerProfile
         fields = (
@@ -414,12 +423,16 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'license_id',
             'license_id_file',
         )
+
     def get_license_id_file(self, obj):
+        context = {}
         if obj.license_id_file:
-            return obj.license_id_file.file_path.url
+            context['title'] = obj.attachment.title
+            context['path'] = obj.license_id_file.file_path.url
+            context['type'] = obj.license_id_file.media_type
+            return context
         return None
-    
-    
+
 
 class EmployerDetailSerializers(serializers.ModelSerializer):
     """
@@ -443,7 +456,7 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
-        
+
     def get_profile(self, obj):
         context = dict()
         try:
@@ -456,3 +469,68 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
         finally:
             return context
 
+
+class UpdateImageSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for `updating a user's profile image`.
+
+    Attributes:
+        - `profile_image (FileField)`: A file field that represents the user's new profile image.
+    """
+    profile_image = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = User
+        fields = ['id', 'profile_image']
+
+    def validate_profile_image(self, profile_image):
+        """
+        Validates that the uploaded profile image is a valid image file.
+
+        Args:
+            - `profile_image (File)`: The profile image file to validate.
+
+        Returns:
+            - `File`: The validated profile image file.
+
+        Raises:
+            - `ValidationError`: If the profile image file is `blank or invalid`.
+        """
+        if profile_image in ["", None]:
+            raise serializers.ValidationError('Profile image can not be blank.', code='profile_image')
+        content_type = str(profile_image.content_type).split("/")
+        if content_type[0] == "image":
+            return profile_image
+        else:
+            raise serializers.ValidationError('Invalid profile image.', code='profile_image')
+
+    def update(self, instance, validated_data):
+        """
+        Updates the user's profile image.
+
+        Args:
+            - `instance (User)`: The User instance to update.
+            - `validated_data (dict)`: The validated data containing the new profile image.
+
+        Returns:
+            - `User`: The updated `User` instance.
+        """
+        super().update(instance, validated_data)
+        if 'profile_image' in validated_data:
+            # Get media type from upload license file
+            content_type = str(validated_data['profile_image'].content_type).split("/")
+            if content_type[0] not in ["video", "image" ] :
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=validated_data['profile_image'].name, file_path=validated_data['profile_image'], media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.image = media_instance
+            instance.save()
+        return instance

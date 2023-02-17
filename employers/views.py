@@ -2,9 +2,10 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Q
 
 from rest_framework import (
-    generics, response, status, 
+    generics, response, status,
     permissions, serializers, filters
 )
+from rest_framework.pagination import _divide_with_ceil, LimitOffsetPagination
 
 from core.pagination import CustomPagination
 
@@ -81,7 +82,27 @@ class JobsView(generics.ListAPIView):
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True, context={"request": request})
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
 
     def post(self, request):
         """
@@ -109,7 +130,7 @@ class JobsView(generics.ListAPIView):
                     status=status.HTTP_201_CREATED
                 )
             else:
-                context['message'] = "You are not authorized for create job."
+                context['message'] = "You do not have permission to perform this action."
                 return response.Response(
                     data=context,
                     status=status.HTTP_401_UNAUTHORIZED
@@ -124,7 +145,7 @@ class JobsView(generics.ListAPIView):
                 data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
     def get_queryset(self, **kwargs):
         """
         A method that returns a queryset of `JobDetails instances`. It filters the queryset based on the `employer ID`
@@ -138,9 +159,54 @@ class JobsView(generics.ListAPIView):
         Returns:
             QuerySet: A filtered queryset of JobDetails instances.
 
-        """  
+        """
         user_id = self.request.GET.get('employerId', None)
         if not user_id:
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
         return JobDetails.objects.filter(user=user_data).order_by('-created')
+    
+    def put(self, request):
+        """
+        Update an existing job instance with the provided request data.
+
+        Args:
+            - `request`: An instance of the Django Request object.
+
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
+            was updated successfully or not.
+
+        Raises:
+            - `Http404`: If the JobDetails instance with the provided jobId does not exist.
+
+        Notes:
+            This method requires a jobId to be included in the request data, and will only update the job if the
+            authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
+            used to serialize the request data and update the job instance. If the serializer is invalid or the user
+            does not have permission to update the job instance, an appropriate error response is returned.
+        """
+        context = dict()
+        job_id = request.data['jobId']
+        job_instance = get_object_or_404(JobDetails, id=job_id)
+        if request.user == job_instance.user:
+            serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )

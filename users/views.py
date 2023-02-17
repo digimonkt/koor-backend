@@ -17,7 +17,8 @@ from .serializers import (
     CreateUserSerializers,
     CreateSessionSerializers,
     JobSeekerDetailSerializers,
-    EmployerDetailSerializers
+    EmployerDetailSerializers,
+    UpdateImageSerializers
 )
 
 
@@ -215,3 +216,44 @@ class DeleteSessionView(generics.GenericAPIView):
         except Exception as e:
             context["error"] = str(e)
             return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+
+class DisplayImageView(generics.GenericAPIView):
+    """
+    API view class for displaying and updating a user's profile image.
+
+    Attributes:
+        - `serializer_class (UpdateImageSerializers)`: The serializer class used for updating the user's profile image.
+        - `permission_classes (list)`: A list of permission classes that the user must have to access this view.
+    """
+    serializer_class = UpdateImageSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        """
+        Updates the user's profile image and returns the new `image URL`.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - `Response`: A JSON response containing the new image URL, or a list of errors if the request was invalid.
+
+        Raises:
+            - `HTTPError`: If the user is not authenticated.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data, instance=request.user, partial=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            if serializer.update(request.user, serializer.validated_data):
+                context["image"] = str(request.user.image.file_path.url)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )

@@ -49,11 +49,6 @@ class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         max_length=255,
         db_column="institute",
     )
-    organization = models.CharField(
-        verbose_name=_('Organization'),
-        max_length=255,
-        db_column="organization",
-    )
     description = models.TextField(
         verbose_name=_('Description'),
         null=True,

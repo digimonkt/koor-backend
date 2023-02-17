@@ -84,7 +84,8 @@ This route is used to create `jobs`
       language: ["${languageId}"],
       skill: ["${skillId}"],
       working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
-      attachments: File
+      attachments: [File],
+      deadline: "YYYY-MM-DD"
     }
   }
   ```

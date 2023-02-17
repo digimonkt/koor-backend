@@ -112,12 +112,12 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         if 'license' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['license'].content_type).split("/")
-            if content_type[0] == "application":
+            if content_type[0] not in ["video", "image" ] :
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(file_path=validated_data['license'], media_type=media_type)
+            media_instance = Media(title=validated_data['license'].name, file_path=validated_data['license'], media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.license_id_file = media_instance
@@ -167,7 +167,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
-    attachments = serializers.FileField(
+    attachments = serializers.ListField(
         style={"input_type": "file"},
         write_only=True,
         allow_null=False,
@@ -180,7 +180,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'attachments'
+            'working_days', 'attachments','deadline'
         ]
 
     def validate_job_category(self, job_category):
@@ -272,19 +272,20 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         attachments = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
-        job_instance = super().save(user=user)
+        job_instance = super().save(user=user, status='active')
         if attachments:
-            content_type = str(attachments.content_type).split("/")
-            if content_type[0] == "application":
-                media_type = 'document'
-            else:
-                media_type = content_type[0]
-            # save media file into media table and get instance of saved data.
-            media_instance = Media(file_path=attachments, media_type=media_type)
-            media_instance.save()
-            # save media instance into license id file into employer profile table.
-            attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
-            attachments_instance.save()
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image" ] :
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
+                attachments_instance.save()
         return self
 
 
@@ -317,7 +318,11 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_image(self, obj):
+        context = {}
         if obj.image:
-            return obj.image.file_path.url
+            context['title'] = obj.image.title
+            context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
         return None
 

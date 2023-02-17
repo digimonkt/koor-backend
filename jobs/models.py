@@ -56,12 +56,13 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('weekly', "Weekly"),
         ('hourly', "Hourly"),
     )
-    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,7)]
+    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,8)]
     STATUS_CHOICE = (
         ('active', "Active"),
         ('inactive', "Inactive"),
         ('hold', "Hold"),
         ('deleted', "Deleted"),
+        ('expired', "Expired"),
     )
     user = models.ForeignKey(
         User,
@@ -78,12 +79,16 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     budget_currency = models.CharField(
         verbose_name=_('Budget Currency'),
         max_length=5,
+        null=True,
+        blank=True,
         db_column="budget_currency",
         default="KES"
     )
     budget_amount = models.DecimalField(
         max_digits=19,
         decimal_places=2,
+        null=True,
+        blank=True,
         verbose_name=_('Budget Amount'),
         db_column="budget_amount",
     )
@@ -91,6 +96,8 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('Budget Pay Period'),
         db_column="budget_pay_period",
         max_length=255,
+        null=True,
+        blank=True,
         choices=PAY_PERIOD_CHOICE,
     )
     description = models.TextField(
@@ -193,6 +200,10 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=25,
         choices=WORKING_DAYS_CHOICE,
     )
+    deadline = models.DateField(
+        verbose_name=_('Deadline'),
+        db_column='deadline'
+    )
     status = models.CharField(
         verbose_name=_('Status'),
         db_column="status",
@@ -220,6 +231,7 @@ class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mo
         verbose_name=_('Job'),
         on_delete=models.CASCADE,
         db_column="job",
+        null=True,
         related_name='%(app_label)s_%(class)s_job'
     )
     attachment = models.OneToOneField(

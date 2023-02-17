@@ -5,6 +5,10 @@ from user_profile.models import JobSeekerProfile
 from jobs.models import JobDetails, JobAttachmentsItem
 from employers.serializers import UserSerializer
 
+from .models import (
+    EducationRecord
+)
+
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
     """
