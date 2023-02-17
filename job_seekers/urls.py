@@ -16,4 +16,6 @@ urlpatterns = [
     
     path('/language', LanguageView.as_view(), name="language"),
     
+    path('/language/<str:languageId>', LanguageView.as_view(), name="language"),
+    
 ]
