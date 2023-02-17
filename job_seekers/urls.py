@@ -12,4 +12,6 @@ urlpatterns = [
     
     path('/educations', EducationsView.as_view(), name="educations"),
     
+    path('/educations/<str:educationId>', EducationsView.as_view(), name="educations"),
+    
 ]
