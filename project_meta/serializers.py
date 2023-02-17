@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from .models import (
     City, Country, Language,
-    Skill
+    Skill, EducationLevel
 )
 
 
@@ -76,6 +76,24 @@ class SkillSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Skill
+        fields = (
+            'id',
+            'title',
+        )
+
+class HighestEducationSerializer(serializers.ModelSerializer):
+    """
+    HighestEducationSerializer is a serializer class that serializes EducationLevel model instances to JSON format. It uses the
+    ModelSerializer subclass from the Django REST Framework to automatically generate serializer fields for the EducationLevel
+    model fields.
+
+    Attributes:
+        model (Model): The EducationLevel model that the serializer is based on.
+        fields (tuple): The fields to be serialized in the EducationLevel model.
+
+    """
+    class Meta:
+        model = EducationLevel
         fields = (
             'id',
             'title',
