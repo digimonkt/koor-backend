@@ -287,3 +287,121 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                 attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
                 attachments_instance.save()
         return self
+
+
+class UpdateJobSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for updating JobDetails model instances.
+    This class defines a set of fields to be updated and provides validation methods for job_category, language and
+    skill fields. Additionally, it handles the updating of the attachments and attachments_remove fields. It takes an
+    existing instance of JobDetails and validated data, then performs the update operation on the instance.
+    Attributes:
+        - `job_category`: PrimaryKeyRelatedField to JobCategory model objects, many to many relationship, used to update
+        job categories.
+        - `language`: PrimaryKeyRelatedField to Language model objects, many to many relationship, used to update
+        languages.
+        - `skill`: PrimaryKeyRelatedField to Skill model objects, many to many relationship, used to update skills.
+        - `attachments`: ListField of file inputs, used to add new attachments to the job instance.
+        - `attachments_remove`: ListField of text inputs, used to remove attachments from the job instance.
+    Methods:
+        - `validate_job_category`: validates the job_category field and raises a ValidationError if the value is empty
+        or exceeds a specified limit.
+        - `validate_language`: validates the language field and raises a ValidationError if the value is empty or
+        exceeds a specified limit.
+        - `validate_skill`: validates the skill field and raises a ValidationError if the value is empty or exceeds a
+        specified limit.
+        - `update`: performs the update operation on the JobDetails instance and handles the updating of the attachments
+         and attachments_remove fields.
+    """
+
+    job_category = serializers.PrimaryKeyRelatedField(
+        queryset=JobCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    language = serializers.PrimaryKeyRelatedField(
+        queryset=Language.objects.all(),
+        many=True,
+        write_only=True
+    )
+    skill = serializers.PrimaryKeyRelatedField(
+        queryset=Skill.objects.all(),
+        many=True,
+        write_only=True
+    )
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+    attachments_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = JobDetails
+        fields = [
+            'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
+            'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'working_days','status', 'attachments', 'attachments_remove'
+        ]
+    def validate_job_category(self, job_category):
+
+        if job_category == '':
+            limit = 3
+            if len(job_category) > limit:
+                raise serializers.ValidationError({'job_category': 'Choices limited to ' + str(limit)})
+            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
+        else:
+            return job_category
+
+    def validate_language(self, language):
+
+        if language == '':
+            limit = 3
+            if len(language) > limit:
+                raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
+            raise serializers.ValidationError({'language': 'Language can not be blank.'})
+        else:
+            return language
+
+    def validate_skill(self, skill):
+
+        if skill == '':
+            limit = 3
+            if len(skill) > limit:
+                raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
+            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
+        else:
+            return skill
+
+    def update(self, instance, validated_data):
+        attachments = None
+        attachments_remove = None
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        if 'attachments_remove' in self.validated_data:
+            attachments_remove = self.validated_data.pop('attachments_remove')
+            
+        super().update(instance, validated_data)
+        if attachments_remove:
+            for remove in attachments_remove:
+                JobAttachmentsItem.objects.filter(id=remove).update(job=None)
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] == "application":
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = JobAttachmentsItem.objects.create(job=instance, attachment=media_instance)
+                attachments_instance.save()
+        return 
