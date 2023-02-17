@@ -347,7 +347,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days','status', 'attachments', 'attachments_remove'
+            'working_days','status', 'attachments', 'attachments_remove', 'deadline'
         ]
     def validate_job_category(self, job_category):
 
@@ -394,14 +394,14 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
-                if content_type[0] == "application":
+                if content_type[0] not in ["video", "image" ] :
                     media_type = 'document'
                 else:
                     media_type = content_type[0]
                 # save media file into media table and get instance of saved data.
-                media_instance = Media(file_path=attachment, media_type=media_type)
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 # save media instance into license id file into employer profile table.
                 attachments_instance = JobAttachmentsItem.objects.create(job=instance, attachment=media_instance)
                 attachments_instance.save()
-        return 
+        return instance
