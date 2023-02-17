@@ -20,6 +20,7 @@ from jobs.serializers import GetJobsSerializers
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
+    UpdateJobSerializers
 )
 
 
