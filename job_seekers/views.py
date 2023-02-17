@@ -15,7 +15,7 @@ from jobs.models import JobDetails
 from .models import EducationRecord
 
 from .serializers import (
-    UpdateAboutSerializers, EducationSerializers
+    UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers
 )
 
 
@@ -189,16 +189,14 @@ class EducationsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-
+    
     def delete(self, request, educationId):
         """
         Deletes an EducationRecord object with the given ID if the authenticated user is a job seeker and owns the
         EducationRecord.
-
         Args:
             request: A DRF request object.
             educationId: An integer representing the ID of the EducationRecord to be deleted.
-
         Returns:
             A DRF response object with a success or error message and appropriate status code.
         """
@@ -214,6 +212,178 @@ class EducationsView(generics.GenericAPIView):
             except EducationRecord.DoesNotExist:
                 return response.Response(
                     data={"education record": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class LanguageView(generics.GenericAPIView):
+    """
+    A generic API view for handling languages.
+
+    Attributes:
+        - `permission_classes (list)`: The list of permission classes that the user must have to access this view.
+                                In this case, only authenticated users can access this view.
+
+        - `serializer_class (JobSeekerLanguageProficiencySerializers)`: The serializer class that the view uses to serialize and
+                                                deserialize the Language model.
+
+    Returns:
+        Serialized languages in JSON format, with authentication required to access the view. 
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = JobSeekerLanguageProficiencySerializers
+
+    def post(self, request):
+        """
+        Handles HTTP POST requests for creating a new language.
+
+        Args:
+            request (HttpRequest): The request object sent to the server.
+
+        Returns:
+            HTTP response with serialized data in JSON format, and status codes indicating whether the request was
+            successful or not.
+
+        Raises:
+            serializers.ValidationError: If the data in the request is invalid or incomplete.
+
+            Exception: If an error occurs while processing the request.
+
+        Notes:
+            This function creates a new language using the serializer class specified in the `serializer_class`
+            attribute of the view. The serializer is first validated and then saved to the database. The `user` field
+            of the language is set to the currently logged-in user.
+            If the serializer is not valid, a `serializers.ValidationError` is raised and a response with a status code
+            of 400 is returned. If any other error occurs, a response with a status code of 400 is returned along with
+            an error message in the `message` field of the response data. If the serializer is valid and the record is
+            successfully created, a response with the serialized data and a status code of 201 is returned.
+        """
+
+        context = dict()
+        if request.user.role == "job_seeker":
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user=request.user)
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, languageId):
+        """
+        Update an `Language` instance for a `job seeker`.
+
+        Args:
+            - `request`: The HTTP request object.
+            - `languageId`: The ID of the `Language` instance to update.
+
+        Returns:
+            - A Response object with a message and HTTP status code indicating the result of the update.
+
+        Raises:
+            - `ValidationError`: If the request data is not valid.
+            - `NotFound`: If the Language instance does not exist.
+            - `Exception`: If an error occurs during the update.
+
+        Note:
+            - This function is only accessible to job seekers. If the user has a role other than `'job_seeker'`, an
+            error message is returned indicating that the user does not have permission to perform the action.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                education_instance = Language.objects.get(id=languageId, user=request.user)
+                serializer = self.serializer_class(data=request.data, instance=education_instance, partial=True)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(education_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except Language.DoesNotExist:
+                return response.Response(
+                    data={"language": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )    
+    
+    def delete(self, request, languageId):
+        """
+        Deletes an Language object with the given ID if the authenticated user is a job seeker and owns the
+        Language.
+        Args:
+            request: A DRF request object.
+            languageId: An integer representing the ID of the Language to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                Language.objects.get(id=languageId, user=request.user).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Language.DoesNotExist:
+                return response.Response(
+                    data={"language": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
