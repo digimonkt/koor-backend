@@ -347,37 +347,35 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days','status', 'attachments', 'attachments_remove'
+            'working_days','status', 'attachments', 'attachments_remove', 'deadline'
         ]
     def validate_job_category(self, job_category):
-
-        if job_category == '':
+        if job_category not in [None, ""]:
             limit = 3
             if len(job_category) > limit:
                 raise serializers.ValidationError({'job_category': 'Choices limited to ' + str(limit)})
-            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
-        else:
             return job_category
+        else:
+            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
 
     def validate_language(self, language):
-
-        if language == '':
+        if language not in [None, ""]:
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
-            raise serializers.ValidationError({'language': 'Language can not be blank.'})
-        else:
             return language
+        else:
+            raise serializers.ValidationError({'language': 'Language can not be blank.'})
+            
 
     def validate_skill(self, skill):
-
-        if skill == '':
+        if skill not in [None, ""]:
             limit = 3
             if len(skill) > limit:
                 raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
-            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
-        else:
             return skill
+        else:
+            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
 
     def update(self, instance, validated_data):
         attachments = None
@@ -394,14 +392,14 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
-                if content_type[0] == "application":
+                if content_type[0] not in ["video", "image" ] :
                     media_type = 'document'
                 else:
                     media_type = content_type[0]
                 # save media file into media table and get instance of saved data.
-                media_instance = Media(file_path=attachment, media_type=media_type)
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 # save media instance into license id file into employer profile table.
                 attachments_instance = JobAttachmentsItem.objects.create(job=instance, attachment=media_instance)
                 attachments_instance.save()
-        return 
+        return instance
