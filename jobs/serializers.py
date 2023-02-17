@@ -40,15 +40,17 @@ class AttachmentsSerializer(serializers.ModelSerializer):
             of the attachment.
 
     """
-    attachment = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
+    path = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
 
     class Meta:
         model = JobAttachmentsItem
         fields = (
-            'attachment',
+            'id', 'path', 'title', 'type'
         )
 
-    def get_attachment(self, obj):
+    def get_path(self, obj):
         """
         Retrieves the URL of the attachment file for a JobAttachmentsItem object, if it exists.
 
@@ -61,6 +63,36 @@ class AttachmentsSerializer(serializers.ModelSerializer):
         """
         if obj.attachment:
             return obj.attachment.file_path.url
+        return None
+    
+    def get_title(self, obj):
+        """
+        Retrieves the URL of the attachment file for a JobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The JobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.title
+        return None
+    
+    def get_type(self, obj):
+        """
+        Retrieves the URL of the attachment file for a JobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The JobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.media_type
         return None
 
 
@@ -362,5 +394,5 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         attachments_data = JobAttachmentsItem.objects.filter(job=obj)
         get_data = AttachmentsSerializer(attachments_data, many=True)
         if get_data.data:
-            context.append(get_data.data[0]['attachment'])
+            context = get_data.data
         return context
