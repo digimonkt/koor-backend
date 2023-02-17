@@ -199,13 +199,13 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         choices are limited to 3. If the job category is not blank and its length is within limits, the job category
         is returned.
         """
-        if job_category == '':
+        if job_category not in [None, ""]:
             limit = 3
             if len(job_category) > limit:
                 raise serializers.ValidationError({'job_category': 'Choices limited to ' + str(limit)})
-            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
-        else:
             return job_category
+        else:
+            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
 
     def validate_language(self, language):
         """
@@ -222,13 +222,13 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         greater than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If
         the language is not blank and its length is within limits, the language is returned.
         """
-        if language == '':
+        if language not in [None, ""]:
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
-            raise serializers.ValidationError({'language': 'Language can not be blank.'})
-        else:
             return language
+        else:
+            raise serializers.ValidationError({'language': 'Language can not be blank.'})
 
     def validate_skill(self, skill):
         """
@@ -245,13 +245,25 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If the skill
         is not blank and its length is within limits, the skill is returned.
         """
-        if skill == '':
+        if skill not in [None, ""]:
             limit = 3
             if len(skill) > limit:
                 raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
-            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
-        else:
             return skill
+        else:
+            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
+
+    def validate(self, data):
+        job_category = data.get("job_category")
+        skill = data.get("skill")
+        language = data.get("language")
+        if not job_category:
+            raise serializers.ValidationError({'job_category': 'This field is required.'})
+        if not skill:
+            raise serializers.ValidationError({'skill': 'This field is required.'})
+        if not language:
+            raise serializers.ValidationError({'language': 'This field is required.'})
+        return data
 
     def save(self, user):
         """
@@ -377,9 +389,22 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
 
+    def validate(self, data):
+        job_category = data.get("job_category")
+        skill = data.get("skill")
+        language = data.get("language")
+        if not job_category:
+            raise serializers.ValidationError({'job_category': 'This field is required.'})
+        if not skill:
+            raise serializers.ValidationError({'skill': 'This field is required.'})
+        if not language:
+            raise serializers.ValidationError({'language': 'This field is required.'})
+        return data
+    
     def update(self, instance, validated_data):
         attachments = None
         attachments_remove = None
+
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         if 'attachments_remove' in self.validated_data:
