@@ -536,3 +536,40 @@ class WorkExperiencesView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )  
+        
+    def delete(self, request, workExperienceId):
+        """
+        Deletes an EmploymentRecord object with the given ID if the authenticated user is a job seeker and owns the
+        EmploymentRecord.
+        Args:
+            request: A DRF request object.
+            workExperienceId: An integer representing the ID of the EmploymentRecord to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                EmploymentRecord.objects.get(id=workExperienceId, user=request.user).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except EmploymentRecord.DoesNotExist:
+                return response.Response(
+                    data={"employment_record": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
