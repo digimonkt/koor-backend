@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from jobs.models import JobDetails
 from project_meta.models import Media, Skill, Language
+
 from user_profile.models import EmployerProfile
 from users.models import User
 
@@ -320,54 +321,3 @@ class UserSerializer(serializers.ModelSerializer):
             return obj.image.file_path.url
         return None
 
-
-class GetJobsSerializers(serializers.ModelSerializer):
-    """
-    A serializer class for `JobDetails` model that includes fields such as 'id', 'title', 'description',
-    'budget_currency', 'budget_amount', 'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-    'has_contract', 'working_days', 'status', 'user'.
-
-    The fields `'country'`, `'city'`, and `'user'` are `SerializerMethodFields` that return the respective fields of the
-    related models.
-
-    Attributes:
-        - `country (serializers.SerializerMethodField)`: A SerializerMethodField that returns the title of the related
-        country.
-        - `city (serializers.SerializerMethodField)`: A SerializerMethodField that returns the title of the related
-        city.
-        - `user (serializers.SerializerMethodField)`: A SerializerMethodField that returns a serialized user object.
-
-    Methods:
-        - `get_country(obj)`: A method that takes a JobDetails instance and returns the title of the related country.
-        - `get_city(obj)`: A method that takes a JobDetails instance and returns the title of the related city.
-        - `get_user(obj)`: A method that takes a JobDetails instance and returns a serialized user object.
-
-    """
-    country = serializers.SerializerMethodField()
-    city = serializers.SerializerMethodField()
-    user = serializers.SerializerMethodField()
-    applicant = serializers.SerializerMethodField()
-
-    class Meta:
-        model = JobDetails
-        fields = [
-            'id', 'title', 'description', 'budget_currency', 'budget_amount',
-            'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'applicant', 'created', 'user'
-        ]
-
-    def get_country(self, obj):
-        return obj.country.title
-
-    def get_city(self, obj):
-        return obj.city.title
-
-    def get_user(self, obj):
-        context = {}
-        get_data = UserSerializer(obj.user)
-        if get_data.data:
-            context = get_data.data
-        return context
-    
-    def get_applicant(self, obj):
-        return 0

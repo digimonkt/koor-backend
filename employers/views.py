@@ -14,10 +14,11 @@ from user_profile.models import EmployerProfile
 
 from jobs.models import JobDetails
 
+from jobs.serializers import GetJobsSerializers
+
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
-    GetJobsSerializers
 )
 
 
