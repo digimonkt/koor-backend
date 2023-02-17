@@ -11,12 +11,10 @@ from core.pagination import CustomPagination
 
 from user_profile.models import JobSeekerProfile
 
-from employers.serializers import GetJobsSerializers
-
 from jobs.models import JobDetails
 
 from .serializers import (
-    UpdateAboutSerializers, GetJobsDetailSerializers, EducationSerializers
+    UpdateAboutSerializers, EducationSerializers
 )
 
 
@@ -53,85 +51,6 @@ class UpdateAboutView(generics.GenericAPIView):
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
-class JobSearchView(generics.ListAPIView):
-    """
-    API endpoint that lists all job details based on a search query.
-
-    The endpoint requires authentication to access and returns a paginated list of job details sorted by their creation
-    date in descending order. The list can be filtered by job title.
-
-    Attributes:
-        - `serializer_class`: The serializer class used to serialize job details data.
-        - `permission_classes`: A list of permission classes that apply to the view.
-        - `queryset`: The queryset of job details used to retrieve data.
-        - `filter_backends`: A list of filter backend classes used to filter job details data.
-        - `search_fields`: A list of fields on which the search query can be performed.
-        - `pagination_class`: The pagination class used to paginate job details data.
-    """
-    serializer_class = GetJobsSerializers
-    permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.filter(deadline__gte=date.today()).order_by('-created')
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
-
-    def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
-
-
-class GetJobDetailsView(generics.GenericAPIView):
-    """API view to retrieve job details.
-
-    This API view is used to retrieve job details by ID. The returned data includes related data such as country and
-    city names, user information, attachments, and more.
-
-    Attributes:
-        - `serializer_class`: The serializer class to use for the returned data, which is GetJobsDetailSerializers.
-        - `permission_classes`: The permission classes to use for the view, which allow any user to access the data.
-
-    Methods:
-        - `get`: A method that retrieves job details by ID and returns the data as a response.
-    """
-    serializer_class = GetJobsDetailSerializers
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request):
-        context = dict()
-        job_id = request.GET.get('jobId', None)
-        try:
-            if job_id:
-                job_data = JobDetails.objects.get(id=job_id)
-                get_data = self.serializer_class(job_data)
-                context = get_data.data
-            return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            context["message"] = str(e)
-            return response.Response(
-                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
 
