@@ -49,45 +49,50 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
 
 class AttachmentsSerializer(serializers.ModelSerializer):
     """
-    Serializer class to retrieve job attachment data.
+    Serializes the JobAttachmentsItem model to return a dictionary of attachment information.
 
-    This serializer class is used to retrieve job attachment data, such as the attachment URL and media type.
+    This function takes a JobAttachmentsItem model and returns a dictionary of information about its attachment.
+    The dictionary contains the attachment's ID, file path, media type, and title. If the attachment is missing,
+    the corresponding value in the dictionary is None.
 
-    Attributes:
-        - `attachment`: A SerializerMethodField that retrieves the attachment URL from the related Attachment model.
-        - `file_type`: A SerializerMethodField that retrieves the media type from the related Attachment model.
+    Args:
+        obj (JobAttachmentsItem): A JobAttachmentsItem model instance.
 
-    Meta:
-        - `model`: The model to be serialized, which is JobAttachmentsItem.
-        - `fields`: A tuple of fields to be included in the serialized output.
-
-    Methods:
-        - `get_attachment`: A method that retrieves the attachment URL from the related Attachment model.
-        - `get_file_type`: A method that retrieves the media type from the related Attachment model.
+    Returns:
+        dict: A dictionary containing information about the attachment.
+            - `id (int)`: The ID of the attachment.
+            - `path (str)`: The file path of the attachment. None if attachment is missing.
+            - `type (str)`: The media type of the attachment. None if attachment is missing.
+            - `title (str)`: The title of the attachment. None if attachment is missing.
     """
-    attachment = serializers.SerializerMethodField()
-    file_type = serializers.SerializerMethodField()
+
+    path = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
 
     class Meta:
         model = JobAttachmentsItem
         fields = (
             'id',
-            'attachment',
-            'file_type'
+            'path',
+            'type',
+            'title'
         )
 
-    def get_attachment(self, obj):
+    def get_path(self, obj):
         context = {}
         if obj.attachment:
-            context['title'] = obj.attachment.title
-            context['path'] = obj.attachment.file_path.url
-            context['type'] = obj.attachment.media_type
-            return context
+            return obj.attachment.file_path.url
         return None
 
-    def get_file_type(self, obj):
+    def get_type(self, obj):
         if obj.attachment:
             return obj.attachment.media_type
+        return None
+    
+    def get_title(self, obj):
+        if obj.attachment:
+            return obj.attachment.title
         return None
 
 
