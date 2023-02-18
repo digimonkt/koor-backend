@@ -1,7 +1,8 @@
 from django.urls import path
 
 from .views import (
-    UpdateAboutView, EducationsView, LanguageView
+    UpdateAboutView, EducationsView, LanguageView,
+    WorkExperiencesView
     )
 
 app_name = "job_seekers"
@@ -17,5 +18,7 @@ urlpatterns = [
     path('/language', LanguageView.as_view(), name="language"),
     
     path('/language/<str:languageId>', LanguageView.as_view(), name="language"),
+    
+    path('/work-experiences', WorkExperiencesView.as_view(), name="work_experiences"),
     
 ]
