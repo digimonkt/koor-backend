@@ -2,8 +2,6 @@ from rest_framework import serializers
 
 from user_profile.models import JobSeekerProfile
 
-from jobs.models import JobDetails, JobAttachmentsItem
-
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord
 )
