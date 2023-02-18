@@ -21,4 +21,6 @@ urlpatterns = [
     
     path('/work-experiences', WorkExperiencesView.as_view(), name="work_experiences"),
     
+    path('/work-experiences/<str:workExperienceId>', WorkExperiencesView.as_view(), name="work_experiences"),
+    
 ]
