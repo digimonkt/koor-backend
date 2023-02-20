@@ -4,15 +4,17 @@ from rest_framework import (
     permissions, serializers
 )
 
+from jobs.models import JobDetails
 from user_profile.models import JobSeekerProfile
 from users.models import User
+
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
     JobSeekerSkill
 )
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
-    EmploymentRecordSerializers, JobSeekerSkillSerializers
+    EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers
 )
 
 
@@ -641,7 +643,6 @@ class SkillsView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             try:
                 serializer.is_valid(raise_exception=True)
-                print(serializer.validated_data)
                 for data in serializer.validated_data:
                     try:
                         if JobSeekerSkill.objects.get(skill_id=data, user=request.user):
@@ -664,6 +665,82 @@ class SkillsView(generics.GenericAPIView):
                     data=context,
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobsApplyView(generics.GenericAPIView):
+    """View for creating a new job application.
+
+    This view handles the creation of a new job application by authenticating the user making the request and then
+    using the AppliedJobSerializers to deserialize the request data and save the new job application.
+
+    Attributes:
+        - permission_classes (list): A list of permission classes that a user must have in order to access this view.
+        - serializer_class (AppliedJobSerializers): The serializer class that will be used to deserialize the incoming
+            data and serialize the outgoing data.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AppliedJobSerializers
+
+    def post(self, request, jobId):
+        """
+        Creates a new application for a job posting by a job seeker.
+
+        Args:
+            request: The HTTP request object.
+            jobId (int): The ID of the job posting to apply for.
+
+        Returns:
+            A response object with the following keys:
+            - "message" (str): A message indicating the success or failure of the request.
+
+            - If the request is successful, the response will have a status code of 200 (HTTP_200_OK).
+            - If the user does not have permission to perform this action, the response will have a status
+            code of 401 (HTTP_401_UNAUTHORIZED).
+            - If the specified job posting does not exist, the response will have a status code of 404
+            (HTTP_404_NOT_FOUND).
+            - If there is an error while processing the request, the response will have a status code of 404
+            (HTTP_404_NOT_FOUND) and a message describing the error.
+        """
+
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                job_instace = JobDetails.objects.get(id=jobId)
+
+                serializer = self.serializer_class(data=request.data)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save(user=request.user, job_instace=job_instace)
+                    context["message"] = "Applied Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=str(serializer.errors),
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
