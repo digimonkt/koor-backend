@@ -27,6 +27,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
     GENDER_CHOICE = (
         ('male', "Male"),
         ('female', "Female"),
+        ('trans', "Trans"),
     )
     EMPLOYMENT_STATUS_CHOICE = (
         ('employed', "Employed"),
