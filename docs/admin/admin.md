@@ -28,6 +28,7 @@
   - [Get Country](#get-country)
   - [Create City](#create-city)
   - [Get City](#get-city)
+  - [Delete Cities](#delete-cities)
   - [Create Job Category](#create-job-category)
   - [Get Job Category](#get-job-category)
 
@@ -515,6 +516,30 @@ This api is used to get all `cities`
         "title": "Gwalior",
         "country": "${UUID}"
       }],
+    }
+  }
+  ```
+
+## Delete Cities
+
+This api is used to `delete` tag
+
+- route: `/city/:cityId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "cityId": ["${UUID}"]
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
     }
   }
   ```
