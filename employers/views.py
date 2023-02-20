@@ -46,22 +46,28 @@ class UpdateAboutView(generics.GenericAPIView):
 
     def patch(self, request):
         context = dict()
-        profile_instance = get_object_or_404(EmployerProfile, user=request.user)
-        serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
-        try:
-            serializer.is_valid(raise_exception=True)
-            if serializer.update(profile_instance, serializer.validated_data):
-                context['message'] = "Updated Successfully"
+        if self.request.user.role == "employer":
+            profile_instance = get_object_or_404(EmployerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(profile_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
                 return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-        except serializers.ValidationError:
+        else:
+            context['message'] = "You do not have permission to perform this action."
             return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
-
 
 class JobsView(generics.ListAPIView):
     """
