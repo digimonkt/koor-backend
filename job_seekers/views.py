@@ -1,10 +1,12 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import (
     generics, response, status,
-    permissions, serializers
+    permissions, serializers, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from jobs.models import JobDetails
+
 from user_profile.models import JobSeekerProfile
 from users.models import User
 
@@ -14,7 +16,8 @@ from .models import (
 )
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
-    EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers
+    EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
+    GetAppliedJobsSerializers
 )
 
 
@@ -673,22 +676,78 @@ class SkillsView(generics.GenericAPIView):
             )
 
 
-class JobsApplyView(generics.GenericAPIView):
-    """View for creating a new job application.
+class JobsApplyView(generics.ListAPIView):
+    """
+    A view for retrieving a list of applied jobs.
 
-    This view handles the creation of a new job application by authenticating the user making the request and then
-    using the AppliedJobSerializers to deserialize the request data and save the new job application.
+    This view supports HTTP GET requests and returns a list of applied jobs for the authenticated user.
+    The applied jobs are serialized using the `GetAppliedJobsSerializers` class.
+
+    This view requires the user to be authenticated, and uses the `IsAuthenticated` permission class.
+    The view supports searching the applied jobs by job title, using the `SearchFilter` filter backend.
 
     Attributes:
-        - permission_classes (list): A list of permission classes that a user must have in order to access this view.
-        - serializer_class (AppliedJobSerializers): The serializer class that will be used to deserialize the incoming
-            data and serialize the outgoing data.
-
+        - `serializer_class`: The serializer class to use for serializing the applied jobs.
+        - `permission_classes`: A list of permission classes that the user must pass in order to access this view.
+        - `queryset`: The base queryset for the view. This attribute is not used in this view, since the queryset
+            is dynamically generated in the `get_queryset` method.
+        - `filter_backends`: A list of filter backends to use for filtering the applied jobs.
+        - `search_fields`: The fields to search for when filtering the applied jobs.
     """
-
+    
+    serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = AppliedJobSerializers
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
 
+    def list(self, request):
+        """
+        Returns a paginated list of serialized applied jobs for the authenticated user.
+
+        This method returns a paginated list of applied jobs for the authenticated user. The applied jobs are
+        serialized using the `GetAppliedJobsSerializers` class.
+
+        If a 'limit' query parameter is provided in the request, the queryset will be paginated using the
+        `LimitOffsetPagination` class. Otherwise, the entire queryset will be returned.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A HTTP response object containing a paginated list of serialized applied jobs.
+
+        The response includes the following fields:
+            - `count (int)`: The total number of applied jobs for the authenticated user.
+            - `next (str)`: The URL for the next page of results, or null if there are no more pages.
+            - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
+            - `results (list)`: A list of serialized applied jobs for the authenticated user.
+
+        The `'count'`, `'next'`, and `'previous'` fields are determined by the `LimitOffsetPagination` class if a limit
+        query parameter is provided. Otherwise, the count will be the length of the entire queryset and next
+        and previous will be null.
+        """
+
+        queryset = self.filter_queryset(self.get_queryset())
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True, context={"request": request})
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
+        
     def post(self, request, jobId):
         """
         Creates a new application for a job posting by a job seeker.
@@ -722,7 +781,7 @@ class JobsApplyView(generics.GenericAPIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
                 except AppliedJob.DoesNotExist:
-                    serializer = self.serializer_class(data=request.data)
+                    serializer = AppliedJobSerializers(data=request.data)
                     try:
                         serializer.is_valid(raise_exception=True)
                         serializer.save(user=request.user, job_instace=job_instace)
@@ -754,3 +813,20 @@ class JobsApplyView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+            
+    def get_queryset(self, **kwargs):
+        """
+        Returns the queryset of applied jobs for the authenticated user.
+
+        This method returns a queryset of AppliedJob objects for the authenticated user, ordered by their creation date
+        in descending order.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
+            order.
+        """
+
+        return AppliedJob.objects.filter(user=self.request.user).order_by('-created')
