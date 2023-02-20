@@ -3,7 +3,8 @@ from rest_framework import serializers
 from user_profile.models import JobSeekerProfile
 
 from .models import (
-    EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord
+    EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
+    JobSeekerSkill
 )
 
 
@@ -150,6 +151,49 @@ class EmploymentRecordSerializers(serializers.ModelSerializer):
     class Meta:
         model = EmploymentRecord
         fields = ['id', 'title', 'start_date', 'end_date', 'organization', 'description']
+
+    def update(self, instance, validated_data):
+        """
+        Update the given instance with the validated data and return it.
+
+        Parameters:
+            instance : object
+                The instance to be updated.
+            validated_data : dict
+                The validated data to be used to update the instance.
+
+        Returns:
+            object
+                The updated instance.
+
+        Note:
+            This method overrides the update() method of the superclass.
+        """
+
+        super().update(instance, validated_data)
+        return instance
+
+
+class JobSeekerSkillSerializers(serializers.ModelSerializer):
+    """ 
+    A serializer class for the `JobSeekerSkill` model to convert model instances into JSON serializable data and vice
+    versa.
+
+    Attributes: 
+        - `Meta (inner class)`: Specifies the metadata for the serializer, including the model to use, and the fields
+                                to include in the serialized data.
+
+        - `model (JobSeekerSkill)`: The model class that the serializer should use.
+
+        - `fields (list)`: The list of fields to include in the serialized data. 
+
+    Returns: 
+        Serialized data of the JobSeekerSkill model instance in `JSON format`. 
+    """
+
+    class Meta:
+        model = JobSeekerSkill
+        fields = ['id', 'skill']
 
     def update(self, instance, validated_data):
         """
