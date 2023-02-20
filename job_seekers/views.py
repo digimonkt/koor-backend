@@ -624,8 +624,14 @@ class SkillsView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             try:
                 serializer.is_valid(raise_exception=True)
-                serializer.save(user=request.user)
-                context["data"] = serializer.data
+                print(serializer.validated_data)
+                for data in serializer.validated_data:
+                    try:
+                        if JobSeekerSkill.objects.get(skill_id=data, user=request.user):
+                            pass
+                    except JobSeekerSkill.DoesNotExist:
+                        JobSeekerSkill.objects.create(skill_id=data, user=request.user)
+                context["message"] = "Skills added."
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
