@@ -225,43 +225,47 @@ class EmploymentRecordSerializers(serializers.ModelSerializer):
 
 
 class JobSeekerSkillSerializers(serializers.ModelSerializer):
-    """ 
-    A serializer class for the `JobSeekerSkill` model to convert model instances into JSON serializable data and vice
-    versa.
-
-    Attributes: 
-        - `Meta (inner class)`: Specifies the metadata for the serializer, including the model to use, and the fields
-                                to include in the serialized data.
-
-        - `model (JobSeekerSkill)`: The model class that the serializer should use.
-
-        - `fields (list)`: The list of fields to include in the serialized data. 
-
-    Returns: 
-        Serialized data of the JobSeekerSkill model instance in `JSON format`. 
     """
+    The JobSeekerSkillSerializers class is a Django REST Framework serializer that handles the serialization and
+    validation of JobSeekerSkill objects.
 
+    It includes two ListField attributes, skill_add and skill_remove, which are used for adding and removing skills
+    from a JobSeekerSkill object.
+
+    The validate() method is used to validate the input data and perform any necessary database operations. If a skill
+    is marked for removal, the method deletes the JobSeekerSkill object with the matching skill. The method returns the
+    list of skills to be added.
+
+    Attributes:
+        - skill_add: a ListField attribute used for adding new skills to a JobSeekerSkill object
+        - skill_remove: a ListField attribute used for removing existing skills from a JobSeekerSkill object
+
+    Methods:
+        - validate(data): validates input data and performs any necessary database operations
+
+    Usage:
+        The JobSeekerSkillSerializers can be used to serialize and validate JobSeekerSkill objects for use in Django
+        REST Framework APIs.
+    """
+    skill_add = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+    skill_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
     class Meta:
         model = JobSeekerSkill
-        fields = ['id', 'skill']
-
-    def update(self, instance, validated_data):
-        """
-        Update the given instance with the validated data and return it.
-
-        Parameters:
-            instance : object
-                The instance to be updated.
-            validated_data : dict
-                The validated data to be used to update the instance.
-
-        Returns:
-            object
-                The updated instance.
-
-        Note:
-            This method overrides the update() method of the superclass.
-        """
-
-        super().update(instance, validated_data)
-        return instance
+        fields = ['id', 'skill_remove', 'skill_add']
+    
+    def validate(self, data):
+        skill_add = data.get("skill_add")
+        skill_remove = data.get("skill_remove")
+        if skill_remove:
+            for remove in skill_remove:
+                JobSeekerSkill.objects.filter(skill=remove).delete()
+        return skill_add
+    

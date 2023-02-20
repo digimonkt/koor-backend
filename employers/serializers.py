@@ -67,7 +67,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
 
     def validate_license_id(self, license_id):
         if license_id == '':
-            raise serializers.ValidationError('License id can not be blank sfs', code='license_id')
+            raise serializers.ValidationError('License id can not be blank.', code='license_id')
         else:
             return license_id
 
@@ -94,10 +94,10 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         license = data.get("license")
         if mobile_number and country_code in ["", None]:
             raise serializers.ValidationError({'country_code': 'Country code can not be blank.'})
-        if license_id and license in ["", None]:
-            raise serializers.ValidationError({'license': 'License can not be blank.'})
-        if license and license_id in ["", None]:
-            raise serializers.ValidationError({'license_id': 'License id can not be blank. hkhkh'})
+        # if license_id and license in ["", None]:
+        #     raise serializers.ValidationError({'license': 'License can not be blank.'})
+        # if license and license_id in ["", None]:
+        #     raise serializers.ValidationError({'license_id': 'License id can not be blank. hkhkh'})
         return data
 
     def update(self, instance, validated_data):
