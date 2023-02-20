@@ -10,6 +10,7 @@ app_name = "superadmin"
 urlpatterns = [
 
     path('/country', CountryView.as_view(), name="country"),
+    path('/country/<str:countryId>', CountryView.as_view(), name="country"),
     
     path('/city', CityView.as_view(), name="city"),
     path('/city/<str:cityId>', CityView.as_view(), name="city"),
