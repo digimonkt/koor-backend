@@ -8,7 +8,8 @@ from jobs.serializers import GetJobsDetailSerializers
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
-    JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem
+    JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
+    SavedJob
 )
 
 
@@ -462,6 +463,95 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+    def get_job(self, obj):
+        """
+        Returns a dictionary with details of a job posting.
+
+        Args:
+            obj: An object representing a job application.
+
+        Returns:
+            A dictionary containing details of the job posting, such as the job title, company name,
+            job location, etc.
+
+        If the job posting does not exist, an empty dictionary will be returned.
+        """
+
+        context = dict()
+        try:
+            get_data = GetJobsDetailSerializers(obj.job)
+            if get_data.data:
+                context = get_data.data
+        except JobDetails.DoesNotExist:
+            pass
+        finally:
+            return context
+
+
+class SavedJobSerializers(serializers.ModelSerializer):
+    """Serializer class for serializing and deserializing SavedJob instances.
+
+    This serializer class defines a ListField for attachments which allows files to be uploaded via a file input field.
+    The attachments field is write-only and not required, but must not be null if present.
+
+    Attributes:
+        Meta (Meta): A nested class that defines metadata options for the serializer, including the model class and the
+            fields to include in the serialized representation.
+
+    Usage:
+        To serialize an SavedJob instance, create an instance of this serializer and pass the instance to the data
+        parameter.
+    """
+
+    class Meta:
+        model = SavedJob
+        fields = ['id',]
+
+    def save(self, user, job_instace):
+        """Saves a new instance of the SavedJob model with the given user and job instance.
+
+        Args:
+            user (User): The user instance to associate with the job application.
+            job_instance (Job): The job instance to associate with the job application.
+
+        Returns:
+            This instance of the SavedJobSerializers.
+
+        Behavior:
+            This method saves a new instance of the SavedJob model with the given user and job instance.
+
+            The method returns the current instance of the serializer.
+
+        Raises:
+            Any exceptions raised during the save process.
+
+        Usage:
+            To create a new SavedJob instance and save attachments, call this method on an instance of
+            SavedJobSerializers.
+
+        """
+        super().save(user=user, job=job_instace)
+        return self
+
+
+class GetSavedJobsSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the SavedJob model that returns details of saved jobs.
+
+    This serializer includes the following fields:
+        - id (int): The ID of the applied job.
+        - job (dict): A dictionary containing details of the job posting.
+
+    The 'job' field is a serialized representation of the related JobDetails object, and is populated
+    using the `get_job` method of the GetSavedJobsSerializers class.
+    """
+
+    job = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'job']
 
     def get_job(self, obj):
         """
