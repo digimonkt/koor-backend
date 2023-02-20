@@ -45,6 +45,7 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     def validate_email(self, email):
         if email != '':
+            email = email.lower()
             try:
                 if User.objects.get(email=email):
                     raise serializers.ValidationError('email already in use.', code='email')
@@ -112,6 +113,7 @@ class CreateSessionSerializers(serializers.Serializer):
 
     def validate_email(self, email):
         if email != '':
+            email = email.lower()
             try:
                 if User.objects.get(email=email):
                     return email

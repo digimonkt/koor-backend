@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from user_profile.models import JobSeekerProfile
+from users.models import User
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
@@ -31,16 +32,65 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_blank=False
     )
+    email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    mobile_number = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    country_code = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
 
     class Meta:
         model = JobSeekerProfile
         fields = ['gender', 'dob', 'employment_status', 'description',
-                  'market_information_notification', 'job_notification', 'full_name']
+                  'market_information_notification', 'job_notification', 
+                  'full_name', 'email', 'mobile_number', 'country_code',
+                  'highest_education'
+                  ]
+        
+    
+    def validate_mobile_number(self, mobile_number):
+        if mobile_number != '':
+            if mobile_number.isdigit():
+                return mobile_number
+            else:
+                raise serializers.ValidationError('mobile_number must contain only numbers', code='mobile_number')
+        else:
+            raise serializers.ValidationError('mobile_number can not be blank', code='mobile_number')
+
+    def validate_email(self, email):
+        if email != '':
+            email = email.lower()
+            return email
+        else:
+            raise serializers.ValidationError('email can not be blank', code='email')
+
+    def validate(self, data):
+        country_code = data.get("country_code")
+        mobile_number = data.get("mobile_number")
+        if mobile_number and country_code in ["", None]:
+            raise serializers.ValidationError({'country_code': 'country code can not be blank'})
+        return data
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         if 'full_name' in validated_data:
             instance.user.name = validated_data['full_name']
+            instance.user.save()
+        if 'email' in validated_data:
+            instance.user.email = validated_data['email']
+            instance.user.save()
+        if 'mobile_number' in validated_data:
+            instance.user.mobile_number = validated_data['mobile_number']
+            instance.user.country_code = validated_data['country_code']
             instance.user.save()
         return instance
 
