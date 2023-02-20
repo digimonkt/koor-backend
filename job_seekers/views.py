@@ -12,12 +12,12 @@ from users.models import User
 
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJob
+    JobSeekerSkill, AppliedJob, SavedJob
 )
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
-    GetAppliedJobsSerializers
+    GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers
 )
 
 
@@ -830,3 +830,159 @@ class JobsApplyView(generics.ListAPIView):
         """
 
         return AppliedJob.objects.filter(user=self.request.user).order_by('-created')
+
+
+class JobsSaveView(generics.ListAPIView):
+    """
+    A view for retrieving a list of saved jobs.
+
+    This view supports HTTP GET requests and returns a list of saved jobs for the authenticated user.
+    The saved jobs are serialized using the `GetSavedJobsSerializers` class.
+
+    This view requires the user to be authenticated, and uses the `IsAuthenticated` permission class.
+    The view supports searching the saved jobs by job title, using the `SearchFilter` filter backend.
+
+    Attributes:
+        - `serializer_class`: The serializer class to use for serializing the saved jobs.
+        - `permission_classes`: A list of permission classes that the user must pass in order to access this view.
+        - `queryset`: The base queryset for the view. This attribute is not used in this view, since the queryset
+            is dynamically generated in the `get_queryset` method.
+        - `filter_backends`: A list of filter backends to use for filtering the saved jobs.
+        - `search_fields`: The fields to search for when filtering the saved jobs.
+    """
+    
+    serializer_class = GetSavedJobsSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        """
+        Returns a paginated list of serialized saved jobs for the authenticated user.
+
+        This method returns a paginated list of saved jobs for the authenticated user. The saved jobs are
+        serialized using the `GetSavedJobsSerializers` class.
+
+        If a 'limit' query parameter is provided in the request, the queryset will be paginated using the
+        `LimitOffsetPagination` class. Otherwise, the entire queryset will be returned.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A HTTP response object containing a paginated list of serialized saved jobs.
+
+        The response includes the following fields:
+            - `count (int)`: The total number of saved jobs for the authenticated user.
+            - `next (str)`: The URL for the next page of results, or null if there are no more pages.
+            - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
+            - `results (list)`: A list of serialized saved jobs for the authenticated user.
+
+        The `'count'`, `'next'`, and `'previous'` fields are determined by the `LimitOffsetPagination` class if a limit
+        query parameter is provided. Otherwise, the count will be the length of the entire queryset and next
+        and previous will be null.
+        """
+
+        queryset = self.filter_queryset(self.get_queryset())
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True, context={"request": request})
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
+        
+    def post(self, request, jobId):
+        """
+        Creates a new application for a job posting by a job seeker.
+
+        Args:
+            request: The HTTP request object.
+            jobId (int): The ID of the job posting to apply for.
+
+        Returns:
+            A response object with the following keys:
+            - "message" (str): A message indicating the success or failure of the request.
+
+            - If the request is successful, the response will have a status code of 200 (HTTP_200_OK).
+            - If the user does not have permission to perform this action, the response will have a status
+            code of 401 (HTTP_401_UNAUTHORIZED).
+            - If the specified job posting does not exist, the response will have a status code of 404
+            (HTTP_404_NOT_FOUND).
+            - If there is an error while processing the request, the response will have a status code of 404
+            (HTTP_404_NOT_FOUND) and a message describing the error.
+        """
+
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                job_instace = JobDetails.objects.get(id=jobId)
+                try:
+                    if SavedJob.objects.get(job=job_instace, user=request.user):
+                        context["message"] = "You are already saved"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except SavedJob.DoesNotExist:
+                    serializer = SavedJobSerializers(data=request.data)
+                    try:
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(user=request.user, job_instace=job_instace)
+                        context["message"] = "Saved Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                    except serializers.ValidationError:
+                        return response.Response(
+                            data=str(serializer.errors),
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+    def get_queryset(self, **kwargs):
+        """
+        Returns the queryset of saved jobs for the authenticated user.
+
+        This method returns a queryset of SavedJob objects for the authenticated user, ordered by their creation date
+        in descending order.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            A queryset of SavedJob objects for the authenticated user, ordered by their creation date in descending
+            order.
+        """
+
+        return SavedJob.objects.filter(user=self.request.user).order_by('-created')
