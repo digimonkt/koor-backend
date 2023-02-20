@@ -11,6 +11,7 @@ from project_meta.models import (
     EducationLevel
 )
 
+
 class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This Django model class represents the education record details for a jobseeker. The fields are as follows:
@@ -64,6 +65,7 @@ class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         verbose_name = "Education Record"
         verbose_name_plural = "Education Records"
         db_table = "EducationRecord"
+
 
 class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -119,6 +121,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         verbose_name_plural = "Employment Records"
         db_table = "EmploymentRecord"
 
+
 class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This Django model class represents the resume for a job seeker. The fields are as follows:
@@ -154,6 +157,7 @@ class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Resume"
         verbose_name_plural = "Resumes"
         db_table = "Resume"
+
 
 class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -204,6 +208,7 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel,
         verbose_name_plural = "Job Seeker Language Proficiencies"
         db_table = "JobSeekerLanguageProficiency"
 
+
 class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This Django model class represents the skill of a job seeker. The fields are as follows:
@@ -234,6 +239,7 @@ class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         verbose_name_plural = "Job Seeker Skills"
         db_table = "JobSeekerSkill"
 
+
 class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This is a Django model for a Saved Job object, associated with a JobSeeker user, with the following fields:
@@ -263,6 +269,7 @@ class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Saved Job"
         verbose_name_plural = "Saved Jobs"
         db_table = "SavedJob"
+
 
 class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -310,12 +317,13 @@ class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="resume",
         related_name='%(app_label)s_%(class)s_resume'
     )
-    cover_letter = models.TextField(
-        verbose_name=_('Cover Letter'),
+    short_letter = models.TextField(
+        verbose_name=_('Short Letter'),
         null=True,
         blank=True,
-        db_column="cover_letter",
+        db_column="short_letter",
     )
+
     def __str__(self):
         return str(self.job) + "(" + str(self.user) + ")"
 
@@ -323,6 +331,7 @@ class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Applied Job"
         verbose_name_plural = "Applied Jobs"
         db_table = "AppliedJob"
+
 
 class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -347,7 +356,7 @@ class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, mo
         db_column="attachment",
         related_name='%(app_label)s_%(class)s_attachment'
     )
-    
+
     def __str__(self):
         return str(self.applied_job)
 
