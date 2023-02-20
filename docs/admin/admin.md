@@ -26,6 +26,7 @@
   - [Delete Education Level](#delete-education-level)
   - [Create Country](#create-country)
   - [Get Country](#get-country)
+  - [Delete Countries](#delete-countries)
   - [Create City](#create-city)
   - [Get City](#get-city)
   - [Delete Cities](#delete-cities)
@@ -446,6 +447,31 @@ This api is used to get all `countries`
         "iso_code2": "123",
         "iso_code3": "456"
       }],
+    }
+  }
+  ```
+
+  
+## Delete Countries
+
+This api is used to `delete` tag
+
+- route: `/country/:countryId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "countryId": ["${UUID}"]
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
     }
   }
   ```
