@@ -149,7 +149,10 @@ class CityView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                if City.all_objects.filter(title=serializer.validated_data['title'], country=serializer.validated_data['country'], is_removed=True).exists():
+                        City.all_objects.filter(title=serializer.validated_data['title'], country=serializer.validated_data['country'], is_removed=True).update(is_removed=False)
+                else:
+                    serializer.save()
                 context["data"] = serializer.data
                 return response.Response(
                     data=context,
