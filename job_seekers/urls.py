@@ -25,4 +25,7 @@ urlpatterns = [
     
     path('/skills', SkillsView.as_view(), name="skills"),
     
+    path('/skills/<str:skillId>', SkillsView.as_view(), name="skills"),
+    
+    
 ]
