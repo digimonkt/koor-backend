@@ -1,21 +1,16 @@
 from django.shortcuts import get_object_or_404
-from django.db.models import Q
 
 from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
-from rest_framework.pagination import _divide_with_ceil, LimitOffsetPagination
-
-from core.pagination import CustomPagination
-
-from users.models import User
-
-from user_profile.models import EmployerProfile
+from rest_framework.pagination import LimitOffsetPagination
 
 from jobs.models import JobDetails
-
 from jobs.serializers import GetJobsSerializers
+
+from user_profile.models import EmployerProfile
+from users.models import User
 
 from .serializers import (
     UpdateAboutSerializers,
@@ -68,6 +63,7 @@ class UpdateAboutView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
 
 class JobsView(generics.ListAPIView):
     """
@@ -172,7 +168,7 @@ class JobsView(generics.ListAPIView):
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
         return JobDetails.objects.filter(user=user_data).order_by('-created')
-    
+
     def put(self, request, jobId):
         """
         Update an existing job instance with the provided request data.

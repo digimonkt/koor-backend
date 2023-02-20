@@ -1,12 +1,84 @@
 from rest_framework import serializers
 
+from jobs.models import JobDetails
+from project_meta.models import Media
 from user_profile.models import JobSeekerProfile
-from users.models import User
+
+from jobs.serializers import GetJobsDetailSerializers
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
-    JobSeekerSkill
+    JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
+    SavedJob
 )
+
+
+class AppliedJobAttachmentsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the AppliedJobAttachmentsItem model.
+
+    This serializer is used to serialize AppliedJobAttachmentsItem objects to a JSON-compatible format, including
+    a link to the attachment file if it exists.
+
+    Attributes:
+        attachment: A SerializerMethodField that calls the get_attachment method to retrieve the file path
+            of the attachment.
+
+    """
+    title = serializers.SerializerMethodField()
+    path = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJobAttachmentsItem
+        fields = (
+            'id', 'path', 'title', 'type'
+        )
+
+    def get_path(self, obj):
+        """
+        Retrieves the URL of the attachment file for a AppliedJobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The AppliedJobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.file_path.url
+        return None
+
+    def get_title(self, obj):
+        """
+        Retrieves the URL of the attachment file for a AppliedJobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The AppliedJobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.title
+        return None
+
+    def get_type(self, obj):
+        """
+        Retrieves the URL of the attachment file for a AppliedJobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The AppliedJobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.media_type
+        return None
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -51,12 +123,11 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSeekerProfile
         fields = ['gender', 'dob', 'employment_status', 'description',
-                  'market_information_notification', 'job_notification', 
+                  'market_information_notification', 'job_notification',
                   'full_name', 'email', 'mobile_number', 'country_code',
                   'highest_education'
                   ]
-        
-    
+
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
             if mobile_number.isdigit():
@@ -257,10 +328,11 @@ class JobSeekerSkillSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
+
     class Meta:
         model = JobSeekerSkill
         fields = ['id', 'skill_remove', 'skill_add']
-    
+
     def validate(self, data):
         skill_add = data.get("skill_add")
         skill_remove = data.get("skill_remove")
@@ -268,4 +340,239 @@ class JobSeekerSkillSerializers(serializers.ModelSerializer):
             for remove in skill_remove:
                 JobSeekerSkill.objects.filter(skill=remove).delete()
         return skill_add
-    
+
+
+class AppliedJobSerializers(serializers.ModelSerializer):
+    """Serializer class for serializing and deserializing AppliedJob instances.
+
+    This serializer class defines a ListField for attachments which allows files to be uploaded via a file input field.
+    The attachments field is write-only and not required, but must not be null if present.
+
+    Attributes:
+        attachments (ListField): A ListField instance with style "input_type": "file", write_only=True,
+            allow_null=False, and required=False.
+        Meta (Meta): A nested class that defines metadata options for the serializer, including the model class and the
+            fields to include in the serialized representation.
+
+    Usage:
+        To serialize an AppliedJob instance, create an instance of this serializer and pass the instance to the data
+        parameter.
+    """
+
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'attachments', 'short_letter']
+
+    def save(self, user, job_instace):
+        """Saves a new instance of the AppliedJob model with the given user and job instance, and saves any attachments
+        to the job application.
+
+        Args:
+            user (User): The user instance to associate with the job application.
+            job_instance (Job): The job instance to associate with the job application.
+
+        Returns:
+            This instance of the AppliedJobSerializers.
+
+        Behavior:
+            This method saves a new instance of the AppliedJob model with the given user and job instance. If there are
+            any attachments included in the validated data, each attachment is saved as a media instance and associated
+            with the job application by creating an AppliedJobAttachmentsItem instance.
+
+            The method returns the current instance of the serializer.
+
+        Raises:
+            Any exceptions raised during the save process.
+
+        Usage:
+            To create a new AppliedJob instance and save attachments, call this method on an instance of
+            AppliedJobSerializers.
+
+        """
+
+        attachments = None
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        applied_job_instance = super().save(user=user, job=job_instace)
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = AppliedJobAttachmentsItem.objects.create(applied_job=applied_job_instance,
+                                                                                attachment=media_instance)
+                attachments_instance.save()
+        return self
+
+
+class GetAppliedJobsSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the AppliedJob model that returns details of applied jobs.
+
+    This serializer includes the following fields:
+        - id (int): The ID of the applied job.
+        - shortlisted_at (datetime): The date and time when the job was shortlisted.
+        - rejected_at (datetime): The date and time when the job was rejected.
+        - short_letter (str): The short letter submitted with the job application.
+        - attachments (list): A list of URLs for any attachments submitted with the job application.
+        - job (dict): A dictionary containing details of the job posting.
+
+    The 'job' field is a serialized representation of the related JobDetails object, and is populated
+    using the `get_job` method of the GetAppliedJobsSerializers class.
+    """
+
+    job = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job']
+
+    def get_attachments(self, obj):
+        """Get the serialized attachment data for a AppliedJob object.
+
+        This method uses the JobAttachmentsItem model to retrieve the attachments associated with a AppliedJob
+        object. It then uses the AppliedJobAttachmentsSerializer to serialize the attachment data. If the serializer
+        returns data, the first attachment in the list is extracted and added to a list, which is then returned.
+
+        Args:
+            obj: A AppliedJob object whose attachment data will be serialized.
+
+        Returns:
+            A list containing the first serialized attachment data, or an empty list if the serializer did
+            not return any data.
+
+        """
+
+        context = []
+        attachments_data = AppliedJobAttachmentsItem.objects.filter(applied_job=obj)
+        get_data = AppliedJobAttachmentsSerializer(attachments_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_job(self, obj):
+        """
+        Returns a dictionary with details of a job posting.
+
+        Args:
+            obj: An object representing a job application.
+
+        Returns:
+            A dictionary containing details of the job posting, such as the job title, company name,
+            job location, etc.
+
+        If the job posting does not exist, an empty dictionary will be returned.
+        """
+
+        context = dict()
+        try:
+            get_data = GetJobsDetailSerializers(obj.job)
+            if get_data.data:
+                context = get_data.data
+        except JobDetails.DoesNotExist:
+            pass
+        finally:
+            return context
+
+
+class SavedJobSerializers(serializers.ModelSerializer):
+    """Serializer class for serializing and deserializing SavedJob instances.
+
+    This serializer class defines a ListField for attachments which allows files to be uploaded via a file input field.
+    The attachments field is write-only and not required, but must not be null if present.
+
+    Attributes:
+        Meta (Meta): A nested class that defines metadata options for the serializer, including the model class and the
+            fields to include in the serialized representation.
+
+    Usage:
+        To serialize an SavedJob instance, create an instance of this serializer and pass the instance to the data
+        parameter.
+    """
+
+    class Meta:
+        model = SavedJob
+        fields = ['id',]
+
+    def save(self, user, job_instace):
+        """Saves a new instance of the SavedJob model with the given user and job instance.
+
+        Args:
+            user (User): The user instance to associate with the job application.
+            job_instance (Job): The job instance to associate with the job application.
+
+        Returns:
+            This instance of the SavedJobSerializers.
+
+        Behavior:
+            This method saves a new instance of the SavedJob model with the given user and job instance.
+
+            The method returns the current instance of the serializer.
+
+        Raises:
+            Any exceptions raised during the save process.
+
+        Usage:
+            To create a new SavedJob instance and save attachments, call this method on an instance of
+            SavedJobSerializers.
+
+        """
+        super().save(user=user, job=job_instace)
+        return self
+
+
+class GetSavedJobsSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the SavedJob model that returns details of saved jobs.
+
+    This serializer includes the following fields:
+        - id (int): The ID of the applied job.
+        - job (dict): A dictionary containing details of the job posting.
+
+    The 'job' field is a serialized representation of the related JobDetails object, and is populated
+    using the `get_job` method of the GetSavedJobsSerializers class.
+    """
+
+    job = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'job']
+
+    def get_job(self, obj):
+        """
+        Returns a dictionary with details of a job posting.
+
+        Args:
+            obj: An object representing a job application.
+
+        Returns:
+            A dictionary containing details of the job posting, such as the job title, company name,
+            job location, etc.
+
+        If the job posting does not exist, an empty dictionary will be returned.
+        """
+
+        context = dict()
+        try:
+            get_data = GetJobsDetailSerializers(obj.job)
+            if get_data.data:
+                context = get_data.data
+        except JobDetails.DoesNotExist:
+            pass
+        finally:
+            return context
