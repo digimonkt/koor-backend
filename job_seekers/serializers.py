@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from user_profile.models import JobSeekerProfile
+from users.models import User
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
@@ -31,6 +32,21 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_blank=False
     )
+    email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    mobile_number = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    country_code = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
 
     class Meta:
         model = JobSeekerProfile
@@ -44,11 +60,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
             if mobile_number.isdigit():
-                try:
-                    if User.objects.get(mobile_number=mobile_number):
-                        raise serializers.ValidationError('mobile_number already in use.', code='mobile_number')
-                except User.DoesNotExist:
-                    return mobile_number
+                return mobile_number
             else:
                 raise serializers.ValidationError('mobile_number must contain only numbers', code='mobile_number')
         else:
@@ -57,11 +69,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     def validate_email(self, email):
         if email != '':
             email = email.lower()
-            try:
-                if User.objects.get(email=email):
-                    raise serializers.ValidationError('email already in use.', code='email')
-            except User.DoesNotExist:
-                return email
+            return email
         else:
             raise serializers.ValidationError('email can not be blank', code='email')
 
