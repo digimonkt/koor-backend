@@ -341,12 +341,21 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     resume = serializers.SerializerMethodField()
     languages = serializers.SerializerMethodField()
     skills = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
                   'education_record', 'work_experience', 'resume', 'languages', 'skills']
 
+    def get_image(self, obj):
+        context = dict()
+        if obj.image:
+            context['id'] = obj.image.id
+            context['path'] = obj.image.file_path.url
+            context['title'] = obj.image.title
+        return context
+    
     def get_profile(self, obj):
         context = dict()
         try:
@@ -451,10 +460,19 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
     """
 
     profile = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
+        
+    def get_image(self, obj):
+        context = dict()
+        if obj.image:
+            context['id'] = obj.image.id
+            context['path'] = obj.image.file_path.url
+            context['title'] = obj.image.title
+        return context
 
     def get_profile(self, obj):
         context = dict()
