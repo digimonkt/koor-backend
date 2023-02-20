@@ -647,3 +647,64 @@ class SkillsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+    def patch(self, request, skillId):
+        """
+        Update an `JobSeekerSkill` instance for a `job seeker`.
+
+        Args:
+            - `request`: The HTTP request object.
+            - `skillId`: The ID of the `JobSeekerSkill` instance to update.
+
+        Returns:
+            - A Response object with a message and HTTP status code indicating the result of the update.
+
+        Raises:
+            - `ValidationError`: If the request data is not valid.
+            - `NotFound`: If the JobSeekerSkill instance does not exist.
+            - `Exception`: If an error occurs during the update.
+
+        Note:
+            - This function is only accessible to job seekers. If the user has a role other than `'job_seeker'`, an
+            error message is returned indicating that the user does not have permission to perform the action.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                skill_instance = JobSeekerSkill.objects.get(id=skillId, user=request.user)
+                serializer = self.serializer_class(data=request.data, instance=skill_instance, partial=True)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(skill_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except JobSeekerSkill.DoesNotExist:
+                return response.Response(
+                    data={"skill": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
