@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
+from project_meta.models import Media
 from user_profile.models import JobSeekerProfile
-from users.models import User
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
-    JobSeekerSkill
+    JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem
 )
 
 
@@ -51,12 +51,11 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSeekerProfile
         fields = ['gender', 'dob', 'employment_status', 'description',
-                  'market_information_notification', 'job_notification', 
+                  'market_information_notification', 'job_notification',
                   'full_name', 'email', 'mobile_number', 'country_code',
                   'highest_education'
                   ]
-        
-    
+
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
             if mobile_number.isdigit():
@@ -257,10 +256,11 @@ class JobSeekerSkillSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
+
     class Meta:
         model = JobSeekerSkill
         fields = ['id', 'skill_remove', 'skill_add']
-    
+
     def validate(self, data):
         skill_add = data.get("skill_add")
         skill_remove = data.get("skill_remove")
@@ -268,4 +268,79 @@ class JobSeekerSkillSerializers(serializers.ModelSerializer):
             for remove in skill_remove:
                 JobSeekerSkill.objects.filter(skill=remove).delete()
         return skill_add
-    
+
+
+class AppliedJobSerializers(serializers.ModelSerializer):
+    """Serializer class for serializing and deserializing AppliedJob instances.
+
+    This serializer class defines a ListField for attachments which allows files to be uploaded via a file input field.
+    The attachments field is write-only and not required, but must not be null if present.
+
+    Attributes:
+        attachments (ListField): A ListField instance with style "input_type": "file", write_only=True,
+            allow_null=False, and required=False.
+        Meta (Meta): A nested class that defines metadata options for the serializer, including the model class and the
+            fields to include in the serialized representation.
+
+    Usage:
+        To serialize an AppliedJob instance, create an instance of this serializer and pass the instance to the data
+        parameter.
+    """
+
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'attachments', 'short_letter']
+
+    def save(self, user, job_instace):
+        """Saves a new instance of the AppliedJob model with the given user and job instance, and saves any attachments
+        to the job application.
+
+        Args:
+            user (User): The user instance to associate with the job application.
+            job_instance (Job): The job instance to associate with the job application.
+
+        Returns:
+            This instance of the AppliedJobSerializers.
+
+        Behavior:
+            This method saves a new instance of the AppliedJob model with the given user and job instance. If there are
+            any attachments included in the validated data, each attachment is saved as a media instance and associated
+            with the job application by creating an AppliedJobAttachmentsItem instance.
+
+            The method returns the current instance of the serializer.
+
+        Raises:
+            Any exceptions raised during the save process.
+
+        Usage:
+            To create a new AppliedJob instance and save attachments, call this method on an instance of
+            AppliedJobSerializers.
+
+        """
+
+        attachments = None
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        applied_job_instance = super().save(user=user, job=job_instace)
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = AppliedJobAttachmentsItem.objects.create(applied_job=applied_job_instance,
+                                                                                attachment=media_instance)
+                attachments_instance.save()
+        return self
