@@ -22,5 +22,6 @@ urlpatterns = [
     path('/language', LanguageView.as_view(), name="language"),
     
     path('/skills', SkillView.as_view(), name="skills"),
+    path('/skills/<str:skillId>', SkillView.as_view(), name="skills"),
     
 ]
