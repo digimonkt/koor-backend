@@ -813,7 +813,51 @@ class JobsApplyView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            
+              
+    def delete(self, request, jobId):
+        """
+        Deletes an AppliedJob object with the given job if the authenticated user is a job seeker and owns the
+        AppliedJob.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the AppliedJob to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                job_instace = JobDetails.objects.get(id=jobId)
+                try:
+                    AppliedJob.all_objects.get(job=job_instace, user=request.user).delete(soft=False)
+                    context['message'] = "Revoked applied job"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                except AppliedJob.DoesNotExist:
+                    return response.Response(
+                        data={"AppliedJob": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except JobDetails.DoesNotExist:
+                    return response.Response(
+                        data={"job": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+   
     def get_queryset(self, **kwargs):
         """
         Returns the queryset of applied jobs for the authenticated user.
@@ -998,7 +1042,7 @@ class JobsSaveView(generics.ListAPIView):
                     )
             except JobDetails.DoesNotExist:
                     return response.Response(
-                        data={"jobId": "Does Not Exist"},
+                        data={"job": "Does Not Exist"},
                         status=status.HTTP_404_NOT_FOUND
                     )
             except Exception as e:
