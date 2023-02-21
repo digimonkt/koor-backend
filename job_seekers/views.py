@@ -986,3 +986,45 @@ class JobsSaveView(generics.ListAPIView):
         """
 
         return SavedJob.objects.filter(user=self.request.user).order_by('-created')
+
+
+class JobsUnsaveView(generics.GenericAPIView):
+
+        
+    def delete(self, request, savedJobId):
+        """
+        Deletes an SavedJob object with the given ID if the authenticated user is a job seeker and owns the
+        SavedJob.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the SavedJob to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                SavedJob.all_objects.get(id=savedJobId, user=request.user).delete(soft=False)
+                context['message'] = "Job Unsaved"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except SavedJob.DoesNotExist:
+                return response.Response(
+                    data={"savedJobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
