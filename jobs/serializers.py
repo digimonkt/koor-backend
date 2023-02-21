@@ -1,6 +1,8 @@
 from rest_framework import serializers
 
 from jobs.models import JobDetails, JobAttachmentsItem, JobCategory
+
+from job_seekers.models import AppliedJob
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, LanguageSerializer,
     SkillSerializer, HighestEducationSerializer
@@ -180,7 +182,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
         return context
 
     def get_applicant(self, obj):
-        return 0
+        return AppliedJob.objects.filter(job=obj).count()
 
 
 class GetJobsDetailSerializers(serializers.ModelSerializer):
@@ -372,7 +374,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         return context
 
     def get_applicant(self, obj):
-        return 0
+        return AppliedJob.objects.filter(job=obj).count()
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a JobDetails object.
