@@ -186,7 +186,7 @@ class EducationRecordSerializer(serializers.ModelSerializer):
     model (EducationRecord): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
-
+    education_level = serializers.SerializerMethodField()
     class Meta:
         model = EducationRecord
         fields = (
@@ -194,10 +194,17 @@ class EducationRecordSerializer(serializers.ModelSerializer):
             'title',
             'start_date',
             'end_date',
-            'present',
             'institute',
-            'description'
+            'education_level'
         )
+        
+    def get_education_level(self, obj):
+        context = {}
+        if obj.education_level:
+            context['id'] = obj.education_level.id
+            context['title'] = obj.education_level.title
+            return context
+        return None
 
 
 class EmploymentRecordSerializer(serializers.ModelSerializer):

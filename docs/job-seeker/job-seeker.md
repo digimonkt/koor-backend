@@ -695,3 +695,25 @@ This api is used to get all the `jobs search` of the employer.
     }]
   }
   ```
+
+## Unsave a job
+
+This api is used to save a `job`
+
+- route: `/jobs/unsave/:savedJobId`
+- method: `DELETE`
+- request:
+  ```
+  {
+    savedJobId: "${UUID}"
+  }
+  ```
+- response:
+  ```
+  {
+    code: 200,
+    data:{
+      message: "Job Unsaved"
+    }
+  }
+  ```
