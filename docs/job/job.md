@@ -12,6 +12,7 @@ These APIs are for the `CRUD` of a job
 
 - **[Get Applications](#get-applications)**
 - **[Get Recent Applications](#get-recent-applications)**
+- **[Get Applications Detail](#get-applications-detail)**
 
 
 ## Get Applications:
@@ -91,5 +92,48 @@ From this API Get Recent Applications of any Jobs.
                     }
                   ]
             }
+  }
+  ```
+
+## Get Applications Detail:
+
+### Summary:
+
+From this API Get Applications Detail of any Jobs.
+
+- route: `/applications-detail/:applicationId`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "params": {
+      "applicationId": "${UUID}"
+    },
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+              "id": "${UUID}",
+              "shortlisted_at": null,
+              "rejected_at": null,
+              "short_letter": "second time apply job in another jobs title.",
+              "attachments": [
+                              {
+                                "id": "${UUID}",
+                                "path": "file_path",
+                                "title": "file_title",
+                                "type": "file_type"
+                              },
+                            ],
+                "job": {
+                        ...
+                        }
+              }
   }
   ```
