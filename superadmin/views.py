@@ -8,11 +8,12 @@ from jobs.models import (
 )
 from project_meta.models import (
     Country, City, EducationLevel,
-    Language, Skill
+    Language, Skill, Tag
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
-    EducationLevelSerializers, LanguageSerializers, SkillSerializers
+    EducationLevelSerializers, LanguageSerializers, SkillSerializers,
+    TagSerializers
 )
 
 
@@ -629,7 +630,7 @@ class SkillView(generics.ListAPIView):
                 )
             except Skill.DoesNotExist:
                 return response.Response(
-                    data={"Skill": "Does Not Exist"},
+                    data={"skill": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
@@ -643,4 +644,83 @@ class SkillView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+class TagView(generics.ListAPIView):
+    """
+    A view for displaying a list of tags .
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (TagSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `Tag.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = TagSerializers
+    queryset = Tag.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
+
+    def post(self, request):
+        """
+        Handle POST request to create a new tag.
+        The request must contain valid data for the tag to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a tag.
+
+        Returns:
+            - HTTP 201 CREATED with added tag data (id, title) if the tag is created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                    Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
             )
