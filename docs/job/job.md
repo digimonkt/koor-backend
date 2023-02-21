@@ -11,6 +11,7 @@ These APIs are for the `CRUD` of a job
 ## Table Of Content
 
 - **[Get Applications](#get-applications)**
+- **[Get Recent Applications](#get-recent-applications)**
 
 
 ## Get Applications:
@@ -35,7 +36,7 @@ From this API get Applications of any Jobs.
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": [
                 {
                     "id": "${UUID}",
@@ -53,4 +54,42 @@ From this API get Applications of any Jobs.
                 }
             ]
     }
+  ```
+
+## Get Recent Applications:
+
+### Summary:
+
+From this API Get Recent Applications of any Jobs.
+
+- route: `/applications`
+- method: `GET`
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+              "count": 1,
+              "next": null,
+              "previous": null,
+              "results": [
+                    {
+                      "id": "${UUID}",
+                      "shortlisted_at": null,
+                      "rejected_at": null,
+                      "created": "2023-02-20T17:16:11",
+                      "short_letter": "This is the short letter of the applications...",
+                      "user": 
+                      {
+                          ...
+                      },
+                      "education": true,
+                      "language": true,
+                      "skill": true
+                    }
+                  ]
+            }
+  }
   ```
