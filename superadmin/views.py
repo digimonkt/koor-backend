@@ -540,7 +540,10 @@ class SkillView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                if Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                    Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
+                else:
+                    serializer.save()
                 context["data"] = serializer.data
                 return response.Response(
                     data=context,
@@ -562,4 +565,41 @@ class SkillView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    def delete(self, request, skillId):
+        """
+        Deletes an Skill object with the given ID if the authenticated user is a job seeker and owns the
+        Skill.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the Skill to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                Skill.objects.get(id=skillId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Skill.DoesNotExist:
+                return response.Response(
+                    data={"Skill": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
