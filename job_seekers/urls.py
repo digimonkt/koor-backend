@@ -29,6 +29,4 @@ urlpatterns = [
     path('/jobs/save', JobsSaveView.as_view(), name="jobs_save"),
     path('/jobs/save/<str:jobId>', JobsSaveView.as_view(), name="jobs_save"),
     
-    path('/jobs/unsave/<str:savedJobId>', JobsUnsaveView.as_view(), name="jobs_unsave"),
-    
 ]
