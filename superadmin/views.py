@@ -724,3 +724,41 @@ class TagView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+    def delete(self, request, tagId):
+        """
+        Deletes an Tag object with the given ID if the authenticated user is a job seeker and owns the
+        Tag.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the Tag to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                Tag.objects.get(id=tagId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Tag.DoesNotExist:
+                return response.Response(
+                    data={"tag": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
