@@ -2,7 +2,8 @@ from django.urls import path
 
 from .views import (
     CountryView, CityView, JobCategoryView, 
-    EducationLevelView, LanguageView, SkillView
+    EducationLevelView, LanguageView, SkillView,
+    TagView
     )
 
 app_name = "superadmin"
@@ -25,4 +26,5 @@ urlpatterns = [
     path('/skills', SkillView.as_view(), name="skills"),
     path('/skills/<str:skillId>', SkillView.as_view(), name="skills"),
     
+    path('/tag', TagView.as_view(), name="tag"),
 ]
