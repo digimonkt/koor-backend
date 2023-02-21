@@ -10,16 +10,16 @@ These APIs are for the `CRUD` of a job
 
 ## Table Of Content
 
-- **[Get Applicaitons](#get-applicaitons)**
+- **[Get Applications](#get-applications)**
 
 
-## Get Applicaitons:
+## Get Applications:
 
 ### Summary:
 
-From this API get Applicaitons of any Jobs.
+From this API get Applications of any Jobs.
 
-- route: `/applicaitons/:jobId`
+- route: `/applications/:jobId`
 - method: `GET`
 - request:
 
@@ -42,7 +42,7 @@ From this API get Applicaitons of any Jobs.
                     "shortlisted_at": null,
                     "rejected_at": null,
                     "created": "2023-02-20T17:16:11",
-                    "short_letter": "This is the short letter of the applicaitons...",
+                    "short_letter": "This is the short letter of the applications...",
                     "user": 
                     {
                         ...
