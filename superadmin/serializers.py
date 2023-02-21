@@ -5,7 +5,7 @@ from jobs.models import (
 )
 from project_meta.models import (
     Country, City, EducationLevel,
-    Language, Skill
+    Language, Skill, Tag
 )
 
 
@@ -129,4 +129,18 @@ class SkillSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Skill
+        fields = ['id', 'title']
+
+
+class TagSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `Tag` model.
+
+    The `TagSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `Tag` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = Tag
         fields = ['id', 'title']
