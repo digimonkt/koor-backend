@@ -718,3 +718,26 @@ This api is used to save a `unsave a job`
   }
   ```
 
+
+## Revoke applied job
+
+This api is used to save a `revoke applied job`
+
+- route: `/jobs/apply/:jobId`
+- method: `DELETE`
+- request:
+  ```
+  {
+    jobId: "${UUID}"
+  }
+  ```
+- response:
+  ```
+  {
+    code: 200,
+    data:{
+      message: "Revoked applied job"
+    }
+  }
+  ```
+
