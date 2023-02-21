@@ -227,7 +227,6 @@ class EmploymentRecordSerializer(serializers.ModelSerializer):
             'title',
             'start_date',
             'end_date',
-            'present',
             'organization',
             'description'
         )

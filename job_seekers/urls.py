@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     UpdateAboutView, EducationsView, LanguageView,
     WorkExperiencesView, SkillsView, JobsApplyView,
-    JobsSaveView, JobsUnsaveView
+    JobsSaveView
 )
 
 app_name = "job_seekers"
@@ -28,7 +28,5 @@ urlpatterns = [
     
     path('/jobs/save', JobsSaveView.as_view(), name="jobs_save"),
     path('/jobs/save/<str:jobId>', JobsSaveView.as_view(), name="jobs_save"),
-    
-    path('/jobs/unsave/<str:savedJobId>', JobsUnsaveView.as_view(), name="jobs_unsave"),
     
 ]
