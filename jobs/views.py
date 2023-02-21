@@ -9,7 +9,7 @@ from core.pagination import CustomPagination
 from jobs.models import JobDetails
 
 from job_seekers.models import AppliedJob
-
+from job_seekers.serializers import GetAppliedJobsSerializers
 from .serializers import (
     GetJobsSerializers,
     GetJobsDetailSerializers,
@@ -136,6 +136,7 @@ class JobApplicationsView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+
 class RecentApplicationsView(generics.ListAPIView):
     """
     A view class that returns a list of AppliedJob instances.
@@ -211,3 +212,38 @@ class RecentApplicationsView(generics.ListAPIView):
         """
         job_data = JobDetails.objects.filter(user=self.request.user.id)
         return AppliedJob.objects.filter(job__in=job_data).order_by('-created')
+
+
+class ApplicationsDetailView(generics.GenericAPIView):
+    """
+    A view that returns a serialized JobDetail object for a given jobId.
+
+    Parameters:
+        - jobId (int): The ID of the job to retrieve details for.
+
+    Returns:
+        - data (dict): A dictionary containing the serialized job details.
+        - status (int): The HTTP status code of the response.
+    """
+
+    serializer_class = GetAppliedJobsSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, applicationId):
+        context = dict()
+        try:
+            if applicationId:
+                application_data = AppliedJob.objects.get(id=applicationId)
+                get_data = self.serializer_class(application_data)
+                context = get_data.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
