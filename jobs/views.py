@@ -2,12 +2,18 @@ from rest_framework import (
     generics, response, status,
     permissions, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from core.pagination import CustomPagination
+
 from jobs.models import JobDetails
+
+from job_seekers.models import AppliedJob
+
 from .serializers import (
     GetJobsSerializers,
-    GetJobsDetailSerializers
+    GetJobsDetailSerializers,
+    AppliedJobSerializers
 )
 
 
@@ -65,4 +71,67 @@ class JobDetailView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class JobApplicaitonsView(generics.ListAPIView):
+    """
+    A view class that returns a list of AppliedJob instances.
+
+    Attributes:
+            - `serializer_class`: A serializer class used to serialize the AppliedJob instances.
+            - `permission_classes`: A list of permission classes that a user must pass in order to access the view.
+            - `queryset`: A QuerySet instance representing the list of AppliedJob instances. The queryset is not
+                defined in the class, but it can be defined dynamically in the dispatch method.
+            - `filter_backends`: A list of filter backend classes used to filter the queryset.
+            - `search_fields`: A list of fields on which the search filtering is applied.
+            - `pagination_class`: A pagination class that is used to paginate the result set.
+
+    """
+    serializer_class = AppliedJobSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request, jobId):
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                job_instance = JobDetails.objects.get(id=jobId, user=request.user)
+                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance).order_by('-created'))
+                count = queryset.count()
+                next = None
+                previous = None
+                paginator = LimitOffsetPagination()
+                limit = self.request.query_params.get('limit')
+                if limit:
+                    queryset = paginator.paginate_queryset(queryset, request)
+                    count = paginator.count
+                    next = paginator.get_next_link()
+                    previous = paginator.get_previous_link()
+                serializer = self.serializer_class(queryset, many=True, context={"request": request})
+                return response.Response(
+                    {'count': count,
+                     "next": next,
+                     "previous": previous,
+                     "results": serializer.data
+                     }
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
