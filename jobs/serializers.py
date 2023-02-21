@@ -2,11 +2,16 @@ from rest_framework import serializers
 
 from jobs.models import JobDetails, JobAttachmentsItem, JobCategory
 
-from job_seekers.models import AppliedJob
+from job_seekers.models import (
+    AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
+    JobSeekerSkill
+)
+
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, LanguageSerializer,
     SkillSerializer, HighestEducationSerializer
 )
+
 from users.serializers import UserSerializer
 
 
@@ -66,7 +71,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
         if obj.attachment:
             return obj.attachment.file_path.url
         return None
-    
+
     def get_title(self, obj):
         """
         Retrieves the URL of the attachment file for a JobAttachmentsItem object, if it exists.
@@ -81,7 +86,7 @@ class AttachmentsSerializer(serializers.ModelSerializer):
         if obj.attachment:
             return obj.attachment.title
         return None
-    
+
     def get_type(self, obj):
         """
         Retrieves the URL of the attachment file for a JobAttachmentsItem object, if it exists.
@@ -286,7 +291,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
-    
+
     def get_highest_education(self, obj):
         """Get the serialized highest education data for a JobDetails object.
 
@@ -303,9 +308,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         """
 
         context = {}
-        get_data = HighestEducationSerializer(obj.highest_education)
-        if get_data.data:
-            context = get_data.data
+        if obj.highest_education:
+            get_data = HighestEducationSerializer(obj.highest_education)
+            if get_data.data:
+                context = get_data.data
         return context
 
     def get_language(self, obj):
@@ -398,3 +404,123 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class AppliedJobSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for serializing `AppliedJob` instances with additional information about the job seeker's
+    education, language proficiency, and skills.
+
+    This serializer includes the following fields:
+        - `id`: the ID of the AppliedJob instance.
+        - `shortlisted_at`: the datetime when the job seeker was shortlisted for the job.
+        - `rejected_at`: the datetime when the job seeker was rejected for the job.
+        - `created`: the datetime when the AppliedJob instance was created.
+        - `short_letter`: the cover letter submitted by the job seeker.
+        - `user`: a nested serialization of the job seeker's user profile, including
+                the user's ID, email, first name, last name, and profile picture.
+        - `education`: a boolean value indicating whether the job seeker has an
+                     education record matching the required education level of the job.
+        - `language`: a boolean value indicating whether the job seeker has language
+                    proficiency in any of the required languages for the job.
+        - `skill`: a boolean value indicating whether the job seeker has any of the
+                 required skills for the job.
+
+    The `get_user`, `get_education`, `get_language`, and `get_skill` methods are used
+    to customize the serialization of the `user`, `education`, `language`, and `skill` fields,
+    respectively.
+
+    """
+    user = serializers.SerializerMethodField()
+    education = serializers.SerializerMethodField()
+    language = serializers.SerializerMethodField()
+    skill = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJob
+        fields = [
+            'id', 'shortlisted_at', 'rejected_at', 'created', 'short_letter', 'user',
+            'education', 'language', 'skill'
+        ]
+
+    def get_user(self, obj):
+        """
+        A method for customizing the serialization of the `user` field.
+
+        This method returns a serialized representation of the job seeker's user profile, including the user's ID,
+        email, first name, last name, and profile picture.
+
+        Args:
+            - `obj`: the AppliedJob instance being serialized.
+
+        Returns:
+            - A dictionary containing the serialized user profile information.
+
+        """
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_education(self, obj):
+        """
+        A method for customizing the serialization of the `education` field.
+
+        This method returns a boolean value indicating whether the job seeker has an education record matching the
+        required education level of the job.
+
+        Args:
+            - `obj`: the AppliedJob instance being serialized.
+
+        Returns:
+            - A boolean value indicating whether the job seeker has the required education level.
+
+        """
+        education_record = EducationRecord.objects.filter(
+            user=obj.user,
+            education_level=obj.job.highest_education
+        ).exists()
+        return education_record
+
+    def get_language(self, obj):
+        """
+        A method for customizing the serialization of the `language` field.
+
+        This method returns a boolean value indicating whether the job seeker has language proficiency in any of the
+        required languages for the job.
+
+        Args:
+            - `obj`: the AppliedJob instance being serialized.
+
+        Returns:
+            - A boolean value indicating whether the job seeker has language proficiency in any of the required
+            languages for the job.
+
+        """
+        language_record = JobSeekerLanguageProficiency.objects.filter(
+            user=obj.user,
+            language__in=obj.job.language.all()
+        ).exists()
+        return language_record
+
+    def get_skill(self, obj):
+        """
+        A method for customizing the serialization of the `skill` field.
+
+        This method returns a boolean value indicating whether the job seeker has skill proficiency in any of the
+        required skills for the job.
+
+        Args:
+            - `obj`: the AppliedJob instance being serialized.
+
+        Returns:
+            - A boolean value indicating whether the job seeker has skill proficiency in any of the required
+            skills for the job.
+
+        """
+        skill_record = JobSeekerSkill.objects.filter(
+            user=obj.user,
+            skill__in=obj.job.skill.all()
+        ).exists()
+        return skill_record
