@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     UpdateAboutView, EducationsView, LanguageView,
     WorkExperiencesView, SkillsView, JobsApplyView,
-    JobsSaveView, JobsUnsaveView
+    JobsSaveView
 )
 
 app_name = "job_seekers"
