@@ -47,8 +47,8 @@ class UpdateAboutView(generics.GenericAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 if 'email' in serializer.validated_data:
-                    if User.objects.filter(email=serializer.validated_data['email']).exists():
-                        if profile_instance.user.email != serializer.validated_data['email']:
+                    if User.objects.filter(email__iexact=serializer.validated_data['email']).exists():
+                        if profile_instance.user.email__iexact != serializer.validated_data['email']:
                             context['email'] = ["email already in use."]
                             return response.Response(
                                 data=context,

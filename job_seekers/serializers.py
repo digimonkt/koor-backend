@@ -139,7 +139,6 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
 
     def validate_email(self, email):
         if email != '':
-            email = email.lower()
             return email
         else:
             raise serializers.ValidationError('email can not be blank', code='email')
