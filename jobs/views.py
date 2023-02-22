@@ -4,12 +4,16 @@ from rest_framework import (
 )
 from rest_framework.pagination import LimitOffsetPagination
 
+from datetime import datetime
+
 from core.pagination import CustomPagination
 
 from jobs.models import JobDetails
 
 from job_seekers.models import AppliedJob
 from job_seekers.serializers import GetAppliedJobsSerializers
+
+from employers.models import BlackList
 from .serializers import (
     GetJobsSerializers,
     GetJobsDetailSerializers,
@@ -236,6 +240,34 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 application_data = AppliedJob.objects.get(id=applicationId)
                 get_data = self.serializer_class(application_data)
                 context = get_data.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def patch(self, request, applicationId):
+        context = dict()
+        try:
+            if applicationId:
+                action = request.data['action']
+                if action == "shortlisted":
+                    application_status = AppliedJob.objects.get(id=applicationId)
+                    application_status.shortlisted_at=datetime.now()
+                    application_status.save()                
+                elif action == "rejected":
+                    application_status = AppliedJob.objects.get(id=applicationId)
+                    application_status.rejected_at=datetime.now()
+                    application_status.save() 
+                elif action == "blacklisted":
+                    application_data = AppliedJob.objects.get(id=applicationId)
+                    BlackList.objects.create(user=request.user, blacklisted_user=application_data.user)
+                context['message'] = "Successfully " + str(action)
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
