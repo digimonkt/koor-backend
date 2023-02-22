@@ -161,7 +161,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
         model (JobSeekerProfile): The model that will be serialized.
         fields (tuple): The fields from the model that will be serialized.
     """
-
+    highest_education = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerProfile
         fields = (
@@ -170,8 +170,17 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'employment_status',
             'description',
             'market_information_notification',
-            'job_notification'
+            'job_notification',
+            'highest_education'
         )
+    
+    def get_highest_education(self, obj):
+        context = {}
+        if obj.highest_education:
+            context['id'] = obj.highest_education.id
+            context['title'] = obj.highest_education.title
+            return context
+        return None
 
 
 class EducationRecordSerializer(serializers.ModelSerializer):
