@@ -137,3 +137,35 @@ From this API Get Applications Detail of any Jobs.
               }
   }
   ```
+
+## Modify Applications:
+
+### Summary:
+
+From this API Modify Applications of any Jobs.
+
+- route: `/applications-detail/:applicationId`
+- method: `PATCH`
+- request:
+
+  ```js
+  {
+    "params": {
+      "applicationId": "${UUID}"
+    },
+    "body":{
+      "action":"shortlisted" || "rejected" || "blacklisted"
+    }
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+             "message": "Successfully shortlisted"
+            }
+  }
+  ```
