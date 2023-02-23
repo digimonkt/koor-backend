@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import (
-    BaseModel, SoftDeleteModel
+    BaseModel, SoftDeleteModel, upload_directory_path
 )
 
 
@@ -26,6 +26,12 @@ class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
         verbose_name=_('SMTP Password'),
         max_length=255,
         db_column="smtp_password",
+    )
+    logo = models.FileField(
+        verbose_name=_('Logo'),
+        unique=True,
+        upload_to=upload_directory_path,
+        db_column="logo",
     )
 
     def __str__(self):
