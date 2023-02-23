@@ -83,8 +83,9 @@ class JobsView(generics.ListAPIView):
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['-created']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -167,7 +168,7 @@ class JobsView(generics.ListAPIView):
         if not user_id:
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
-        return JobDetails.objects.filter(user=user_data).order_by('-created')
+        return JobDetails.objects.filter(user=user_data)
 
     def put(self, request, jobId):
         """

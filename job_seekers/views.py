@@ -698,8 +698,9 @@ class JobsApplyView(generics.ListAPIView):
     serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['-created']
 
     def list(self, request):
         """
@@ -873,7 +874,7 @@ class JobsApplyView(generics.ListAPIView):
             order.
         """
 
-        return AppliedJob.objects.filter(user=self.request.user).order_by('-created')
+        return AppliedJob.objects.filter(user=self.request.user)
 
 
 class JobsSaveView(generics.ListAPIView):
@@ -898,9 +899,10 @@ class JobsSaveView(generics.ListAPIView):
     serializer_class = GetSavedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
-
+    ordering = ['-created']
+    
     def list(self, request):
         """
         Returns a paginated list of serialized saved jobs for the authenticated user.
@@ -1073,4 +1075,4 @@ class JobsSaveView(generics.ListAPIView):
             order.
         """
 
-        return SavedJob.objects.filter(user=self.request.user).order_by('-created')
+        return SavedJob.objects.filter(user=self.request.user)

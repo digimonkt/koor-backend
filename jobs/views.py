@@ -54,8 +54,9 @@ class JobSearchView(generics.ListAPIView):
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
     queryset = JobDetails.objects.all()
-    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = JobDetailsFilter
+    ordering = ['-created']
     search_fields = ['title']
     pagination_class = CustomPagination
 
@@ -137,15 +138,16 @@ class JobApplicationsView(generics.ListAPIView):
     serializer_class = AppliedJobSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['-created']
 
     def list(self, request, jobId):
         context = dict()
         if self.request.user.role == "employer":
             try:
                 job_instance = JobDetails.objects.get(id=jobId, user=request.user)
-                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance).order_by('-created'))
+                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance))
                 count = queryset.count()
                 next = None
                 previous = None
@@ -200,8 +202,9 @@ class RecentApplicationsView(generics.ListAPIView):
     serializer_class = AppliedJobSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['-created']
 
     def list(self, request):
         context = dict()
@@ -257,7 +260,7 @@ class RecentApplicationsView(generics.ListAPIView):
 
         """
         job_data = JobDetails.objects.filter(user=self.request.user.id)
-        return AppliedJob.objects.filter(job__in=job_data).order_by('-created')
+        return AppliedJob.objects.filter(job__in=job_data)
 
 
 class ApplicationsDetailView(generics.GenericAPIView):
