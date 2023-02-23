@@ -65,6 +65,7 @@ class EducationRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         verbose_name = "Education Record"
         verbose_name_plural = "Education Records"
         db_table = "EducationRecord"
+        ordering = ['-created']
 
 
 class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -120,6 +121,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         verbose_name = "Employment Record"
         verbose_name_plural = "Employment Records"
         db_table = "EmploymentRecord"
+        ordering = ['-created']
 
 
 class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -157,6 +159,7 @@ class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Resume"
         verbose_name_plural = "Resumes"
         db_table = "Resume"
+        ordering = ['-created']
 
 
 class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -207,6 +210,7 @@ class JobSeekerLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel,
         verbose_name = "Job Seeker Language Proficiency"
         verbose_name_plural = "Job Seeker Language Proficiencies"
         db_table = "JobSeekerLanguageProficiency"
+        ordering = ['-created']
 
 
 class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -238,6 +242,7 @@ class JobSeekerSkill(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         verbose_name = "Job Seeker Skill"
         verbose_name_plural = "Job Seeker Skills"
         db_table = "JobSeekerSkill"
+        ordering = ['-created']
 
 
 class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -269,6 +274,7 @@ class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Saved Job"
         verbose_name_plural = "Saved Jobs"
         db_table = "SavedJob"
+        ordering = ['-created']
 
 
 class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -331,6 +337,7 @@ class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Applied Job"
         verbose_name_plural = "Applied Jobs"
         db_table = "AppliedJob"
+        ordering = ['-created']
 
 
 class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -364,3 +371,4 @@ class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, mo
         verbose_name = "Applied Job Attachment Item"
         verbose_name_plural = "Applied Job Attachment Items"
         db_table = "AppliedJobAttachmentsItem"
+        ordering = ['-created']

@@ -121,6 +121,7 @@ class TimeStampedModel(misc_models.TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['created']  # table order in DB
 
 class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -168,3 +169,4 @@ class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "User Session"
         verbose_name_plural = "User Sessions"
         db_table = "UserSession"
+        ordering = ['created']

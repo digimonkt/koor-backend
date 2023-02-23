@@ -65,6 +65,7 @@ class Tag(SlugBaseModel, models.Model):
         verbose_name = "Tag"
         verbose_name_plural = "Tags"
         db_table = "Tag"
+        ordering = ['title']
 
 class Language(SlugBaseModel, models.Model):
     """
@@ -79,6 +80,7 @@ class Language(SlugBaseModel, models.Model):
         verbose_name = "Language"
         verbose_name_plural = "Langauges"
         db_table = "Language"
+        ordering = ['title']
 
 class Skill(SlugBaseModel, models.Model):
     """
@@ -93,6 +95,7 @@ class Skill(SlugBaseModel, models.Model):
         verbose_name = "Skill"
         verbose_name_plural = "Skills"
         db_table = "Skill"
+        ordering = ['title']
 
 class EducationLevel(SlugBaseModel, models.Model):
     """
@@ -107,6 +110,7 @@ class EducationLevel(SlugBaseModel, models.Model):
         verbose_name = "Education Level"
         verbose_name_plural = "Education Levels"
         db_table = "EducationLevel"
+        ordering = ['title']
 
 class Country(SlugBaseModel, models.Model):
     """
@@ -145,6 +149,7 @@ class Country(SlugBaseModel, models.Model):
         verbose_name = "Country"
         verbose_name_plural = "Countries"
         db_table = "Country"
+        ordering = ['title']
 
 class City(SlugBaseModel, models.Model):
     """
@@ -167,6 +172,7 @@ class City(SlugBaseModel, models.Model):
         verbose_name = "City"
         verbose_name_plural = "Cities"
         db_table = "City"
+        ordering = ['title']
         
     def save(self, *args, **kwargs):
         if not self.slug:

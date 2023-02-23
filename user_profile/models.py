@@ -91,6 +91,7 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         verbose_name = "Job Seeker Profile"
         verbose_name_plural = "Job Seeker Profiles"
         db_table = "JobSeekerProfile"
+        ordering = ['created']
 
 class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -164,3 +165,4 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         verbose_name = "Employer Profile"
         verbose_name_plural = "Employer Profiles"
         db_table = "EmployerProfile"
+        ordering = ['created']

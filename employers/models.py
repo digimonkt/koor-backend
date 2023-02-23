@@ -36,3 +36,4 @@ class BlackList(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Black List"
         verbose_name_plural = "Black Lists"
         db_table = "BlackList"
+        ordering = ['-created']
