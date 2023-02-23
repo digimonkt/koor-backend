@@ -47,8 +47,8 @@ class UpdateAboutView(generics.GenericAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 if 'email' in serializer.validated_data:
-                    if User.objects.filter(email=serializer.validated_data['email']).exists():
-                        if profile_instance.user.email != serializer.validated_data['email']:
+                    if User.objects.filter(email__iexact=serializer.validated_data['email']).exists():
+                        if profile_instance.user.email__iexact != serializer.validated_data['email']:
                             context['email'] = ["email already in use."]
                             return response.Response(
                                 data=context,
@@ -873,7 +873,7 @@ class JobsApplyView(generics.ListAPIView):
             order.
         """
 
-        return AppliedJob.objects.filter(user=self.request.user).order_by('-created')
+        return AppliedJob.objects.filter(user=self.request.user)
 
 
 class JobsSaveView(generics.ListAPIView):
@@ -900,7 +900,7 @@ class JobsSaveView(generics.ListAPIView):
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-
+    
     def list(self, request):
         """
         Returns a paginated list of serialized saved jobs for the authenticated user.
@@ -1073,4 +1073,4 @@ class JobsSaveView(generics.ListAPIView):
             order.
         """
 
-        return SavedJob.objects.filter(user=self.request.user).order_by('-created')
+        return SavedJob.objects.filter(user=self.request.user)

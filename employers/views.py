@@ -167,7 +167,7 @@ class JobsView(generics.ListAPIView):
         if not user_id:
             user_id = self.request.user.id
         user_data = User.objects.get(id=user_id)
-        return JobDetails.objects.filter(user=user_data).order_by('-created')
+        return JobDetails.objects.filter(user=user_data)
 
     def put(self, request, jobId):
         """

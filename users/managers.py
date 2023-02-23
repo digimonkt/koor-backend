@@ -24,7 +24,7 @@ class UserManager(BaseUserManager):
         else:
             if email:
                 email = self.normalize_email(email)
-                user = self.model(email=email, role=role, **extra_fields)
+                user = self.model(email__iexact=email, role=role, **extra_fields)
             elif mobile_number:
                 user = self.model(mobile_number=mobile_number, **extra_fields)
         user.set_password(password)

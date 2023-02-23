@@ -45,9 +45,8 @@ class CreateUserSerializers(serializers.ModelSerializer):
 
     def validate_email(self, email):
         if email != '':
-            email = email.lower()
             try:
-                if User.objects.get(email=email):
+                if User.objects.get(email__iexact=email):
                     raise serializers.ValidationError('email already in use.', code='email')
             except User.DoesNotExist:
                 return email
@@ -113,9 +112,8 @@ class CreateSessionSerializers(serializers.Serializer):
 
     def validate_email(self, email):
         if email != '':
-            email = email.lower()
             try:
-                if User.objects.get(email=email):
+                if User.objects.get(email__iexact=email):
                     return email
             except User.DoesNotExist:
                 raise serializers.ValidationError('email not exist.', code='email')
@@ -132,7 +130,7 @@ class CreateSessionSerializers(serializers.Serializer):
         identifier = None
         try:
             if email:
-                user_instance = User.objects.filter(email=email).filter(is_active=False)
+                user_instance = User.objects.filter(email__iexact=email).filter(is_active=False)
                 identifier = email
             elif mobile_number:
                 user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_active=False)

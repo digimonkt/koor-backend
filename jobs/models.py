@@ -23,6 +23,7 @@ class JobCategory(SlugBaseModel, TimeStampedModel, models.Model):
         verbose_name = "Job Category"
         verbose_name_plural = "Job Categories"
         db_table = "JobCategory"
+        ordering = ['title']
 
 class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -218,6 +219,7 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Job Detail"
         verbose_name_plural = "Job Details"
         db_table = "JobDetails"
+        ordering = ['-created']
 
 class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -249,3 +251,4 @@ class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mo
         verbose_name = "Job Attachments Item"
         verbose_name_plural = "Job Attachments Items"
         db_table = "JobAttachmentsItem"
+        ordering = ['-created']

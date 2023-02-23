@@ -6,6 +6,8 @@ from rest_framework.pagination import LimitOffsetPagination
 
 from datetime import datetime
 
+from django_filters import rest_framework as django_filters
+
 from core.pagination import CustomPagination
 
 from jobs.models import JobDetails
@@ -14,34 +16,74 @@ from job_seekers.models import AppliedJob
 from job_seekers.serializers import GetAppliedJobsSerializers
 
 from employers.models import BlackList
+
 from .serializers import (
     GetJobsSerializers,
     GetJobsDetailSerializers,
     AppliedJobSerializers
 )
+from .filters import JobDetailsFilter
 
 
 class JobSearchView(generics.ListAPIView):
     """
-    API endpoint that lists all job details based on a search query.
+    A view for searching and filtering job details.
 
-    The endpoint requires authentication to access and returns a paginated list of job details sorted by their creation
-    date in descending order. The list can be filtered by job title.
+    This view allows for searching and filtering job details based on various criteria, including job category and job
+    title.
+    The view returns a paginated list of jobs matching the specified criteria.
 
     Attributes:
-        - `serializer_class`: The serializer class used to serialize job details data.
-        - `permission_classes`: A list of permission classes that apply to the view.
-        - `queryset`: The queryset of job details used to retrieve data.
-        - `filter_backends`: A list of filter backend classes used to filter job details data.
-        - `search_fields`: A list of fields on which the search query can be performed.
-        - `pagination_class`: The pagination class used to paginate job details data.
+        - `serializer_class`: A Django Rest Framework serializer class for serializing `JobDetails` objects.
+        - `permission_classes`: A list of Django Rest Framework permission classes that define the permission policy for
+                                the view.
+        - `queryset`: A Django QuerySet that defines the base set of `JobDetails` objects for the view.
+        - `filter_backends`: A list of Django Rest Framework filter backend classes that provide filtering and search
+                             functionality.
+        - `filterset_class`: A Django FilterSet class used for filtering the queryset.
+        - `search_fields`: A list of fields that can be searched for a given query.
+        - `pagination_class`: A Django Rest Framework pagination class for paginating the results of the view.
+
+    Methods:
+        - `list(self, request)`: Returns a paginated list of job details that match the specified criteria.
+
+    Returns:
+        - A paginated list of job details that match the specified criteria.
     """
+
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.all().order_by('-created')
-    filter_backends = [filters.SearchFilter]
+    queryset = JobDetails.objects.all()
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = JobDetailsFilter
     search_fields = ['title']
     pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Return a paginated list of job details matching the specified search and filter criteria.
+
+        This method filters the queryset based on the search and filter criteria provided in the request.
+        It returns a paginated list of job details that match the specified criteria.
+
+        Parameters:
+            - `self`: The current instance of the class.
+            - `request`: The HTTP request object that contains the search and filter criteria.
+
+        Returns:
+            - A paginated list of job details that match the specified search and filter criteria.
+        """
+
+        queryset = self.filter_queryset(self.get_queryset())
+        jobCategory = request.GET.getlist('jobCategory')
+        if jobCategory:
+            queryset = queryset.filter(job_category__title__in=jobCategory)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
 
 
 class JobDetailView(generics.GenericAPIView):
@@ -103,7 +145,7 @@ class JobApplicationsView(generics.ListAPIView):
         if self.request.user.role == "employer":
             try:
                 job_instance = JobDetails.objects.get(id=jobId, user=request.user)
-                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance).order_by('-created'))
+                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance))
                 count = queryset.count()
                 next = None
                 previous = None
@@ -215,7 +257,7 @@ class RecentApplicationsView(generics.ListAPIView):
 
         """
         job_data = JobDetails.objects.filter(user=self.request.user.id)
-        return AppliedJob.objects.filter(job__in=job_data).order_by('-created')
+        return AppliedJob.objects.filter(job__in=job_data)
 
 
 class ApplicationsDetailView(generics.GenericAPIView):
@@ -258,12 +300,12 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 action = request.data['action']
                 if action == "shortlisted":
                     application_status = AppliedJob.objects.get(id=applicationId)
-                    application_status.shortlisted_at=datetime.now()
-                    application_status.save()                
+                    application_status.shortlisted_at = datetime.now()
+                    application_status.save()
                 elif action == "rejected":
                     application_status = AppliedJob.objects.get(id=applicationId)
-                    application_status.rejected_at=datetime.now()
-                    application_status.save() 
+                    application_status.rejected_at = datetime.now()
+                    application_status.save()
                 elif action == "blacklisted":
                     application_data = AppliedJob.objects.get(id=applicationId)
                     BlackList.objects.create(user=request.user, blacklisted_user=application_data.user)
@@ -278,4 +320,3 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-

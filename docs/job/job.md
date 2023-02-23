@@ -10,9 +10,122 @@ These APIs are for the `CRUD` of a job
 
 ## Table Of Content
 
+- **[Get Jobs Search](#get-jobs-search)**
 - **[Get Applications](#get-applications)**
 - **[Get Recent Applications](#get-recent-applications)**
 - **[Get Applications Detail](#get-applications-detail)**
+- **[Modify Applications](#modify-applications)**
+
+
+
+## Get Jobs Search
+
+This api is used to get all the `jobs search` of the employer.
+- route: ` `
+- method: `GET`
+- request:
+  ```js
+    // type one
+  {
+    "query": 
+    {
+      "search": "", // show all results
+      "country": "india" || null;, // filter by country
+      "city": "delhi" || null;, // filter by city
+      "fullTime": true || false || null;, // filter is full time
+      "partTime": true || false || null;, // filter is part time
+      "contract": true || false || null;, // filter has contract
+      "jobCategory": [ ] || null;, // filter by job category
+      "timing": "1" || "2" || "3" || "4" || "5" || "6" || "7" || null;, // filter for working days
+      "salary_min": "3500" || null;, // filter for minimum salary
+      "salary_max": "4500" || null;, // filter for maximum salary
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "search": "b", // show only those results whose title includes `b` only
+      "country": "india" || null;, // filter by country
+      "city": "delhi" || null;, // filter by city
+      "fullTime": true || false || null;, // filter is full time
+      "partTime": true || false || null;, // filter is part time
+      "contract": true || false || null;, // filter has contract
+      "jobCategory": [ ] || null;, // filter by job category
+      "timing": "1" || "2" || "3" || "4" || "5" || "6" || "7" || null;, // filter for working days
+      "salary_min": "3500" || null;, // filter for minimum salary
+      "salary_max": "4500" || null;, // filter for maximum salary
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: [{
+      id: "${UUID}",
+      title: "Retail Assistant Cashier",
+      description: "This is the description of job...",
+      budget_currency: "$",
+      budget_amount: 3500,
+      budget_pay_period: "UP TO",
+      country: "India",
+      city: "Gwalior",
+      is_fulltime: true,
+      is_partime: false,
+      has_contract: false,
+      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      status: "active" || "inactive" || "hold",
+      user: {...userDetails} // full user details
+    }]
+  }
+  ```
+
+
+## Get Jobs Detail
+
+This api is used to get all the `get jobs detail` of the employer.
+- route: `/:jobId`
+- method: `GET`
+- request:
+  ```js
+    // type one
+  {
+    params: {
+      jobId: "${UUID}"
+    },
+  }
+ 
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: [{
+      id: "${UUID}",
+      title: "Retail Assistant Cashier",
+      description: "This is the description of job...",
+      budget_currency: "$",
+      budget_amount: 3500,
+      budget_pay_period: "UP TO",
+      country: "India",
+      city: "Gwalior",
+      is_fulltime: true,
+      is_partime: false,
+      has_contract: false,
+      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      status: "active" || "inactive" || "hold",
+      user: {...userDetails} // full user details
+    }]
+  }
+  ```
 
 
 ## Get Applications:
