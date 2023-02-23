@@ -39,8 +39,9 @@ class CountryView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CountrySerializers
     queryset = Country.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -158,8 +159,9 @@ class CityView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = CitySerializers
     queryset = City.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         country_id = request.GET.get('countryId', None)
@@ -280,8 +282,9 @@ class JobCategoryView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = JobCategorySerializers
     queryset = JobCategory.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -358,8 +361,9 @@ class EducationLevelView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = EducationLevelSerializers
     queryset = EducationLevel.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -435,8 +439,9 @@ class LanguageView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = LanguageSerializers
     queryset = Language.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -553,8 +558,9 @@ class SkillView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = SkillSerializers
     queryset = Skill.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -669,8 +675,9 @@ class TagView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = TagSerializers
     queryset = Tag.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['title']
+    ordering = ['title']
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
