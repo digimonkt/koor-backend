@@ -54,9 +54,8 @@ class JobSearchView(generics.ListAPIView):
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
     queryset = JobDetails.objects.all()
-    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
-    ordering = ['-created']
     search_fields = ['title']
     pagination_class = CustomPagination
 
@@ -138,9 +137,8 @@ class JobApplicationsView(generics.ListAPIView):
     serializer_class = AppliedJobSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    ordering = ['-created']
 
     def list(self, request, jobId):
         context = dict()
@@ -202,9 +200,8 @@ class RecentApplicationsView(generics.ListAPIView):
     serializer_class = AppliedJobSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    ordering = ['-created']
 
     def list(self, request):
         context = dict()

@@ -698,9 +698,8 @@ class JobsApplyView(generics.ListAPIView):
     serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    ordering = ['-created']
 
     def list(self, request):
         """
@@ -899,9 +898,8 @@ class JobsSaveView(generics.ListAPIView):
     serializer_class = GetSavedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    ordering = ['-created']
     
     def list(self, request):
         """
