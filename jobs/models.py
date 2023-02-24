@@ -181,14 +181,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         related_name='%(app_label)s_%(class)s_highest_education'
     )
-    language = models.ManyToManyField(
-        to=Language,
-        verbose_name=_('Language'),
-        db_column="language",
-        null=True,
-        blank=True,
-        related_name='%(app_label)s_%(class)s_language'
-    )
     skill = models.ManyToManyField(
         to=Skill,
         verbose_name=_('Skill'),
@@ -204,6 +196,10 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     deadline = models.DateField(
         verbose_name=_('Deadline'),
         db_column='deadline'
+    )
+    start_date = models.DateField(
+        verbose_name=_('Start Date'),
+        db_column='start_date',
     )
     status = models.CharField(
         verbose_name=_('Status'),
@@ -251,4 +247,55 @@ class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mo
         verbose_name = "Job Attachments Item"
         verbose_name_plural = "Job Attachments Items"
         db_table = "JobAttachmentsItem"
+        ordering = ['-created']
+
+
+class JobsLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This Django model class represents the language proficiency of a job seeker. The fields are as follows:
+
+    - `job`: The job in which this language proficiency belongs to.
+    - `language`: The language of the language proficiency.
+    - `written`: The written proficiency level of the language.
+    - `spoken`: The spoken proficiency level of the language.
+    """
+    FLUENCY_CHOICE = (
+        ('basic', "Basic"),
+        ('conversational', "Conversational"),
+        ('fluent', "Fluent"),
+    )
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    language = models.ForeignKey(
+        Language,
+        verbose_name=_('Language'),
+        on_delete=models.CASCADE,
+        db_column="language",
+        related_name='%(app_label)s_%(class)s_language'
+    )
+    written = models.CharField(
+        verbose_name=_('Written'),
+        max_length=255,
+        db_column="written",
+        choices=FLUENCY_CHOICE,
+    )
+    spoken = models.CharField(
+        verbose_name=_('Spoken'),
+        max_length=255,
+        db_column="spoken",
+        choices=FLUENCY_CHOICE,
+    )
+
+    def __str__(self):
+        return str(self.language) + "(" + str(self.job) + ")"
+
+    class Meta:
+        verbose_name = "Jobs Language Proficiency"
+        verbose_name_plural = "Jobs Language Proficiencies"
+        db_table = "JobsLanguageProficiency"
         ordering = ['-created']
