@@ -302,12 +302,20 @@ class LanguageView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             try:
                 serializer.is_valid(raise_exception=True)
-                serializer.save(user=request.user)
-                context["data"] = serializer.data
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
+                try:
+                    if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'], user=request.user):
+                        context['language'] = 'Language already in use.'
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except JobSeekerLanguageProficiency.DoesNotExist:
+                    serializer.save(user=request.user)
+                    context["data"] = serializer.data
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_201_CREATED
+                    )
             except serializers.ValidationError:
                 return response.Response(
                     data=serializer.errors,
