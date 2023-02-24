@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from jobs.models import JobDetails
-from project_meta.models import Media
+from project_meta.models import Media, Language
 from user_profile.models import JobSeekerProfile
 
 from jobs.serializers import GetJobsDetailSerializers
@@ -228,6 +228,16 @@ class JobSeekerLanguageProficiencySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSeekerLanguageProficiency
         fields = ['id', 'language', 'written', 'spoken']
+        
+    def validate_language(self, language):
+        if language not in [None, ""]:
+            try:
+                if Language.objects.get(title=language):
+                    return language
+            except Language.DoesNotExist:
+                raise serializers.ValidationError('Language does not exist.', code='language')
+        else:
+            raise serializers.ValidationError('Language can not be blank.', code='language')
 
     def update(self, instance, validated_data):
         """
