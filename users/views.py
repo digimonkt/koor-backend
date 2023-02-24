@@ -26,6 +26,15 @@ from .serializers import (
 )
 
 
+def unique_otp_generator():
+    otp = randint(1000, 9999)
+    try:
+        if User.objects.get(otp=otp):
+            return unique_otp_generator()
+    except User.DoesNotExist:
+        return otp
+    
+
 def create_user_session(request, user):
     """
     `create_user_session` creates a new UserSession object for the given request. It retrieves the IP address from
@@ -301,28 +310,38 @@ class ForgetPasswordView(generics.GenericAPIView):
         context = dict()
         response_context = dict()
         try:
-            otp = randint(1000, 9999)
+            otp = unique_otp_generator()
             full_url = self.request.build_absolute_uri()
             path = self.request.path
             Base_url = full_url.replace(path, "")
             if "?" in Base_url:
                 Base_url = Base_url.split("?")[0]
             user_email = request.GET.get('email', None)
-            context["yourname"] = user_email
-            context["otp"] = otp
-
-            get_email_object(
-                subject=f'Forget Password',
-                email_template_name='email-templates/send-forget-password-otp.html',
-                context=context,
-                to_email=[user_email, ],
-                base_url=Base_url
-            )
-            response_context['message'] = "OTP sent to " + user_email
-            return response.Response(
-                data=response_context,
-                status=status.HTTP_200_OK
-            )
+            try:
+                user_instance = User.objects.get(email__iexact=user_email)
+                context["yourname"] = user_email
+                context["otp"] = otp
+                get_email_object(
+                    subject=f'Forget Password',
+                    email_template_name='email-templates/send-forget-password-otp.html',
+                    context=context,
+                    to_email=[user_email, ],
+                    base_url=Base_url
+                )
+                user_instance.otp = otp
+                user_instance.otp_created_at = datetime.now()
+                user_instance.save()
+                response_context['message'] = "OTP sent to " + user_email
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"email": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
         except Exception as e:
             context["error"] = str(e)
             return response.Response(
