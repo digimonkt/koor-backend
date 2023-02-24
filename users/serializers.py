@@ -284,7 +284,7 @@ class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
     model (JobSeekerLanguageProficiency): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
-
+    language = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerLanguageProficiency
         fields = (
@@ -293,6 +293,14 @@ class JobSeekerLanguageProficiencySerializer(serializers.ModelSerializer):
             'written',
             'spoken'
         )
+    
+    def get_language(self, obj):
+        context = {}
+        if obj.language:
+            context['id'] = obj.language.id
+            context['title'] = obj.language.title
+            return context
+        return None
 
 
 class JobSeekerSkillSerializer(serializers.ModelSerializer):
