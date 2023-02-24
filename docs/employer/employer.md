@@ -81,11 +81,12 @@ This route is used to create `jobs`
       contactPhone: null,
       contactWhatsapp: null,
       highestEducation: "${educationLevelId}",
-      language: ["${languageId}"],
+      language: [{"language":"${languageId}","spoken":"fluent","written":"conversational"}],
       skill: ["${skillId}"],
       working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
       attachments: [File],
       deadline: "YYYY-MM-DD"
+      start_date: "YYYY-MM-DD"
     }
   }
   ```
@@ -173,9 +174,7 @@ This `api` is used to update existing job
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
-      jobCategory1: "${jobCategoryId}",
-      jobCategory2: "${jobCategoryId}" || null,
-      jobCategory3: "${jobCategoryId}" || null,
+      jobCategory: ["${jobCategoryId}"],
       isFulltime: true,
       isPartime: false,
       hasContract: false,
@@ -183,12 +182,13 @@ This `api` is used to update existing job
       contactPhone: null,
       contactWhatsapp: null,
       highestEducation: "${educationLevelId}",
-      language1: "${languageId}",
-      language2: "${languageId}" || null,
-      language3: "${languageId}" || null,
-      skill1: "${skillId}",
-      skill2: "${skillId}" || null,
-      skill3: "${skillId}" || null,
+      language: [
+        '{"language":"${languageId}","spoken":"fluent","written":"conversational"}' || 
+        '{"id":"${UUID}","language":"${languageId}","spoken":"fluent","written":"conversational"}' 
+        ],
+      language_remove: ["${UUID}"],
+      skill: ["${skillId}"],
+      start_date: "YYYY-MM-DD"
     }
   }
   ```
