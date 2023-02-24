@@ -145,6 +145,17 @@ These routes are used to reset the `user`’s `password`. This will be 2 step pr
     }
   }
   ```
+  
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "OTP sent to <email>"
+    }
+  }
+  ```
 
 ### Step 2:
 

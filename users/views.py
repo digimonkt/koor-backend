@@ -5,8 +5,12 @@ from rest_framework import (
     response, permissions
 )
 
+from random import randint
+
 from core.middleware import JWTMiddleware
 from core.tokens import SessionTokenObtainPairSerializer
+from core.emails import get_email_object
+
 from user_profile.models import (
     JobSeekerProfile,
     EmployerProfile
@@ -255,5 +259,73 @@ class DisplayImageView(generics.GenericAPIView):
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class ForgetPasswordView(generics.GenericAPIView):
+    """
+    A view for sending an `OTP to a user's email` address for `password recovery`.
+
+    `Permissions`:
+        - `AllowAny`: Anyone can access this view.
+
+    `Methods`:
+        - `get`: Sends an email message containing an OTP to the user's email address.
+
+    `Returns`:
+        - `Response`: A Response object with the data and HTTP status code.
+
+    `Raises`:
+        - `Exception`: If an exception occurs during the sending of the email message.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        """
+        Sends an email message containing an OTP to the user's email address.
+
+        `Args`:
+            - `request (HttpRequest)`: The request object.
+
+        `Returns`:
+            - `Response`: A Response object with the data and HTTP status code.
+
+        `Raises`:
+            - `Exception`: If an exception occurs during the sending of the email message.
+
+        """
+
+        context = dict()
+        response_context = dict()
+        try:
+            otp = randint(1000, 9999)
+            full_url = self.request.build_absolute_uri()
+            path = self.request.path
+            Base_url = full_url.replace(path, "")
+            if "?" in Base_url:
+                Base_url = Base_url.split("?")[0]
+            user_email = request.GET.get('email', None)
+            context["yourname"] = user_email
+            context["otp"] = otp
+
+            get_email_object(
+                subject=f'Forget Password',
+                email_template_name='email-templates/send-forget-password-otp.html',
+                context=context,
+                to_email=[user_email, ],
+                base_url=Base_url
+            )
+            response_context['message'] = "OTP sent to " + user_email
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
