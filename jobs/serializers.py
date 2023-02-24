@@ -129,7 +129,8 @@ class GetJobsSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'created', 'user'
+            'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'start_date',
+            'created', 'user'
         ]
 
     def get_country(self, obj):
@@ -226,7 +227,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'status', 'applicant', 'deadline', 'created', 'user', 'attachments'
+            'working_days', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments'
 
         ]
 
