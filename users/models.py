@@ -69,6 +69,19 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         db_column="role",
         choices=ROLE_TYPE_CHOICE
     )
+    otp = models.CharField(
+        verbose_name=_('OTP'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="otp"
+    )
+    otp_created_at = models.DateTimeField(
+        verbose_name=_('OTP Created At'),
+        blank=True,
+        null=True,
+        db_column="otp_created_at"
+    )
     image = models.OneToOneField(
         Media,
         verbose_name=_('Image'),
