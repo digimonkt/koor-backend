@@ -114,12 +114,13 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         if 'license' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['license'].content_type).split("/")
-            if content_type[0] not in ["video", "image" ] :
+            if content_type[0] not in ["video", "image"]:
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(title=validated_data['license'].name, file_path=validated_data['license'], media_type=media_type)
+            media_instance = Media(title=validated_data['license'].name, file_path=validated_data['license'],
+                                   media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.license_id_file = media_instance
@@ -165,8 +166,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         write_only=True
     )
     language = serializers.ListField(
-    style={"input_type": "text"},
-    write_only=True
+        style={"input_type": "text"},
+        write_only=True
     )
     attachments = serializers.ListField(
         style={"input_type": "file"},
@@ -234,7 +235,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                 else:
                     try:
                         if Language.objects.get(id=language_data['language']):
-                            pass          
+                            pass
                     except Language.DoesNotExist:
                         raise serializers.ValidationError('Language not exist.', code='language')
                 if 'written' not in language_data:
@@ -297,9 +298,10 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         saved as their content type.
         """
         language = None
+        attachments = None
+
         if 'language' in self.validated_data:
             language = self.validated_data.pop('language')
-        attachments = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         job_instance = super().save(user=user, status='active')
@@ -308,16 +310,16 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                 language_data = json.loads(language_data)
                 language_instance = Language.objects.get(id=language_data['language'])
                 job_language_instance = JobsLanguageProficiency.objects.create(
-                    job=job_instance, 
-                    language=language_instance, 
-                    spoken=language_data['spoken'], 
+                    job=job_instance,
+                    language=language_instance,
+                    spoken=language_data['spoken'],
                     written=language_data['written']
-                    )
+                )
                 job_language_instance.save()
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
-                if content_type[0] not in ["video", "image" ] :
+                if content_type[0] not in ["video", "image"]:
                     media_type = 'document'
                 else:
                     media_type = content_type[0]
@@ -360,15 +362,19 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
-    language = serializers.PrimaryKeyRelatedField(
-        queryset=Language.objects.all(),
-        many=True,
-        write_only=True
-    )
     skill = serializers.PrimaryKeyRelatedField(
         queryset=Skill.objects.all(),
         many=True,
         write_only=True
+    )
+    language = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True
+    )
+    language_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
     )
     attachments = serializers.ListField(
         style={"input_type": "file"},
@@ -387,9 +393,10 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days','status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
+            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
+            'skill', 'working_days', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
+
     def validate_job_category(self, job_category):
         if job_category not in [None, ""]:
             limit = 3
@@ -404,10 +411,23 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
+            for language_data in language:
+                language_data = json.loads(language_data)
+                if 'language' not in language_data:
+                    raise serializers.ValidationError('This field is required.', code='language')
+                else:
+                    try:
+                        if Language.objects.get(id=language_data['language']):
+                            pass
+                    except Language.DoesNotExist:
+                        raise serializers.ValidationError('Language not exist.', code='language')
+                if 'written' not in language_data:
+                    raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
+                if 'spoken' not in language_data:
+                    raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
             return language
         else:
             raise serializers.ValidationError({'language': 'Language can not be blank.'})
-            
 
     def validate_skill(self, skill):
         if skill not in [None, ""]:
@@ -429,31 +449,87 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         if not language:
             raise serializers.ValidationError({'language': 'This field is required.'})
         return data
-    
+
     def update(self, instance, validated_data):
+        """
+            Update an existing Job instance and related fields with new validated data.
+
+            `Args`:
+                - `instance`: A Job instance to be updated.
+                - `validated_data`: A dictionary of validated data for the Job instance.
+
+            `Returns`:
+                - The updated Job instance.
+
+            - The function first extracts validated data for 'language', 'language_remove', 'attachments', and
+            'attachments_remove' from the given `validated_data` dictionary, if they exist.
+
+            - It then calls the `update` method of the superclass with the given `instance` and `validated_data`.
+
+            - If `attachments_remove` exists, it iterates over the `attachments_remove` list and removes the
+            corresponding `JobAttachmentsItem` instances from the database.
+
+            - If `language_remove` exists, it iterates over the `language_remove` list and removes the corresponding
+            `JobsLanguageProficiency` instances from the database.
+
+            - If `language` exists, it iterates over the `language` list and creates or updates
+            `JobsLanguageProficiency` instances for the given `instance`.
+
+            - If `attachments` exists, it iterates over the `attachments` list and creates new `Media` and
+            `JobAttachmentsItem` instances for the given `instance`.
+
+            - Finally, it returns the updated `instance`.
+        """
         attachments = None
         attachments_remove = None
+        language = None
+        language_remove = None
 
+        if 'language' in self.validated_data:
+            language = self.validated_data.pop('language')
+        if 'language_remove' in self.validated_data:
+            language_remove = self.validated_data.pop('language_remove')
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         if 'attachments_remove' in self.validated_data:
             attachments_remove = self.validated_data.pop('attachments_remove')
-            
+
         super().update(instance, validated_data)
         if attachments_remove:
             for remove in attachments_remove:
                 JobAttachmentsItem.objects.filter(id=remove).update(job=None)
+        if language_remove:
+            for remove in language_remove:
+                JobsLanguageProficiency.objects.filter(id=remove).delete()
+        if language:
+            for language_data in language:
+                language_data = json.loads(language_data)
+                language_instance = Language.objects.get(id=language_data['language'])
+                if not JobsLanguageProficiency.objects.filter(job=instance, language=language_instance).exists():
+                    if 'id' in language_data:
+                        job_language_instance = JobsLanguageProficiency.objects.get(id=language_data['id'])
+                        job_language_instance.job = instance
+                        job_language_instance.language = language_instance
+                        job_language_instance.spoken = language_data['spoken']
+                        job_language_instance.written = language_data['written']
+                        job_language_instance.save()
+                    else:
+                        job_language_instance = JobsLanguageProficiency.objects.create(
+                            job=instance,
+                            language=language_instance,
+                            spoken=language_data['spoken'],
+                            written=language_data['written']
+                        )
+                        job_language_instance.save()
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
-                if content_type[0] not in ["video", "image" ] :
+                if content_type[0] not in ["video", "image"]:
                     media_type = 'document'
                 else:
                     media_type = content_type[0]
-                # save media file into media table and get instance of saved data.
                 media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
-                # save media instance into license id file into employer profile table.
                 attachments_instance = JobAttachmentsItem.objects.create(job=instance, attachment=media_instance)
                 attachments_instance.save()
         return instance
