@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers
 
 from jobs.models import JobDetails
@@ -6,7 +8,7 @@ from project_meta.models import Media, Skill, Language
 from user_profile.models import EmployerProfile
 from users.models import User
 
-from jobs.models import JobCategory, JobAttachmentsItem
+from jobs.models import JobCategory, JobAttachmentsItem, JobsLanguageProficiency
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -157,15 +159,14 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         many=True,
         write_only=True
     )
-    language = serializers.PrimaryKeyRelatedField(
-        queryset=Language.objects.all(),
-        many=True,
-        write_only=True
-    )
     skill = serializers.PrimaryKeyRelatedField(
         queryset=Skill.objects.all(),
         many=True,
         write_only=True
+    )
+    language = serializers.ListField(
+    style={"input_type": "text"},
+    write_only=True
     )
     attachments = serializers.ListField(
         style={"input_type": "file"},
@@ -180,7 +181,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'attachments','deadline'
+            'working_days', 'attachments', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):
@@ -226,9 +227,23 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
+            for language_data in language:
+                language_data = json.loads(language_data)
+                if 'language' not in language_data:
+                    raise serializers.ValidationError('This field is required.', code='language')
+                else:
+                    try:
+                        if Language.objects.get(id=language_data['language']):
+                            pass          
+                    except Language.DoesNotExist:
+                        raise serializers.ValidationError('Language not exist.', code='language')
+                if 'written' not in language_data:
+                    raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
+                if 'spoken' not in language_data:
+                    raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
             return language
         else:
-            raise serializers.ValidationError({'language': 'Language can not be blank.'})
+            raise serializers.ValidationError('This field is required.', code='language')
 
     def validate_skill(self, skill):
         """
@@ -281,10 +296,24 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         determined based on its content type, with application types being saved as 'documents' and other types being
         saved as their content type.
         """
+        language = None
+        if 'language' in self.validated_data:
+            language = self.validated_data.pop('language')
         attachments = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         job_instance = super().save(user=user, status='active')
+        if language:
+            for language_data in language:
+                language_data = json.loads(language_data)
+                language_instance = Language.objects.get(id=language_data['language'])
+                job_language_instance = JobsLanguageProficiency.objects.create(
+                    job=job_instance, 
+                    language=language_instance, 
+                    spoken=language_data['spoken'], 
+                    written=language_data['written']
+                    )
+                job_language_instance.save()
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
@@ -359,7 +388,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days','status', 'attachments', 'attachments_remove', 'deadline'
+            'working_days','status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
     def validate_job_category(self, job_category):
         if job_category not in [None, ""]:
