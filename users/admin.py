@@ -10,7 +10,7 @@ from .models import User, UserSession
 class UserAdmin(UserAdmin):
     fieldsets = (
         (None, {
-            'fields': ('email', 'password', 'mobile_number', 'country_code', 'role',)
+            'fields': ('email', 'password', 'mobile_number', 'country_code', 'role','otp','otp_created_at')
         }),
         (_('Personal info'), {
             'fields': ('name', 'image')

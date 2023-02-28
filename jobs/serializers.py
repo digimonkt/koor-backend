@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
-from jobs.models import JobDetails, JobAttachmentsItem, JobCategory
+from jobs.models import (
+    JobDetails, JobAttachmentsItem, JobCategory, 
+    JobsLanguageProficiency
+    )
 
 from job_seekers.models import (
     AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
@@ -14,6 +17,47 @@ from project_meta.serializers import (
 
 from users.serializers import UserSerializer
 
+
+class JobsLanguageProficiencySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the JobsLanguageProficiency model.
+
+    This serializer is used to serialize/deserialize JobsLanguageProficiency objects to/from JSON format. It defines
+    the fields that will be included in the serialized data and provides validation for deserialization.
+
+    Attributes:
+        Meta: A subclass of the serializer that specifies the model to be serialized and the fields
+            to be included in the serialized data.
+    """
+    language = serializers.SerializerMethodField()
+    class Meta:
+        model = JobsLanguageProficiency
+        fields = (
+            'id', 'language', 'written',
+            'spoken'
+        )
+        
+    def get_language(self, obj):
+        """Get the serialized language data for a JobDetails object.
+
+        This method uses the LanguageSerializer to serialize the languages associated with a JobDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobDetails object whose language data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized language data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        get_data = LanguageSerializer(obj.language)
+        if get_data.data:
+            context = get_data.data
+        return context
+        
 
 class JobCategorySerializer(serializers.ModelSerializer):
     """
@@ -129,7 +173,8 @@ class GetJobsSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'created', 'user'
+            'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'start_date',
+            'created', 'user'
         ]
 
     def get_country(self, obj):
@@ -226,7 +271,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'status', 'applicant', 'deadline', 'created', 'user', 'attachments'
+            'working_days', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments'
 
         ]
 
@@ -245,9 +290,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
         context = {}
-        get_data = CountrySerializer(obj.country)
-        if get_data.data:
-            context = get_data.data
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
         return context
 
     def get_city(self, obj):
@@ -266,9 +312,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         """
 
         context = {}
-        get_data = CitySerializer(obj.city)
-        if get_data.data:
-            context = get_data.data
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
         return context
 
     def get_job_category(self, obj):
@@ -317,7 +364,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     def get_language(self, obj):
         """Get the serialized language data for a JobDetails object.
 
-        This method uses the LanguageSerializer to serialize the languages associated with a JobDetails
+        This method uses the JobsLanguageProficiencySerializer to serialize the languages associated with a JobDetails
         object. If the serializer returns data, it is assigned to a dictionary and returned.
 
         Args:
@@ -330,7 +377,8 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         """
 
         context = []
-        get_data = LanguageSerializer(obj.language, many=True)
+        data = JobsLanguageProficiency.objects.filter(job=obj)
+        get_data = JobsLanguageProficiencySerializer(data, many=True)
         if get_data.data:
             context = get_data.data
         return context
@@ -351,9 +399,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         """
 
         context = []
-        get_data = SkillSerializer(obj.skill, many=True)
-        if get_data.data:
-            context = get_data.data
+        if obj.skill:
+            get_data = SkillSerializer(obj.skill, many=True)
+            if get_data.data:
+                context = get_data.data
         return context
 
         # return obj.city.title
@@ -374,9 +423,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         """
 
         context = {}
-        get_data = UserSerializer(obj.user)
-        if get_data.data:
-            context = get_data.data
+        if obj.user:
+            get_data = UserSerializer(obj.user)
+            if get_data.data:
+                context = get_data.data
         return context
 
     def get_applicant(self, obj):
