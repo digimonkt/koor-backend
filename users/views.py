@@ -348,3 +348,59 @@ class ForgetPasswordView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class ChangePasswordView(generics.GenericAPIView):
+    """
+    A view to change a user's password using an OTP.
+
+    - Methods:
+        - put(self, request, otp):
+            Changes the password of a user identified by their OTP.
+
+    - Attributes:
+        - permission_classes : list
+            A list of permission classes that allow any user to access this view.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def put(self, request, otp):
+        """
+        Changes the password of a user identified by their `OTP`.
+
+        - `Parameters`:
+            - `request` : HttpRequest
+                The HTTP request object.
+            - `otp` : str
+                The `one-time password (OTP)` that identifies the user.
+
+        - `Returns:
+            - A JSON response containing the status of the password change operation.
+            - If the operation was successful, the response has a 200 OK status code.
+            - If the OTP does not exist, the response has a 404 NOT FOUND status code.
+            - If there was an error, the response has a 400 BAD REQUEST status code.
+        """
+
+        context = dict()
+        try:
+            password = request.data['password']
+            user_instance = User.objects.get(otp=otp)
+            user_instance.otp = None
+            user_instance.otp_created_at = None
+            user_instance.set_password(password)
+            user_instance.save()
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"otp": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
