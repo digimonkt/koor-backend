@@ -8,6 +8,7 @@ from user_profile.models import (
 )
 
 from project_meta.models import Media
+from project_meta.serializers import SkillSerializer
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
@@ -315,13 +316,20 @@ class JobSeekerSkillSerializer(serializers.ModelSerializer):
     model (JobSeekerSkill): The model that will be serialized.
     fields (tuple): The fields from the model that will be serialized.
     """
-
+    skill = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerSkill
         fields = (
             'id',
             'skill'
         )
+        
+    def get_skill(self, obj):
+        context = {}
+        get_data = SkillSerializer(obj.skill)
+        if get_data.data:
+            context = get_data.data
+        return context
 
 
 class JobSeekerDetailSerializers(serializers.ModelSerializer):
