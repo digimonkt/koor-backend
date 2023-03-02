@@ -14,7 +14,7 @@ urlpatterns = [
     path('/applications-detail/<str:applicationId>', ApplicationsDetailView.as_view(), name="applications_detail"),
     
     path('/<str:jobId>', JobDetailView.as_view(), name="job_detail"),    
-    path('/applications/<str:jobId>', JobApplicationsView.as_view(), name="job_applications"),
+    path('/<str:jobId>/applications', JobApplicationsView.as_view(), name="job_applications"),
 
 
 ]
