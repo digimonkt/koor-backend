@@ -347,7 +347,7 @@ class JobSeekerSkillSerializers(serializers.ModelSerializer):
         skill_remove = data.get("skill_remove")
         if skill_remove:
             for remove in skill_remove:
-                JobSeekerSkill.objects.filter(skill=remove).delete()
+                JobSeekerSkill.objects.filter(id=remove).delete()
         return skill_add
 
 
