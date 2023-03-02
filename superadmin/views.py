@@ -557,7 +557,11 @@ class SkillView(generics.ListAPIView):
     search_fields = ['title']
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        exclude = request.GET.get('exclude', None)
+        if exclude:
+            queryset = self.filter_queryset(self.get_queryset().exclude(title__in=exclude.split(",")))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return response.Response({'results': serializer.data})
 
