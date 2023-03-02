@@ -548,9 +548,13 @@ class AppliedJobSerializers(serializers.ModelSerializer):
             languages for the job.
 
         """
+        language_list = []
+        data = JobsLanguageProficiency.objects.filter(job=obj.job)
+        for get_data in data:
+            language_list.append(get_data.language)
         language_record = JobSeekerLanguageProficiency.objects.filter(
             user=obj.user,
-            language__in=obj.job.language.all()
+            language__in=language_list
         ).exists()
         return language_record
 
