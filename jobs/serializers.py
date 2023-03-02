@@ -264,6 +264,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     applicant = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    is_applied = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -271,7 +272,8 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments'
+            'working_days', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
+            'is_applied'
 
         ]
 
@@ -431,6 +433,16 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
     def get_applicant(self, obj):
         return AppliedJob.objects.filter(job=obj).count()
+    
+    def get_is_applied(self, obj):
+        is_applied_record = False
+        user =  self.context['user']
+        if user:
+            is_applied_record = AppliedJob.objects.filter(
+                job=obj,
+                user=user
+            ).exists()
+        return is_applied_record
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a JobDetails object.

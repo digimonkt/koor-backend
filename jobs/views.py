@@ -102,20 +102,22 @@ class JobDetailView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, jobId):
-        context = dict()
+        response_context = dict()
         try:
+            if request.user:
+                context = {"user":request.user}
             if jobId:
                 job_data = JobDetails.objects.get(id=jobId)
-                get_data = self.serializer_class(job_data)
-                context = get_data.data
+                get_data = self.serializer_class(job_data, context=context)
+                response_context = get_data.data
             return response.Response(
-                data=context,
+                data=response_context,
                 status=status.HTTP_200_OK
             )
         except Exception as e:
-            context["message"] = str(e)
+            response_context["message"] = str(e)
             return response.Response(
-                data=context,
+                data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
 
