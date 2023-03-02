@@ -602,6 +602,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     """
     image = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -612,6 +613,7 @@ class UserSerializer(serializers.ModelSerializer):
             'country_code',
             'mobile_number',
             'image',
+            'description',
         )
 
     def get_image(self, obj):
@@ -622,4 +624,11 @@ class UserSerializer(serializers.ModelSerializer):
             context['path'] = obj.image.file_path.url
             context['type'] = obj.image.media_type
             return context
+        return None
+    
+    def get_description(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+            return jobseeker_data.description
         return None
