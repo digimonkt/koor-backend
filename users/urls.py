@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import (
     UserView, CreateSessionView, DeleteSessionView,
-    DisplayImageView, ForgetPasswordView
+    DisplayImageView, ForgetPasswordView, ChangePasswordView
     )
 
 app_name = "users"
@@ -18,4 +18,6 @@ urlpatterns = [
     path('/display-image', DisplayImageView.as_view(), name="display_image"),
     
     path('/forget-password', ForgetPasswordView.as_view(), name="forget_password"),
+    
+    path('/change-password/<str:otp>', ChangePasswordView.as_view(), name="change_password"),
 ]
