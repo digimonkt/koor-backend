@@ -6,7 +6,7 @@ from user_profile.models import JobSeekerProfile
 
 from users.serializers import ApplicantDetailSerializers
 
-from jobs.serializers import GetJobsDetailSerializers
+from jobs.serializers import GetJobsDetailSerializers, GetJobsSerializers
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
@@ -489,7 +489,11 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
         If the job posting does not exist, an empty dictionary will be returned.
         """
-        return {"id": obj.job.id, "title":obj.job.title}
+        context = {}
+        get_data = GetJobsSerializers(obj.job)
+        if get_data.data:
+            context = get_data.data
+        return context
     
     def get_user(self, obj):
         context = {}
