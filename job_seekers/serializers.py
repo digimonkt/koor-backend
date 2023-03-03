@@ -6,7 +6,7 @@ from user_profile.models import JobSeekerProfile
 
 from users.serializers import ApplicantDetailSerializers
 
-from jobs.serializers import GetJobsDetailSerializers
+from jobs.serializers import GetJobsDetailSerializers, GetJobsSerializers
 
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
@@ -445,13 +445,12 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
     using the `get_job` method of the GetAppliedJobsSerializers class.
     """
 
-    user = serializers.SerializerMethodField()
     job = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
 
     class Meta:
         model = AppliedJob
-        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job', 'user']
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job']
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a AppliedJob object.
@@ -489,11 +488,8 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
         If the job posting does not exist, an empty dictionary will be returned.
         """
-        return {"id": obj.job.id, "title":obj.job.title}
-    
-    def get_user(self, obj):
         context = {}
-        get_data = ApplicantDetailSerializers(obj.user)
+        get_data = GetJobsSerializers(obj.job)
         if get_data.data:
             context = get_data.data
         return context

@@ -15,7 +15,7 @@ from core.pagination import CustomPagination
 from jobs.models import JobDetails
 
 from job_seekers.models import AppliedJob
-from job_seekers.serializers import GetAppliedJobsSerializers
+from jobs.serializers import GetAppliedJobsSerializers
 
 from employers.models import BlackList
 

@@ -608,3 +608,74 @@ class AppliedJobSerializers(serializers.ModelSerializer):
 
         """
         return {"id": obj.job.id, "title":obj.job.title}
+
+
+class GetAppliedJobsSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the AppliedJob model that returns details of applied jobs.
+
+    This serializer includes the following fields:
+        - id (int): The ID of the applied job.
+        - shortlisted_at (datetime): The date and time when the job was shortlisted.
+        - rejected_at (datetime): The date and time when the job was rejected.
+        - short_letter (str): The short letter submitted with the job application.
+        - attachments (list): A list of URLs for any attachments submitted with the job application.
+        - job (dict): A dictionary containing details of the job posting.
+
+    The 'job' field is a serialized representation of the related JobDetails object, and is populated
+    using the `get_job` method of the GetAppliedJobsSerializers class.
+    """
+
+    user = serializers.SerializerMethodField()
+    job = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job', 'user']
+
+    def get_attachments(self, obj):
+        """Get the serialized attachment data for a AppliedJob object.
+
+        This method uses the JobAttachmentsItem model to retrieve the attachments associated with a AppliedJob
+        object. It then uses the AppliedJobAttachmentsSerializer to serialize the attachment data. If the serializer
+        returns data, the first attachment in the list is extracted and added to a list, which is then returned.
+
+        Args:
+            obj: A AppliedJob object whose attachment data will be serialized.
+
+        Returns:
+            A list containing the first serialized attachment data, or an empty list if the serializer did
+            not return any data.
+
+        """
+
+        context = []
+        attachments_data = AppliedJobAttachmentsItem.objects.filter(applied_job=obj)
+        get_data = AppliedJobAttachmentsSerializer(attachments_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_job(self, obj):
+        """
+        Returns a dictionary with details of a job posting.
+
+        Args:
+            obj: An object representing a job application.
+
+        Returns:
+            A dictionary containing details of the job posting, such as the job title, company name,
+            job location, etc.
+
+        If the job posting does not exist, an empty dictionary will be returned.
+        """
+        return {"id": obj.job.id, "title":obj.job.title}
+    
+    def get_user(self, obj):
+        context = {}
+        get_data = ApplicantDetailSerializers(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
+
