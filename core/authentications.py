@@ -30,6 +30,8 @@ class CustomJWTAuthentication(JWTAuthentication):
             session_id = validated_token[self.claim_id]
             user_session = UserSession.objects.get(id=session_id)
             user = UserSession.objects.get(id=session_id).user
+        except UserSession.DoesNotExist:
+            raise AuthenticationFailed({"message":_("Session not found")})
         except KeyError:
             raise InvalidToken({"message":_("Token contained no recognizable user identification")})
         except self.user_model.DoesNotExist:
