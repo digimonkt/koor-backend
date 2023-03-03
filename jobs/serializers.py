@@ -7,7 +7,7 @@ from jobs.models import (
 
 from job_seekers.models import (
     AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill
+    JobSeekerSkill, AppliedJobAttachmentsItem
 )
 
 from project_meta.serializers import (
@@ -15,7 +15,76 @@ from project_meta.serializers import (
     SkillSerializer, HighestEducationSerializer
 )
 
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, ApplicantDetailSerializers
+
+
+class AppliedJobAttachmentsSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the AppliedJobAttachmentsItem model.
+
+    This serializer is used to serialize AppliedJobAttachmentsItem objects to a JSON-compatible format, including
+    a link to the attachment file if it exists.
+
+    Attributes:
+        attachment: A SerializerMethodField that calls the get_attachment method to retrieve the file path
+            of the attachment.
+
+    """
+    title = serializers.SerializerMethodField()
+    path = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJobAttachmentsItem
+        fields = (
+            'id', 'path', 'title', 'type'
+        )
+
+    def get_path(self, obj):
+        """
+        Retrieves the URL of the attachment file for a AppliedJobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The AppliedJobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.file_path.url
+        return None
+
+    def get_title(self, obj):
+        """
+        Retrieves the URL of the attachment file for a AppliedJobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The AppliedJobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.title
+        return None
+
+    def get_type(self, obj):
+        """
+        Retrieves the URL of the attachment file for a AppliedJobAttachmentsItem object, if it exists.
+
+        Args:
+            obj: The AppliedJobAttachmentsItem object to retrieve the attachment URL for.
+
+        Returns:
+            The URL of the attachment file if it exists, otherwise None.
+
+        """
+        if obj.attachment:
+            return obj.attachment.media_type
+        return None
+
 
 
 class JobsLanguageProficiencySerializer(serializers.ModelSerializer):
