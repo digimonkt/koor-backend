@@ -651,6 +651,7 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
         - languages: the languages spoken by the job seeker
         - skills: the skills of the job seeker
         - description: the description of the job seeker
+        - image: the image of the user
 
     Methods:
 
@@ -659,6 +660,8 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
         - get_languages(self, obj): returns the languages spoken by the job seeker
         - get_skills(self, obj): returns the skills of the job seeker
         - get_description(self, obj): returns the description of the job seeker
+        - `get_image(obj)`: A method that takes a User instance and returns the URL of the user's image if it exists,
+            otherwise None.
     """
 
     education_record = serializers.SerializerMethodField()
@@ -666,12 +669,23 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     languages = serializers.SerializerMethodField()
     skills = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'name', 'description', 'education_record', 'work_experience', 
+        fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
                   'languages', 'skills']
-        
+    
+    def get_image(self, obj):
+        context = {}
+        if obj.image:
+            context['id'] = obj.image.id
+            context['title'] = obj.image.title
+            context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
+        return None
+    
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
