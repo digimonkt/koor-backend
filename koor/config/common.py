@@ -162,9 +162,9 @@ class Common(Configuration):
 
     AUTHENTICATION_BACKENDS = [
         # Custom Authentication Backend
-        'users.backends.MobileOrEmailBackend',
-
         'django.contrib.auth.backends.ModelBackend',
+         
+        'users.backends.MobileOrEmailBackend',
     ]
 
     # Logging
