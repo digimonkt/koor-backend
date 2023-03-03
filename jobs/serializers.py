@@ -497,12 +497,13 @@ class AppliedJobSerializers(serializers.ModelSerializer):
     education = serializers.SerializerMethodField()
     language = serializers.SerializerMethodField()
     skill = serializers.SerializerMethodField()
+    job = serializers.SerializerMethodField()
 
     class Meta:
         model = AppliedJob
         fields = [
             'id', 'shortlisted_at', 'rejected_at', 'created', 'short_letter', 'user',
-            'education', 'language', 'skill'
+            'education', 'language', 'skill', 'job'
         ]
 
     def get_user(self, obj):
@@ -590,3 +591,20 @@ class AppliedJobSerializers(serializers.ModelSerializer):
             skill__in=obj.job.skill.all()
         ).exists()
         return skill_record
+    
+    def get_job(self, obj):
+        """
+        A method for customizing the serialization of the `skill` field.
+
+        This method returns a boolean value indicating whether the job seeker has skill proficiency in any of the
+        required skills for the job.
+
+        Args:
+            - `obj`: the AppliedJob instance being serialized.
+
+        Returns:
+            - A boolean value indicating whether the job seeker has skill proficiency in any of the required
+            skills for the job.
+
+        """
+        return {"id": obj.job.id, "title":obj.job.title}
