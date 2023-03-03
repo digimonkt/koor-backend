@@ -4,6 +4,8 @@ from jobs.models import JobDetails
 from project_meta.models import Media, Language
 from user_profile.models import JobSeekerProfile
 
+from users.serializers import ApplicantDetailSerializers
+
 from jobs.serializers import GetJobsDetailSerializers
 
 from .models import (
@@ -443,12 +445,13 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
     using the `get_job` method of the GetAppliedJobsSerializers class.
     """
 
+    user = serializers.SerializerMethodField()
     job = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
 
     class Meta:
         model = AppliedJob
-        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job']
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job', 'user']
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a AppliedJob object.
@@ -486,16 +489,14 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
         If the job posting does not exist, an empty dictionary will be returned.
         """
-
-        context = dict()
-        try:
-            get_data = GetJobsDetailSerializers(obj.job)
-            if get_data.data:
-                context = get_data.data
-        except JobDetails.DoesNotExist:
-            pass
-        finally:
-            return context
+        return {"id": obj.job.id, "title":obj.job.title}
+    
+    def get_user(self, obj):
+        context = {}
+        get_data = ApplicantDetailSerializers(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
 
 
 class SavedJobSerializers(serializers.ModelSerializer):

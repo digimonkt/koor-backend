@@ -1,3 +1,5 @@
+from django.db.models import Value, F, Case, When, IntegerField
+
 from rest_framework import (
     generics, response, status,
     permissions, filters
@@ -322,3 +324,75 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+class JobSuggestionView(generics.ListAPIView):
+
+    serializer_class = GetJobsSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = JobDetails.objects.all()
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = JobDetailsFilter
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request, jobId):
+
+        queryset = self.filter_queryset(self.get_queryset())
+        job_instance = JobDetails.objects.get(id=jobId)
+        annotated_job_details = JobDetails.objects.annotate(
+            matches=Value(0)
+            ).annotate(
+                matches=Case(
+                    When(
+                        budget_amount=job_instance.budget_amount,
+                        then=F('matches') + 1
+                        ), 
+                    default=F('matches'),
+                    output_field=IntegerField()
+                    )
+                ).annotate(
+                    matches=Case(
+                        When(
+                            skill__in=job_instance.skill.all(),
+                            then=F('matches') + 1
+                            ),
+                        default=F('matches'),
+                        output_field=IntegerField()
+                        )
+                    ).annotate(
+                        matches=Case(
+                            When(
+                                job_category__in=job_instance.job_category.all(), 
+                                then=F('matches') + 1
+                                ),
+                            default=F('matches'),
+                            output_field=IntegerField()
+                            )
+                        ).annotate(
+                            matches=Case(
+                                When(
+                                    working_days=job_instance.working_days,
+                                    then=F('matches') + 1
+                                    ),
+                                default=F('matches'),
+                                output_field=IntegerField()
+                                )
+                            ).annotate(
+                                matches=Case(
+                                    When(
+                                        highest_education=job_instance.highest_education,
+                                        then=F('matches') + 1
+                                        ),
+                                    default=F('matches'),
+                                    output_field=IntegerField()
+                                    )
+                                )
+        jobs = annotated_job_details.filter(matches=4)
+        if jobs.count() == 0:
+            jobs = annotated_job_details.order_by('-matches')
+        page = self.paginate_queryset(jobs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(jobs, many=True)
+        return response.Response(serializer.data)
