@@ -10,6 +10,8 @@ from project_meta.models import (
 
 from users.backends import MobileOrEmailBackend as cb
 
+from .models import Content
+
 
 class CountrySerializers(serializers.ModelSerializer):
     """
@@ -172,7 +174,7 @@ class ChangePasswordSerializers(serializers.Serializer):
         the request data is invalid or if the authentication fails.
 
     """
-    
+
     old_password = serializers.CharField(
         style={"input_type": "text"},
         write_only=True
@@ -204,3 +206,17 @@ class ChangePasswordSerializers(serializers.Serializer):
                 raise serializers.ValidationError({'message': 'Invalid login credentials.'})
         except:
             raise serializers.ValidationError({'message': 'Invalid login credentials.'})
+
+
+class ContentSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `Content` model.
+
+    The `ContentSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `Content` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'description'.
+    """
+
+    class Meta:
+        model = Content
+        fields = ['description']
