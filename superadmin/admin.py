@@ -1,7 +1,8 @@
 from django.contrib import admin
 from project_meta.models import EducationLevel, Skill
-from .models import SMTPSetting
+from .models import SMTPSetting, Content
 
 admin.site.register(EducationLevel)
 admin.site.register(Skill)
 admin.site.register(SMTPSetting)
+admin.site.register(Content)

@@ -50,7 +50,7 @@ class Content(SlugBaseModel, SoftDeleteModel, models.Model):
     )
 
     def __str__(self):
-        return str(self.description)
+        return str(self.title)
 
     class Meta:
         verbose_name = "Content"

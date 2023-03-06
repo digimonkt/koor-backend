@@ -220,3 +220,7 @@ class ContentSerializers(serializers.ModelSerializer):
     class Meta:
         model = Content
         fields = ['description']
+        
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
