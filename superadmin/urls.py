@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     CountryView, CityView, JobCategoryView, 
     EducationLevelView, LanguageView, SkillView,
-    TagView
+    TagView, ChangePasswordView
     )
 
 app_name = "superadmin"
@@ -28,4 +28,6 @@ urlpatterns = [
     
     path('/tag', TagView.as_view(), name="tag"),
     path('/tag/<str:tagId>', TagView.as_view(), name="tag"),
+    
+    path('/change-password', ChangePasswordView.as_view(), name="change_password"),
 ]
