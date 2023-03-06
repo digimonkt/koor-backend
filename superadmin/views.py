@@ -1,7 +1,13 @@
+from datetime import datetime
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+
+from core.middleware import JWTMiddleware
+
+from users.models import UserSession
 
 from jobs.models import (
     JobCategory
@@ -13,7 +19,7 @@ from project_meta.models import (
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
-    TagSerializers
+    TagSerializers, ChangePasswordSerializers
 )
 
 
@@ -69,9 +75,9 @@ class CountryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                print(serializer.validated_data['title'])
                 if Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
+                    Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -96,7 +102,7 @@ class CountryView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
+
     def delete(self, request, countryId):
         """
         Deletes an Country object with the given ID if the authenticated user is a job seeker and owns the
@@ -191,8 +197,11 @@ class CityView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if City.all_objects.filter(title=serializer.validated_data['title'], country=serializer.validated_data['country'], is_removed=True).exists():
-                        City.all_objects.filter(title=serializer.validated_data['title'], country=serializer.validated_data['country'], is_removed=True).update(is_removed=False)
+                if City.all_objects.filter(title=serializer.validated_data['title'],
+                                           country=serializer.validated_data['country'], is_removed=True).exists():
+                    City.all_objects.filter(title=serializer.validated_data['title'],
+                                            country=serializer.validated_data['country'], is_removed=True).update(
+                        is_removed=False)
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -217,7 +226,7 @@ class CityView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
+
     def delete(self, request, cityId):
         """
         Deletes an City object with the given ID if the authenticated user is a job seeker and owns the
@@ -254,7 +263,6 @@ class CityView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-
 
 
 class JobCategoryView(generics.ListAPIView):
@@ -374,7 +382,8 @@ class EducationLevelView(generics.ListAPIView):
         Only users with `is_staff` attribute set to True are authorized to create a education level.
 
         Returns:
-            - HTTP 201 CREATED with added education level data (id, title) if the education level is created successfully.
+            - HTTP 201 CREATED with added education level data (id, title) if the education level is created
+            successfully.
             - HTTP 400 BAD REQUEST with error message if data validation fails.
             - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
             not authorized.
@@ -465,7 +474,8 @@ class LanguageView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
+                    Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -490,7 +500,7 @@ class LanguageView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
     def delete(self, request, languageId):
         """
         Deletes an Language object with the given ID if the authenticated user is a job seeker and owns the
@@ -527,7 +537,6 @@ class LanguageView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-
 
 
 class SkillView(generics.ListAPIView):
@@ -587,7 +596,8 @@ class SkillView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
+                    Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -612,7 +622,7 @@ class SkillView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-    
+
     def delete(self, request, skillId):
         """
         Deletes an Skill object with the given ID if the authenticated user is a job seeker and owns the
@@ -649,6 +659,7 @@ class SkillView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
 
 class TagView(generics.ListAPIView):
     """
@@ -703,7 +714,8 @@ class TagView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
+                    Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -728,7 +740,7 @@ class TagView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
     def delete(self, request, tagId):
         """
         Deletes an Tag object with the given ID if the authenticated user is a job seeker and owns the
@@ -766,3 +778,64 @@ class TagView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+
+class ChangePasswordView(generics.GenericAPIView):
+    """
+    A class-based view to handle changing password for an authenticated user. Only staff users are allowed to change
+    password.
+
+    `Attributes`:
+        - `permission_classes (list)`: A list of permission classes that are required for this view. In this case, only
+            authenticated users are allowed.
+        - `serializer_class`: A serializer class that will be used to validate the request data.
+
+    `Methods`:
+        - `patch(request)`: A method that handles the HTTP PATCH requests. It receives a request object, validates the
+            request data using the serializer, and updates the user password if the user is staff. Returns a response
+            object with a message and HTTP status code.
+
+    `Raises`:
+        - `serializers.ValidationError`: If the request data is invalid.
+        - `Exception`: If any other error occurs while processing the request.
+
+    `Returns`:
+        - A response object with a message and HTTP status code indicating the success or failure of the password update
+        operation.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChangePasswordSerializers
+
+    def patch(self, request):
+
+        response_context = dict()
+        try:
+            if self.request.user.is_staff:
+                context = {"user": request.user}
+                serializer = self.serializer_class(data=request.data, context=context)
+                serializer.is_valid(raise_exception=True)
+                refresh_token = request.headers.get('x-refresh')
+                payload = JWTMiddleware.decode_token(refresh_token)
+                UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
+                response_context["message"] = "Password update successfully."
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                response_context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
