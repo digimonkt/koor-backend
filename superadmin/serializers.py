@@ -10,6 +10,7 @@ from project_meta.models import (
 
 from users.backends import MobileOrEmailBackend as cb
 
+
 class CountrySerializers(serializers.ModelSerializer):
     """
     Serializer class for the `Country` model.
@@ -51,14 +52,16 @@ class CitySerializers(serializers.ModelSerializer):
         Validate the data before saving to the database.
         
         The validate method checks if the country field is blank and raises a validation error if it is.
-        It also checks if a city with the same title and country already exists and raises a validation error if it does.
+        It also checks if a city with the same title and country already exists and raises a validation error if it
+        does.
         Finally, it checks if the country exists in the database and raises a validation error if it does not.
 
         Args:
             data (dict): Dictionary of data to be validated.
 
         Raises:
-            serializers.ValidationError: Raised if the country field is blank or if a city with the same title and country already exists or if the country does not exist in the database.
+            serializers.ValidationError: Raised if the country field is blank or if a city with the same title and
+            country already exists or if the country does not exist in the database.
 
         Returns:
             data (dict): The validated data.
@@ -148,7 +151,28 @@ class TagSerializers(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializers(serializers.Serializer):
+    """
+    A serializer class to validate the request data for changing user password.
 
+    `Attributes`:
+        - `old_password (serializers.CharField)`: A field to receive the old password from the request.
+        - `confirm_password (serializers.CharField)`: A field to receive the confirmation password from the request.
+        - `password (serializers.CharField)`: A field to receive the new password from the request.
+
+    `Methods`:
+        - `validate(data)`: A method to validate the request data. It receives a dictionary of request data and returns
+        a validated user object or raises a validation error. It compares the new password and confirm password fields,
+        authenticates the user using the old password, and updates the password if the authentication is successful.
+
+    `Raises`:
+        - `serializers.ValidationError`: If the request data is invalid or if the authentication fails.
+
+    `Returns`:
+        - A validated user object after successful authentication and password update, or raises a validation error if
+        the request data is invalid or if the authentication fails.
+
+    """
+    
     old_password = serializers.CharField(
         style={"input_type": "text"},
         write_only=True
@@ -161,13 +185,12 @@ class ChangePasswordSerializers(serializers.Serializer):
         style={"input_type": "text"},
         write_only=True
     )
-    
 
     def validate(self, data):
         old_password = data.get("old_password", "")
         password = data.get("password", "")
         confirm_password = data.get("confirm_password", "")
-        user_data =  self.context['user']
+        user_data = self.context['user']
         user = None
         if password != confirm_password:
             raise serializers.ValidationError({'password': 'Confirm password not match.'})
@@ -181,4 +204,3 @@ class ChangePasswordSerializers(serializers.Serializer):
                 raise serializers.ValidationError({'message': 'Invalid login credentials.'})
         except:
             raise serializers.ValidationError({'message': 'Invalid login credentials.'})
-
