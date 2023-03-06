@@ -32,7 +32,18 @@
   - [Delete Cities](#delete-cities)
   - [Create Job Category](#create-job-category)
   - [Get Job Category](#get-job-category)
-
+  - [Get Users Count](#get-users-count)
+  - [Get Credit](#get-credit)
+  - [Get Dashboard](#get-dashboard)
+  - [Get Jobs List](#get-jobs-list)
+  - [Get Tenders List](#get-tenders-list)
+  - [Get Employers List](#get-employers-list)
+  - [Get Candidates List](#get-candidates-list)
+  - [Get User Rights](#get-user-rights)
+  - [Update User Rights](#update-user-rights)
+  - [Get Privacy Policy](#get-privacy-policy)
+  - [Update Privacy Policy](#update-privacy-policy)
+  - [Change Password](#change-password)
 ## Create Tag
 
 This API is used to create `tags`.
@@ -632,6 +643,334 @@ This api is used to get all `Job Categories`
         "id": "${UUID}",
         "title": "Teacher"
       }],
+    }
+  }
+  ```
+
+
+## Get Users Count
+
+This api is used to get all `Users Count`
+
+- route: `/users-count`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "active_user": 352371,
+        "visitor_today": 143344,
+        "active_post": 50021,
+        "jobs_posted": 345
+        "users"{
+            "total": 1934300,
+            "job_seekers": 780183,
+            "employers": 664153,
+            "vendors": 507004
+        }
+    }
+  }
+  ```
+
+## Get Credit
+
+This api is used to get all `Credit`
+
+- route: `/credit`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "preiod": 0 || 1 || 2...  // 0 for current month ; 1 for last months
+    },
+  }
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "total": 17374,
+        "gold": 6428,
+        "silver": 5907,
+        "copper": 4863
+    }
+  }
+  ```
+
+## Get Dashboard
+
+This api is used to get all `Dashboard `
+
+- route: `/dashboard`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "preiod": 0 || 1 || 2...  // 0 for current year ; 1 for last year
+    },
+  }
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "employers": 345,
+        "jobs": 252
+    }
+  }
+  ```
+
+## Get Jobs List
+
+This api is used to get all `Jobs List `
+
+- route: `/jobs-list`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "search": "search keyword" || ""  // for search data
+      "filter": "location" || ""  // for filtering data according to location
+    },
+  }
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "title": "Job Title",
+        "company": "Jobs Company",
+        "location": "Jobs Location"
+    }
+  }
+  ```
+
+## Get Tenders List
+
+This api is used to get all `Ttenders List `
+
+- route: `/tenders-list`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "search": "search keyword" || ""  // for search data
+      "filter": "location" || ""  // for filtering data according to location
+    },
+  }
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "title": "Tenders Title",
+        "company": "Tenders Company",
+        "location": "Tenders Location"
+    }
+  }
+  ```
+
+## Get Employers List
+
+This api is used to get all `Employers List `
+
+- route: `/employers-list`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "search": "search keyword" || ""  // for search data
+      "filter": "location" || ""  // for filtering data according to location
+    },
+  }
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "name": "Name",
+        "email": "email@email.com",
+        "country_code": "+1",
+        "mobile_number": "8899887788",
+        "company": "Company Name",
+    }
+  }
+  ```
+
+## Get Candidates List
+
+This api is used to get all `Candidates List `
+
+- route: `/candidates-list`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "search": "search keyword" || ""  // for search data
+      "filter": "location" || ""  // for filtering data according to location
+    },
+  }
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "role": "job_seeker",
+        "name": "Name",
+        "email": "email@email.com",
+        "country_code": "+1",
+        "mobile_number": "8899887788"
+    }
+  }
+  ```
+
+## Get User Rights
+
+This api is used to get all `User Rights`
+
+- route: `/user-rights`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "description": "This is the description of the user rights..."
+    }
+  }
+  ```
+
+## Update User Rights
+
+This api is used to get all `User Rights`
+
+- route: `/user-rights`
+- method: `PATCH`
+- request:
+
+  ```js
+  {
+    "body": {
+      "description": "This is the new description of the user rights..."
+    }
+  }
+  ```
+
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "description": "This is the new description of the user rights..."
+    }
+  }
+  ```
+
+## Get Privacy Policy
+
+This api is used to get all `Privacy Policy`
+
+- route: `/privacy-policy`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "description": "This is the description of the privacy policy..."
+    }
+  }
+  ```
+
+## Update Privacy Policy
+
+This api is used to get all `Privacy Policy`
+
+- route: `/privacy-policy`
+- method: `PATCH`
+- request:
+
+  ```js
+  {
+    "body": {
+      "description": "This is the new description of the privacy policy..."
+    }
+  }
+  ```
+
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "id": "${UUID}",
+        "description": "This is the new description of the privacy policy..."
+    }
+  }
+  ```
+
+## Change Password
+
+This api is used to get all `Change Password`
+
+- route: `/change-password`
+- method: `PATCH`
+- request:
+
+  ```js
+  {
+    "body": {
+      "old_password": "oldpassword"
+      "new_password": "newpassword"
+    }
+  }
+  ```
+
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "message": "Password update successfully."
     }
   }
   ```
