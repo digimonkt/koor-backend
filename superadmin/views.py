@@ -1023,3 +1023,64 @@ class PrivacyPolicyView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+                        
+    def patch(self, request):
+        """
+        Handle PATCH requests to update a Content object.
+
+        Args:
+            - `request (Request)`: The incoming PATCH request.
+
+        Returns:
+            - A Response object with a success message if the user is a staff member and the update was successful,
+              or an error message if the user does not have permission to perform the action or the data provided in
+              the request is invalid.
+
+        Raises:
+            - N/A
+
+        Behavior:
+            - This function first checks whether the user making the request is a staff member.
+            - If so, it looks for an existing Content object with the title "Privacy Policy".
+            - If one exists, it updates that object with the data provided in the request.
+            - If not, it either finds a previously removed object with that title and un-removes it, or creates a new
+              object with that title.
+            - It then attempts to validate the provided data and update the Content object with that data.
+            - If the update is successful, it returns a success message.
+            - If the provided data is invalid, it returns an error message.
+            - If the user is not a staff member, it returns an error message.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            
+            if Content.objects.filter(title="Privacy Policy").exists():
+                instance = Content.objects.get(title="Privacy Policy")
+            else:
+                if Content.all_objects.filter(title="Privacy Policy", is_removed=True).exists():
+                    instance = Content.all_objects.get(title="Privacy Policy", is_removed=True)
+                    instance.is_removed=False
+                else:
+                    instance = Content.objects.create(title="Privacy Policy")
+                instance.save()
+            serializer = self.serializer_class(data=request.data, instance=instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
