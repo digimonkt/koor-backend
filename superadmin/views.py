@@ -962,3 +962,64 @@ class UserRightsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class PrivacyPolicyView(generics.GenericAPIView):
+    """
+    View to retrieve the user rights.
+
+    This view extends the GenericAPIView class from Django Rest Framework and defines the permission_classes and
+    serializer_class attributes to control the access permissions and serialization of data.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that allow any user to access the view.
+        - `serializer_class (ContentSerializers)`: The serializer class used to serialize the data retrieved from
+        the view.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ContentSerializers
+
+    def get(self, request):
+        """
+        Retrieve the user rights content.
+
+        This method retrieves the user rights content from the database using the Content model, serializes it using the
+        serializer_class attribute, and returns it as a response.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request sent to the view.
+
+        Returns:
+            - A Response object with the user rights content as data and a 200 status code if the content is found in
+            the database.
+            - A Response object with a description field as data and a 404 status code if the content is not found in
+            the database.
+            - A Response object with an error message as data and a 400 status code if an exception occurs.
+
+        Raises:
+            None.
+
+        """
+
+        response_context = dict()
+        try:
+            content_instance = Content.objects.get(title="Privacy Policy")
+            get_data = self.serializer_class(content_instance)
+            response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except Content.DoesNotExist:
+            return response.Response(
+                data={"description": None},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
