@@ -1,7 +1,13 @@
+from datetime import datetime
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+
+from core.middleware import JWTMiddleware
+
+from users.models import UserSession
 
 from jobs.models import (
     JobCategory
@@ -13,7 +19,7 @@ from project_meta.models import (
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
-    TagSerializers
+    TagSerializers, ChangePasswordSerializers
 )
 
 
@@ -69,7 +75,6 @@ class CountryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                print(serializer.validated_data['title'])
                 if Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
                     Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(is_removed=False)
                 else:
@@ -765,4 +770,45 @@ class TagView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+class ChangePasswordView(generics.GenericAPIView):
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ChangePasswordSerializers
+
+    def patch(self, request):
+
+        response_context = dict()
+        try:
+            if self.request.user.is_staff:
+                context = {"user":request.user}
+                serializer = self.serializer_class(data=request.data, context=context)
+                serializer.is_valid(raise_exception=True)
+                refresh_token = request.headers.get('x-refresh')
+                payload = JWTMiddleware.decode_token(refresh_token)
+                UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
+                response_context["message"] = "Password update successfully."
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                response_context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 
