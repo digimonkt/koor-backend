@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import (
-    BaseModel, SoftDeleteModel, upload_directory_path
+    BaseModel, SlugBaseModel,  SoftDeleteModel, upload_directory_path
 )
 
 
@@ -43,7 +43,7 @@ class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
         db_table = "SMTPSetting"
 
 
-class UserRights(BaseModel, SoftDeleteModel, models.Model):
+class Content(SlugBaseModel, SoftDeleteModel, models.Model):
     description = models.TextField(
         verbose_name=_('Description'),
         db_column="description",
@@ -53,21 +53,6 @@ class UserRights(BaseModel, SoftDeleteModel, models.Model):
         return str(self.description)
 
     class Meta:
-        verbose_name = "User Rights"
-        verbose_name_plural = "User Rights"
-        db_table = "UserRights"
-
-
-class PrivacyPolicy(BaseModel, SoftDeleteModel, models.Model):
-    description = models.TextField(
-        verbose_name=_('Description'),
-        db_column="description",
-    )
-
-    def __str__(self):
-        return str(self.description)
-
-    class Meta:
-        verbose_name = "Privacy Policy"
-        verbose_name_plural = "Privacy Policies"
-        db_table = "PrivacyPolicy"
+        verbose_name = "Content"
+        verbose_name_plural = "Contents"
+        db_table = "Content"
