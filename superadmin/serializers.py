@@ -8,6 +8,7 @@ from project_meta.models import (
     Language, Skill, Tag
 )
 
+from users.backends import MobileOrEmailBackend as cb
 
 class CountrySerializers(serializers.ModelSerializer):
     """
@@ -144,3 +145,40 @@ class TagSerializers(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'title']
+
+
+class ChangePasswordSerializers(serializers.Serializer):
+
+    old_password = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True
+    )
+    confirm_password = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True
+    )
+    password = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True
+    )
+    
+
+    def validate(self, data):
+        old_password = data.get("old_password", "")
+        password = data.get("password", "")
+        confirm_password = data.get("confirm_password", "")
+        user_data =  self.context['user']
+        user = None
+        if password != confirm_password:
+            raise serializers.ValidationError({'password': 'Confirm password not match.'})
+        try:
+            user = cb.authenticate(self, identifier=user_data.email, password=old_password, role="admin")
+            if user:
+                user.set_password(password)
+                user.save()
+                return user
+            else:
+                raise serializers.ValidationError({'message': 'Invalid login credentials.'})
+        except:
+            raise serializers.ValidationError({'message': 'Invalid login credentials.'})
+
