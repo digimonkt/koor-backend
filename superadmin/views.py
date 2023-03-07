@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from django.db.models import Sum, Count, Avg
+from django.core.serializers import serialize
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
@@ -22,7 +25,7 @@ from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
-    CandidatesSerializers, JobListSerializers
+    CandidatesSerializers, JobListSerializers, UserCountSerializers
 )
 
 
@@ -1222,3 +1225,35 @@ class JobsListView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+
+class UsersCountView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserCountSerializers
+
+    def get(self, request):
+        context = dict()
+        user_context = dict()
+        if self.request.user.is_staff:
+            try:
+                queryset = User.objects.all()
+                serializer = self.get_serializer(queryset)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
