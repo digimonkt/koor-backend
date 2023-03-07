@@ -236,6 +236,8 @@ class GetJobsSerializers(serializers.ModelSerializer):
     city = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     applicant = serializers.SerializerMethodField()
+    is_applied = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -243,7 +245,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
             'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'start_date',
-            'created', 'user'
+            'created', 'is_applied', 'is_saved', 'user'
         ]
 
     def get_country(self, obj):
@@ -300,6 +302,26 @@ class GetJobsSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+    def get_is_applied(self, obj):
+        is_applied_record = False
+        user =  self.context['user']
+        if user:
+            is_applied_record = AppliedJob.objects.filter(
+                job=obj,
+                user=user
+            ).exists()
+        return is_applied_record
+        
+    def get_is_saved(self, obj):
+        is_saved_record = False
+        user =  self.context['user']
+        if user:
+            is_saved_record = SavedJob.objects.filter(
+                job=obj,
+                user=user
+            ).exists()
+        return is_saved_record
+    
     def get_applicant(self, obj):
         return AppliedJob.objects.filter(job=obj).count()
 

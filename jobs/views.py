@@ -75,16 +75,18 @@ class JobSearchView(generics.ListAPIView):
         Returns:
             - A paginated list of job details that match the specified search and filter criteria.
         """
-
+        if request.user:
+            context = {"user":request.user}
+                
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         if jobCategory:
             queryset = queryset.filter(job_category__title__in=jobCategory)
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = self.get_serializer(page, many=True, context=context)
             return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True, context=context)
         return response.Response(serializer.data)
 
 
