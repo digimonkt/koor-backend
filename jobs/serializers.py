@@ -7,7 +7,7 @@ from jobs.models import (
 
 from job_seekers.models import (
     AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJobAttachmentsItem
+    JobSeekerSkill, AppliedJobAttachmentsItem, SavedJob
 )
 
 from project_meta.serializers import (
@@ -334,6 +334,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     applicant = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     is_applied = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -342,7 +343,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'working_days', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
-            'is_applied'
+            'is_applied', 'is_saved'
 
         ]
 
@@ -512,6 +513,16 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
                 user=user
             ).exists()
         return is_applied_record
+        
+    def get_is_saved(self, obj):
+        is_saved_record = False
+        user =  self.context['user']
+        if user:
+            is_saved_record = SavedJob.objects.filter(
+                job=obj,
+                user=user
+            ).exists()
+        return is_saved_record
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a JobDetails object.
