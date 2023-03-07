@@ -1130,3 +1130,49 @@ class CandidatesListView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class EmployerListView(generics.ListAPIView):
+    """
+    API view for listing employers by name.
+
+    This view requires the user to be authenticated, and `only allows staff` users to perform the listing.
+    `Non-staff` users receive a `401 Unauthorized` response.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes required to access this view.
+                In this case, it contains a single `IsAuthenticated` class.
+        - `serializer_class`: The serializer class used to convert model instances to JSON.
+                In this case, it is `CandidatesSerializers`.
+        - `queryset`: The queryset used to fetch the data from the database.
+                In this case, it is `User.objects.all()`, which returns all users in the database.
+        - `filter_backends`: A list of filter backends used to filter the queryset.
+                In this case, it contains a single SearchFilter backend.
+        - `search_fields`: A list of model fields that can be used for text search.
+                In this case, it contains the `'name'` field.
+
+    Methods:
+        - `list(request)`: The main method of this view, which returns a list of employers filtered by name.
+
+    Returns:
+        - A Response object with a list of employers, or an error message if the user is not authorized.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CandidatesSerializers
+    queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response({'results': serializer.data})
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
