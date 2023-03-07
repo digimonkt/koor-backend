@@ -5,7 +5,7 @@ from .views import (
     EducationLevelView, LanguageView, SkillView,
     TagView, ChangePasswordView, UserRightsView,
     PrivacyPolicyView, CandidatesListView, EmployerListView,
-    JobsListView
+    JobsListView, UsersCountView
     )
 
 app_name = "superadmin"
@@ -42,4 +42,6 @@ urlpatterns = [
     path('/employer-list', EmployerListView.as_view(), name="employer_list"),
     
     path('/jobs-list', JobsListView.as_view(), name="jobs_list"),
+    
+    path('/users-count', UsersCountView.as_view(), name="users_count"),
 ]
