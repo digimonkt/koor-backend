@@ -1,3 +1,5 @@
+from django.db.models import Sum, Count, Avg
+
 from rest_framework import serializers
 
 from jobs.models import (
@@ -305,3 +307,32 @@ class JobListSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class UserCountSerializers(serializers.Serializer):
+
+    total = serializers.SerializerMethodField()
+    job_seekers = serializers.SerializerMethodField()
+    employers = serializers.SerializerMethodField()
+    vendors = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['total', 'job_seekers', 'employers', 'vendors']
+        
+    def get_total(self, obj):
+        return User.objects.count()
+    
+    def get_job_seekers(self, obj):
+        return User.objects.filter(role='job_seeker').count()
+            
+    def get_employers(self, obj):
+        return User.objects.filter(role='employer').count()
+            
+    def get_vendors(self, obj):
+        return User.objects.filter(role='vendor').count()
+        
+        
+
+    
+    
