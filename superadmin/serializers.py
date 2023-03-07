@@ -1,5 +1,6 @@
-from django.db.models import Sum, Count, Avg
+from datetime import date
 
+from django.db.models import Q
 from rest_framework import serializers
 
 from jobs.models import (
@@ -12,10 +13,8 @@ from project_meta.models import (
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
 )
-
 from users.backends import MobileOrEmailBackend as cb
-from users.models import User
-
+from users.models import User, UserSession
 from .models import Content
 
 
@@ -310,29 +309,64 @@ class JobListSerializers(serializers.ModelSerializer):
 
 
 class UserCountSerializers(serializers.Serializer):
+    """
+    A serializer that converts user count data to/from JSON format.
 
-    total = serializers.SerializerMethodField()
+    Attributes:
+        - `total_user (int)`: The total number of registered users in the system.
+        - `job_seekers (int)`: The number of registered users with the 'job_seeker' role.
+        - `employers (int)`: The number of registered users with the 'employer' role.
+        - `vendors (int)`: The number of registered users with the 'vendor' role.
+        - `active_user (int)`: The number of users who are currently logged in to the system.
+        - `total_jobs (int)`: The total number of jobs posted in the system.
+        - `active_jobs (int)`: The number of jobs that are currently active and open for applications.
+
+    Methods:
+        - `get_active_jobs(self, obj)`: Retrieves the count of active jobs.
+        - `get_total_jobs(self, obj)`: Retrieves the count of total jobs.
+        - `get_total_user(self, obj)`: Retrieves the count of total users.
+        - `get_active_user(self, obj)`: Retrieves the count of active users.
+        - `get_job_seekers(self, obj)`: Retrieves the count of job seekers.
+        - `get_employers(self, obj)`: Retrieves the count of employers.
+        - `get_vendors(self, obj)`: Retrieves the count of vendors.
+
+    Returns:
+        JSON-serializable data: The data containing the count of users and jobs in the system.
+    """
+
+    total_user = serializers.SerializerMethodField()
     job_seekers = serializers.SerializerMethodField()
     employers = serializers.SerializerMethodField()
     vendors = serializers.SerializerMethodField()
+    active_user = serializers.SerializerMethodField()
+    total_jobs = serializers.SerializerMethodField()
+    active_jobs = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['total', 'job_seekers', 'employers', 'vendors']
-        
-    def get_total(self, obj):
-        return User.objects.count()
-    
+        fields = [
+            'total_jobs', 'active_jobs', 'total_user', 'job_seekers',
+            'employers', 'vendors', 'active_user'
+        ]
+
+    def get_active_jobs(self, obj):
+        return JobDetails.objects.filter(status='active', start_date__lte=date.today(),
+                                         deadline__gte=date.today()).count()
+
+    def get_total_jobs(self, obj):
+        return JobDetails.objects.count()
+
+    def get_total_user(self, obj):
+        return User.objects.filter(~Q(role='admin')).count()
+
+    def get_active_user(self, obj):
+        return UserSession.objects.filter(expire_at=None).order_by('user').distinct('user').count()
+
     def get_job_seekers(self, obj):
         return User.objects.filter(role='job_seeker').count()
-            
+
     def get_employers(self, obj):
         return User.objects.filter(role='employer').count()
-            
+
     def get_vendors(self, obj):
         return User.objects.filter(role='vendor').count()
-        
-        
-
-    
-    
