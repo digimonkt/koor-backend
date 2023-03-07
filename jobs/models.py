@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext as _
 
+from random import randint
+
 from core.models import (
     SlugBaseModel, BaseModel, SoftDeleteModel
 )
@@ -76,6 +78,14 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('Title'),
         max_length=255,
         db_column="title",
+    )
+    job_id = models.CharField(
+        verbose_name=_('Job Id'),
+        max_length=255,
+        db_column="job_id",
+        null=True,
+        blank=True,
+        unique=True
     )
     budget_currency = models.CharField(
         verbose_name=_('Budget Currency'),
@@ -216,7 +226,20 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Job Details"
         db_table = "JobDetails"
         ordering = ['-created']
-
+    
+    def save(self, *args, **kwargs):
+        if not self.job_id:
+            self.job_id = unique_job_id()
+        return super().save(*args, **kwargs)
+    
+def unique_job_id():
+    job_id = str(randint(1000, 9999)) + "-" + str(randint(1000, 9999))
+    try:
+        if JobDetails.objects.get(job_id=job_id):
+            return unique_job_id()
+    except JobDetails.DoesNotExist:
+        return job_id
+    
 class JobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This is a Django model for a Job Attachment object, associated with a specific Job item, with the following fields:

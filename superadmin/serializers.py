@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
 from jobs.models import (
-    JobCategory
+    JobCategory, JobDetails
 )
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag
+)
+from project_meta.serializers import (
+    CitySerializer, CountrySerializer
 )
 
 from users.backends import MobileOrEmailBackend as cb
@@ -239,3 +242,66 @@ class CandidatesSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active']
+
+
+class JobListSerializers(serializers.ModelSerializer):
+    """
+    `JobListSerializers` class is a Django REST Framework serializer used for serializing JobDetails model data
+    into JSON format with selected fields.
+
+    Attributes:
+        - `country (serializers.SerializerMethodField)`: SerializerMethodField used for serializing country field of
+            `JobDetails` model
+        - `city (serializers.SerializerMethodField)`: SerializerMethodField used for serializing city field of
+            `JobDetails` model
+        - `Meta (class): Class used for defining metadata options for the serializer
+            - `model (class)`: Model class to be serialized
+            - `fields (list)`: List of fields to be included in the serialized output
+
+    Example usage:
+        To serialize JobDetails model data into JSON format with selected fields:
+        - `serializer` = `JobListSerializers`(queryset, many=True)
+        - `serialized_data` = `serializer.data`
+    """
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobDetails
+        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status']
+
+    def get_country(self, obj):
+        """
+        Retrieves the serialized data for the country related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the country data for.
+
+        Returns:
+            A dictionary containing the serialized country data.
+
+        """
+
+        context = {}
+        get_data = CountrySerializer(obj.country)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """
+        Retrieves the serialized data for the city related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the city data for.
+
+        Returns:
+            A dictionary containing the serialized city data.
+
+        """
+
+        context = {}
+        get_data = CitySerializer(obj.city)
+        if get_data.data:
+            context = get_data.data
+        return context
