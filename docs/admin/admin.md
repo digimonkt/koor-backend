@@ -690,6 +690,7 @@ This api is used to get all `Credit`
       "preiod": 0 || 1 || 2...  // 0 for current month ; 1 for last months
     },
   }
+  ```
 
 - response:
   ```js
@@ -719,6 +720,7 @@ This api is used to get all `Dashboard `
       "preiod": 0 || 1 || 2...  // 0 for current year ; 1 for last year
     },
   }
+  ```
 
 - response:
   ```js
@@ -747,6 +749,7 @@ This api is used to get all `Jobs List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -777,6 +780,7 @@ This api is used to get all `Ttenders List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -807,6 +811,7 @@ This api is used to get all `Employers List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -839,6 +844,7 @@ This api is used to get all `Candidates List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
