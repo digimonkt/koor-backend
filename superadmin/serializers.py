@@ -9,6 +9,7 @@ from project_meta.models import (
 )
 
 from users.backends import MobileOrEmailBackend as cb
+from users.models import User
 
 from .models import Content
 
@@ -220,7 +221,21 @@ class ContentSerializers(serializers.ModelSerializer):
     class Meta:
         model = Content
         fields = ['description']
-        
+
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+class CandidatesSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `User` model.
+
+    The `CandidatesSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `User` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active'.
+    """
+
+    class Meta:
+        model = User
+        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active']
