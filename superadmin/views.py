@@ -7,7 +7,7 @@ from rest_framework import (
 
 from core.middleware import JWTMiddleware
 
-from users.models import UserSession
+from users.models import UserSession, User
 
 from jobs.models import (
     JobCategory
@@ -21,7 +21,8 @@ from .models import Content
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
-    TagSerializers, ChangePasswordSerializers, ContentSerializers
+    TagSerializers, ChangePasswordSerializers, ContentSerializers,
+    CandidatesSerializers
 )
 
 
@@ -902,7 +903,7 @@ class UserRightsView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
     def patch(self, request):
         """
         Handle PATCH requests to update a Content object.
@@ -932,13 +933,13 @@ class UserRightsView(generics.GenericAPIView):
 
         context = dict()
         if self.request.user.is_staff:
-            
+
             if Content.objects.filter(title="User Rights").exists():
                 instance = Content.objects.get(title="User Rights")
             else:
                 if Content.all_objects.filter(title="User Rights", is_removed=True).exists():
                     instance = Content.all_objects.get(title="User Rights", is_removed=True)
-                    instance.is_removed=False
+                    instance.is_removed = False
                 else:
                     instance = Content.objects.create(title="User Rights")
                 instance.save()
@@ -1023,7 +1024,7 @@ class PrivacyPolicyView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-                        
+
     def patch(self, request):
         """
         Handle PATCH requests to update a Content object.
@@ -1053,13 +1054,13 @@ class PrivacyPolicyView(generics.GenericAPIView):
 
         context = dict()
         if self.request.user.is_staff:
-            
+
             if Content.objects.filter(title="Privacy Policy").exists():
                 instance = Content.objects.get(title="Privacy Policy")
             else:
                 if Content.all_objects.filter(title="Privacy Policy", is_removed=True).exists():
                     instance = Content.all_objects.get(title="Privacy Policy", is_removed=True)
-                    instance.is_removed=False
+                    instance.is_removed = False
                 else:
                     instance = Content.objects.create(title="Privacy Policy")
                 instance.save()
@@ -1083,4 +1084,49 @@ class PrivacyPolicyView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            
+
+
+class CandidatesListView(generics.ListAPIView):
+    """
+    API view for listing job seekers by name.
+
+    This view requires the user to be authenticated, and `only allows staff` users to perform the listing.
+    `Non-staff` users receive a `401 Unauthorized` response.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes required to access this view.
+                In this case, it contains a single `IsAuthenticated` class.
+        - `serializer_class`: The serializer class used to convert model instances to JSON.
+                In this case, it is `CandidatesSerializers`.
+        - `queryset`: The queryset used to fetch the data from the database.
+                In this case, it is `User.objects.all()`, which returns all users in the database.
+        - `filter_backends`: A list of filter backends used to filter the queryset.
+                In this case, it contains a single SearchFilter backend.
+        - `search_fields`: A list of model fields that can be used for text search.
+                In this case, it contains the `'name'` field.
+
+    Methods:
+        - `list(request)`: The main method of this view, which returns a list of job seekers filtered by name.
+
+    Returns:
+        - A Response object with a list of job seekers, or an error message if the user is not authorized.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CandidatesSerializers
+    queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response({'results': serializer.data})
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
