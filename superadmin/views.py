@@ -1270,7 +1270,7 @@ class JobsListView(generics.ListAPIView):
         Raises:
             - `Http404`: If the job instance with the given `jobId does not exist`.
         """
-        
+
         context = dict()
         if self.request.user.is_staff:
             try:
@@ -1399,3 +1399,50 @@ class UserView(generics.GenericAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def patch(self, request, userId):
+        """
+        View function for `updating the status` of a user instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `userId`: Integer representing the ID of the user instance to be updated.
+
+        Returns:
+            Response object containing data about the updated user instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the user instance with the given `userId does not exist`.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                user_instance = User.objects.get(id=userId)
+                if not user_instance.is_active:
+                    user_instance.status = True
+                    context['message'] = "This user is active"
+                else:
+                    user_instance.is_active = False
+                    context['message'] = "This user is inactive"
+                user_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"userId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
