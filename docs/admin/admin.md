@@ -36,9 +36,15 @@
   - [Get Credit](#get-credit)
   - [Get Dashboard](#get-dashboard)
   - [Get Jobs List](#get-jobs-list)
+  - [Delete Jobs](#delete-jobs)
+  - [Inactive Jobs](#inactive-jobs)
   - [Get Tenders List](#get-tenders-list)
   - [Get Employers List](#get-employers-list)
+  - [Delete Employers](#delete-employers)
+  - [Inactive Employers](#inactive-employers)
   - [Get Candidates List](#get-candidates-list)
+  - [Delete Candidates](#delete-candidates)
+  - [Inactive Candidates](#inactive-candidates)
   - [Get User Rights](#get-user-rights)
   - [Update User Rights](#update-user-rights)
   - [Get Privacy Policy](#get-privacy-policy)
@@ -737,7 +743,7 @@ This api is used to get all `Dashboard `
 
 This api is used to get all `Jobs List `
 
-- route: `/jobs-list`
+- route: `/jobs`
 - method: `GET`
 - request:
 
@@ -763,12 +769,44 @@ This api is used to get all `Jobs List `
     }
   }
   ```
+## Delete Jobs
+
+This api is used to Delete `Jobs`
+
+- route: `/jobs/:jobId`
+- method: `DELETE`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+  ## Inactive Jobs
+
+This api is used to inactivate `Jobs`
+
+- route: `/jobs/:jobId`
+- method: `PUT`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "This job is inactive"
+    }
+  }
+  ```
 
 ## Get Tenders List
 
 This api is used to get all `Ttenders List `
 
-- route: `/tenders-list`
+- route: `/tenders`
 - method: `GET`
 - request:
 
@@ -799,7 +837,7 @@ This api is used to get all `Ttenders List `
 
 This api is used to get all `Employers List `
 
-- route: `/employers-list`
+- route: `/employers`
 - method: `GET`
 - request:
 
@@ -828,11 +866,43 @@ This api is used to get all `Employers List `
   }
   ```
 
+## Delete Employers
+
+This api is used to Delete `Employers`
+
+- route: `/employers/:employerId`
+- method: `DELETE`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+  ## Inactive Employers
+
+This api is used to inactivate `Employers`
+
+- route: `/employers/:employerId`
+- method: `PUT`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "This employer is inactive"
+    }
+  }
+  ```
 ## Get Candidates List
 
 This api is used to get all `Candidates List `
 
-- route: `/candidates-list`
+- route: `/candidates`
 - method: `GET`
 - request:
 
@@ -860,7 +930,38 @@ This api is used to get all `Candidates List `
     }
   }
   ```
+## Delete Candidates
 
+This api is used to Delete `Candidates`
+
+- route: `/candidates/:candidateId`
+- method: `DELETE`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+  ## Inactive Candidates
+
+This api is used to inactivate `Candidates`
+
+- route: `/candidates/:candidateId`
+- method: `PUT`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "This candidate is inactive"
+    }
+  }
+  ```
 ## Get User Rights
 
 This api is used to get all `User Rights`

@@ -1,17 +1,11 @@
 from datetime import datetime
 
-from django.db.models import Sum, Count, Avg
-from django.core.serializers import serialize
-
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
 
 from core.middleware import JWTMiddleware
-
-from users.models import UserSession, User
-
 from jobs.models import (
     JobCategory, JobDetails
 )
@@ -19,7 +13,7 @@ from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag
 )
-
+from users.models import UserSession, User
 from .models import Content
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -1227,8 +1221,22 @@ class JobsListView(generics.ListAPIView):
             )
 
 
-
 class UsersCountView(generics.GenericAPIView):
+    """
+    A view that returns the number of users registered in the system if the user has staff level permissions,
+    and returns an error message otherwise.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that control access to this view.
+        - `serializer_class (class)`: The serializer class used to convert data to/from JSON format.
+
+    Methods:
+        - `get(self, request)`: Retrieves the number of users registered in the system and returns a response.
+                                If the user does not have staff level permissions, an error message is returned.
+
+    Returns:
+        - `response.Response`: The response containing the serialized data or error message.
+    """
 
     permission_classes = [permissions.AllowAny]
     serializer_class = UserCountSerializers
@@ -1256,4 +1264,3 @@ class UsersCountView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            

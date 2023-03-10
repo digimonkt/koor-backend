@@ -6,7 +6,7 @@ from rest_framework import (
 )
 from rest_framework.pagination import LimitOffsetPagination
 
-from datetime import datetime
+from datetime import datetime, date
 
 from django_filters import rest_framework as django_filters
 
@@ -55,7 +55,7 @@ class JobSearchView(generics.ListAPIView):
 
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.all()
+    queryset = JobDetails.objects.filter(start_date__lte=date.today(), deadline__gte=date.today())
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = ['title']

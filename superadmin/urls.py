@@ -37,11 +37,11 @@ urlpatterns = [
     
     path('/privacy-policy', PrivacyPolicyView.as_view(), name="privacy_policy"),
     
-    path('/candidates-list', CandidatesListView.as_view(), name="candidates_list"),
+    path('/candidates', CandidatesListView.as_view(), name="candidates_list"),
     
-    path('/employer-list', EmployerListView.as_view(), name="employer_list"),
+    path('/employer', EmployerListView.as_view(), name="employer_list"),
     
-    path('/jobs-list', JobsListView.as_view(), name="jobs_list"),
+    path('/jobs', JobsListView.as_view(), name="jobs_list"),
     
     path('/users-count', UsersCountView.as_view(), name="users_count"),
 ]
