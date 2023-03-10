@@ -1419,7 +1419,7 @@ class UserView(generics.GenericAPIView):
             try:
                 user_instance = User.objects.get(id=userId)
                 if not user_instance.is_active:
-                    user_instance.status = True
+                    user_instance.is_active = True
                     context['message'] = "This user is active"
                 else:
                     user_instance.is_active = False
