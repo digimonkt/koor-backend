@@ -1173,42 +1173,6 @@ class EmployerListView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-    
-    def delete(self, request, employerId):
-        """
-        Deletes a User object with the given ID if the authenticated user is a admin.
-        Args:
-            request: A DRF request object.
-            employerId: An integer representing the ID of the User to be deleted.
-        Returns:
-            A DRF response object with a success or error message and appropriate status code.
-        """
-        context = dict()
-        if self.request.user.is_staff:
-            try:
-                User.objects.get(id=employerId, role="employer").delete()
-                context['message'] = "Deleted Successfully"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except User.DoesNotExist:
-                return response.Response(
-                    data={"employerId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
-            return response.Response(
-                data=context,
-                status=status.HTTP_401_UNAUTHORIZED
-            )
 
 
 class JobsListView(generics.ListAPIView):
@@ -1384,3 +1348,54 @@ class UsersCountView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class UserView(generics.GenericAPIView):
+    """
+    A class-based view that provides generic CRUD (Update, Delete) operations for User instances.
+
+    This view requires authentication to perform any CRUD operation, as specified by the permission_classes attribute.
+
+    Attributes:
+        - permission_classes: A list of permission classes that defines the permission policy for this view.
+                            In this case, the IsAuthenticated permission class is used to require authentication for all requests.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, userId):
+        """
+        Deletes a User object with the given ID if the authenticated user is a admin.
+        Args:
+            request: A DRF request object.
+            userId: An integer representing the ID of the User to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                User.objects.get(id=userId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"userId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
