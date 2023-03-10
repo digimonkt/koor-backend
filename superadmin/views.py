@@ -1220,6 +1220,90 @@ class JobsListView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def delete(self, request, jobId):
+        """
+        Deletes a Job object with the given ID if the authenticated user is a admin.
+        Args:
+            request: A DRF request object.
+            jobId: An integer representing the ID of the Job to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobDetails.objects.get(id=jobId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, jobId):
+        """
+        View function for `updating the status` of a job instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `jobId`: Integer representing the ID of the job instance to be updated.
+
+        Returns:
+            Response object containing data about the updated job instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the job instance with the given `jobId does not exist`.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                jobs_instance = JobDetails.objects.get(id=jobId)
+                if jobs_instance.status == "inactive":
+                    jobs_instance.status = "active"
+                    context['message'] = "This job is active"
+                else:
+                    jobs_instance.status = "inactive"
+                    context['message'] = "This job is inactive"
+                jobs_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
 
 class UsersCountView(generics.GenericAPIView):
     """
@@ -1257,6 +1341,158 @@ class UsersCountView(generics.GenericAPIView):
                 return response.Response(
                     data=context,
                     status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UserView(generics.GenericAPIView):
+    """
+    A class-based view that provides generic CRUD (Update, Delete) operations for User instances.
+
+    This view requires authentication to perform any CRUD operation, as specified by the permission_classes attribute.
+
+    Attributes:
+        - permission_classes: A list of permission classes that defines the permission policy for this view.
+                            In this case, the IsAuthenticated permission class is used to require authentication for all requests.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, userId):
+        """
+        Deletes a User object with the given ID if the authenticated user is a admin.
+        Args:
+            request: A DRF request object.
+            userId: An integer representing the ID of the User to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                User.objects.get(id=userId)
+                User.objects.filter(id=userId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"userId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, userId):
+        """
+        View function for `updating the status` of a user instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `userId`: Integer representing the ID of the user instance to be updated.
+
+        Returns:
+            Response object containing data about the updated user instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the user instance with the given `userId does not exist`.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                user_instance = User.objects.get(id=userId)
+                if not user_instance.is_active:
+                    user_instance.is_active = True
+                    context['message'] = "This user is active"
+                else:
+                    user_instance.is_active = False
+                    context['message'] = "This user is inactive"
+                user_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"userId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobsRevertView(generics.GenericAPIView):
+    """
+    The `JobsRevertView` class is a generic view that allows staff users to restore a removed job by sending a PATCH
+    request to the API with the jobId as a parameter.
+
+    Parameters:
+        - `request`: The HTTP request object
+        - `jobId`: The ID of the job to be restored
+
+    Returns:
+        - A response object with a success or error message and an HTTP status code.
+
+    Raises:
+        - `JobDetails.DoesNotExist`: If the job with the given jobId does not exist in the database.
+        - `Exception`: If an unexpected error occurs.
+
+    Permissions:
+        - The user must be authenticated and have staff status to perform this action.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, jobId):
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobDetails.all_objects.get(id=jobId, is_removed=True)
+                JobDetails.all_objects.filter(id=jobId, is_removed=True).update(is_removed=False)
+                context['message'] = "Job restored successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
                 )
         else:
             context['message'] = "You do not have permission to perform this action."
