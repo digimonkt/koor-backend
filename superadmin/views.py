@@ -1256,6 +1256,54 @@ class JobsListView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def patch(self, request, jobId):
+        """
+        View function for `updating the status` of a job instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `jobId`: Integer representing the ID of the job instance to be updated.
+
+        Returns:
+            Response object containing data about the updated job instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the job instance with the given `jobId does not exist`.
+        """
+        
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                jobs_instance = JobDetails.objects.get(id=jobId)
+                if jobs_instance.status == "inactive":
+                    jobs_instance.status = "active"
+                    context['message'] = "This job is active"
+                else:
+                    jobs_instance.status = "inactive"
+                    context['message'] = "This job is inactive"
+                jobs_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
 
 class UsersCountView(generics.GenericAPIView):
     """
