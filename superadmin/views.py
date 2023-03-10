@@ -1375,7 +1375,8 @@ class UserView(generics.GenericAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                User.objects.get(id=userId).delete()
+                User.objects.get(id=userId)
+                User.objects.filter(id=userId).delete()
                 context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
