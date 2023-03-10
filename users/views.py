@@ -432,17 +432,24 @@ class GetLocationView(generics.GenericAPIView):
             Returns a Response object with a JSON-formatted dictionary of autocomplete suggestions and a status code of
             200 (OK).
         """
-
+        context = dict()
         search_location = self.request.GET.get('search', None)
-        api_data = GooglePlaceApi.objects.filter(status=True).last()
-        api_key = api_data.api_key
-        api_response = requests.get(
-            'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={0}&key={1}'.format(
-                search_location, api_key
+        try:
+            api_data = GooglePlaceApi.objects.filter(status=True).last()
+            api_key = api_data.api_key
+            api_response = requests.get(
+                'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={0}&key={1}'.format(
+                    search_location, api_key
+                )
             )
-        )
-        api_response_dict = api_response.json()
-        return response.Response(
-                data=api_response_dict,
-                status=status.HTTP_200_OK
+            api_response_dict = api_response.json()
+            return response.Response(
+                    data=api_response_dict,
+                    status=status.HTTP_200_OK
+                )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
             )
