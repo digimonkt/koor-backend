@@ -37,11 +37,12 @@
   - [Get Dashboard](#get-dashboard)
   - [Get Jobs List](#get-jobs-list)
   - [Delete Jobs](#delete-jobs)
+  - [Revert Jobs](#revert-jobs)
   - [Inactive Jobs](#inactive-jobs)
   - [Get Tenders List](#get-tenders-list)
   - [Get Employers List](#get-employers-list)
   - [Delete Users](#delete-users)
-  - [Inactive Employers](#inactive-employers)
+  - [Inactive Users](#inactive-users)
   - [Get Candidates List](#get-candidates-list)
   - [Get User Rights](#get-user-rights)
   - [Update User Rights](#update-user-rights)
@@ -780,6 +781,22 @@ This api is used to Delete `Jobs`
     "code": 200,
     "data": {
       "message": "Deleted Successfully"
+    }
+  }
+  ```
+## Revert Jobs
+
+This api is used to revert `Jobs`
+
+- route: `/jobs/:jobId/revert`
+- method: `PATCH  `
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Job restored successfully"
     }
   }
   ```

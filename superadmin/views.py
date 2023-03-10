@@ -1447,3 +1447,56 @@ class UserView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class JobsRevertView(generics.GenericAPIView):
+    """
+    The `JobsRevertView` class is a generic view that allows staff users to restore a removed job by sending a PATCH
+    request to the API with the jobId as a parameter.
+
+    Parameters:
+        - `request`: The HTTP request object
+        - `jobId`: The ID of the job to be restored
+
+    Returns:
+        - A response object with a success or error message and an HTTP status code.
+
+    Raises:
+        - `JobDetails.DoesNotExist`: If the job with the given jobId does not exist in the database.
+        - `Exception`: If an unexpected error occurs.
+
+    Permissions:
+        - The user must be authenticated and have staff status to perform this action.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, jobId):
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobDetails.all_objects.get(id=jobId, is_removed=True)
+                JobDetails.all_objects.filter(id=jobId, is_removed=True).update(is_removed=False)
+                context['message'] = "Job restored successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
