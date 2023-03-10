@@ -40,11 +40,9 @@
   - [Inactive Jobs](#inactive-jobs)
   - [Get Tenders List](#get-tenders-list)
   - [Get Employers List](#get-employers-list)
-  - [Delete Employers](#delete-employers)
+  - [Delete Users](#delete-users)
   - [Inactive Employers](#inactive-employers)
   - [Get Candidates List](#get-candidates-list)
-  - [Delete Candidates](#delete-candidates)
-  - [Inactive Candidates](#inactive-candidates)
   - [Get User Rights](#get-user-rights)
   - [Update User Rights](#update-user-rights)
   - [Get Privacy Policy](#get-privacy-policy)
@@ -866,11 +864,11 @@ This api is used to get all `Employers List `
   }
   ```
 
-## Delete Employers
+## Delete Users
 
-This api is used to Delete `Employers`
+This api is used to Delete `Users`
 
-- route: `/employers/:employerId`
+- route: `/user/:userId`
 - method: `DELETE`
 
 - response:
@@ -882,19 +880,19 @@ This api is used to Delete `Employers`
     }
   }
   ```
-  ## Inactive Employers
+  ## Inactive Users
 
-This api is used to inactivate `Employers`
+This api is used to inactivate `Users`
 
-- route: `/employers/:employerId`
-- method: `PUT`
+- route: `/user/:userId`
+- method: `Patch`
 
 - response:
   ```js
   {
     "code": 200,
     "data": {
-      "message": "This employer is inactive"
+      "message": "This user is inactive"
     }
   }
   ```
@@ -927,38 +925,6 @@ This api is used to get all `Candidates List `
         "email": "email@email.com",
         "country_code": "+1",
         "mobile_number": "8899887788"
-    }
-  }
-  ```
-## Delete Candidates
-
-This api is used to Delete `Candidates`
-
-- route: `/candidates/:candidateId`
-- method: `DELETE`
-
-- response:
-  ```js
-  {
-    "code": 200,
-    "data": {
-      "message": "Deleted Successfully"
-    }
-  }
-  ```
-  ## Inactive Candidates
-
-This api is used to inactivate `Candidates`
-
-- route: `/candidates/:candidateId`
-- method: `PUT`
-
-- response:
-  ```js
-  {
-    "code": 200,
-    "data": {
-      "message": "This candidate is inactive"
     }
   }
   ```
