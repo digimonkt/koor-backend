@@ -360,7 +360,7 @@ class UserCountSerializers(serializers.Serializer):
         return User.objects.filter(~Q(role='admin')).count()
 
     def get_active_user(self, obj):
-        return UserSession.objects.filter(expire_at=None).order_by('user').distinct('user').count()
+        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None).order_by('user').distinct('user').count()
 
     def get_job_seekers(self, obj):
         return User.objects.filter(role='job_seeker').count()
