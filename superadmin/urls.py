@@ -5,7 +5,7 @@ from .views import (
     EducationLevelView, LanguageView, SkillView,
     TagView, ChangePasswordView, UserRightsView,
     PrivacyPolicyView, CandidatesListView, EmployerListView,
-    JobsListView, UsersCountView
+    JobsListView, UsersCountView, UserView
     )
 
 app_name = "superadmin"
