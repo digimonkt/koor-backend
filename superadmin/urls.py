@@ -40,7 +40,8 @@ urlpatterns = [
     path('/candidates', CandidatesListView.as_view(), name="candidates_list"),
     
     path('/employer', EmployerListView.as_view(), name="employer_list"),
-    path('/employer/<str:employerId>', EmployerListView.as_view(), name="employer_list"),
+    
+    path('/user/<str:userId>', UserView.as_view(), name="user"),
     
     path('/jobs', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
