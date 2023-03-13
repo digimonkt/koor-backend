@@ -370,3 +370,48 @@ class UserCountSerializers(serializers.Serializer):
 
     def get_vendors(self, obj):
         return User.objects.filter(role='vendor').count()
+
+
+class DashboardCountSerializers(serializers.Serializer):
+    """
+    `DashboardCountSerializers` is a serializer class that takes a User model and returns the count of `active jobs` and
+    `employers` within a given `date range`. The class has two serializer method fields, '`employers`' and '`jobs`',
+    which retrieve the count of `employers` and `jobs` respectively.
+
+    Attributes:
+    - `employers (serializers.SerializerMethodField)`: The method field that retrieves the `count of employers`.
+    - `jobs (serializers.SerializerMethodField)`: The method field that retrieves the `count of active jobs`.
+
+    Methods:
+    - `get_jobs(obj)`: A method that returns the `count of active jobs` within the `specified date range`.
+    - `get_employers(obj)`: A method that returns the `count of employers` within the `specified date range`.
+
+    Example usage:
+    - `serializer` = DashboardCountSerializers(context={'start_date': '2022-01-01', 'end_date': '2022-12-31'})
+    - `serialized_data` = serializer.data
+
+    """
+
+    employers = serializers.SerializerMethodField()
+    jobs = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'employers', 'jobs'
+        ]
+
+    def get_jobs(self, obj):
+        start_date =  self.context['start_date']
+        end_date =  self.context['end_date']
+        return JobDetails.objects.filter(
+            start_date__lte=date.today(), deadline__gte=date.today(),
+            created__gte=start_date, created__lte=end_date,
+            status='active').count()
+
+    def get_employers(self, obj):
+        start_date =  self.context['start_date']
+        end_date =  self.context['end_date']
+        return User.objects.filter(
+            date_joined__gte=start_date, date_joined__lte=end_date,
+            role='employer').count()
