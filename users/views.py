@@ -26,7 +26,8 @@ from .serializers import (
     CreateSessionSerializers,
     JobSeekerDetailSerializers,
     EmployerDetailSerializers,
-    UpdateImageSerializers
+    UpdateImageSerializers,
+    SocialLoginSerializers
 )
 
 
@@ -37,7 +38,7 @@ def unique_otp_generator():
             return unique_otp_generator()
     except User.DoesNotExist:
         return otp
-    
+
 
 def create_user_session(request, user):
     """
@@ -345,7 +346,7 @@ class ForgetPasswordView(generics.GenericAPIView):
                     data={"email": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            
+
         except Exception as e:
             context["error"] = str(e)
             return response.Response(
@@ -444,12 +445,78 @@ class GetLocationView(generics.GenericAPIView):
             )
             api_response_dict = api_response.json()
             return response.Response(
-                    data=api_response_dict,
-                    status=status.HTTP_200_OK
-                )
+                data=api_response_dict,
+                status=status.HTTP_200_OK
+            )
         except Exception as e:
             context["error"] = str(e)
             return response.Response(
                 data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class SocialLoginView(generics.GenericAPIView):
+    """
+    SocialLoginView is a view class that handles social login for users.
+
+    The class contains a `post` method that accepts a `request` object and validates the data using the
+    `SocialLoginSerializers` serializer class. It then checks if the user with the given email already exists,
+    and if not, it creates a new user with the validated data. It also checks if the role of the user matches the role
+    provided in the request data. If the user is successfully authenticated, it creates a user session and generates an
+    access token and a refresh token. Finally, it returns a response with a success message, access token, and refresh
+    token.
+
+    Parameters:
+        - `generics.GenericAPIView`: A generic class-based view that handles HTTP requests.
+
+    Returns:
+        - `response.Response`: A response object that contains a success message, access token, and refresh token.
+
+    Raises:
+        - `serializers.ValidationError`: If the serializer data is invalid, it raises a `serializers.ValidationError`.
+    """
+
+    serializer_class = SocialLoginSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            if User.objects.filter(email=serializer.validated_data['email']).exists():
+                user = User.objects.get(email=serializer.validated_data['email'])
+            else:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                user = User.objects.get(id=serializer.data['id'])
+                user.role(serializer.data['role'])
+                user.save()
+                if user.role == "job_seeker":
+                    JobSeekerProfile.objects.create(user=user)
+                elif user.role == "employer":
+                    EmployerProfile.objects.create(user=user)
+            if user.role != serializer.validated_data['role']:
+                context["message"] = "Email registered with wrong role."
+                return response.Response(
+                    data=context,
+                    headers={"x-access": token.access_token, "x-refresh": token},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            user_session = create_user_session(request, user)
+            token = SessionTokenObtainPairSerializer.get_token(
+                user=user,
+                session_id=user_session.id
+            )
+            context["message"] = "User Login Successfully"
+            return response.Response(
+                data=context,
+                headers={"x-access": token.access_token, "x-refresh": token},
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
