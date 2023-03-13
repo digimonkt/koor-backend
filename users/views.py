@@ -13,7 +13,10 @@ from random import randint
 from koor.config.common import Common
 
 from core.middleware import JWTMiddleware
-from core.tokens import SessionTokenObtainPairSerializer, PasswordResetTokenObtainPairSerializer
+from core.tokens import (
+    SessionTokenObtainPairSerializer, 
+    PasswordResetTokenObtainPairSerializer,
+    PasswordChangeTokenObtainPairSerializer)
 from core.emails import get_email_object
 
 from user_profile.models import (
@@ -363,12 +366,49 @@ class ForgetPasswordView(generics.GenericAPIView):
             )
 
 
+class OtpVerificationView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, otp):
+
+        context = dict()
+        try:
+            token = self.request.GET.get('token', None)
+            user_id = None
+            token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
+            if 'user_id' in token:
+                user_id = token['user_id']
+            user_instance = User.objects.get(otp=otp, id=user_id)
+            token = PasswordChangeTokenObtainPairSerializer.get_token(
+                    user=user_instance,
+                    user_id=user_instance.id,
+                    otp=user_instance.otp
+                )
+            context['token'] = str(token.access_token)
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"otp": "Invalid OTP or Token"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class ChangePasswordView(generics.GenericAPIView):
     """
     A view to change a user's password using an OTP.
 
     - Methods:
-        - put(self, request, otp):
+        - put(self, request):
             Changes the password of a user identified by their OTP.
 
     - Attributes:
@@ -377,15 +417,13 @@ class ChangePasswordView(generics.GenericAPIView):
     """
     permission_classes = [permissions.AllowAny]
 
-    def put(self, request, otp):
+    def put(self, request):
         """
         Changes the password of a user identified by their `OTP`.
 
         - `Parameters`:
             - `request` : HttpRequest
                 The HTTP request object.
-            - `otp` : str
-                The `one-time password (OTP)` that identifies the user.
 
         - `Returns:
             - A JSON response containing the status of the password change operation.
@@ -402,6 +440,7 @@ class ChangePasswordView(generics.GenericAPIView):
             token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
             if 'user_id' in token:
                 user_id = token['user_id']
+                otp = token['otp']
             user_instance = User.objects.get(otp=otp, id=user_id)
             user_instance.otp = None
             user_instance.otp_created_at = None
@@ -413,7 +452,7 @@ class ChangePasswordView(generics.GenericAPIView):
             )
         except User.DoesNotExist:
             return response.Response(
-                data={"otp": "Invalid OTP or Token"},
+                data={"otp": "Invalid token"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
