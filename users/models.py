@@ -26,6 +26,11 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         ('employer', "Employer"),
         ('vendor', "Vendor"),
     )
+    CREATION_TYPE_CHOICE = (
+        ('app', "App"),
+        ('facebook', "Facebook"),
+        ('google', "Google")
+    )
 
     username = None
     first_name = None
@@ -68,6 +73,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         max_length=250,
         db_column="role",
         choices=ROLE_TYPE_CHOICE
+    )
+    creation_type = models.CharField(
+        verbose_name=_('Creation Type'),
+        max_length=250,
+        db_column="creation_type",
+        default="app",
+        choices=CREATION_TYPE_CHOICE
     )
     otp = models.CharField(
         verbose_name=_('OTP'),
