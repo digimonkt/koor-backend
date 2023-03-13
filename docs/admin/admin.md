@@ -719,10 +719,20 @@ This api is used to get all `Dashboard `
 - request:
 
   ```js
+  // type one
   {
     "query": 
     {
-      "preiod": 0 || 1 || 2...  // 0 for current year ; 1 for last year
+      "preiod": "this week" || "last week" || "this month"|| "last month"|| "this year"|| "last year"  // 0 for current year ; 1 for last year
+    },
+  }
+
+  // type two
+  {
+    "query": 
+    {
+      "start-date": "YYYY-MM-DD"  // 0 for current year ; 1 for last year
+      "end-date": "YYYY-MM-DD"  // 0 for current year ; 1 for last year
     },
   }
   ```
