@@ -10,7 +10,11 @@ from .models import User, UserSession
 class UserAdmin(UserAdmin):
     fieldsets = (
         (None, {
-            'fields': ('email', 'password', 'mobile_number', 'country_code', 'role','otp','otp_created_at')
+            'fields': (
+                'email', 'password', 'mobile_number', 
+                'country_code', 'role', 'creation_type',
+                'otp', 'otp_created_at'
+                )
         }),
         (_('Personal info'), {
             'fields': ('name', 'image')
@@ -28,7 +32,7 @@ class UserAdmin(UserAdmin):
             'fields': ('email', 'mobile_number', 'role', 'country_code', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'mobile_number', 'is_active', 'role',)
+    list_display = ('email', 'mobile_number', 'is_active', 'role', 'creation_type')
     list_display_links = ('email', 'mobile_number',)
     ordering = ('date_joined',)
 
