@@ -28,6 +28,7 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
     )
     SOURCE_TYPE_CHOICE = (
         ('app', "App"),
+        ('apple', "Apple"),
         ('facebook', "Facebook"),
         ('google', "Google")
     )
