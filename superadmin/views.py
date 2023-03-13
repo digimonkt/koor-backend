@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from rest_framework import (
     status, generics, serializers,
@@ -19,7 +19,8 @@ from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
-    CandidatesSerializers, JobListSerializers, UserCountSerializers
+    CandidatesSerializers, JobListSerializers, UserCountSerializers,
+    DashboardCountSerializers
 )
 
 
@@ -1327,7 +1328,6 @@ class UsersCountView(generics.GenericAPIView):
 
     def get(self, request):
         context = dict()
-        user_context = dict()
         if self.request.user.is_staff:
             try:
                 queryset = User.objects.all()
@@ -1498,5 +1498,94 @@ class JobsRevertView(generics.GenericAPIView):
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
                 data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class DashboardView(generics.GenericAPIView):
+    """
+    `DashboardView` is a generic API view that returns `counts` of `active jobs` and `employers` based on specified
+    `period` or `start and end dates`. The view accepts `GET requests` and requires the user to have
+    `staff permissions`.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that the user must have in order to access this
+                                        view.
+        - `serializer_class (DashboardCountSerializers)`: The serializer class used to serialize the response data.
+
+    Methods:
+        - `get(request)`: A method that handles GET requests and returns `counts of active jobs and employers` based on
+                            specified `period` or `start and end dates`.
+
+    Example usage:
+    To access this view, make a GET request with the following parameters:
+        - `period (optional)`: a string representing the `time period` for which to retrieve counts. Can be one of
+                                '`this week`', '`last week`', '`this month`', '`last month`', '`this year`', or
+                                '`last year`'.
+        - `start-date (optional)`: a string representing the `start date` for which to retrieve counts. Must be in
+                                    '`YYYY-MM-DD`' format.
+        - `end-date (optional)`: a string representing the `end date` for which to retrieve counts. Must be in
+                                    '`YYYY-MM-DD`' format.
+        If the user is not authorized to access this view, a 401 Unauthorized response will be returned. If the request
+        is invalid or there is an error retrieving the counts, a 400 Bad Request response will be returned with a
+        message describing the error.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = DashboardCountSerializers
+
+    def get(self, request):
+        response_context = dict()
+        user_context = dict()
+        if self.request.user.is_staff:
+            try:
+                if 'period' in self.request.GET and 'start-date' in self.request.GET:
+                    response_context['message'] = "Please select one eighter 'period' or 'start and end dates'."
+                    return response.Response(
+                        data=response_context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                period = self.request.GET.get('period', None)
+                start_date = self.request.GET.get('start-date', date.today())
+                end_date = self.request.GET.get('end-date', date.today())
+                if period == "this week":
+                    start_date = start_date - timedelta(days=start_date.weekday())
+                elif period == "last week":
+                    last_week = date.today() + timedelta(days=-2)
+                    start_date = last_week - timedelta(days=last_week.weekday())
+                    end_date = start_date + timedelta(days=6)
+                elif period == "this month":
+                    start_date = date(start_date.year, start_date.month, 1)
+                elif period == "last month":
+                    start_date = date(start_date.year, start_date.month, 1)
+                    end_date = start_date + timedelta(days=-1)
+                    start_date = date(end_date.year, end_date.month, 1)
+                elif period == "this year":
+                    start_date = date(start_date.year, 1, 1)
+                elif period == "last year":
+                    start_date = date(start_date.year, 1, 1)
+                    end_date = start_date + timedelta(days=-1)
+                    start_date = date(end_date.year, 1, 1)
+                context = {
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+                queryset = User.objects.all()
+                serializer = self.serializer_class(queryset, context=context)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                response_context['message'] = str(e)
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
