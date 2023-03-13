@@ -12,7 +12,7 @@ class UserAdmin(UserAdmin):
         (None, {
             'fields': (
                 'email', 'password', 'mobile_number', 
-                'country_code', 'role', 'creation_type',
+                'country_code', 'role', 'source',
                 'otp', 'otp_created_at'
                 )
         }),
@@ -32,7 +32,7 @@ class UserAdmin(UserAdmin):
             'fields': ('email', 'mobile_number', 'role', 'country_code', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'mobile_number', 'is_active', 'role', 'creation_type')
+    list_display = ('email', 'mobile_number', 'is_active', 'role', 'source')
     list_display_links = ('email', 'mobile_number',)
     ordering = ('date_joined',)
 
