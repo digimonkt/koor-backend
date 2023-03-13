@@ -410,3 +410,63 @@ This api is used to get all `Get Location`
   }
 
   ```
+
+## **Social Login**
+
+### Summary
+
+- Route: `api/v1/user/social-login`
+- method: `POST`
+- request :
+
+  request can be one of the following types:
+
+  ```js
+  {
+    "body": {
+      "email": "test@test.com",
+  		"password": "123456789",
+  		"role": "job_seeker" || "employer" || "vendor",
+      "source": "google" || "facebook" || "apple"
+    }
+  }
+
+  {
+    "body": {
+        "email": "test@test.com",
+  		"mobileNumber": "1234567890",
+  		"password": "123456789",
+  		"role": "job_seeker" || "employer" || "vendor",
+      "source": "google" || "facebook" || "apple",
+  		"countryCode": "+91"
+      }
+  }
+
+  {
+    "body": {
+  		"mobileNumber": "123456789",
+  		"password": "123456789",
+  		"role": "job_seeker" || "employer" || "vendor",
+      "source": "google" || "facebook" || "apple",
+  		"countryCode": "+91"
+      }
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 201,
+    "headers": {
+      "x-access": "${JWT_TOKEN}",
+      "x-refresh": "${JWT_TOKEN}"
+    },
+    "body": {
+      "message": "User Created Successfully"
+    }
+  }
+  ```
+
+> Note: When a `user` is creating we need to create a `session` of the `user` also
+
