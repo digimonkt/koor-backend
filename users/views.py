@@ -1,3 +1,5 @@
+import json
+import requests
 from datetime import datetime
 
 from rest_framework import (
@@ -15,6 +17,8 @@ from user_profile.models import (
     JobSeekerProfile,
     EmployerProfile
 )
+
+from superadmin.models import GooglePlaceApi
 
 from .models import UserSession, User
 from .serializers import (
@@ -398,6 +402,51 @@ class ChangePasswordView(generics.GenericAPIView):
                 data={"otp": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class GetLocationView(generics.GenericAPIView):
+    """
+    View that retrieves the Google Places APIs autocomplete suggestions based on a provided search location.
+
+    GET Parameters:
+        - `search`: A string representing the search location.
+
+    Returns:
+        Returns a Response object with a JSON-formatted dictionary of autocomplete suggestions and a status code of
+        200 (OK).
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        """
+        Retrieves the Google Places APIs autocomplete suggestions based on a provided search location.
+
+        Returns:
+            Returns a Response object with a JSON-formatted dictionary of autocomplete suggestions and a status code of
+            200 (OK).
+        """
+        context = dict()
+        search_location = self.request.GET.get('search', None)
+        try:
+            api_data = GooglePlaceApi.objects.filter(status=True).last()
+            api_key = api_data.api_key
+            api_response = requests.get(
+                'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={0}&key={1}'.format(
+                    search_location, api_key
+                )
+            )
+            api_response_dict = api_response.json()
+            return response.Response(
+                    data=api_response_dict,
+                    status=status.HTTP_200_OK
+                )
         except Exception as e:
             context["error"] = str(e)
             return response.Response(
