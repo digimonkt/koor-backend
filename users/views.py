@@ -10,7 +10,7 @@ from rest_framework import (
 from random import randint
 
 from core.middleware import JWTMiddleware
-from core.tokens import SessionTokenObtainPairSerializer
+from core.tokens import SessionTokenObtainPairSerializer, PasswordResetTokenObtainPairSerializer
 from core.emails import get_email_object
 
 from user_profile.models import (
@@ -336,6 +336,11 @@ class ForgetPasswordView(generics.GenericAPIView):
                 user_instance.otp = otp
                 user_instance.otp_created_at = datetime.now()
                 user_instance.save()
+                token = PasswordResetTokenObtainPairSerializer.get_token(
+                    user=user_instance,
+                    user_id=user_instance.id
+                )
+                response_context['token'] = str(token.access_token)
                 response_context['message'] = "OTP sent to " + user_email
                 return response.Response(
                     data=response_context,
