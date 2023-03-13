@@ -1,6 +1,7 @@
-import json
+import json, jwt
 import requests
 from datetime import datetime
+
 
 from rest_framework import (
     status, generics, serializers,
@@ -8,6 +9,8 @@ from rest_framework import (
 )
 
 from random import randint
+
+from koor.config.common import Common
 
 from core.middleware import JWTMiddleware
 from core.tokens import SessionTokenObtainPairSerializer, PasswordResetTokenObtainPairSerializer
@@ -394,7 +397,12 @@ class ChangePasswordView(generics.GenericAPIView):
         context = dict()
         try:
             password = request.data['password']
-            user_instance = User.objects.get(otp=otp)
+            token = self.request.GET.get('token', None)
+            user_id = None
+            token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
+            if 'user_id' in token:
+                user_id = token['user_id']
+            user_instance = User.objects.get(otp=otp, id=user_id)
             user_instance.otp = None
             user_instance.otp_created_at = None
             user_instance.set_password(password)
@@ -405,7 +413,7 @@ class ChangePasswordView(generics.GenericAPIView):
             )
         except User.DoesNotExist:
             return response.Response(
-                data={"otp": "Does Not Exist"},
+                data={"otp": "Invalid OTP or Token"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
