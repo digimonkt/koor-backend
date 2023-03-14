@@ -338,33 +338,27 @@ class JobSuggestionView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request, jobId):
-
+        context = dict()
+        if request.user:
+            context = {"user":request.user}
         queryset = self.filter_queryset(self.get_queryset())
-        job_instance = JobDetails.objects.get(id=jobId)
-        annotated_job_details = JobDetails.objects.annotate(
-            matches=Value(0)
-            ).annotate(
-                matches=Case(
-                    When(
-                        budget_amount=job_instance.budget_amount,
-                        then=F('matches') + 1
-                        ), 
-                    default=F('matches'),
-                    output_field=IntegerField()
-                    )
+        try:
+            job_instance = JobDetails.objects.get(id=jobId)
+            annotated_job_details = JobDetails.objects.annotate(
+                matches=Value(0)
                 ).annotate(
                     matches=Case(
                         When(
-                            skill__in=job_instance.skill.all(),
+                            budget_amount=job_instance.budget_amount,
                             then=F('matches') + 1
-                            ),
+                            ), 
                         default=F('matches'),
                         output_field=IntegerField()
                         )
                     ).annotate(
                         matches=Case(
                             When(
-                                job_category__in=job_instance.job_category.all(), 
+                                skill__in=job_instance.skill.all(),
                                 then=F('matches') + 1
                                 ),
                             default=F('matches'),
@@ -373,7 +367,7 @@ class JobSuggestionView(generics.ListAPIView):
                         ).annotate(
                             matches=Case(
                                 When(
-                                    working_days=job_instance.working_days,
+                                    job_category__in=job_instance.job_category.all(), 
                                     then=F('matches') + 1
                                     ),
                                 default=F('matches'),
@@ -382,19 +376,33 @@ class JobSuggestionView(generics.ListAPIView):
                             ).annotate(
                                 matches=Case(
                                     When(
-                                        highest_education=job_instance.highest_education,
+                                        working_days=job_instance.working_days,
                                         then=F('matches') + 1
                                         ),
                                     default=F('matches'),
                                     output_field=IntegerField()
                                     )
-                                )
-        jobs = annotated_job_details.filter(matches=4)
-        if jobs.count() == 0:
-            jobs = annotated_job_details.order_by('-matches')
-        page = self.paginate_queryset(jobs)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(jobs, many=True)
-        return response.Response(serializer.data)
+                                ).annotate(
+                                    matches=Case(
+                                        When(
+                                            highest_education=job_instance.highest_education,
+                                            then=F('matches') + 1
+                                            ),
+                                        default=F('matches'),
+                                        output_field=IntegerField()
+                                        )
+                                    )
+            jobs = annotated_job_details.filter(matches=4)
+            if jobs.count() == 0:
+                jobs = annotated_job_details.order_by('-matches')
+            page = self.paginate_queryset(jobs)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(jobs, many=True, context=context)
+            return response.Response(serializer.data)
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"job": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
