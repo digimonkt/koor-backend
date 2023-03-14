@@ -98,7 +98,7 @@ class JobsView(generics.ListAPIView):
             count = paginator.count
             next = paginator.get_next_link()
             previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
+        serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
         return response.Response(
             {'count': count,
              "next": next,
