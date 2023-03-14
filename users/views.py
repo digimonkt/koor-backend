@@ -283,7 +283,7 @@ class DisplayImageView(generics.GenericAPIView):
             )
 
 
-class ForgetPasswordView(generics.GenericAPIView):
+class SendOtpView(generics.GenericAPIView):
     """
     A view for sending an `OTP to a user's email` address for `password recovery`.
 
@@ -445,7 +445,9 @@ class ChangePasswordView(generics.GenericAPIView):
             user_instance.otp = None
             user_instance.otp_created_at = None
             user_instance.set_password(password)
+            user_instance.is_verified = True
             user_instance.save()
+            context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
@@ -572,3 +574,59 @@ class SocialLoginView(generics.GenericAPIView):
                 data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class VerificationView(generics.GenericAPIView):
+    """
+    A class-based view that handles the verification of user's OTP and sets the user's verification status to True.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, otp):
+        """
+        Handle GET requests for the view.
+
+        Args:
+            - `request`: The HTTP request object.
+            - `otp`: The OTP received by the user for verification.
+
+        Returns:
+            - A Response object with status code 200 if the user is successfully verified.
+            - A Response object with status code 404 if the user's OTP or token is invalid.
+            - A Response object with status code 400 if there is any other error during the verification process.
+        """
+
+        context = dict()
+        try:
+            token = self.request.GET.get('token', None)
+            user_id = None
+            token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
+            if 'user_id' in token:
+                user_id = token['user_id']
+            
+            user_instance = User.objects.get(otp=otp, id=user_id)
+            if user_instance.is_verified == True:
+                context['message'] = "Your email address already verified."
+            else:
+                user_instance.otp = None
+                user_instance.otp_created_at = None
+                user_instance.is_verified = True
+                user_instance.save()
+                context['message'] = "Your email address is verified."
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"otp": "Invalid OTP or Token"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
