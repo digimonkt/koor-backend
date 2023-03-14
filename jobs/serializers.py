@@ -314,11 +314,10 @@ class GetJobsSerializers(serializers.ModelSerializer):
         
     def get_is_saved(self, obj):
         is_saved_record = False
-        user =  self.context['user']
-        if user:
+        if 'user' in self.context:
             is_saved_record = SavedJob.objects.filter(
                 job=obj,
-                user=user
+                user=self.context['user']
             ).exists()
         return is_saved_record
     
