@@ -91,6 +91,7 @@ class UserView(generics.GenericAPIView):
             data, returns HTTP response with status 400 and error message.
         """
         context = dict()
+        response_context = dict()
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -98,19 +99,47 @@ class UserView(generics.GenericAPIView):
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
             user.save()
+            # --------------------------------------------------------
+            if user.email:
+                otp = unique_otp_generator()
+                full_url = self.request.build_absolute_uri()
+                path = self.request.path
+                Base_url = full_url.replace(path, "")
+                if "?" in Base_url:
+                    Base_url = Base_url.split("?")[0]
+                context["yourname"] = user.email
+                context["otp"] = otp
+                get_email_object(
+                    subject=f'OTP for Verification',
+                    email_template_name='email-templates/send-forget-password-otp.html',
+                    context=context,
+                    to_email=[user.email, ],
+                    base_url=Base_url
+                )
+                user.otp = otp
+                user.otp_created_at = datetime.now()
+                user.save()
+                otp_token = PasswordResetTokenObtainPairSerializer.get_token(
+                    user=user,
+                    user_id=user.id
+                )
+                response_context['token'] = str(otp_token) 
+            else:
+                user.is_verified = True
+                user.save()
+            # --------------------------------------------------------
             if user.role == "job_seeker":
                 JobSeekerProfile.objects.create(user=user)
             elif user.role == "employer":
                 EmployerProfile.objects.create(user=user)
             user_session = create_user_session(request, user)
-
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
                 session_id=user_session.id
             )
-            context["message"] = "User Created Successfully"
+            response_context["message"] = "User Created Successfully"
             return response.Response(
-                data=context,
+                data=response_context,
                 headers={"x-access": token.access_token, "x-refresh": token},
                 status=status.HTTP_201_CREATED
             )
@@ -333,7 +362,7 @@ class SendOtpView(generics.GenericAPIView):
                 context["yourname"] = user_email
                 context["otp"] = otp
                 get_email_object(
-                    subject=f'Forget Password',
+                    subject=f'OTP for Verification',
                     email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
                     to_email=[user_email, ],
