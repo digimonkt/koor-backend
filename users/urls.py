@@ -2,8 +2,9 @@ from django.urls import path
 
 from .views import (
     UserView, CreateSessionView, DeleteSessionView,
-    DisplayImageView, ForgetPasswordView, ChangePasswordView,
-    GetLocationView, SocialLoginView, OtpVerificationView
+    DisplayImageView, SendOtpView, ChangePasswordView,
+    GetLocationView, SocialLoginView, OtpVerificationView,
+    VerificationView
     )
 
 app_name = "users"
@@ -20,11 +21,13 @@ urlpatterns = [
     
     path('/display-image', DisplayImageView.as_view(), name="display_image"),
     
-    path('/forget-password', ForgetPasswordView.as_view(), name="forget_password"),
+    path('/send-otp', SendOtpView.as_view(), name="send_otp"),
     
     path('/otp-verification/<str:otp>', OtpVerificationView.as_view(), name="otp_verification"),
     
     path('/change-password', ChangePasswordView.as_view(), name="change_password"),
     
     path('/get-location', GetLocationView.as_view(), name="get_location"),
+    
+    path('/email-verification/<str:otp>', VerificationView.as_view(), name="verification"),
 ]
