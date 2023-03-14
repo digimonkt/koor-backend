@@ -543,10 +543,8 @@ class SocialLoginView(generics.GenericAPIView):
                 user = User.objects.get(email=serializer.validated_data['email'])
             else:
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                serializer.save(is_verified=True)
                 user = User.objects.get(id=serializer.data['id'])
-                user.role(serializer.data['role'])
-                user.save()
                 if user.role == "job_seeker":
                     JobSeekerProfile.objects.create(user=user)
                 elif user.role == "employer":
