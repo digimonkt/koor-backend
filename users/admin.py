@@ -20,7 +20,7 @@ class UserAdmin(UserAdmin):
             'fields': ('name', 'image')
         }),
         (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser',)
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'is_verified')
         }),
         (_('Important dates'), {
             'fields': ('last_login', 'date_joined',)

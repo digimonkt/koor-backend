@@ -104,6 +104,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         db_column="image",
         related_name='%(app_label)s_%(class)s_image'
     )
+    is_verified = models.BooleanField(
+        verbose_name=_('Is Verified'),
+        db_column="is_verified",
+        null=True,
+        blank=True,
+        default=False
+    )
     USERNAME_FIELD = 'email'  # set email as a username
     REQUIRED_FIELDS = []
 
