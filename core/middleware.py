@@ -77,7 +77,7 @@ class JWTMiddleware(MiddlewareMixin):
                     return response
                 else:
                     response.status_code = 401
-                    res = '{"error": "Email is not verified", "email":"'+ get_session.user.email +'"}'
+                    res = '{"message": "Email is not verified", "email":"'+ get_session.user.email +'"}'
                     response.headers.setdefault(self.access_token_lookup, access_token)
                     response.content = bytes(res, encoding="UTF8")
                     return response
@@ -98,7 +98,7 @@ class JWTMiddleware(MiddlewareMixin):
                                 response.headers.setdefault(self.access_token_lookup, new_access_token)
                             else:
                                 response.status_code = 401
-                                res = '{"error": "Email is not verified", "email":"'+ session.user.email +'"}'
+                                res = '{"message": "Email is not verified", "email":"'+ session.user.email +'"}'
                                 response.headers.setdefault(self.access_token_lookup, new_access_token)
                                 response.content = bytes(res, encoding="UTF8")
                         return response
