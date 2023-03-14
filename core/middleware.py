@@ -71,9 +71,16 @@ class JWTMiddleware(MiddlewareMixin):
             try:
                 # Try to decode the access token and if not possible handle the respective Exception 
                 access_token_payload = self.decode_token(access_token)
-                self.get_session(access_token_payload)
+                get_session = self.get_session(access_token_payload)
                 # Return the response to respective endpoint
-                return response
+                if get_session.user.is_verified:
+                    return response
+                else:
+                    response.status_code = 401
+                    res = '{"error": "Email is not verified", "email":"'+ get_session.user.email +'"}'
+                    response.headers.setdefault(self.access_token_lookup, access_token)
+                    response.content = bytes(res, encoding="UTF8")
+                    return response
 
             except jwt.ExpiredSignatureError:
                 # If the access token expired then we process the refresh token
@@ -87,19 +94,25 @@ class JWTMiddleware(MiddlewareMixin):
                             request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
                             request.META[self.access_token_lookup] = new_access_token
                             response = self.get_response(request)
-                            response.headers.setdefault(self.access_token_lookup, new_access_token)
+                            if session.user.is_verified:
+                                response.headers.setdefault(self.access_token_lookup, new_access_token)
+                            else:
+                                response.status_code = 401
+                                res = '{"error": "Email is not verified", "email":"'+ session.user.email +'"}'
+                                response.headers.setdefault(self.access_token_lookup, new_access_token)
+                                response.content = bytes(res, encoding="UTF8")
                         return response
-                    response.status_code = 401
+                    response.status_code = 403
                     return response
 
                 # if the session does not exist
                 except UserSession.DoesNotExist:
-                    response.status_code = 401
+                    response.status_code = 403
                     return response
 
                 # check if the token is already expired
                 except jwt.ExpiredSignatureError:
-                    response.status_code = 401
+                    response.status_code = 403
                     return response
 
             # check if any other exception occur
@@ -108,7 +121,7 @@ class JWTMiddleware(MiddlewareMixin):
                 jwt.InvalidTokenError,
                 jwt.InvalidSignatureError,
             ]:
-                response.status_code = 401
+                response.status_code = 403
                 return response
         else:
             return response
