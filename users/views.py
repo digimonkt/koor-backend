@@ -94,7 +94,10 @@ class UserView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            if 'email' not in serializer.validated_data:
+                serializer.save(is_verified=True)
+            else:
+                serializer.save()
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
             user.save()
