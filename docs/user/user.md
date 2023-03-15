@@ -10,6 +10,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 - **[Delete user session (logout)](#forget-user-password):** This route is used to delete the user session
 - **[Get user details](#get-user-details):** This route is used to get user details by id or by token
 - **[Update Profile Image](#update-profile-image):** This route is used to update profile Image
+- **[Get Location](#get-location):**
 
 ## **Create User**
 
@@ -339,3 +340,133 @@ This API is used to update the `display_image` of the user.
     }
   }
   ```
+
+## Get Location
+
+This api is used to get all `Get Location`
+
+- route: `/get-location`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "query": 
+    {
+      "search": "ind" || ""  // for search data
+    },
+  }
+  
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "predictions": [
+          {
+            "description": "Indore, Madhya Pradesh, India",
+            "matched_substrings": [
+                {
+                    "length": 5,
+                    "offset": 0
+                }
+            ],
+            "place_id": "ChIJ2w1BG638YjkR9EBiNdrEbgk",
+            "reference": "ChIJ2w1BG638YjkR9EBiNdrEbgk",
+            "structured_formatting": {
+                "main_text": "Indore",
+                "main_text_matched_substrings": [
+                    {
+                        "length": 5,
+                        "offset": 0
+                    }
+                ],
+                "secondary_text": "Madhya Pradesh, India"
+            },
+            "terms": [
+                {
+                    "offset": 0,
+                    "value": "Indore"
+                },
+                {
+                    "offset": 8,
+                    "value": "Madhya Pradesh"
+                },
+                {
+                    "offset": 24,
+                    "value": "India"
+                }
+            ],
+            "types": [
+                "locality",
+                "political",
+                "geocode"
+            ]
+        },
+      ],
+    "status": "OK"
+    }
+  }
+
+  ```
+
+## **Social Login**
+
+### Summary
+
+- Route: `api/v1/user/social-login`
+- method: `POST`
+- request :
+
+  request can be one of the following types:
+
+  ```js
+  {
+    "body": {
+      "email": "test@test.com",
+  		"password": "123456789",
+  		"role": "job_seeker" || "employer" || "vendor",
+      "source": "google" || "facebook" || "apple"
+    }
+  }
+
+  {
+    "body": {
+        "email": "test@test.com",
+  		"mobileNumber": "1234567890",
+  		"password": "123456789",
+  		"role": "job_seeker" || "employer" || "vendor",
+      "source": "google" || "facebook" || "apple",
+  		"countryCode": "+91"
+      }
+  }
+
+  {
+    "body": {
+  		"mobileNumber": "123456789",
+  		"password": "123456789",
+  		"role": "job_seeker" || "employer" || "vendor",
+      "source": "google" || "facebook" || "apple",
+  		"countryCode": "+91"
+      }
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 201,
+    "headers": {
+      "x-access": "${JWT_TOKEN}",
+      "x-refresh": "${JWT_TOKEN}"
+    },
+    "body": {
+      "message": "User Created Successfully"
+    }
+  }
+  ```
+
+> Note: When a `user` is creating we need to create a `session` of the `user` also
+

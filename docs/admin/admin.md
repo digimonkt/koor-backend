@@ -36,8 +36,13 @@
   - [Get Credit](#get-credit)
   - [Get Dashboard](#get-dashboard)
   - [Get Jobs List](#get-jobs-list)
+  - [Delete Jobs](#delete-jobs)
+  - [Revert Jobs](#revert-jobs)
+  - [Inactive Jobs](#inactive-jobs)
   - [Get Tenders List](#get-tenders-list)
   - [Get Employers List](#get-employers-list)
+  - [Delete Users](#delete-users)
+  - [Inactive Users](#inactive-users)
   - [Get Candidates List](#get-candidates-list)
   - [Get User Rights](#get-user-rights)
   - [Update User Rights](#update-user-rights)
@@ -690,6 +695,7 @@ This api is used to get all `Credit`
       "preiod": 0 || 1 || 2...  // 0 for current month ; 1 for last months
     },
   }
+  ```
 
 - response:
   ```js
@@ -713,12 +719,23 @@ This api is used to get all `Dashboard `
 - request:
 
   ```js
+  // type one
   {
     "query": 
     {
-      "preiod": 0 || 1 || 2...  // 0 for current year ; 1 for last year
+      "preiod": "this week" || "last week" || "this month"|| "last month"|| "this year"|| "last year"  // 0 for current year ; 1 for last year
     },
   }
+
+  // type two
+  {
+    "query": 
+    {
+      "start-date": "YYYY-MM-DD"  // 0 for current year ; 1 for last year
+      "end-date": "YYYY-MM-DD"  // 0 for current year ; 1 for last year
+    },
+  }
+  ```
 
 - response:
   ```js
@@ -735,7 +752,7 @@ This api is used to get all `Dashboard `
 
 This api is used to get all `Jobs List `
 
-- route: `/jobs-list`
+- route: `/jobs`
 - method: `GET`
 - request:
 
@@ -747,6 +764,7 @@ This api is used to get all `Jobs List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -760,12 +778,60 @@ This api is used to get all `Jobs List `
     }
   }
   ```
+## Delete Jobs
+
+This api is used to Delete `Jobs`
+
+- route: `/jobs/:jobId`
+- method: `DELETE`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+## Revert Jobs
+
+This api is used to revert `Jobs`
+
+- route: `/jobs/:jobId/revert`
+- method: `PATCH  `
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Job restored successfully"
+    }
+  }
+  ```
+  ## Inactive Jobs
+
+This api is used to inactivate `Jobs`
+
+- route: `/jobs/:jobId`
+- method: `PUT`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "This job is inactive"
+    }
+  }
+  ```
 
 ## Get Tenders List
 
 This api is used to get all `Ttenders List `
 
-- route: `/tenders-list`
+- route: `/tenders`
 - method: `GET`
 - request:
 
@@ -777,6 +843,7 @@ This api is used to get all `Ttenders List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -795,7 +862,7 @@ This api is used to get all `Ttenders List `
 
 This api is used to get all `Employers List `
 
-- route: `/employers-list`
+- route: `/employers`
 - method: `GET`
 - request:
 
@@ -807,6 +874,7 @@ This api is used to get all `Employers List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -823,11 +891,43 @@ This api is used to get all `Employers List `
   }
   ```
 
+## Delete Users
+
+This api is used to Delete `Users`
+
+- route: `/user/:userId`
+- method: `DELETE`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+  ## Inactive Users
+
+This api is used to inactivate `Users`
+
+- route: `/user/:userId`
+- method: `Patch`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "This user is inactive"
+    }
+  }
+  ```
 ## Get Candidates List
 
 This api is used to get all `Candidates List `
 
-- route: `/candidates-list`
+- route: `/candidates`
 - method: `GET`
 - request:
 
@@ -839,6 +939,7 @@ This api is used to get all `Candidates List `
       "filter": "location" || ""  // for filtering data according to location
     },
   }
+  ```
 
 - response:
   ```js
@@ -854,7 +955,6 @@ This api is used to get all `Candidates List `
     }
   }
   ```
-
 ## Get User Rights
 
 This api is used to get all `User Rights`

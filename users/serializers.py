@@ -725,3 +725,58 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+
+class SocialLoginSerializers(serializers.ModelSerializer):
+    """
+    SocialLoginSerializers is a serializer class for the User model that creates social login serializers.
+
+    The class contains three methods: `validate_mobile_number`, `validate_email`, and `validate`.
+
+    `validate_mobile_number` validates that the mobile number is not blank and contains only numbers. It raises a
+    `serializers.ValidationError` if the mobile number is blank or contains non-numeric characters.
+
+    `validate_email` validates that the email is not blank. It raises a `serializers.ValidationError` if the email is
+    blank.
+
+    `validate` validates that the source is not blank and that the country code is not blank if the mobile number is
+    present. It returns the validated data.
+
+    Parameters:
+        - `serializers.ModelSerializer`: A ModelSerializer object that defines the serialization of the User model.
+
+    Returns:
+        - `dict`: A dictionary containing the validated data.
+
+    Raises:
+        - `serializers.ValidationError`: If the mobile number is blank or contains non-numeric characters, or if the
+        email is blank, or if the source is blank or the country code is blank when the mobile number is present.
+    """
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code']
+
+    def validate_mobile_number(self, mobile_number):
+        if mobile_number != '':
+            if mobile_number.isdigit():
+                return mobile_number
+            else:
+                raise serializers.ValidationError('mobile_number must contain only numbers', code='mobile_number')
+        else:
+            raise serializers.ValidationError('mobile_number can not be blank', code='mobile_number')
+
+    def validate_email(self, email):
+        if email != '':
+            return email
+        else:
+            raise serializers.ValidationError('email can not be blank', code='email')
+
+    def validate(self, data):
+        country_code = data.get("country_code")
+        mobile_number = data.get("mobile_number")
+        source = data.get("source")
+        if source in ["", None]:
+            raise serializers.ValidationError({'source': 'source can not be blank'})
+        if mobile_number and country_code in ["", None]:
+            raise serializers.ValidationError({'country_code': 'country code can not be blank'})
+        return data

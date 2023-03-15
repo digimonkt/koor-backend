@@ -1,4 +1,7 @@
+import json, jwt
+import requests
 from datetime import datetime
+
 
 from rest_framework import (
     status, generics, serializers,
@@ -7,8 +10,13 @@ from rest_framework import (
 
 from random import randint
 
+from koor.config.common import Common
+
 from core.middleware import JWTMiddleware
-from core.tokens import SessionTokenObtainPairSerializer
+from core.tokens import (
+    SessionTokenObtainPairSerializer, 
+    PasswordResetTokenObtainPairSerializer,
+    PasswordChangeTokenObtainPairSerializer)
 from core.emails import get_email_object
 
 from user_profile.models import (
@@ -16,13 +24,16 @@ from user_profile.models import (
     EmployerProfile
 )
 
+from superadmin.models import GooglePlaceApi
+
 from .models import UserSession, User
 from .serializers import (
     CreateUserSerializers,
     CreateSessionSerializers,
     JobSeekerDetailSerializers,
     EmployerDetailSerializers,
-    UpdateImageSerializers
+    UpdateImageSerializers,
+    SocialLoginSerializers
 )
 
 
@@ -33,7 +44,7 @@ def unique_otp_generator():
             return unique_otp_generator()
     except User.DoesNotExist:
         return otp
-    
+
 
 def create_user_session(request, user):
     """
@@ -80,6 +91,7 @@ class UserView(generics.GenericAPIView):
             data, returns HTTP response with status 400 and error message.
         """
         context = dict()
+        response_context = dict()
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
@@ -87,19 +99,48 @@ class UserView(generics.GenericAPIView):
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
             user.save()
+            # --------------------------------------------------------
+            if user.email:
+                otp = unique_otp_generator()
+                full_url = self.request.build_absolute_uri()
+                path = self.request.path
+                Base_url = full_url.replace(path, "")
+                if "?" in Base_url:
+                    Base_url = Base_url.split("?")[0]
+                context["yourname"] = user.email
+                context["otp"] = otp
+                get_email_object(
+                    subject=f'OTP for Verification',
+                    email_template_name='email-templates/send-forget-password-otp.html',
+                    context=context,
+                    to_email=[user.email, ],
+                    base_url=Base_url
+                )
+                user.otp = otp
+                user.otp_created_at = datetime.now()
+                user.is_verified = True
+                user.save()
+                otp_token = PasswordResetTokenObtainPairSerializer.get_token(
+                    user=user,
+                    user_id=user.id
+                )
+                response_context['token'] = str(otp_token) 
+            else:
+                user.is_verified = True
+                user.save()
+            # --------------------------------------------------------
             if user.role == "job_seeker":
                 JobSeekerProfile.objects.create(user=user)
             elif user.role == "employer":
                 EmployerProfile.objects.create(user=user)
             user_session = create_user_session(request, user)
-
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
                 session_id=user_session.id
             )
-            context["message"] = "User Created Successfully"
+            response_context["message"] = "User Created Successfully"
             return response.Response(
-                data=context,
+                data=response_context,
                 headers={"x-access": token.access_token, "x-refresh": token},
                 status=status.HTTP_201_CREATED
             )
@@ -272,7 +313,7 @@ class DisplayImageView(generics.GenericAPIView):
             )
 
 
-class ForgetPasswordView(generics.GenericAPIView):
+class SendOtpView(generics.GenericAPIView):
     """
     A view for sending an `OTP to a user's email` address for `password recovery`.
 
@@ -322,7 +363,7 @@ class ForgetPasswordView(generics.GenericAPIView):
                 context["yourname"] = user_email
                 context["otp"] = otp
                 get_email_object(
-                    subject=f'Forget Password',
+                    subject=f'OTP for Verification',
                     email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
                     to_email=[user_email, ],
@@ -331,6 +372,11 @@ class ForgetPasswordView(generics.GenericAPIView):
                 user_instance.otp = otp
                 user_instance.otp_created_at = datetime.now()
                 user_instance.save()
+                token = PasswordResetTokenObtainPairSerializer.get_token(
+                    user=user_instance,
+                    user_id=user_instance.id
+                )
+                response_context['token'] = str(token.access_token)
                 response_context['message'] = "OTP sent to " + user_email
                 return response.Response(
                     data=response_context,
@@ -341,7 +387,44 @@ class ForgetPasswordView(generics.GenericAPIView):
                     data={"email": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            
+
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class OtpVerificationView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, otp):
+
+        context = dict()
+        try:
+            token = self.request.GET.get('token', None)
+            user_id = None
+            token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
+            if 'user_id' in token:
+                user_id = token['user_id']
+            user_instance = User.objects.get(otp=otp, id=user_id)
+            token = PasswordChangeTokenObtainPairSerializer.get_token(
+                    user=user_instance,
+                    user_id=user_instance.id,
+                    otp=user_instance.otp
+                )
+            context['token'] = str(token.access_token)
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"otp": "Invalid OTP or Token"},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             context["error"] = str(e)
             return response.Response(
@@ -355,7 +438,7 @@ class ChangePasswordView(generics.GenericAPIView):
     A view to change a user's password using an OTP.
 
     - Methods:
-        - put(self, request, otp):
+        - put(self, request):
             Changes the password of a user identified by their OTP.
 
     - Attributes:
@@ -364,15 +447,13 @@ class ChangePasswordView(generics.GenericAPIView):
     """
     permission_classes = [permissions.AllowAny]
 
-    def put(self, request, otp):
+    def put(self, request):
         """
         Changes the password of a user identified by their `OTP`.
 
         - `Parameters`:
             - `request` : HttpRequest
                 The HTTP request object.
-            - `otp` : str
-                The `one-time password (OTP)` that identifies the user.
 
         - `Returns:
             - A JSON response containing the status of the password change operation.
@@ -384,18 +465,26 @@ class ChangePasswordView(generics.GenericAPIView):
         context = dict()
         try:
             password = request.data['password']
-            user_instance = User.objects.get(otp=otp)
+            token = self.request.GET.get('token', None)
+            user_id = None
+            token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
+            if 'user_id' in token:
+                user_id = token['user_id']
+                otp = token['otp']
+            user_instance = User.objects.get(otp=otp, id=user_id)
             user_instance.otp = None
             user_instance.otp_created_at = None
             user_instance.set_password(password)
+            user_instance.is_verified = True
             user_instance.save()
+            context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
             )
         except User.DoesNotExist:
             return response.Response(
-                data={"otp": "Does Not Exist"},
+                data={"otp": "Invalid token"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
@@ -404,3 +493,168 @@ class ChangePasswordView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class GetLocationView(generics.GenericAPIView):
+    """
+    View that retrieves the Google Places APIs autocomplete suggestions based on a provided search location.
+
+    GET Parameters:
+        - `search`: A string representing the search location.
+
+    Returns:
+        Returns a Response object with a JSON-formatted dictionary of autocomplete suggestions and a status code of
+        200 (OK).
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        """
+        Retrieves the Google Places APIs autocomplete suggestions based on a provided search location.
+
+        Returns:
+            Returns a Response object with a JSON-formatted dictionary of autocomplete suggestions and a status code of
+            200 (OK).
+        """
+        context = dict()
+        search_location = self.request.GET.get('search', None)
+        try:
+            api_data = GooglePlaceApi.objects.filter(status=True).last()
+            api_key = api_data.api_key
+            api_response = requests.get(
+                'https://maps.googleapis.com/maps/api/place/autocomplete/json?input={0}&key={1}'.format(
+                    search_location, api_key
+                )
+            )
+            api_response_dict = api_response.json()
+            return response.Response(
+                data=api_response_dict,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class SocialLoginView(generics.GenericAPIView):
+    """
+    SocialLoginView is a view class that handles social login for users.
+
+    The class contains a `post` method that accepts a `request` object and validates the data using the
+    `SocialLoginSerializers` serializer class. It then checks if the user with the given email already exists,
+    and if not, it creates a new user with the validated data. It also checks if the role of the user matches the role
+    provided in the request data. If the user is successfully authenticated, it creates a user session and generates an
+    access token and a refresh token. Finally, it returns a response with a success message, access token, and refresh
+    token.
+
+    Parameters:
+        - `generics.GenericAPIView`: A generic class-based view that handles HTTP requests.
+
+    Returns:
+        - `response.Response`: A response object that contains a success message, access token, and refresh token.
+
+    Raises:
+        - `serializers.ValidationError`: If the serializer data is invalid, it raises a `serializers.ValidationError`.
+    """
+
+    serializer_class = SocialLoginSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            if User.objects.filter(email=serializer.validated_data['email']).exists():
+                user = User.objects.get(email=serializer.validated_data['email'])
+            else:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(is_verified=True)
+                user = User.objects.get(id=serializer.data['id'])
+                if user.role == "job_seeker":
+                    JobSeekerProfile.objects.create(user=user)
+                elif user.role == "employer":
+                    EmployerProfile.objects.create(user=user)
+            if user.role != serializer.validated_data['role']:
+                context["message"] = "Email registered with wrong role."
+                return response.Response(
+                    data=context,
+                    headers={"x-access": token.access_token, "x-refresh": token},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            user_session = create_user_session(request, user)
+            token = SessionTokenObtainPairSerializer.get_token(
+                user=user,
+                session_id=user_session.id
+            )
+            context["message"] = "User Login Successfully"
+            return response.Response(
+                data=context,
+                headers={"x-access": token.access_token, "x-refresh": token},
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class VerificationView(generics.GenericAPIView):
+    """
+    A class-based view that handles the verification of user's OTP and sets the user's verification status to True.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, otp):
+        """
+        Handle GET requests for the view.
+
+        Args:
+            - `request`: The HTTP request object.
+            - `otp`: The OTP received by the user for verification.
+
+        Returns:
+            - A Response object with status code 200 if the user is successfully verified.
+            - A Response object with status code 404 if the user's OTP or token is invalid.
+            - A Response object with status code 400 if there is any other error during the verification process.
+        """
+
+        context = dict()
+        try:
+            token = self.request.GET.get('token', None)
+            user_id = None
+            token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
+            if 'user_id' in token:
+                user_id = token['user_id']
+            
+            user_instance = User.objects.get(otp=otp, id=user_id)
+            if user_instance.is_verified == True:
+                context['message'] = "Your email address already verified."
+            else:
+                user_instance.otp = None
+                user_instance.otp_created_at = None
+                user_instance.is_verified = True
+                user_instance.save()
+                context['message'] = "Your email address is verified."
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"otp": "Invalid OTP or Token"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+

@@ -10,13 +10,17 @@ from .models import User, UserSession
 class UserAdmin(UserAdmin):
     fieldsets = (
         (None, {
-            'fields': ('email', 'password', 'mobile_number', 'country_code', 'role','otp','otp_created_at')
+            'fields': (
+                'email', 'password', 'mobile_number', 
+                'country_code', 'role', 'source',
+                'otp', 'otp_created_at'
+                )
         }),
         (_('Personal info'), {
             'fields': ('name', 'image')
         }),
         (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser',)
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'is_verified')
         }),
         (_('Important dates'), {
             'fields': ('last_login', 'date_joined',)
@@ -28,7 +32,7 @@ class UserAdmin(UserAdmin):
             'fields': ('email', 'mobile_number', 'role', 'country_code', 'password1', 'password2'),
         }),
     )
-    list_display = ('email', 'mobile_number', 'is_active', 'role',)
+    list_display = ('email', 'mobile_number', 'is_active', 'role', 'source')
     list_display_links = ('email', 'mobile_number',)
     ordering = ('date_joined',)
 

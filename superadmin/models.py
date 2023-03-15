@@ -56,3 +56,23 @@ class Content(SlugBaseModel, SoftDeleteModel, models.Model):
         verbose_name = "Content"
         verbose_name_plural = "Contents"
         db_table = "Content"
+
+
+
+class GooglePlaceApi(SoftDeleteModel, models.Model):
+    api_key = models.CharField(
+        verbose_name=_('API Key'),
+        db_column="api_key",
+        max_length=255
+        )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        default=True
+        )
+
+    def __str__(self):
+        return self.api_key
+    
+    class Meta:
+        verbose_name_plural = "Google Place Api"

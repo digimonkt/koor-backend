@@ -1,15 +1,20 @@
+from datetime import date
+
+from django.db.models import Q
 from rest_framework import serializers
 
 from jobs.models import (
-    JobCategory
+    JobCategory, JobDetails
 )
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag
 )
-
+from project_meta.serializers import (
+    CitySerializer, CountrySerializer
+)
 from users.backends import MobileOrEmailBackend as cb
-
+from users.models import User, UserSession
 from .models import Content
 
 
@@ -220,7 +225,193 @@ class ContentSerializers(serializers.ModelSerializer):
     class Meta:
         model = Content
         fields = ['description']
-        
+
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+class CandidatesSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `User` model.
+
+    The `CandidatesSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `User` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active'.
+    """
+
+    class Meta:
+        model = User
+        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active']
+
+
+class JobListSerializers(serializers.ModelSerializer):
+    """
+    `JobListSerializers` class is a Django REST Framework serializer used for serializing JobDetails model data
+    into JSON format with selected fields.
+
+    Attributes:
+        - `country (serializers.SerializerMethodField)`: SerializerMethodField used for serializing country field of
+            `JobDetails` model
+        - `city (serializers.SerializerMethodField)`: SerializerMethodField used for serializing city field of
+            `JobDetails` model
+        - `Meta (class): Class used for defining metadata options for the serializer
+            - `model (class)`: Model class to be serialized
+            - `fields (list)`: List of fields to be included in the serialized output
+
+    Example usage:
+        To serialize JobDetails model data into JSON format with selected fields:
+        - `serializer` = `JobListSerializers`(queryset, many=True)
+        - `serialized_data` = `serializer.data`
+    """
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobDetails
+        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status']
+
+    def get_country(self, obj):
+        """
+        Retrieves the serialized data for the country related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the country data for.
+
+        Returns:
+            A dictionary containing the serialized country data.
+
+        """
+
+        context = {}
+        get_data = CountrySerializer(obj.country)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """
+        Retrieves the serialized data for the city related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the city data for.
+
+        Returns:
+            A dictionary containing the serialized city data.
+
+        """
+
+        context = {}
+        get_data = CitySerializer(obj.city)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+
+class UserCountSerializers(serializers.Serializer):
+    """
+    A serializer that converts user count data to/from JSON format.
+
+    Attributes:
+        - `total_user (int)`: The total number of registered users in the system.
+        - `job_seekers (int)`: The number of registered users with the 'job_seeker' role.
+        - `employers (int)`: The number of registered users with the 'employer' role.
+        - `vendors (int)`: The number of registered users with the 'vendor' role.
+        - `active_user (int)`: The number of users who are currently logged in to the system.
+        - `total_jobs (int)`: The total number of jobs posted in the system.
+        - `active_jobs (int)`: The number of jobs that are currently active and open for applications.
+
+    Methods:
+        - `get_active_jobs(self, obj)`: Retrieves the count of active jobs.
+        - `get_total_jobs(self, obj)`: Retrieves the count of total jobs.
+        - `get_total_user(self, obj)`: Retrieves the count of total users.
+        - `get_active_user(self, obj)`: Retrieves the count of active users.
+        - `get_job_seekers(self, obj)`: Retrieves the count of job seekers.
+        - `get_employers(self, obj)`: Retrieves the count of employers.
+        - `get_vendors(self, obj)`: Retrieves the count of vendors.
+
+    Returns:
+        JSON-serializable data: The data containing the count of users and jobs in the system.
+    """
+
+    total_user = serializers.SerializerMethodField()
+    job_seekers = serializers.SerializerMethodField()
+    employers = serializers.SerializerMethodField()
+    vendors = serializers.SerializerMethodField()
+    active_user = serializers.SerializerMethodField()
+    total_jobs = serializers.SerializerMethodField()
+    active_jobs = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'total_jobs', 'active_jobs', 'total_user', 'job_seekers',
+            'employers', 'vendors', 'active_user'
+        ]
+
+    def get_active_jobs(self, obj):
+        return JobDetails.objects.filter(status='active', start_date__lte=date.today(),
+                                         deadline__gte=date.today()).count()
+
+    def get_total_jobs(self, obj):
+        return JobDetails.objects.count()
+
+    def get_total_user(self, obj):
+        return User.objects.filter(~Q(role='admin')).count()
+
+    def get_active_user(self, obj):
+        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None).order_by('user').distinct('user').count()
+
+    def get_job_seekers(self, obj):
+        return User.objects.filter(role='job_seeker').count()
+
+    def get_employers(self, obj):
+        return User.objects.filter(role='employer').count()
+
+    def get_vendors(self, obj):
+        return User.objects.filter(role='vendor').count()
+
+
+class DashboardCountSerializers(serializers.Serializer):
+    """
+    `DashboardCountSerializers` is a serializer class that takes a User model and returns the count of `active jobs` and
+    `employers` within a given `date range`. The class has two serializer method fields, '`employers`' and '`jobs`',
+    which retrieve the count of `employers` and `jobs` respectively.
+
+    Attributes:
+    - `employers (serializers.SerializerMethodField)`: The method field that retrieves the `count of employers`.
+    - `jobs (serializers.SerializerMethodField)`: The method field that retrieves the `count of active jobs`.
+
+    Methods:
+    - `get_jobs(obj)`: A method that returns the `count of active jobs` within the `specified date range`.
+    - `get_employers(obj)`: A method that returns the `count of employers` within the `specified date range`.
+
+    Example usage:
+    - `serializer` = DashboardCountSerializers(context={'start_date': '2022-01-01', 'end_date': '2022-12-31'})
+    - `serialized_data` = serializer.data
+
+    """
+
+    employers = serializers.SerializerMethodField()
+    jobs = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'employers', 'jobs'
+        ]
+
+    def get_jobs(self, obj):
+        start_date =  self.context['start_date']
+        end_date =  self.context['end_date']
+        return JobDetails.objects.filter(
+            start_date__lte=date.today(), deadline__gte=date.today(),
+            created__gte=start_date, created__lte=end_date,
+            status='active').count()
+
+    def get_employers(self, obj):
+        start_date =  self.context['start_date']
+        end_date =  self.context['end_date']
+        return User.objects.filter(
+            date_joined__gte=start_date, date_joined__lte=end_date,
+            role='employer').count()

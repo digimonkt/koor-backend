@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 from rest_framework import (
     status, generics, serializers,
@@ -6,22 +6,21 @@ from rest_framework import (
 )
 
 from core.middleware import JWTMiddleware
-
-from users.models import UserSession
-
 from jobs.models import (
-    JobCategory
+    JobCategory, JobDetails
 )
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag
 )
-
+from users.models import UserSession, User
 from .models import Content
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
-    TagSerializers, ChangePasswordSerializers, ContentSerializers
+    TagSerializers, ChangePasswordSerializers, ContentSerializers,
+    CandidatesSerializers, JobListSerializers, UserCountSerializers,
+    DashboardCountSerializers
 )
 
 
@@ -902,7 +901,7 @@ class UserRightsView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+
     def patch(self, request):
         """
         Handle PATCH requests to update a Content object.
@@ -932,13 +931,13 @@ class UserRightsView(generics.GenericAPIView):
 
         context = dict()
         if self.request.user.is_staff:
-            
+
             if Content.objects.filter(title="User Rights").exists():
                 instance = Content.objects.get(title="User Rights")
             else:
                 if Content.all_objects.filter(title="User Rights", is_removed=True).exists():
                     instance = Content.all_objects.get(title="User Rights", is_removed=True)
-                    instance.is_removed=False
+                    instance.is_removed = False
                 else:
                     instance = Content.objects.create(title="User Rights")
                 instance.save()
@@ -1023,7 +1022,7 @@ class PrivacyPolicyView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-                        
+
     def patch(self, request):
         """
         Handle PATCH requests to update a Content object.
@@ -1053,13 +1052,13 @@ class PrivacyPolicyView(generics.GenericAPIView):
 
         context = dict()
         if self.request.user.is_staff:
-            
+
             if Content.objects.filter(title="Privacy Policy").exists():
                 instance = Content.objects.get(title="Privacy Policy")
             else:
                 if Content.all_objects.filter(title="Privacy Policy", is_removed=True).exists():
                     instance = Content.all_objects.get(title="Privacy Policy", is_removed=True)
-                    instance.is_removed=False
+                    instance.is_removed = False
                 else:
                     instance = Content.objects.create(title="Privacy Policy")
                 instance.save()
@@ -1083,4 +1082,510 @@ class PrivacyPolicyView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            
+
+
+class CandidatesListView(generics.ListAPIView):
+    """
+    API view for listing job seekers by name.
+
+    This view requires the user to be authenticated, and `only allows staff` users to perform the listing.
+    `Non-staff` users receive a `401 Unauthorized` response.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes required to access this view.
+                In this case, it contains a single `IsAuthenticated` class.
+        - `serializer_class`: The serializer class used to convert model instances to JSON.
+                In this case, it is `CandidatesSerializers`.
+        - `queryset`: The queryset used to fetch the data from the database.
+                In this case, it is `User.objects.all()`, which returns all users in the database.
+        - `filter_backends`: A list of filter backends used to filter the queryset.
+                In this case, it contains a single SearchFilter backend.
+        - `search_fields`: A list of model fields that can be used for text search.
+                In this case, it contains the `'name'` field.
+
+    Methods:
+        - `list(request)`: The main method of this view, which returns a list of job seekers filtered by name.
+
+    Returns:
+        - A Response object with a list of job seekers, or an error message if the user is not authorized.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CandidatesSerializers
+    queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response({'results': serializer.data})
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class EmployerListView(generics.ListAPIView):
+    """
+    API view for listing employers by name.
+
+    This view requires the user to be authenticated, and `only allows staff` users to perform the listing.
+    `Non-staff` users receive a `401 Unauthorized` response.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes required to access this view.
+                In this case, it contains a single `IsAuthenticated` class.
+        - `serializer_class`: The serializer class used to convert model instances to JSON.
+                In this case, it is `CandidatesSerializers`.
+        - `queryset`: The queryset used to fetch the data from the database.
+                In this case, it is `User.objects.all()`, which returns all users in the database.
+        - `filter_backends`: A list of filter backends used to filter the queryset.
+                In this case, it contains a single SearchFilter backend.
+        - `search_fields`: A list of model fields that can be used for text search.
+                In this case, it contains the `'name'` field.
+
+    Methods:
+        - `list(request)`: The main method of this view, which returns a list of employers filtered by name.
+
+    Returns:
+        - A Response object with a list of employers, or an error message if the user is not authorized.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = CandidatesSerializers
+    queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response({'results': serializer.data})
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobsListView(generics.ListAPIView):
+    """
+    API view for listing jobs by name.
+
+    This view requires the user to be authenticated, and `only allows staff` users to perform the listing.
+    `Non-staff` users receive a `401 Unauthorized` response.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes required to access this view.
+                In this case, it contains a single `IsAuthenticated` class.
+        - `serializer_class`: The serializer class used to convert model instances to JSON.
+                In this case, it is `JobListSerializers`.
+        - `queryset`: The queryset used to fetch the data from the database.
+                In this case, it is `JobDetails.objects.all()`, which returns all jobs in the database.
+        - `filter_backends`: A list of filter backends used to filter the queryset.
+                In this case, it contains a single SearchFilter backend.
+        - `search_fields`: A list of model fields that can be used for text search.
+                In this case, it contains the `'title'` field.
+
+    Methods:
+        - `list(request)`: The main method of this view, which returns a list of jobs filtered by title.
+
+    Returns:
+        - A Response object with a list of jobs, or an error message if the user is not authorized.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = JobListSerializers
+    queryset = JobDetails.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset())
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response({'results': serializer.data})
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def delete(self, request, jobId):
+        """
+        Deletes a Job object with the given ID if the authenticated user is a admin.
+        Args:
+            request: A DRF request object.
+            jobId: An integer representing the ID of the Job to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobDetails.objects.get(id=jobId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, jobId):
+        """
+        View function for `updating the status` of a job instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `jobId`: Integer representing the ID of the job instance to be updated.
+
+        Returns:
+            Response object containing data about the updated job instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the job instance with the given `jobId does not exist`.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                jobs_instance = JobDetails.objects.get(id=jobId)
+                if jobs_instance.status == "inactive":
+                    jobs_instance.status = "active"
+                    context['message'] = "This job is active"
+                else:
+                    jobs_instance.status = "inactive"
+                    context['message'] = "This job is inactive"
+                jobs_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UsersCountView(generics.GenericAPIView):
+    """
+    A view that returns the number of users registered in the system if the user has staff level permissions,
+    and returns an error message otherwise.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that control access to this view.
+        - `serializer_class (class)`: The serializer class used to convert data to/from JSON format.
+
+    Methods:
+        - `get(self, request)`: Retrieves the number of users registered in the system and returns a response.
+                                If the user does not have staff level permissions, an error message is returned.
+
+    Returns:
+        - `response.Response`: The response containing the serialized data or error message.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = UserCountSerializers
+
+    def get(self, request):
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                queryset = User.objects.all()
+                serializer = self.get_serializer(queryset)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UserView(generics.GenericAPIView):
+    """
+    A class-based view that provides generic CRUD (Update, Delete) operations for User instances.
+
+    This view requires authentication to perform any CRUD operation, as specified by the permission_classes attribute.
+
+    Attributes:
+        - permission_classes: A list of permission classes that defines the permission policy for this view.
+                            In this case, the IsAuthenticated permission class is used to require authentication for all requests.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, userId):
+        """
+        Deletes a User object with the given ID if the authenticated user is a admin.
+        Args:
+            request: A DRF request object.
+            userId: An integer representing the ID of the User to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                User.objects.get(id=userId)
+                User.objects.filter(id=userId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"userId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, userId):
+        """
+        View function for `updating the status` of a user instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `userId`: Integer representing the ID of the user instance to be updated.
+
+        Returns:
+            Response object containing data about the updated user instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the user instance with the given `userId does not exist`.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                user_instance = User.objects.get(id=userId)
+                if not user_instance.is_active:
+                    user_instance.is_active = True
+                    context['message'] = "This user is active"
+                else:
+                    user_instance.is_active = False
+                    context['message'] = "This user is inactive"
+                user_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except User.DoesNotExist:
+                return response.Response(
+                    data={"userId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobsRevertView(generics.GenericAPIView):
+    """
+    The `JobsRevertView` class is a generic view that allows staff users to restore a removed job by sending a PATCH
+    request to the API with the jobId as a parameter.
+
+    Parameters:
+        - `request`: The HTTP request object
+        - `jobId`: The ID of the job to be restored
+
+    Returns:
+        - A response object with a success or error message and an HTTP status code.
+
+    Raises:
+        - `JobDetails.DoesNotExist`: If the job with the given jobId does not exist in the database.
+        - `Exception`: If an unexpected error occurs.
+
+    Permissions:
+        - The user must be authenticated and have staff status to perform this action.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, jobId):
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobDetails.all_objects.get(id=jobId, is_removed=True)
+                JobDetails.all_objects.filter(id=jobId, is_removed=True).update(is_removed=False)
+                context['message'] = "Job restored successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"jobId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class DashboardView(generics.GenericAPIView):
+    """
+    `DashboardView` is a generic API view that returns `counts` of `active jobs` and `employers` based on specified
+    `period` or `start and end dates`. The view accepts `GET requests` and requires the user to have
+    `staff permissions`.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that the user must have in order to access this
+                                        view.
+        - `serializer_class (DashboardCountSerializers)`: The serializer class used to serialize the response data.
+
+    Methods:
+        - `get(request)`: A method that handles GET requests and returns `counts of active jobs and employers` based on
+                            specified `period` or `start and end dates`.
+
+    Example usage:
+    To access this view, make a GET request with the following parameters:
+        - `period (optional)`: a string representing the `time period` for which to retrieve counts. Can be one of
+                                '`this week`', '`last week`', '`this month`', '`last month`', '`this year`', or
+                                '`last year`'.
+        - `start-date (optional)`: a string representing the `start date` for which to retrieve counts. Must be in
+                                    '`YYYY-MM-DD`' format.
+        - `end-date (optional)`: a string representing the `end date` for which to retrieve counts. Must be in
+                                    '`YYYY-MM-DD`' format.
+        If the user is not authorized to access this view, a 401 Unauthorized response will be returned. If the request
+        is invalid or there is an error retrieving the counts, a 400 Bad Request response will be returned with a
+        message describing the error.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = DashboardCountSerializers
+
+    def get(self, request):
+        response_context = dict()
+        user_context = dict()
+        if self.request.user.is_staff:
+            try:
+                if 'period' in self.request.GET and 'start-date' in self.request.GET:
+                    response_context['message'] = "Please select one eighter 'period' or 'start and end dates'."
+                    return response.Response(
+                        data=response_context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                period = self.request.GET.get('period', None)
+                start_date = self.request.GET.get('start-date', date.today())
+                end_date = self.request.GET.get('end-date', date.today())
+                if period == "this week":
+                    start_date = start_date - timedelta(days=start_date.weekday())
+                elif period == "last week":
+                    last_week = date.today() + timedelta(days=-2)
+                    start_date = last_week - timedelta(days=last_week.weekday())
+                    end_date = start_date + timedelta(days=6)
+                elif period == "this month":
+                    start_date = date(start_date.year, start_date.month, 1)
+                elif period == "last month":
+                    start_date = date(start_date.year, start_date.month, 1)
+                    end_date = start_date + timedelta(days=-1)
+                    start_date = date(end_date.year, end_date.month, 1)
+                elif period == "this year":
+                    start_date = date(start_date.year, 1, 1)
+                elif period == "last year":
+                    start_date = date(start_date.year, 1, 1)
+                    end_date = start_date + timedelta(days=-1)
+                    start_date = date(end_date.year, 1, 1)
+                context = {
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+                queryset = User.objects.all()
+                serializer = self.serializer_class(queryset, context=context)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                response_context['message'] = str(e)
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )

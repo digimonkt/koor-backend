@@ -4,7 +4,9 @@ from .views import (
     CountryView, CityView, JobCategoryView, 
     EducationLevelView, LanguageView, SkillView,
     TagView, ChangePasswordView, UserRightsView,
-    PrivacyPolicyView
+    PrivacyPolicyView, CandidatesListView, EmployerListView,
+    JobsListView, UsersCountView, UserView,
+    JobsRevertView, DashboardView
     )
 
 app_name = "superadmin"
@@ -35,4 +37,18 @@ urlpatterns = [
     path('/user-rights', UserRightsView.as_view(), name="user_rights"),
     
     path('/privacy-policy', PrivacyPolicyView.as_view(), name="privacy_policy"),
+    
+    path('/candidates', CandidatesListView.as_view(), name="candidates_list"),
+    
+    path('/employer', EmployerListView.as_view(), name="employer_list"),
+    
+    path('/user/<str:userId>', UserView.as_view(), name="user"),
+    
+    path('/jobs', JobsListView.as_view(), name="jobs_list"),
+    path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
+    path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_rrevert"),
+    
+    path('/users-count', UsersCountView.as_view(), name="users_count"),
+    
+    path('/dashboard', DashboardView.as_view(), name="dashboard"),
 ]

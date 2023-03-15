@@ -26,6 +26,12 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         ('employer', "Employer"),
         ('vendor', "Vendor"),
     )
+    SOURCE_TYPE_CHOICE = (
+        ('app', "App"),
+        ('apple', "Apple"),
+        ('facebook', "Facebook"),
+        ('google', "Google")
+    )
 
     username = None
     first_name = None
@@ -69,6 +75,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         db_column="role",
         choices=ROLE_TYPE_CHOICE
     )
+    source = models.CharField(
+        verbose_name=_('Source'),
+        max_length=250,
+        db_column="source",
+        default="app",
+        choices=SOURCE_TYPE_CHOICE
+    )
     otp = models.CharField(
         verbose_name=_('OTP'),
         max_length=250,
@@ -90,6 +103,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         on_delete=models.SET_NULL,
         db_column="image",
         related_name='%(app_label)s_%(class)s_image'
+    )
+    is_verified = models.BooleanField(
+        verbose_name=_('Is Verified'),
+        db_column="is_verified",
+        null=True,
+        blank=True,
+        default=False
     )
     USERNAME_FIELD = 'email'  # set email as a username
     REQUIRED_FIELDS = []
