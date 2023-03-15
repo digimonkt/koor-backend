@@ -573,7 +573,7 @@ class SocialLoginView(generics.GenericAPIView):
                 user = User.objects.get(email=serializer.validated_data['email'])
             else:
                 serializer.is_valid(raise_exception=True)
-                serializer.save(is_verified=True)
+                serializer.save()
                 user = User.objects.get(id=serializer.data['id'])
                 if user.role == "job_seeker":
                     JobSeekerProfile.objects.create(user=user)
@@ -657,4 +657,3 @@ class VerificationView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-
