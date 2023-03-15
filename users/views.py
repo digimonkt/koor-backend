@@ -118,6 +118,7 @@ class UserView(generics.GenericAPIView):
                 )
                 user.otp = otp
                 user.otp_created_at = datetime.now()
+                user.is_verified = True
                 user.save()
                 otp_token = PasswordResetTokenObtainPairSerializer.get_token(
                     user=user,
