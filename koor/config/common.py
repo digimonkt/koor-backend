@@ -282,6 +282,7 @@ class Common(Configuration):
     # https://pypi.org/project/django-cors-headers/
 
     CORS_ALLOW_ALL_ORIGINS = True  # For Development settings
+    CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS").split(",")
     
     CORS_ALLOW_HEADERS = [
     '*',
