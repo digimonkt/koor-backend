@@ -383,7 +383,10 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         context = dict()
         if obj.image:
             context['id'] = obj.image.id
-            context['path'] = obj.image.file_path.url
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
             context['title'] = obj.image.title
         return context
     
@@ -502,7 +505,10 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
         context = dict()
         if obj.image:
             context['id'] = obj.image.id
-            context['path'] = obj.image.file_path.url
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
             context['title'] = obj.image.title
         return context
 
@@ -621,7 +627,10 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.image:
             context['id'] = obj.image.id
             context['title'] = obj.image.title
-            context['path'] = obj.image.file_path.url
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
             context['type'] = obj.image.media_type
             return context
         return None
@@ -681,7 +690,10 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
         if obj.image:
             context['id'] = obj.image.id
             context['title'] = obj.image.title
-            context['path'] = obj.image.file_path.url
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
             context['type'] = obj.image.media_type
             return context
         return None
@@ -751,10 +763,14 @@ class SocialLoginSerializers(serializers.ModelSerializer):
         - `serializers.ValidationError`: If the mobile number is blank or contains non-numeric characters, or if the
         email is blank, or if the source is blank or the country code is blank when the mobile number is present.
     """
-
+    display_image = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code']
+        fields = ['id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code', 'display_image']
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
@@ -770,6 +786,12 @@ class SocialLoginSerializers(serializers.ModelSerializer):
             return email
         else:
             raise serializers.ValidationError('email can not be blank', code='email')
+        
+    def validate_display_image(self, display_image):
+        if display_image != '':
+            return display_image
+        else:
+            raise serializers.ValidationError('display image can not be blank', code='display_image')
 
     def validate(self, data):
         country_code = data.get("country_code")
@@ -780,3 +802,15 @@ class SocialLoginSerializers(serializers.ModelSerializer):
         if mobile_number and country_code in ["", None]:
             raise serializers.ValidationError({'country_code': 'country code can not be blank'})
         return data
+
+    def save(self):
+        display_image = None
+        if 'display_image' in self.validated_data:
+            display_image = self.validated_data.pop('display_image')
+        user_instance = super().save(is_verified=True)
+        if display_image:
+            media_instance = Media(title="profile image", file_path=display_image, media_type="image")
+            media_instance.save()
+            user_instance.image = media_instance
+            user_instance.save()
+        return self
