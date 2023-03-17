@@ -2,7 +2,7 @@ from django.db.models import Value, F, Case, When, IntegerField
 
 from rest_framework import (
     generics, response, status,
-    permissions, filters
+    permissions, filters, serializers
 )
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -22,7 +22,8 @@ from employers.models import BlackList
 from .serializers import (
     GetJobsSerializers,
     GetJobsDetailSerializers,
-    AppliedJobSerializers
+    AppliedJobSerializers,
+    JobFiltersSerializers
 )
 from .filters import JobDetailsFilter
 
@@ -405,4 +406,66 @@ class JobSuggestionView(generics.ListAPIView):
             return response.Response(
                 data={"job": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class JobFilterView(generics.GenericAPIView):
+    """
+    `JobFilterView` is a class-based view that inherits from the GenericAPIView class of the `Django REST Framework`.
+    It defines the serializer_class attribute as `JobFiltersSerializers` and permission_classes as `IsAuthenticated`.
+
+    Attributes:
+        - `serializer_class (class)`: The serializer class to be used for the view.
+        - `permission_classes (list)`: A list of permission classes that the user must have in order to access the view.
+
+    Usage:
+        - This view can be used to save JobFilters objects in the database. The user must be authenticated to access
+            this view.
+        - When a `POST` request is made to this view, it will create a `new JobFilters` object in the database with the
+            data provided in the request body.
+        - The serializer class is used to validate the data and convert it to a JobFilters object.
+    """
+
+    serializer_class = JobFiltersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        post is a method of the `JobFilterView` class that handles HTTP POST requests to save `JobFilters` objects in
+        the database.
+
+        Args:
+            - `request (HttpRequest)`: An HTTP POST request containing the data for the JobFilters object.
+
+        Returns:
+            - `HttpResponse`: A JSON response containing either the serialized JobFilters object and a status code of
+                `201 CREATED`, or a JSON error response with a status code of `400 BAD REQUEST`.
+
+        Raises:
+            - `ValidationError`: If the serializer fails to validate the request data.
+
+        Usage:
+            - This method is used to handle POST requests made to the JobFilterView view. It first creates a context
+                dictionary to store any additional data to be passed to the serializer.
+            - It then creates an instance of the JobFiltersSerializers class using the request data.
+            - The serializer is validated, and if it is valid, the JobFilters object is saved to the database with the
+                authenticated user who made the request.
+            - A JSON response containing the serialized JobFilters object is returned with a status code of 201 CREATED.
+            - If the serializer fails to validate the data, a JSON error response is returned with a status code of 400
+                BAD REQUEST.
+        """
+
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
