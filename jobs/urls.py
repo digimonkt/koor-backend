@@ -14,7 +14,7 @@ urlpatterns = [
     
     path('/applications', RecentApplicationsView.as_view(), name="recent_applications"),
     
-    path('/save-filter', JobFilterView.as_view(), name="save_filter"),
+    path('/job-filter', JobFilterView.as_view(), name="job_filter"),
     
     path('/applications-detail/<str:applicationId>', ApplicationsDetailView.as_view(), name="applications_detail"),
     
