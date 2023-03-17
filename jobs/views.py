@@ -12,7 +12,7 @@ from django_filters import rest_framework as django_filters
 
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobFilters
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import GetAppliedJobsSerializers
@@ -23,7 +23,8 @@ from .serializers import (
     GetJobsSerializers,
     GetJobsDetailSerializers,
     AppliedJobSerializers,
-    JobFiltersSerializers
+    JobFiltersSerializers,
+    GetJobFiltersSerializers
 )
 from .filters import JobDetailsFilter
 
@@ -77,8 +78,8 @@ class JobSearchView(generics.ListAPIView):
             - A paginated list of job details that match the specified search and filter criteria.
         """
         if request.user:
-            context = {"user":request.user}
-                
+            context = {"user": request.user}
+
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         if jobCategory:
@@ -110,7 +111,7 @@ class JobDetailView(generics.GenericAPIView):
         response_context = dict()
         try:
             if request.user:
-                context = {"user":request.user}
+                context = {"user": request.user}
             if jobId:
                 job_data = JobDetails.objects.get(id=jobId)
                 get_data = self.serializer_class(job_data, context=context)
@@ -328,8 +329,8 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-class JobSuggestionView(generics.ListAPIView):
 
+class JobSuggestionView(generics.ListAPIView):
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
     queryset = JobDetails.objects.all()
@@ -341,58 +342,58 @@ class JobSuggestionView(generics.ListAPIView):
     def list(self, request, jobId):
         context = dict()
         if request.user:
-            context = {"user":request.user}
+            context = {"user": request.user}
         queryset = self.filter_queryset(self.get_queryset())
         try:
             job_instance = JobDetails.objects.get(id=jobId)
             annotated_job_details = JobDetails.objects.annotate(
                 matches=Value(0)
-                ).annotate(
-                    matches=Case(
-                        When(
-                            budget_amount=job_instance.budget_amount,
-                            then=F('matches') + 1
-                            ), 
-                        default=F('matches'),
-                        output_field=IntegerField()
-                        )
-                    ).annotate(
-                        matches=Case(
-                            When(
-                                skill__in=job_instance.skill.all(),
-                                then=F('matches') + 1
-                                ),
-                            default=F('matches'),
-                            output_field=IntegerField()
-                            )
-                        ).annotate(
-                            matches=Case(
-                                When(
-                                    job_category__in=job_instance.job_category.all(), 
-                                    then=F('matches') + 1
-                                    ),
-                                default=F('matches'),
-                                output_field=IntegerField()
-                                )
-                            ).annotate(
-                                matches=Case(
-                                    When(
-                                        working_days=job_instance.working_days,
-                                        then=F('matches') + 1
-                                        ),
-                                    default=F('matches'),
-                                    output_field=IntegerField()
-                                    )
-                                ).annotate(
-                                    matches=Case(
-                                        When(
-                                            highest_education=job_instance.highest_education,
-                                            then=F('matches') + 1
-                                            ),
-                                        default=F('matches'),
-                                        output_field=IntegerField()
-                                        )
-                                    )
+            ).annotate(
+                matches=Case(
+                    When(
+                        budget_amount=job_instance.budget_amount,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        skill__in=job_instance.skill.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        job_category__in=job_instance.job_category.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        working_days=job_instance.working_days,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        highest_education=job_instance.highest_education,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            )
             jobs = annotated_job_details.filter(matches=4)
             if jobs.count() == 0:
                 jobs = annotated_job_details.order_by('-matches')
@@ -467,5 +468,47 @@ class JobFilterView(generics.GenericAPIView):
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+        get is a method of the `JobFilterView` class that handles HTTP GET requests to retrieve JobFilters objects
+        saved by a particular user.
+
+        Args:
+            - `request (HttpRequest)`: An HTTP GET request.
+
+        Returns:
+            - `HttpResponse`: A JSON response containing a serialized list of JobFilters objects associated with the
+                authenticated user who made the request and a status code of 200 OK, or a JSON error response with a
+                status code of 400 BAD REQUEST.
+
+        Raises:
+            - `Exception`: If there is an error retrieving the JobFilters objects.
+
+        Usage:
+            - This method is used to handle GET requests made to the SaveFilterView view. It first creates a context
+                dictionary to store any additional data to be passed to the serializer.
+            - It then retrieves all JobFilters objects associated with the authenticated user who made the request
+                using the filter method.
+            - The data is serialized using the GetJobFiltersSerializers class and returned as a JSON response with a
+                status code of 200 OK.
+            - If there is an error retrieving the data, a JSON error response is returned with a status code of 400
+                BAD REQUEST.
+        """
+
+        context = dict()
+        try:
+            job_filter_data = JobFilters.objects.filter(user=request.user)
+            get_data = GetJobFiltersSerializers(job_filter_data, many=True)
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
