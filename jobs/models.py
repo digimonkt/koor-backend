@@ -325,6 +325,31 @@ class JobsLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, mode
 
 
 class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Model representing a job filter created by a user to receive notifications about relevant job postings.
+
+    Attributes:
+        - `user (ForeignKey)`: A foreign key to the user who created the job filter.
+        - `title (TextField)`: The title of the job filter.
+        - `country (ForeignKey)`: A foreign key to the country associated with the job filter.
+        - `city (ForeignKey)`: A foreign key to the city associated with the job filter.
+        - `job_category (ManyToManyField)`: A many-to-many field to the job categories associated with the job filter.
+        - `is_full_time (BooleanField)`: A boolean field indicating if the job filter is for full-time jobs.
+        - `is_part_time (BooleanField)`: A boolean field indicating if the job filter is for part-time jobs.
+        - `is_notification (BooleanField)`: A boolean field indicating if the job filter should send notification for job postings.
+        - `has_contract (BooleanField)`: A boolean field indicating if the job filter is for jobs with contracts.
+        - `working_days (CharField)`: A character field indicating the working days for the job filter.
+
+   Methods:
+       __str__(self): Returns a string representation of the job filter.
+
+   Meta:
+        - `verbose_name (str)`: The singular name for the model.
+        - `verbose_name_plural (str)`: The plural name for the model.
+        - `db_table (str)`: The name of the database table to use for the model.
+        - `ordering (list)`: The default ordering for the model.
+   """
+
     WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,8)]
     user = models.ForeignKey(
         User,
@@ -408,8 +433,3 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Job Filters"
         db_table = "JobFilters"
         ordering = ['-created']
-    
-    # def save(self, *args, **kwargs):
-    #     if not self.job_id:
-    #         self.job_id = unique_job_id()
-    #     return super().save(*args, **kwargs)
