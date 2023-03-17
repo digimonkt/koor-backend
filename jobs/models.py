@@ -335,26 +335,30 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     title = models.TextField(
         verbose_name=_('Title'),
-        null=True,
-        blank=True,
         db_column="title",
     )
     country = models.ForeignKey(
         Country,
         verbose_name=_('Country'),
-        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         db_column="country",
         related_name='%(app_label)s_%(class)s_country'
     )
     city = models.ForeignKey(
         City,
         verbose_name=_('City'),
-        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         db_column="city",
         related_name='%(app_label)s_%(class)s_city'
     )
     job_category = models.ManyToManyField(
         to=JobCategory,
+        null=True,
+        blank=True,
         verbose_name=_('Job Category'),
         db_column="job_category",
         related_name='%(app_label)s_%(class)s_job_category'
@@ -373,6 +377,13 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="is_part_time",
         default=False
     )
+    is_notification= models.BooleanField(
+        verbose_name=_('Is Notification'),
+        null=True,
+        blank=True,
+        db_column="is_notification",
+        default=False
+    )
     has_contract = models.BooleanField(
         verbose_name=_('Has Contract'),
         null=True,
@@ -383,6 +394,8 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     working_days = models.CharField(
         verbose_name=_('Working Days'),
         db_column="working_days",
+        null=True,
+        blank=True,
         max_length=25,
         choices=WORKING_DAYS_CHOICE,
     )
