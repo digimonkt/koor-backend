@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from jobs.models import (
     JobDetails, JobAttachmentsItem, JobCategory, 
-    JobsLanguageProficiency
+    JobsLanguageProficiency, JobFilters
     )
 
 from job_seekers.models import (
@@ -780,3 +780,25 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+
+class JobFiltersSerializers(serializers.ModelSerializer):
+    """
+    JobFiltersSerializers is a class-based serializer that inherits from the ModelSerializer class of the Django REST
+    Framework.
+    It defines a Meta class that specifies the JobFilters model and the fields to be included in the serialization.
+
+    Attributes:
+        - `model (class)`: The Django model class that this serializer is based on.
+        - `fields (list)`: A list of fields to be included in the serialized output.
+        
+    Usage:
+        - This serializer can be used to serialize JobFilters objects and convert them to JSON format for use in HTTP
+        requests and responses.
+    """
+    class Meta:
+        model = JobFilters
+        fields = [
+            'id', 'title', 'country', 'city', 'job_category', 
+            'is_full_time', 'is_part_time','has_contract', 'is_notification', 
+            'working_days'
+            ]
