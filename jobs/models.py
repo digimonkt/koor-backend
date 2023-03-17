@@ -322,3 +322,81 @@ class JobsLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, mode
         verbose_name_plural = "Jobs Language Proficiencies"
         db_table = "JobsLanguageProficiency"
         ordering = ['-created']
+
+
+class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,8)]
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    title = models.TextField(
+        verbose_name=_('Title'),
+        null=True,
+        blank=True,
+        db_column="title",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        on_delete=models.CASCADE,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        on_delete=models.CASCADE,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
+    )
+    job_category = models.ManyToManyField(
+        to=JobCategory,
+        verbose_name=_('Job Category'),
+        db_column="job_category",
+        related_name='%(app_label)s_%(class)s_job_category'
+    )
+    is_full_time = models.BooleanField(
+        verbose_name=_('Is Full-time'),
+        null=True,
+        blank=True,
+        db_column="is_full_time",
+        default=False
+    )
+    is_part_time = models.BooleanField(
+        verbose_name=_('Is Part-time'),
+        null=True,
+        blank=True,
+        db_column="is_part_time",
+        default=False
+    )
+    has_contract = models.BooleanField(
+        verbose_name=_('Has Contract'),
+        null=True,
+        blank=True,
+        db_column="has_contract",
+        default=False
+    )
+    working_days = models.CharField(
+        verbose_name=_('Working Days'),
+        db_column="working_days",
+        max_length=25,
+        choices=WORKING_DAYS_CHOICE,
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Job Filter"
+        verbose_name_plural = "Job Filters"
+        db_table = "JobFilters"
+        ordering = ['-created']
+    
+    # def save(self, *args, **kwargs):
+    #     if not self.job_id:
+    #         self.job_id = unique_job_id()
+    #     return super().save(*args, **kwargs)
