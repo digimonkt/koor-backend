@@ -77,7 +77,8 @@ class JobSearchView(generics.ListAPIView):
         Returns:
             - A paginated list of job details that match the specified search and filter criteria.
         """
-        if request.user:
+        context = dict()
+        if request.user.is_authenticated:
             context = {"user": request.user}
 
         queryset = self.filter_queryset(self.get_queryset())
