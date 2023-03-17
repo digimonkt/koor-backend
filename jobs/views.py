@@ -55,7 +55,7 @@ class JobSearchView(generics.ListAPIView):
 
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.filter(start_date__lte=date.today(), deadline__gte=date.today())
+    queryset = JobDetails.objects.filter(deadline__gte=date.today())
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = ['title']
@@ -81,7 +81,7 @@ class JobSearchView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         if jobCategory:
-            queryset = queryset.filter(job_category__title__in=jobCategory)
+            queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
