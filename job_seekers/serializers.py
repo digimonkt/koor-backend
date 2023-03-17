@@ -420,11 +420,12 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
         If the job posting does not exist, an empty dictionary will be returned.
         """
-        context = {}
-        get_data = GetJobsSerializers(obj.job)
+        return_context = {}
+        user =  self.context['request'].user
+        get_data = GetJobsSerializers(obj.job, context={"user": user})
         if get_data.data:
-            context = get_data.data
-        return context
+            return_context = get_data.data
+        return return_context
 
 
 class SavedJobSerializers(serializers.ModelSerializer):
