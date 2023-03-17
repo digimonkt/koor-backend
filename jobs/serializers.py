@@ -304,12 +304,13 @@ class GetJobsSerializers(serializers.ModelSerializer):
 
     def get_is_applied(self, obj):
         is_applied_record = False
-        user = self.context['user']
-        if user:
-            is_applied_record = AppliedJob.objects.filter(
-                job=obj,
-                user=user
-            ).exists()
+        if 'user' in self.context:
+            user = self.context['user']
+            if user:
+                is_applied_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
