@@ -804,6 +804,12 @@ class JobFiltersSerializers(serializers.ModelSerializer):
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
             'working_days'
         ]
+   
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
 
 
 class GetJobFiltersSerializers(serializers.ModelSerializer):
