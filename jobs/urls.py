@@ -15,11 +15,11 @@ urlpatterns = [
     path('/applications', RecentApplicationsView.as_view(), name="recent_applications"),
     
     path('/filter', JobFilterView.as_view(), name="job_filter"),
+    path('/filter/<str:filterId>', JobFilterView.as_view(), name="job_filter"),
     
     path('/applications-detail/<str:applicationId>', ApplicationsDetailView.as_view(), name="applications_detail"),
     
     path('/<str:jobId>', JobDetailView.as_view(), name="job_detail"),    
     path('/<str:jobId>/applications', JobApplicationsView.as_view(), name="job_applications"),
     path('/<str:jobId>/suggestion', JobSuggestionView.as_view(), name="job_suggestion"),
-    path('/<str:filterId>/filter', JobFilterView.as_view(), name="job_filter"),
 ]
