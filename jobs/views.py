@@ -513,3 +513,47 @@ class JobFilterView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def delete(self, request, filterId):
+        """
+        A function to delete a job filter instance for a job seeker user.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the job filter instance to be deleted.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `JobFilters.DoesNotExist`: If the job filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the deletion process.
+        """
+
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                JobFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+                context['message'] = "Filter Removed"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobFilters.DoesNotExist:
+                return response.Response(
+                    data={"filterId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
