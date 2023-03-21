@@ -7,7 +7,10 @@ from decouple import config
 from django.contrib.auth import get_user_model
 from django.utils.deprecation import MiddlewareMixin
 
-from core.tokens import SessionTokenObtainPairSerializer
+from core.tokens import (
+    SessionTokenObtainPairSerializer, 
+    PasswordResetTokenObtainPairSerializer
+    )
 from koor.config.common import Common
 from users.models import UserSession
 
@@ -39,6 +42,16 @@ class JWTMiddleware(MiddlewareMixin):
             session_id=session_id
         )
         return str(refresh.access_token)
+    
+    def get_verifiy_email_token_for_user(self, user):
+        '''
+        Return the access token for the user.
+        '''
+        token = PasswordResetTokenObtainPairSerializer.get_token(
+                    user=user,
+                    user_id=user.id
+                    )
+        return str(token.access_token)
 
     @classmethod
     def decode_token(self, token):
@@ -76,8 +89,9 @@ class JWTMiddleware(MiddlewareMixin):
                 if get_session.user.is_verified:
                     return response
                 else:
+                    otp_token = self.get_verifiy_email_token_for_user(get_session.user)
                     response.status_code = 401
-                    res = '{"message": "Email is not verified", "email":"'+ get_session.user.email +'"}'
+                    res = '{"message": "Email is not verified", "email":"'+ get_session.user.email +'",  "token":"'+ otp_token +'"}'
                     response.headers.setdefault(self.access_token_lookup, access_token)
                     response.content = bytes(res, encoding="UTF8")
                     return response
@@ -97,8 +111,9 @@ class JWTMiddleware(MiddlewareMixin):
                             if session.user.is_verified:
                                 response.headers.setdefault(self.access_token_lookup, new_access_token)
                             else:
+                                otp_token = self.get_verifiy_email_token_for_user(session.user)
                                 response.status_code = 401
-                                res = '{"message": "Email is not verified", "email":"'+ session.user.email +'"}'
+                                res = '{"message": "Email is not verified", "email":"'+ session.user.email +'",  "token":"'+ otp_token +'"}'
                                 response.headers.setdefault(self.access_token_lookup, new_access_token)
                                 response.content = bytes(res, encoding="UTF8")
                         return response
