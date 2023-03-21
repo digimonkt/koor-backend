@@ -880,7 +880,19 @@ class JobsApplyView(generics.ListAPIView):
             A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
-
+        if 'search-by' in self.request.GET:
+            search_by = self.request.GET['search-by']
+            if search_by == 'salary':
+                order_by = 'job__budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'job__deadline'
+            if 'order-by' in self.request.GET:
+                if 'descending' in self.request.GET['order-by']:
+                    return AppliedJob.objects.filter(user=self.request.user).order_by("-"+str(order_by))
+                else:
+                    return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
+            else:
+                return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
         return AppliedJob.objects.filter(user=self.request.user)
 
 
@@ -1080,5 +1092,17 @@ class JobsSaveView(generics.ListAPIView):
             A queryset of SavedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
-
+        if 'search-by' in self.request.GET:
+            search_by = self.request.GET['search-by']
+            if search_by == 'salary':
+                order_by = 'job__budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'job__deadline'
+            if 'order-by' in self.request.GET:
+                if 'descending' in self.request.GET['order-by']:
+                    return SavedJob.objects.filter(user=self.request.user).order_by("-"+str(order_by))
+                else:
+                    return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
+            else:
+                return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
         return SavedJob.objects.filter(user=self.request.user)
