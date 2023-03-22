@@ -57,7 +57,6 @@ def create_user_session(request, user):
     else:
         IPAddr = request.META.get('REMOTE_ADDR')
     agent = {'User-Agent': request.headers.get('User-Agent')}
-    UserSession.objects.filter(user=user).update(expire_at=datetime.now())
     user_session = UserSession.objects.create(
         user=user,
         ip_address=IPAddr,
