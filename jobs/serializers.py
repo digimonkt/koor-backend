@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
 from jobs.models import (
-    JobDetails, JobAttachmentsItem, JobCategory, 
-    JobsLanguageProficiency
-    )
+    JobDetails, JobAttachmentsItem, JobCategory,
+    JobsLanguageProficiency, JobFilters
+)
 
 from job_seekers.models import (
     AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
@@ -86,7 +86,6 @@ class AppliedJobAttachmentsSerializer(serializers.ModelSerializer):
         return None
 
 
-
 class JobsLanguageProficiencySerializer(serializers.ModelSerializer):
     """
     Serializer for the JobsLanguageProficiency model.
@@ -99,13 +98,14 @@ class JobsLanguageProficiencySerializer(serializers.ModelSerializer):
             to be included in the serialized data.
     """
     language = serializers.SerializerMethodField()
+
     class Meta:
         model = JobsLanguageProficiency
         fields = (
             'id', 'language', 'written',
             'spoken'
         )
-        
+
     def get_language(self, obj):
         """Get the serialized language data for a JobDetails object.
 
@@ -126,7 +126,7 @@ class JobsLanguageProficiencySerializer(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
-        
+
 
 class JobCategorySerializer(serializers.ModelSerializer):
     """
@@ -304,14 +304,15 @@ class GetJobsSerializers(serializers.ModelSerializer):
 
     def get_is_applied(self, obj):
         is_applied_record = False
-        user =  self.context['user']
-        if user:
-            is_applied_record = AppliedJob.objects.filter(
-                job=obj,
-                user=user
-            ).exists()
+        if 'user' in self.context:
+            user = self.context['user']
+            if user:
+                is_applied_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).exists()
         return is_applied_record
-        
+
     def get_is_saved(self, obj):
         is_saved_record = False
         if 'user' in self.context:
@@ -320,7 +321,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
                 user=self.context['user']
             ).exists()
         return is_saved_record
-    
+
     def get_applicant(self, obj):
         return AppliedJob.objects.filter(job=obj).count()
 
@@ -524,21 +525,21 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
     def get_applicant(self, obj):
         return AppliedJob.objects.filter(job=obj).count()
-    
+
     def get_is_applied(self, obj):
         is_applied_record = False
-        user =  self.context['user']
-        if user:
+        if 'user' in self.context:
+            user = self.context['user']
             is_applied_record = AppliedJob.objects.filter(
                 job=obj,
                 user=user
             ).exists()
         return is_applied_record
-        
+
     def get_is_saved(self, obj):
         is_saved_record = False
-        user =  self.context['user']
-        if user:
+        if 'user' in self.context:
+            user = self.context['user']
             is_saved_record = SavedJob.objects.filter(
                 job=obj,
                 user=user
@@ -692,7 +693,7 @@ class AppliedJobSerializers(serializers.ModelSerializer):
             skill__in=obj.job.skill.all()
         ).exists()
         return skill_record
-    
+
     def get_job(self, obj):
         """
         A method for customizing the serialization of the `skill` field.
@@ -708,7 +709,7 @@ class AppliedJobSerializers(serializers.ModelSerializer):
             skills for the job.
 
         """
-        return {"id": obj.job.id, "title":obj.job.title}
+        return {"id": obj.job.id, "title": obj.job.title}
 
 
 class GetAppliedJobsSerializers(serializers.ModelSerializer):
@@ -733,7 +734,7 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = AppliedJob
-        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter','created', 'attachments', 'job', 'user']
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'created', 'attachments', 'job', 'user']
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a AppliedJob object.
@@ -771,8 +772,8 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
         If the job posting does not exist, an empty dictionary will be returned.
         """
-        return {"id": obj.job.id, "title":obj.job.title}
-    
+        return {"id": obj.job.id, "title": obj.job.title}
+
     def get_user(self, obj):
         context = {}
         get_data = ApplicantDetailSerializers(obj.user)
@@ -780,3 +781,132 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+
+class JobFiltersSerializers(serializers.ModelSerializer):
+    """
+    JobFiltersSerializers is a class-based serializer that inherits from the ModelSerializer class of the Django REST
+    Framework.
+    It defines a Meta class that specifies the JobFilters model and the fields to be included in the serialization.
+
+    Attributes:
+        - `model (class)`: The Django model class that this serializer is based on.
+        - `fields (list)`: A list of fields to be included in the serialized output.
+        
+    Usage:
+        - This serializer can be used to serialize JobFilters objects and convert them to JSON format for use in HTTP
+        requests and responses.
+    """
+
+    class Meta:
+        model = JobFilters
+        fields = [
+            'id', 'title', 'country', 'city', 'job_category',
+            'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
+            'working_days'
+        ]
+   
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
+
+
+class GetJobFiltersSerializers(serializers.ModelSerializer):
+    """
+    `GetJobFiltersSerializers` is a class-based serializer that inherits from the `ModelSerializer` class of the
+    Django REST Framework.
+    It defines a Meta class that specifies the JobFilters model and the fields to be included in the serialization,
+    as well as additional SerializerMethodFields.
+
+    Attributes:
+        - `model (class)`: The Django model class that this serializer is based on.
+        - `fields (list)`: A list of fields to be included in the serialized output, including additional fields
+            generated by `SerializerMethodFields`.
+
+    Usage:
+        - This serializer can be used to serialize JobFilters objects and convert them to JSON format for use in HTTP
+            responses.
+        - In addition to the standard fields specified in the Meta class, this serializer also includes
+            `SerializerMethodFields` for 'country', 'city', and 'job_category'.
+        - These fields are generated by calling the corresponding methods on the serializer instance and returning
+            their values.
+        - The resulting serialized output will include the standard fields as well as the additional fields generated
+            by the SerializerMethodFields.
+    """
+
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    job_category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobFilters
+        fields = [
+            'id', 'title', 'country', 'city', 'job_category',
+            'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
+            'working_days'
+        ]
+
+    def get_country(self, obj):
+        """Get the serialized country data for a JobFilters object.
+
+        This method uses the CountrySerializer to serialize the country associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose country data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized country data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """Get the serialized city data for a JobFilters object.
+
+        This method uses the CitySerializer to serialize the city associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose city data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized city data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_job_category(self, obj):
+        """Get the serialized job category data for a JobFilters object.
+
+        This method uses the JobCategorySerializer to serialize the job categories associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose job category data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized job category data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = JobCategorySerializer(obj.job_category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context

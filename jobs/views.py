@@ -2,7 +2,7 @@ from django.db.models import Value, F, Case, When, IntegerField
 
 from rest_framework import (
     generics, response, status,
-    permissions, filters
+    permissions, filters, serializers
 )
 from rest_framework.pagination import LimitOffsetPagination
 
@@ -12,7 +12,7 @@ from django_filters import rest_framework as django_filters
 
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobFilters
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import GetAppliedJobsSerializers
@@ -22,7 +22,9 @@ from employers.models import BlackList
 from .serializers import (
     GetJobsSerializers,
     GetJobsDetailSerializers,
-    AppliedJobSerializers
+    AppliedJobSerializers,
+    JobFiltersSerializers,
+    GetJobFiltersSerializers
 )
 from .filters import JobDetailsFilter
 
@@ -55,10 +57,15 @@ class JobSearchView(generics.ListAPIView):
 
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.filter(start_date__lte=date.today(), deadline__gte=date.today())
+    queryset = JobDetails.objects.filter(deadline__gte=date.today())
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
-    search_fields = ['title']
+    search_fields = [
+        'title', 'description', 
+        'skill__title', 'highest_education__title', 
+        'job_category__title', 'country__title', 
+        'city__title'
+        ]
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -75,13 +82,14 @@ class JobSearchView(generics.ListAPIView):
         Returns:
             - A paginated list of job details that match the specified search and filter criteria.
         """
-        if request.user:
-            context = {"user":request.user}
-                
+        context = dict()
+        if request.user.is_authenticated:
+            context = {"user": request.user}
+
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         if jobCategory:
-            queryset = queryset.filter(job_category__title__in=jobCategory)
+            queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
@@ -107,9 +115,10 @@ class JobDetailView(generics.GenericAPIView):
 
     def get(self, request, jobId):
         response_context = dict()
+        context = dict()
         try:
-            if request.user:
-                context = {"user":request.user}
+            if request.user.is_authenticated:
+                context = {"user": request.user}
             if jobId:
                 job_data = JobDetails.objects.get(id=jobId)
                 get_data = self.serializer_class(job_data, context=context)
@@ -327,8 +336,8 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-class JobSuggestionView(generics.ListAPIView):
 
+class JobSuggestionView(generics.ListAPIView):
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
     queryset = JobDetails.objects.all()
@@ -340,58 +349,58 @@ class JobSuggestionView(generics.ListAPIView):
     def list(self, request, jobId):
         context = dict()
         if request.user:
-            context = {"user":request.user}
+            context = {"user": request.user}
         queryset = self.filter_queryset(self.get_queryset())
         try:
             job_instance = JobDetails.objects.get(id=jobId)
             annotated_job_details = JobDetails.objects.annotate(
                 matches=Value(0)
-                ).annotate(
-                    matches=Case(
-                        When(
-                            budget_amount=job_instance.budget_amount,
-                            then=F('matches') + 1
-                            ), 
-                        default=F('matches'),
-                        output_field=IntegerField()
-                        )
-                    ).annotate(
-                        matches=Case(
-                            When(
-                                skill__in=job_instance.skill.all(),
-                                then=F('matches') + 1
-                                ),
-                            default=F('matches'),
-                            output_field=IntegerField()
-                            )
-                        ).annotate(
-                            matches=Case(
-                                When(
-                                    job_category__in=job_instance.job_category.all(), 
-                                    then=F('matches') + 1
-                                    ),
-                                default=F('matches'),
-                                output_field=IntegerField()
-                                )
-                            ).annotate(
-                                matches=Case(
-                                    When(
-                                        working_days=job_instance.working_days,
-                                        then=F('matches') + 1
-                                        ),
-                                    default=F('matches'),
-                                    output_field=IntegerField()
-                                    )
-                                ).annotate(
-                                    matches=Case(
-                                        When(
-                                            highest_education=job_instance.highest_education,
-                                            then=F('matches') + 1
-                                            ),
-                                        default=F('matches'),
-                                        output_field=IntegerField()
-                                        )
-                                    )
+            ).annotate(
+                matches=Case(
+                    When(
+                        budget_amount=job_instance.budget_amount,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        skill__in=job_instance.skill.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        job_category__in=job_instance.job_category.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        working_days=job_instance.working_days,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        highest_education=job_instance.highest_education,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            )
             jobs = annotated_job_details.filter(matches=4)
             if jobs.count() == 0:
                 jobs = annotated_job_details.order_by('-matches')
@@ -405,4 +414,205 @@ class JobSuggestionView(generics.ListAPIView):
             return response.Response(
                 data={"job": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class JobFilterView(generics.GenericAPIView):
+    """
+    `JobFilterView` is a class-based view that inherits from the GenericAPIView class of the `Django REST Framework`.
+    It defines the serializer_class attribute as `JobFiltersSerializers` and permission_classes as `IsAuthenticated`.
+
+    Attributes:
+        - `serializer_class (class)`: The serializer class to be used for the view.
+        - `permission_classes (list)`: A list of permission classes that the user must have in order to access the view.
+
+    Usage:
+        - This view can be used to save JobFilters objects in the database. The user must be authenticated to access
+            this view.
+        - When a `POST` request is made to this view, it will create a `new JobFilters` object in the database with the
+            data provided in the request body.
+        - The serializer class is used to validate the data and convert it to a JobFilters object.
+    """
+
+    serializer_class = JobFiltersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        post is a method of the `JobFilterView` class that handles HTTP POST requests to save `JobFilters` objects in
+        the database.
+
+        Args:
+            - `request (HttpRequest)`: An HTTP POST request containing the data for the JobFilters object.
+
+        Returns:
+            - `HttpResponse`: A JSON response containing either the serialized JobFilters object and a status code of
+                `201 CREATED`, or a JSON error response with a status code of `400 BAD REQUEST`.
+
+        Raises:
+            - `ValidationError`: If the serializer fails to validate the request data.
+
+        Usage:
+            - This method is used to handle POST requests made to the JobFilterView view. It first creates a context
+                dictionary to store any additional data to be passed to the serializer.
+            - It then creates an instance of the JobFiltersSerializers class using the request data.
+            - The serializer is validated, and if it is valid, the JobFilters object is saved to the database with the
+                authenticated user who made the request.
+            - A JSON response containing the serialized JobFilters object is returned with a status code of 201 CREATED.
+            - If the serializer fails to validate the data, a JSON error response is returned with a status code of 400
+                BAD REQUEST.
+        """
+
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+        get is a method of the `JobFilterView` class that handles HTTP GET requests to retrieve JobFilters objects
+        saved by a particular user.
+
+        Args:
+            - `request (HttpRequest)`: An HTTP GET request.
+
+        Returns:
+            - `HttpResponse`: A JSON response containing a serialized list of JobFilters objects associated with the
+                authenticated user who made the request and a status code of 200 OK, or a JSON error response with a
+                status code of 400 BAD REQUEST.
+
+        Raises:
+            - `Exception`: If there is an error retrieving the JobFilters objects.
+
+        Usage:
+            - This method is used to handle GET requests made to the SaveFilterView view. It first creates a context
+                dictionary to store any additional data to be passed to the serializer.
+            - It then retrieves all JobFilters objects associated with the authenticated user who made the request
+                using the filter method.
+            - The data is serialized using the GetJobFiltersSerializers class and returned as a JSON response with a
+                status code of 200 OK.
+            - If there is an error retrieving the data, a JSON error response is returned with a status code of 400
+                BAD REQUEST.
+        """
+
+        context = dict()
+        try:
+            job_filter_data = JobFilters.objects.filter(user=request.user)
+            get_data = GetJobFiltersSerializers(job_filter_data, many=True)
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, filterId):
+        """
+        A function to delete a job filter instance for a job seeker user.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the job filter instance to be deleted.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `JobFilters.DoesNotExist`: If the job filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the deletion process.
+        """
+
+        context = dict()
+        if request.user.role == "job_seeker":
+            try:
+                JobFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+                context['message'] = "Filter Removed"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobFilters.DoesNotExist:
+                return response.Response(
+                    data={"filterId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, filterId):
+        """
+        A function to partially update a job filter instance for a job seeker user.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the job filter instance to be updated.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `JobFilters.DoesNotExist`: If the job filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the partial update process.
+        """
+
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            try:
+                filter_instance = JobFilters.all_objects.get(id=filterId, user=request.user)
+                serializer = self.serializer_class(data=request.data, instance=filter_instance, partial=True)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(filter_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            except JobFilters.DoesNotExist:
+                return response.Response(
+                    data={"filterId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )

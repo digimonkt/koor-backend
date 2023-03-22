@@ -63,6 +63,8 @@ def create_user_session(request, user):
         agent=agent
     )
     user_session.save()
+    user.last_login = datetime.now()
+    user.save()
     return user_session
 
 
@@ -228,6 +230,7 @@ class CreateSessionView(generics.GenericAPIView):
                 user=serializer.validated_data,
                 session_id=user_session.id
             )
+            
             context["message"] = "User LoggedIn Successfully"
             return response.Response(
                 data=context,
@@ -573,7 +576,7 @@ class SocialLoginView(generics.GenericAPIView):
                 user = User.objects.get(email=serializer.validated_data['email'])
             else:
                 serializer.is_valid(raise_exception=True)
-                serializer.save(is_verified=True)
+                serializer.save()
                 user = User.objects.get(id=serializer.data['id'])
                 if user.role == "job_seeker":
                     JobSeekerProfile.objects.create(user=user)
@@ -657,4 +660,3 @@ class VerificationView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
-
