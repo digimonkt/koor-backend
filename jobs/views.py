@@ -60,7 +60,12 @@ class JobSearchView(generics.ListAPIView):
     queryset = JobDetails.objects.filter(deadline__gte=date.today())
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
-    search_fields = ['title']
+    search_fields = [
+        'title', 'description', 
+        'skill__title', 'highest_education__title', 
+        'job_category__title', 'country__title', 
+        'city__title'
+        ]
     pagination_class = CustomPagination
 
     def list(self, request):
