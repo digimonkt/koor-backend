@@ -110,8 +110,9 @@ class JobDetailView(generics.GenericAPIView):
 
     def get(self, request, jobId):
         response_context = dict()
+        context = dict()
         try:
-            if request.user:
+            if request.user.is_authenticated:
                 context = {"user": request.user}
             if jobId:
                 job_data = JobDetails.objects.get(id=jobId)
