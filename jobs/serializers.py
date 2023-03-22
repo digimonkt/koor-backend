@@ -528,8 +528,8 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
     def get_is_applied(self, obj):
         is_applied_record = False
-        user = self.context['user']
-        if user:
+        if 'user' in self.context:
+            user = self.context['user']
             is_applied_record = AppliedJob.objects.filter(
                 job=obj,
                 user=user
@@ -538,8 +538,8 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
     def get_is_saved(self, obj):
         is_saved_record = False
-        user = self.context['user']
-        if user:
+        if 'user' in self.context:
+            user = self.context['user']
             is_saved_record = SavedJob.objects.filter(
                 job=obj,
                 user=user
