@@ -57,12 +57,15 @@ def create_user_session(request, user):
     else:
         IPAddr = request.META.get('REMOTE_ADDR')
     agent = {'User-Agent': request.headers.get('User-Agent')}
+    UserSession.objects.filter(user=user).update(expire_at=datetime.now())
     user_session = UserSession.objects.create(
         user=user,
         ip_address=IPAddr,
         agent=agent
     )
     user_session.save()
+    user.last_login = datetime.now()
+    user.save()
     return user_session
 
 
@@ -228,6 +231,7 @@ class CreateSessionView(generics.GenericAPIView):
                 user=serializer.validated_data,
                 session_id=user_session.id
             )
+            
             context["message"] = "User LoggedIn Successfully"
             return response.Response(
                 data=context,
