@@ -322,3 +322,114 @@ class JobsLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, mode
         verbose_name_plural = "Jobs Language Proficiencies"
         db_table = "JobsLanguageProficiency"
         ordering = ['-created']
+
+
+class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Model representing a job filter created by a user to receive notifications about relevant job postings.
+
+    Attributes:
+        - `user (ForeignKey)`: A foreign key to the user who created the job filter.
+        - `title (TextField)`: The title of the job filter.
+        - `country (ForeignKey)`: A foreign key to the country associated with the job filter.
+        - `city (ForeignKey)`: A foreign key to the city associated with the job filter.
+        - `job_category (ManyToManyField)`: A many-to-many field to the job categories associated with the job filter.
+        - `is_full_time (BooleanField)`: A boolean field indicating if the job filter is for full-time jobs.
+        - `is_part_time (BooleanField)`: A boolean field indicating if the job filter is for part-time jobs.
+        - `is_notification (BooleanField)`: A boolean field indicating if the job filter should send notification for job postings.
+        - `has_contract (BooleanField)`: A boolean field indicating if the job filter is for jobs with contracts.
+        - `working_days (CharField)`: A character field indicating the working days for the job filter.
+
+   Methods:
+       __str__(self): Returns a string representation of the job filter.
+
+   Meta:
+        - `verbose_name (str)`: The singular name for the model.
+        - `verbose_name_plural (str)`: The plural name for the model.
+        - `db_table (str)`: The name of the database table to use for the model.
+        - `ordering (list)`: The default ordering for the model.
+   """
+
+    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,8)]
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    title = models.TextField(
+        verbose_name=_('Title'),
+        db_column="title",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
+    )
+    job_category = models.ManyToManyField(
+        to=JobCategory,
+        null=True,
+        blank=True,
+        verbose_name=_('Job Category'),
+        db_column="job_category",
+        related_name='%(app_label)s_%(class)s_job_category'
+    )
+    is_full_time = models.BooleanField(
+        verbose_name=_('Is Full-time'),
+        null=True,
+        blank=True,
+        db_column="is_full_time",
+        default=False
+    )
+    is_part_time = models.BooleanField(
+        verbose_name=_('Is Part-time'),
+        null=True,
+        blank=True,
+        db_column="is_part_time",
+        default=False
+    )
+    is_notification= models.BooleanField(
+        verbose_name=_('Is Notification'),
+        null=True,
+        blank=True,
+        db_column="is_notification",
+        default=False
+    )
+    has_contract = models.BooleanField(
+        verbose_name=_('Has Contract'),
+        null=True,
+        blank=True,
+        db_column="has_contract",
+        default=False
+    )
+    working_days = models.CharField(
+        verbose_name=_('Working Days'),
+        db_column="working_days",
+        null=True,
+        blank=True,
+        max_length=25,
+        choices=WORKING_DAYS_CHOICE,
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Job Filter"
+        verbose_name_plural = "Job Filters"
+        db_table = "JobFilters"
+        ordering = ['-created']
