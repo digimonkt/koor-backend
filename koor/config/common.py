@@ -32,6 +32,7 @@ class Common(Configuration):
         "jobs.apps.JobsConfig",
         "employers.apps.EmployersConfig",
         "superadmin.apps.SuperadminConfig",
+        "notification.apps.NotificationConfig",
     )
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
