@@ -8,6 +8,8 @@ from users.serializers import ApplicantDetailSerializers
 
 from jobs.serializers import GetJobsDetailSerializers, GetJobsSerializers, AppliedJobAttachmentsSerializer
 
+from notification.models import Notification
+
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
@@ -344,6 +346,10 @@ class AppliedJobSerializers(serializers.ModelSerializer):
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         applied_job_instance = super().save(user=user, job=job_instace)
+        Notification.objects.create(
+            user=job_instace.user, application=applied_job_instance, 
+            notification_type='applied', created_by=user
+            )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
