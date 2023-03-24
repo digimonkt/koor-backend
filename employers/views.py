@@ -1,3 +1,6 @@
+from django.core.handlers.wsgi import WSGIHandler
+from django.core.signals import request_finished
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
 from rest_framework import (
@@ -6,8 +9,10 @@ from rest_framework import (
 )
 from rest_framework.pagination import LimitOffsetPagination
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobFilters
 from jobs.serializers import GetJobsSerializers
+
+from notification.models import Notification
 
 from user_profile.models import EmployerProfile
 from users.models import User
@@ -128,6 +133,7 @@ class JobsView(generics.ListAPIView):
                 serializer.is_valid(raise_exception=True)
                 serializer.save(self.request.user)
                 context["message"] = "Job added successfully."
+                request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -224,3 +230,56 @@ class JobsView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+def my_callback(sender, **kwargs):
+    """
+    A callback function that generates notifications for job filters matching the job details of a recently finished
+    request.
+
+    Args:
+        - `sender`: The sender of the signal, typically a Django web application.
+        - `**kwargs`: Additional keyword arguments provided by the signal.
+
+    Returns:
+        - None.
+
+    Functionality:
+        - Fetches the first JobDetails instance from the database.
+        - Filters JobFilters instances based on the job details, including `country`, `city`, `job category`,
+            `employment type`, and `working days`.
+        - Creates Notification instances for each matching JobFilters instance.
+        - Disconnects this callback function from the request_finished signal after execution.
+    """
+
+    job_instance = JobDetails.objects.first()
+    job_filter_data = JobFilters.objects.filter(
+        is_notification=True
+    ).filter(
+        Q(country=job_instance.country) | Q(country=None)
+    ).filter(
+        Q(city=job_instance.city) | Q(city=None)
+    ).filter(
+        Q(job_category__in=[(job_category_value) for job_category_value in job_instance.job_category.all()]) | Q(
+            job_category=None)
+    ).filter(
+        Q(is_full_time=job_instance.is_full_time) | Q(is_full_time=None)
+    ).filter(
+        Q(is_part_time=job_instance.is_part_time) | Q(is_part_time=None)
+    ).filter(
+        Q(has_contract=job_instance.has_contract) | Q(has_contract=None)
+    ).filter(
+        Q(working_days=job_instance.working_days) | Q(working_days=None)
+    )
+
+    Notification.objects.bulk_create(
+        [
+            Notification(
+                user=job_filter.user,
+                job_filter=job_filter,
+                notification_type='advance filter',
+                created_by=job_instance.user
+            ) for job_filter in job_filter_data
+        ]
+    )
+    request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
