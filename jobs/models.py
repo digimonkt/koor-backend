@@ -393,28 +393,24 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         null=True,
         blank=True,
         db_column="is_full_time",
-        default=False
     )
     is_part_time = models.BooleanField(
         verbose_name=_('Is Part-time'),
         null=True,
         blank=True,
         db_column="is_part_time",
-        default=False
     )
     is_notification= models.BooleanField(
         verbose_name=_('Is Notification'),
         null=True,
         blank=True,
         db_column="is_notification",
-        default=False
     )
     has_contract = models.BooleanField(
         verbose_name=_('Has Contract'),
         null=True,
         blank=True,
         db_column="has_contract",
-        default=False
     )
     working_days = models.CharField(
         verbose_name=_('Working Days'),
