@@ -308,11 +308,10 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def patch(self, request, applicationId):
+    def put(self, request, applicationId, action):
         context = dict()
         try:
             if applicationId:
-                action = request.data['action']
                 if action == "shortlisted":
                     application_status = AppliedJob.objects.get(id=applicationId)
                     application_status.shortlisted_at = datetime.now()
