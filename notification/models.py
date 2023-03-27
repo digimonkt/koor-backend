@@ -37,10 +37,10 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
 
     NOTIFICATION_TYPE_CHOICE = (
         ('applied', "Applied"),
-        ('password update', "Password Updated"),
+        ('password_update', "Password Updated"),
         ('shortlisted', "Shortlisted"),
         ('message', "Message"),
-        ('advance filter', "Advance Filter"),
+        ('advance_filter', "Advance Filter"),
     )
     user = models.ForeignKey(
         User,

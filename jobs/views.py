@@ -312,18 +312,25 @@ class ApplicationsDetailView(generics.GenericAPIView):
         context = dict()
         try:
             if applicationId:
+                message = "Successfully "
                 if action == "shortlisted":
                     application_status = AppliedJob.objects.get(id=applicationId)
-                    application_status.shortlisted_at = datetime.now()
-                    application_status.save()
+                    if application_status.shortlisted_at:
+                        message = "Already "
+                    else:
+                        application_status.shortlisted_at = datetime.now()
+                        application_status.save()
                 elif action == "rejected":
                     application_status = AppliedJob.objects.get(id=applicationId)
-                    application_status.rejected_at = datetime.now()
-                    application_status.save()
+                    if application_status.rejected_at:
+                        message = "Already "
+                    else:
+                        application_status.rejected_at = datetime.now()
+                        application_status.save()
                 elif action == "blacklisted":
                     application_data = AppliedJob.objects.get(id=applicationId)
                     BlackList.objects.create(user=request.user, blacklisted_user=application_data.user)
-                context['message'] = "Successfully " + str(action)
+                context['message'] = str(message) + str(action)
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK

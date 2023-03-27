@@ -29,7 +29,7 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = [
-            'id', 'notification_type', 'application', 'job_filter', 'seen'
+            'id', 'notification_type', 'application', 'job_filter', 'seen', 'created'
         ]
 
     def get_application(self, obj):
