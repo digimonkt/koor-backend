@@ -25,11 +25,13 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     """
 
     application = serializers.SerializerMethodField()
+    job = serializers.SerializerMethodField()
+    job_filter = serializers.SerializerMethodField()
     
     class Meta:
         model = Notification
         fields = [
-            'id', 'notification_type', 'application', 'job_filter', 'seen', 'created'
+            'id', 'notification_type', 'application','job', 'job_filter', 'seen', 'created'
         ]
 
     def get_application(self, obj):
@@ -44,8 +46,19 @@ class GetNotificationSerializers(serializers.ModelSerializer):
             or an empty dictionary if the related object does not exist or could not be serialized.
 
         """
-        return_context = {}
-        get_data = GetAppliedJobsSerializers(obj.application, context={"request": self.context['request']})
-        if get_data.data:
-            return_context = get_data.data
-        return return_context
+        if obj.application:
+            get_data = GetAppliedJobsSerializers(obj.application, context={"request": self.context['request']})
+            print(get_data.data)
+            if get_data.data:
+                return get_data.data
+        return None
+    
+    def get_job(self, obj):
+        if obj.job:
+            return {"id": obj.job.id, "title": obj.job.title}
+        return None
+    
+    def get_job_filter(self, obj):
+        if obj.job_filter:
+            return {"id": obj.job_filter.id, "title": obj.job_filter.title}
+        return None
