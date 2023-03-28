@@ -17,6 +17,8 @@ from jobs.models import JobDetails, JobFilters
 from job_seekers.models import AppliedJob
 from jobs.serializers import GetAppliedJobsSerializers
 
+from notification.models import Notification
+
 from employers.models import BlackList
 
 from .serializers import (
@@ -320,6 +322,10 @@ class ApplicationsDetailView(generics.GenericAPIView):
                     else:
                         application_status.shortlisted_at = datetime.now()
                         application_status.save()
+                        Notification.objects.create(
+                        user=application_status.user, application=application_status, 
+                        notification_type='shortlisted', created_by=request.user
+                        )
                 elif action == "rejected":
                     application_status = AppliedJob.objects.get(id=applicationId)
                     if application_status.rejected_at:
