@@ -483,7 +483,7 @@ class ChangePasswordView(generics.GenericAPIView):
             user_instance.is_verified = True
             user_instance.save()
             Notification.objects.create(
-                user=user_instance, notification_type='password update', 
+                user=user_instance, notification_type='password_update', 
                 created_by=user_instance
                 )
             context['message'] = "Password updated successfully."
