@@ -24,6 +24,7 @@ class Common(Configuration):
         'rest_framework.authtoken',  # token authentication
         'django_filters',  # for filtering rest endpoints
         'rest_framework_simplejwt',  # for the JWT authentication 
+        'django_crontab',  # for the Cronjobs 
 
         "users.apps.UsersConfig",
         "project_meta.apps.ProjectMetaConfig",
@@ -34,6 +35,10 @@ class Common(Configuration):
         "superadmin.apps.SuperadminConfig",
         "notification.apps.NotificationConfig",
     )
+    
+    CRONJOBS = [
+    ('59 23 * * *', 'notification.views.ExpiredSavedJobs'),
+    ]
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
     MIDDLEWARE = (
