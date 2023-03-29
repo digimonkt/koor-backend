@@ -266,6 +266,13 @@ class SavedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="job",
         related_name='%(app_label)s_%(class)s_job'
     )
+    notified = models.BooleanField(
+        verbose_name=_('Notified'),
+        null=True,
+        blank=True,
+        db_column="notified",
+        default=False
+    )
 
     def __str__(self):
         return str(self.job) + "(" + str(self.user) + ")"
