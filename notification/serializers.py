@@ -55,7 +55,14 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     
     def get_job(self, obj):
         if obj.job:
-            return {"id": obj.job.id, "title": obj.job.title}
+            user = dict()
+            user['id'] = obj.job.user.id
+            user['name'] = obj.job.user.name
+            if obj.job.user.image.title == "profile image":
+                user['image'] = str(obj.job.user.image.file_path)
+            else:
+                user['image'] = obj.job.user.image.file_path.url
+            return {"id": obj.job.id, "title": obj.job.title, 'user': user}
         return None
     
     def get_job_filter(self, obj):
