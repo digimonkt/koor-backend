@@ -1,7 +1,11 @@
+from datetime import date
+
 from rest_framework import (
     generics, response, permissions, filters
 )
 from rest_framework.pagination import LimitOffsetPagination
+
+from job_seekers.models import SavedJob
 
 from notification.models import Notification
 from notification.serializers import GetNotificationSerializers
@@ -73,3 +77,27 @@ class NotificationView(generics.ListAPIView):
              "results": serializer.data
              }
         )
+
+
+def ExpiredSavedJobs():
+    """
+    Sends notifications to users who have saved job postings that have passed their deadline and have not been notified
+    yet.
+
+    Returns a HTTP response object indicating that all notifications have been sent.
+    """
+
+    saved_job_data = SavedJob.objects.filter(job__deadline__lte=date.today(), notified=False)
+    Notification.objects.bulk_create(
+        [
+            Notification(
+                user=saved_job.user,
+                job=saved_job.job,
+                notification_type='expired_save_job',
+            ) for saved_job in saved_job_data
+        ]
+    )
+    saved_job_data = SavedJob.objects.filter(
+        job__deadline__lte=date.today(), notified=False
+    ).update(notified=True)
+    return response.Response({'message': "All notifications have been sent."})
