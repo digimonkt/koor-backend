@@ -277,7 +277,8 @@ def my_callback(sender, **kwargs):
             Notification(
                 user=job_filter.user,
                 job_filter=job_filter,
-                notification_type='advance filter',
+                job=job_instance,
+                notification_type='advance_filter',
                 created_by=job_instance.user
             ) for job_filter in job_filter_data
         ]

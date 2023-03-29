@@ -11,7 +11,7 @@ from users.models import (
 )
 from job_seekers.models import AppliedJob
 
-from jobs.models import JobFilters
+from jobs.models import JobFilters, JobDetails
 
 
 class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -63,6 +63,15 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="application",
         related_name='%(app_label)s_%(class)s_applications'
+    )
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_jobs'
     )
     job_filter = models.ForeignKey(
         JobFilters,
