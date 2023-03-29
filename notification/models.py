@@ -41,6 +41,7 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('shortlisted', "Shortlisted"),
         ('message', "Message"),
         ('advance_filter', "Advance Filter"),
+        ('expired_save_job', "Expired Save Job"),
     )
     user = models.ForeignKey(
         User,
