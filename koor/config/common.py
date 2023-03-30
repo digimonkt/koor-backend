@@ -37,7 +37,7 @@ class Common(Configuration):
     )
     
     CRONJOBS = [
-    ('59 23 * * *', 'notification.views.ExpiredSavedJobs'),
+    ('*/2 * * * *', 'notification.views.ExpiredSavedJobs'),
     ]
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
