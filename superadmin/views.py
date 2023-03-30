@@ -4,6 +4,7 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
 from jobs.models import (
@@ -1201,7 +1202,7 @@ class JobsListView(generics.ListAPIView):
     Returns:
         - A Response object with a list of jobs, or an error message if the user is not authorized.
     """
-
+    
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = JobListSerializers
     queryset = JobDetails.objects.all()
@@ -1209,11 +1210,26 @@ class JobsListView(generics.ListAPIView):
     search_fields = ['title']
 
     def list(self, request):
-        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
-            serializer = self.get_serializer(queryset, many=True)
-            return response.Response({'results': serializer.data})
+            count = queryset.count()
+            next = None
+            previous = None
+            paginator = LimitOffsetPagination()
+            limit = self.request.query_params.get('limit')
+            if limit:
+                queryset = paginator.paginate_queryset(queryset, request)
+                count = paginator.count
+                next = paginator.get_next_link()
+                previous = paginator.get_previous_link()
+            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
+            return response.Response(
+                {'count': count,
+                "next": next,
+                "previous": previous,
+                "results": serializer.data
+                }
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
