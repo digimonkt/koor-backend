@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from job_seekers.serializers import GetAppliedJobsSerializers
+from job_seekers.serializers import GetAppliedJobsNotificationSerializers
 from notification.models import Notification
 
 
@@ -10,7 +10,7 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     A serializer class for Notification objects, with a custom field for the application data.
 
     The `application` field is a SerializerMethodField that returns the data of the related Application object,
-    serialized using the `GetAppliedJobsSerializers` class.
+    serialized using the `GetAppliedJobsNotificationSerializers` class.
 
     Attributes:
         application: A SerializerMethodField that returns the data of the related Application object.
@@ -47,8 +47,7 @@ class GetNotificationSerializers(serializers.ModelSerializer):
 
         """
         if obj.application:
-            get_data = GetAppliedJobsSerializers(obj.application, context={"request": self.context['request']})
-            print(get_data.data)
+            get_data = GetAppliedJobsNotificationSerializers(obj.application)
             if get_data.data:
                 return get_data.data
         return None

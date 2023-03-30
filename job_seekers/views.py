@@ -12,12 +12,13 @@ from users.models import User
 
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJob, SavedJob
+    JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
 )
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
-    GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers
+    GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
+    UpdateJobPreferencesSerializers
 )
 
 
@@ -1106,3 +1107,62 @@ class JobsSaveView(generics.ListAPIView):
             else:
                 return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
         return SavedJob.objects.filter(user=self.request.user)
+
+
+class UpdateJobPreferencesView(generics.GenericAPIView):
+    """
+        A view class for updating `JobPreferences` instances via PATCH requests.
+
+        This class extends the GenericAPIView class provided by Django REST framework, and specifies the serializer
+        class and permission classes to use.
+
+        Attributes:
+            - `serializer_class`: The serializer class used to serialize and validate request data.
+            - `permission_classes`: A list of permission classes to use for authorization.
+    """
+
+    serializer_class = UpdateJobPreferencesSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        """
+            Handle a PATCH request to update a JobPreferences instance.
+
+            This method checks that the requesting user is a job seeker, and retrieves or creates a `JobPreferences`
+            instance for the user. It then uses the serializer class to validate and update the instance with the
+            request data.
+
+            Args:
+                - `request`: The `PATCH` request object.
+
+            Returns:
+                - A response object with a success or error message, and an HTTP status code.
+        """
+
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            if JobPreferences.objects.filter(user=request.user).exists():
+                preference_instance = get_object_or_404(JobPreferences, user=request.user)
+            else:
+                preference_instance = JobPreferences.objects.create(user=request.user)
+                
+            serializer = self.serializer_class(data=request.data, instance=preference_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(preference_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
