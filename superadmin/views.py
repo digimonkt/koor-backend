@@ -43,7 +43,7 @@ class CountryView(generics.ListAPIView):
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = CountrySerializers
     queryset = Country.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -162,7 +162,7 @@ class CityView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = CitySerializers
     queryset = City.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -286,7 +286,7 @@ class JobCategoryView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = JobCategorySerializers
     queryset = JobCategory.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -364,7 +364,7 @@ class EducationLevelView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = EducationLevelSerializers
     queryset = EducationLevel.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -442,7 +442,7 @@ class LanguageView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = LanguageSerializers
     queryset = Language.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -560,7 +560,7 @@ class SkillView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = SkillSerializers
     queryset = Skill.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -682,7 +682,7 @@ class TagView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = TagSerializers
     queryset = Tag.objects.all()
     filter_backends = [filters.SearchFilter]
