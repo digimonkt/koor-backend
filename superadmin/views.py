@@ -1118,11 +1118,26 @@ class CandidatesListView(generics.ListAPIView):
     search_fields = ['name']
 
     def list(self, request):
-        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
-            serializer = self.get_serializer(queryset, many=True)
-            return response.Response({'results': serializer.data})
+            count = queryset.count()
+            next = None
+            previous = None
+            paginator = LimitOffsetPagination()
+            limit = self.request.query_params.get('limit')
+            if limit:
+                queryset = paginator.paginate_queryset(queryset, request)
+                count = paginator.count
+                next = paginator.get_next_link()
+                previous = paginator.get_previous_link()
+            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
+            return response.Response(
+                {'count': count,
+                "next": next,
+                "previous": previous,
+                "results": serializer.data
+                }
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
