@@ -1,3 +1,5 @@
+from django.shortcuts import HttpResponse
+
 from datetime import date
 
 from rest_framework import (
@@ -100,4 +102,4 @@ def ExpiredSavedJobs():
     saved_job_data = SavedJob.objects.filter(
         job__deadline__lte=date.today(), notified=False
     ).update(notified=True)
-    return response.Response({'message': "All notifications have been sent."})
+    return HttpResponse("done")
