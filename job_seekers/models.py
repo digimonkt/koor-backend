@@ -4,8 +4,11 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
+
 from users.models import User, TimeStampedModel
+
 from jobs.models import JobDetails
+
 from project_meta.models import (
     Media, Language, Skill,
     EducationLevel
@@ -378,4 +381,88 @@ class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, mo
         verbose_name = "Applied Job Attachment Item"
         verbose_name_plural = "Applied Job Attachment Items"
         db_table = "AppliedJobAttachmentsItem"
+        ordering = ['-created']
+
+
+class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    `JobPreferences` model stores the job Preferences of a user.
+
+    Fields:
+        - `user`: A foreign key to the User model.
+        - `is_available`: A boolean indicating if the user is available for work.
+        - `is_display`: A boolean indicating if the user's job Preferences are visible to employers.
+        - `is_part_time`: A boolean indicating if the user is looking for part-time work.
+        - `is_full_time`: A boolean indicating if the user is looking for full-time work.
+        - `has_contract`: A boolean indicating if the user is looking for work with a contract.
+        - `expected_salary`: A decimal field indicating the expected salary of the user.
+
+    Meta:
+        - `verbose_name`: A human-readable name for the model in singular form.
+        - `verbose_name_plural`: A human-readable name for the model in plural form.
+        - `db_table`: The name of the database table to use for the model.
+        - `ordering`: The default ordering for the model.
+
+    Inherits from:
+        - `BaseModel`: A base model class with common fields and methods.
+        - `SoftDeleteModel`: A model class that implements soft deletion.
+        - `TimeStampedModel`: A model class that adds created and modified timestamps.
+        - `models.Model`: The base class for all Django models.
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    is_available = models.BooleanField(
+        verbose_name=_('Is Available'),
+        null=True,
+        blank=True,
+        db_column="is_available",
+        default=False
+    )
+    is_display = models.BooleanField(
+        verbose_name=_('Is Display'),
+        null=True,
+        blank=True,
+        db_column="is_display",
+        default=False
+    )
+    is_part_time = models.BooleanField(
+        verbose_name=_('Is Part Time'),
+        null=True,
+        blank=True,
+        db_column="is_part_time",
+        default=False
+    )
+    is_full_time = models.BooleanField(
+        verbose_name=_('Is Full Time'),
+        null=True,
+        blank=True,
+        db_column="is_full_time",
+        default=False
+    )
+    has_contract = models.BooleanField(
+        verbose_name=_('Has Contract'),
+        null=True,
+        blank=True,
+        db_column="has_contract",
+        default=False
+    )
+    expected_salary = models.DecimalField(
+        max_digits=19,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Expected Salary'),
+        db_column="expected_salary",
+    )
+
+    class Meta:
+        verbose_name = "Job Preferences"
+        verbose_name_plural = "Job Preferences"
+        db_table = "JobPreferences"
         ordering = ['-created']
