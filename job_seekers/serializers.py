@@ -1,7 +1,10 @@
 from rest_framework import serializers
 
 from jobs.models import JobDetails
-from project_meta.models import Media, Language
+from project_meta.models import (
+    Media, Language, JobSeekerCategory
+
+)
 from user_profile.models import JobSeekerProfile
 
 from users.serializers import ApplicantDetailSerializers
@@ -13,7 +16,7 @@ from notification.models import Notification
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob, JobPreferences
+    SavedJob, JobPreferences, Categories
 )
 
 
@@ -637,7 +640,7 @@ class GetAppliedJobsNotificationSerializers(serializers.ModelSerializer):
             else:
                 user['image'] = obj.user.image.file_path.url
         return user
-        
+
 
 class AdditionalParameterSerializers(serializers.ModelSerializer):
     """
@@ -657,19 +660,19 @@ class AdditionalParameterSerializers(serializers.ModelSerializer):
 
     """
 
-    is_part_time = serializers.BooleanField (
+    is_part_time = serializers.BooleanField(
         required=True
     )
-    is_full_time = serializers.BooleanField (
+    is_full_time = serializers.BooleanField(
         required=True
     )
-    has_contract = serializers.BooleanField (
+    has_contract = serializers.BooleanField(
         required=True
     )
 
     class Meta:
         model = JobSeekerProfile
-        fields = ['country', 'city', 'is_part_time', 
+        fields = ['country', 'city', 'is_part_time',
                   'is_full_time', 'has_contract'
                   ]
 
@@ -687,3 +690,66 @@ class AdditionalParameterSerializers(serializers.ModelSerializer):
             preference_instance.has_contract = validated_data['has_contract']
         preference_instance.save()
         return instance
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    """
+        Serializer for the sub-categories of a `JobSeekerCategory` model.
+
+        Attributes:
+            - `status (SerializerMethodField)`: A field that indicates whether the user has selected the `sub-category`.
+
+        Meta:
+            - `model (JobSeekerCategory)`: The model that the serializer is based on.
+            - `fields (list)`: The fields to include in the serialized output.
+
+        Methods:
+            - `get_status`: A method that checks whether the user has selected the sub-category.
+    """
+
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobSeekerCategory
+        fields = ['id', 'title', 'status']
+
+    def get_status(self, obj):
+        status = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if Categories.objects.filter(user=user, category=obj).exists():
+                status = True
+        return status
+
+
+class CategoriesSerializers(serializers.ModelSerializer):
+    """
+        Serializer for the `JobSeekerCategory` model that includes its `sub-categories`.
+
+        Attributes:
+            - `sub_category (SerializerMethodField)`: A field that gets the `sub-categories` associated with the
+                `category`.
+
+        Meta:
+            - `model (JobSeekerCategory)`: The model that the serializer is based on.
+            - `fields (list)`: The fields to include in the serialized output.
+
+        Methods:
+            - `get_sub_category`: A method that retrieves the sub-categories associated with the category.
+    """
+
+    sub_category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobSeekerCategory
+        fields = ['id', 'title', 'sub_category']
+
+    def get_sub_category(self, obj):
+        context = []
+        if 'user' in self.context:
+            user = self.context['user']
+            category_data = JobSeekerCategory.objects.filter(category=obj)
+            get_data = SubCategorySerializer(category_data, many=True, context={'user': user})
+            if get_data.data:
+                context = get_data.data
+        return context
