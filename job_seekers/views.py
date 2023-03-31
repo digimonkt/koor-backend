@@ -3,7 +3,8 @@ from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
+
+from core.pagination import CustomPagination
 
 from jobs.models import JobDetails
 
@@ -704,12 +705,14 @@ class JobsApplyView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the applied jobs.
         - `search_fields`: The fields to search for when filtering the applied jobs.
     """
-
+        
     serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
+    
 
     def list(self, request):
         """
@@ -717,9 +720,6 @@ class JobsApplyView(generics.ListAPIView):
 
         This method returns a paginated list of applied jobs for the authenticated user. The applied jobs are
         serialized using the `GetAppliedJobsSerializers` class.
-
-        If a 'limit' query parameter is provided in the request, the queryset will be paginated using the
-        `LimitOffsetPagination` class. Otherwise, the entire queryset will be returned.
 
         Args:
             request: The HTTP request object.
@@ -733,30 +733,15 @@ class JobsApplyView(generics.ListAPIView):
             - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
             - `results (list)`: A list of serialized applied jobs for the authenticated user.
 
-        The `'count'`, `'next'`, and `'previous'` fields are determined by the `LimitOffsetPagination` class if a limit
-        query parameter is provided. Otherwise, the count will be the length of the entire queryset and next
-        and previous will be null.
         """
 
         queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
 
     def post(self, request, jobId):
         """
@@ -916,12 +901,12 @@ class JobsSaveView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the saved jobs.
         - `search_fields`: The fields to search for when filtering the saved jobs.
     """
-
     serializer_class = GetSavedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         """
@@ -929,9 +914,6 @@ class JobsSaveView(generics.ListAPIView):
 
         This method returns a paginated list of saved jobs for the authenticated user. The saved jobs are
         serialized using the `GetSavedJobsSerializers` class.
-
-        If a 'limit' query parameter is provided in the request, the queryset will be paginated using the
-        `LimitOffsetPagination` class. Otherwise, the entire queryset will be returned.
 
         Args:
             request: The HTTP request object.
@@ -945,30 +927,15 @@ class JobsSaveView(generics.ListAPIView):
             - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
             - `results (list)`: A list of serialized saved jobs for the authenticated user.
 
-        The `'count'`, `'next'`, and `'previous'` fields are determined by the `LimitOffsetPagination` class if a limit
-        query parameter is provided. Otherwise, the count will be the length of the entire queryset and next
-        and previous will be null.
         """
-
+        
         queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
 
     def post(self, request, jobId):
         """

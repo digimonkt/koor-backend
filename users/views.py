@@ -6,7 +6,6 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
 
 from random import randint
 
@@ -18,6 +17,7 @@ from core.tokens import (
     PasswordResetTokenObtainPairSerializer,
     PasswordChangeTokenObtainPairSerializer)
 from core.emails import get_email_object
+from core.pagination import CustomPagination
 
 from user_profile.models import (
     JobSeekerProfile,
@@ -688,12 +688,16 @@ class SearchView(generics.ListAPIView):
         - /candidates/developers/?limit=10&search=python
         - /candidates/managers/?search=project+management
     """
-
+    
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = [
+        'name', 'email'
+    ]
+    pagination_class = CustomPagination
+    
 
     def list(self, request, role):
         """
@@ -714,23 +718,10 @@ class SearchView(generics.ListAPIView):
             - `results`: list of dicts, the serialized representations of the candidates matching the 
                 filter/search criteria
         """
-        
         queryset = self.filter_queryset(self.get_queryset().filter(role=role))
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True)
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)

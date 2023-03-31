@@ -8,7 +8,8 @@ from jobs.models import (
 )
 from project_meta.models import (
     Country, City, EducationLevel,
-    Language, Skill, Tag
+    Language, Skill, Tag,
+    JobSeekerCategory
 )
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
@@ -350,7 +351,8 @@ class UserCountSerializers(serializers.Serializer):
         return User.objects.filter(~Q(role='admin')).count()
 
     def get_active_user(self, obj):
-        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None).order_by('user').distinct('user').count()
+        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None).order_by('user').distinct(
+            'user').count()
 
     def get_job_seekers(self, obj):
         return User.objects.filter(role='job_seeker').count()
@@ -392,16 +394,63 @@ class DashboardCountSerializers(serializers.Serializer):
         ]
 
     def get_jobs(self, obj):
-        start_date =  self.context['start_date']
-        end_date =  self.context['end_date']
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
         return JobDetails.objects.filter(
             start_date__lte=date.today(), deadline__gte=date.today(),
             created__gte=start_date, created__lte=end_date,
             status='active').count()
 
     def get_employers(self, obj):
-        start_date =  self.context['start_date']
-        end_date =  self.context['end_date']
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
         return User.objects.filter(
             date_joined__gte=start_date, date_joined__lte=end_date,
             role='employer').count()
+
+
+class JobSeekerCategorySerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the `JobSeekerCategory` model. It serializes and deserializes data
+    to and from JSON format for API calls.
+
+    Attributes:
+        - `Meta (class)`: A subclass of ModelSerializer which defines the metadata for the serializer.
+
+    Methods:
+        - `validate_category(category)`: Validates the category field in the serialized data.
+
+    """
+
+    class Meta:
+        model = JobSeekerCategory
+        fields = ['id', 'title', 'category']
+
+    def validate_category(self, category):
+        """
+        Validates the category field in the serialized data. If the category is not blank and is
+        a valid category, returns the category. Otherwise, raises a validation error with an
+        appropriate message.
+
+        Args:
+            - `category (str)`: The category to be validated.
+
+        Raises:
+            - `serializers.ValidationError`: If the category is invalid or blank.
+
+        Returns:
+            - `str`: The validated category.
+
+        """
+
+        if category != '':
+            try:
+                if JobSeekerCategory.objects.get(id=category.id):
+                    if JobSeekerCategory.objects.filter(id=category.id, category=None):
+                        return category
+                    else:
+                        raise serializers.ValidationError('This is a sub category.', code='category')
+            except JobSeekerCategory.DoesNotExist:
+                raise serializers.ValidationError('Invalid category.', code='category')
+        else:
+            raise serializers.ValidationError('category can not be blank', code='category')

@@ -7,7 +7,8 @@ from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
+
+from core.pagination import CustomPagination
 
 from jobs.models import JobDetails, JobFilters
 from jobs.serializers import GetJobsSerializers
@@ -89,28 +90,31 @@ class JobsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = [
+        'title', 'description',
+        'skill__title', 'highest_education__title',
+        'job_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+    
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"user": request.user})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"user": request.user})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
     def post(self, request):
         """
