@@ -256,11 +256,10 @@ class JobListSerializers(serializers.ModelSerializer):
     """
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
-    company = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
-        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'company', 'status']
+        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status']
 
     def get_country(self, obj):
         """
@@ -297,19 +296,6 @@ class JobListSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
-    
-    def get_company(self, obj):
-        """
-        Retrieves the serialized data for the city related to a JobDetails object.
-
-        Args:
-            obj: The JobDetails object to retrieve the city data for.
-
-        Returns:
-            A dictionary containing the serialized city data.
-
-        """
-        return obj.user.name
 
 
 class UserCountSerializers(serializers.Serializer):
