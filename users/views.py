@@ -2,11 +2,11 @@ import json, jwt
 import requests
 from datetime import datetime
 
-
 from rest_framework import (
     status, generics, serializers,
-    response, permissions
+    response, permissions, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from random import randint
 
@@ -27,6 +27,7 @@ from user_profile.models import (
 from notification.models import Notification
 
 from superadmin.models import GooglePlaceApi
+from superadmin.serializers import CandidatesSerializers
 
 from .models import UserSession, User
 from .serializers import (
@@ -666,3 +667,70 @@ class VerificationView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class SearchView(generics.ListAPIView):
+    """
+    A view that returns a list of candidates filtered by role and optionally searched by title.
+    The `role` parameter is required in the URL path.
+    The `limit` query parameter can be used to paginate the results.
+
+    - `Serializer class`: CandidatesSerializers
+    - `Permission classes`: AllowAny
+    - `Queryset`: all User objects
+    - `Filter backends`: SearchFilter
+    - `Search fields`: 'title'
+
+    HTTP methods:
+        - `GET`: returns a paginated list of candidates filtered by role and optionally searched by title.
+
+    Sample URLs:
+        - /candidates/developers/?limit=10&search=python
+        - /candidates/managers/?search=project+management
+    """
+
+    serializer_class = CandidatesSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request, role):
+        """
+        Returns a paginated list of candidates filtered by role and optionally searched by title.
+
+        Parameters:
+            - `role`: str, the role of the candidates to retrieve (e.g., 'developers', 'managers')
+
+        Query parameters:
+            - `limit`: int, the maximum number of results to return per page (default: 100)
+            - `search`: str, the keyword(s) to search in the 'title' field of the candidates
+
+        Returns:
+        A JSON response with the following keys:
+            - `count`: int, the total number of candidates matching the filter/search criteria
+            - `next`: str or None, a URL to the next page of results (if any)
+            - `previous`: str or None, a URL to the previous page of results (if any)
+            - `results`: list of dicts, the serialized representations of the candidates matching the 
+                filter/search criteria
+        """
+        
+        queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True)
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
