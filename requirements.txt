@@ -39,3 +39,6 @@ boto3==1.26.51
 
 # Cross-Origin Resource Sharing
 django-cors-headers==3.13
+
+# Crontab
+django-crontab==0.7.1

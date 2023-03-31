@@ -4,6 +4,7 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
 from jobs.models import (
@@ -43,7 +44,7 @@ class CountryView(generics.ListAPIView):
         - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
 
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = CountrySerializers
     queryset = Country.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -162,7 +163,7 @@ class CityView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = CitySerializers
     queryset = City.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -286,7 +287,7 @@ class JobCategoryView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = JobCategorySerializers
     queryset = JobCategory.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -364,7 +365,7 @@ class EducationLevelView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = EducationLevelSerializers
     queryset = EducationLevel.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -442,7 +443,7 @@ class LanguageView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = LanguageSerializers
     queryset = Language.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -560,7 +561,7 @@ class SkillView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = SkillSerializers
     queryset = Skill.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -682,7 +683,7 @@ class TagView(generics.ListAPIView):
 
     """
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     serializer_class = TagSerializers
     queryset = Tag.objects.all()
     filter_backends = [filters.SearchFilter]
@@ -1117,11 +1118,26 @@ class CandidatesListView(generics.ListAPIView):
     search_fields = ['name']
 
     def list(self, request):
-        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
-            serializer = self.get_serializer(queryset, many=True)
-            return response.Response({'results': serializer.data})
+            count = queryset.count()
+            next = None
+            previous = None
+            paginator = LimitOffsetPagination()
+            limit = self.request.query_params.get('limit')
+            if limit:
+                queryset = paginator.paginate_queryset(queryset, request)
+                count = paginator.count
+                next = paginator.get_next_link()
+                previous = paginator.get_previous_link()
+            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
+            return response.Response(
+                {'count': count,
+                "next": next,
+                "previous": previous,
+                "results": serializer.data
+                }
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1163,11 +1179,26 @@ class EmployerListView(generics.ListAPIView):
     search_fields = ['name']
 
     def list(self, request):
-        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
-            serializer = self.get_serializer(queryset, many=True)
-            return response.Response({'results': serializer.data})
+            count = queryset.count()
+            next = None
+            previous = None
+            paginator = LimitOffsetPagination()
+            limit = self.request.query_params.get('limit')
+            if limit:
+                queryset = paginator.paginate_queryset(queryset, request)
+                count = paginator.count
+                next = paginator.get_next_link()
+                previous = paginator.get_previous_link()
+            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
+            return response.Response(
+                {'count': count,
+                "next": next,
+                "previous": previous,
+                "results": serializer.data
+                }
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1201,7 +1232,7 @@ class JobsListView(generics.ListAPIView):
     Returns:
         - A Response object with a list of jobs, or an error message if the user is not authorized.
     """
-
+    
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = JobListSerializers
     queryset = JobDetails.objects.all()
@@ -1209,11 +1240,26 @@ class JobsListView(generics.ListAPIView):
     search_fields = ['title']
 
     def list(self, request):
-        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
-            serializer = self.get_serializer(queryset, many=True)
-            return response.Response({'results': serializer.data})
+            count = queryset.count()
+            next = None
+            previous = None
+            paginator = LimitOffsetPagination()
+            limit = self.request.query_params.get('limit')
+            if limit:
+                queryset = paginator.paginate_queryset(queryset, request)
+                count = paginator.count
+                next = paginator.get_next_link()
+                previous = paginator.get_previous_link()
+            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
+            return response.Response(
+                {'count': count,
+                "next": next,
+                "previous": previous,
+                "results": serializer.data
+                }
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(

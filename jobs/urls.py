@@ -18,6 +18,7 @@ urlpatterns = [
     path('/filter/<str:filterId>', JobFilterView.as_view(), name="job_filter"),
     
     path('/applications-detail/<str:applicationId>', ApplicationsDetailView.as_view(), name="applications_detail"),
+    path('/applications-detail/<str:applicationId>/<str:action>', ApplicationsDetailView.as_view(), name="applications_detail"),
     
     path('/<str:jobId>', JobDetailView.as_view(), name="job_detail"),    
     path('/<str:jobId>/applications', JobApplicationsView.as_view(), name="job_applications"),

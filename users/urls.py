@@ -1,5 +1,6 @@
 from django.urls import path
 
+from notification.views import NotificationView
 from .views import (
     UserView, CreateSessionView, DeleteSessionView,
     DisplayImageView, SendOtpView, ChangePasswordView,
@@ -28,6 +29,8 @@ urlpatterns = [
     path('/change-password', ChangePasswordView.as_view(), name="change_password"),
     
     path('/get-location', GetLocationView.as_view(), name="get_location"),
+    
+    path('/notification', NotificationView.as_view(), name="get_notification"),
     
     path('/email-verification/<str:otp>', VerificationView.as_view(), name="verification"),
 ]

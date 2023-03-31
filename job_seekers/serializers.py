@@ -8,10 +8,12 @@ from users.serializers import ApplicantDetailSerializers
 
 from jobs.serializers import GetJobsDetailSerializers, GetJobsSerializers, AppliedJobAttachmentsSerializer
 
+from notification.models import Notification
+
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob
+    SavedJob, JobPreferences
 )
 
 
@@ -162,7 +164,7 @@ class JobSeekerLanguageProficiencySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSeekerLanguageProficiency
         fields = ['id', 'language', 'written', 'spoken']
-        
+
     def validate_language(self, language):
         if language not in [None, ""]:
             try:
@@ -344,6 +346,10 @@ class AppliedJobSerializers(serializers.ModelSerializer):
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         applied_job_instance = super().save(user=user, job=job_instace)
+        Notification.objects.create(
+            user=job_instace.user, application=applied_job_instance,
+            notification_type='applied', created_by=user
+        )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
@@ -421,7 +427,7 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
         If the job posting does not exist, an empty dictionary will be returned.
         """
         return_context = {}
-        user =  self.context['request'].user
+        user = self.context['request'].user
         get_data = GetJobsSerializers(obj.job, context={"user": user})
         if get_data.data:
             return_context = get_data.data
@@ -445,7 +451,7 @@ class SavedJobSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = SavedJob
-        fields = ['id',]
+        fields = ['id', ]
 
     def save(self, user, job_instace):
         """Saves a new instance of the SavedJob model with the given user and job instance.
@@ -516,3 +522,117 @@ class GetSavedJobsSerializers(serializers.ModelSerializer):
             pass
         finally:
             return return_context
+
+
+class UpdateJobPreferencesSerializers(serializers.ModelSerializer):
+    """
+        A serializer class for updating JobPreferences instances.
+
+        This class extends the ModelSerializer class provided by Django REST framework, and specifies the
+        `JobPreference`s model and a list of fields to include in the serialized representation.
+
+        Attributes:
+            - `Meta`: A class defining metadata options for the serializer, such as the model to serialize and the
+            fields to include.
+    """
+
+    class Meta:
+        model = JobPreferences
+        fields = ['is_available', 'is_display', 'is_part_time',
+                  'is_full_time', 'has_contract', 'expected_salary'
+                  ]
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
+class GetAppliedJobsNotificationSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the 'AppliedJob' model, used for generating notification data.
+
+    This serializer is used to generate notification data for job applicants.
+    It includes fields for the ID, shortlisted/rejected timestamps, cover letter, job object, user object,
+    and attachments associated with an applied job.
+
+    Serializer fields:
+        - `id (int)`: The ID of the applied job.
+        - `shortlisted_at (datetime)`: The timestamp of when the job was shortlisted.
+        - `rejected_at (datetime)`: The timestamp of when the job was rejected.
+        - `short_letter (str)`: The cover letter provided by the applicant.
+        - `attachments (list)`: A list of attachment objects associated with the applied job.
+        - `job (dict)`: A dictionary representing the job object associated with the applied job.
+        - `user (dict)`: A dictionary representing the user object associated with the applied job.
+    """
+
+    user = serializers.SerializerMethodField()
+    job = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'job', 'user']
+
+    def get_attachments(self, obj):
+        """Get the serialized attachment data for a AppliedJob object.
+
+        This method uses the JobAttachmentsItem model to retrieve the attachments associated with a AppliedJob
+        object. It then uses the AppliedJobAttachmentsSerializer to serialize the attachment data. If the serializer
+        returns data, the first attachment in the list is extracted and added to a list, which is then returned.
+
+        Args:
+            obj: A AppliedJob object whose attachment data will be serialized.
+
+        Returns:
+            A list containing the first serialized attachment data, or an empty list if the serializer did
+            not return any data.
+
+        """
+
+        context = []
+        attachments_data = AppliedJobAttachmentsItem.objects.filter(applied_job=obj)
+        get_data = AppliedJobAttachmentsSerializer(attachments_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_job(self, obj):
+        """
+        Returns a dictionary representing the job associated with the given object.
+
+        This method extracts information about the job associated with the given object,
+        and returns a dictionary with keys for the job's ID and title.
+
+        Args:
+            obj: An object with a 'job' attribute that refers to a job object.
+
+        Returns:
+            A dictionary representing the job associated with the given object,
+            with keys for the job's ID and title.
+        """
+
+        return {"id": obj.job.id, "title": obj.job.title}
+
+    def get_user(self, obj):
+        """
+        Returns a dictionary representing the user associated with the given object.
+
+        This method extracts information about the user associated with the given object,
+        and returns a dictionary with keys for the user's ID, name, and image.
+
+        Args:
+            obj: An object with a 'user' attribute that refers to a user object.
+
+        Returns:
+            A dictionary representing the user associated with the given object,
+            with keys for the user's ID, name, and image.
+        """
+
+        user = dict()
+        user['id'] = obj.user.id
+        user['name'] = obj.user.name
+        if obj.user.image.title == "profile image":
+            user['image'] = str(obj.user.image.file_path)
+        else:
+            user['image'] = obj.user.image.file_path.url
+        return user

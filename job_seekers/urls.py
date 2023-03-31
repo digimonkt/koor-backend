@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     UpdateAboutView, EducationsView, LanguageView,
     WorkExperiencesView, SkillsView, JobsApplyView,
-    JobsSaveView
+    JobsSaveView, UpdateJobPreferencesView
 )
 
 app_name = "job_seekers"
@@ -29,4 +29,5 @@ urlpatterns = [
     path('/jobs/save', JobsSaveView.as_view(), name="jobs_save"),
     path('/jobs/save/<str:jobId>', JobsSaveView.as_view(), name="jobs_save"),
     
+    path('/job-preferences', UpdateJobPreferencesView.as_view(), name="update_job_preferences"),
 ]
