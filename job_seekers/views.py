@@ -18,7 +18,7 @@ from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
-    UpdateJobPreferencesSerializers
+    UpdateJobPreferencesSerializers, AdditionalParameterSerializers
 )
 
 
@@ -304,7 +304,8 @@ class LanguageView(generics.GenericAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 try:
-                    if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'], user=request.user):
+                    if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'],
+                                                                user=request.user):
                         context['language'] = 'Language already in use.'
                         return response.Response(
                             data=context,
@@ -703,7 +704,7 @@ class JobsApplyView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the applied jobs.
         - `search_fields`: The fields to search for when filtering the applied jobs.
     """
-    
+
     serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
@@ -756,7 +757,7 @@ class JobsApplyView(generics.ListAPIView):
              "results": serializer.data
              }
         )
-        
+
     def post(self, request, jobId):
         """
         Creates a new application for a job posting by a job seeker.
@@ -822,7 +823,7 @@ class JobsApplyView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-              
+
     def delete(self, request, jobId):
         """
         Deletes an AppliedJob object with the given job if the authenticated user is a job seeker and owns the
@@ -850,10 +851,10 @@ class JobsApplyView(generics.ListAPIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
             except JobDetails.DoesNotExist:
-                    return response.Response(
-                        data={"job": "Does Not Exist"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             except Exception as e:
                 context["message"] = e
                 return response.Response(
@@ -866,7 +867,7 @@ class JobsApplyView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-   
+
     def get_queryset(self, **kwargs):
         """
         Returns the queryset of applied jobs for the authenticated user.
@@ -889,7 +890,7 @@ class JobsApplyView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return AppliedJob.objects.filter(user=self.request.user).order_by("-"+str(order_by))
+                    return AppliedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
                 else:
                     return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
             else:
@@ -915,13 +916,13 @@ class JobsSaveView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the saved jobs.
         - `search_fields`: The fields to search for when filtering the saved jobs.
     """
-    
+
     serializer_class = GetSavedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    
+
     def list(self, request):
         """
         Returns a paginated list of serialized saved jobs for the authenticated user.
@@ -968,7 +969,7 @@ class JobsSaveView(generics.ListAPIView):
              "results": serializer.data
              }
         )
-        
+
     def post(self, request, jobId):
         """
         Creates a new application for a job posting by a job seeker.
@@ -1034,7 +1035,7 @@ class JobsSaveView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-          
+
     def delete(self, request, jobId):
         """
         Deletes an SavedJob object with the given job if the authenticated user is a job seeker and owns the
@@ -1062,10 +1063,10 @@ class JobsSaveView(generics.ListAPIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
             except JobDetails.DoesNotExist:
-                    return response.Response(
-                        data={"job": "Does Not Exist"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             except Exception as e:
                 context["message"] = e
                 return response.Response(
@@ -1101,7 +1102,7 @@ class JobsSaveView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return SavedJob.objects.filter(user=self.request.user).order_by("-"+str(order_by))
+                    return SavedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
                 else:
                     return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
             else:
@@ -1145,11 +1146,57 @@ class UpdateJobPreferencesView(generics.GenericAPIView):
                 preference_instance = get_object_or_404(JobPreferences, user=request.user)
             else:
                 preference_instance = JobPreferences.objects.create(user=request.user)
-                
+
             serializer = self.serializer_class(data=request.data, instance=preference_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(preference_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class AdditionalParameterView(generics.GenericAPIView):
+    """
+    A view for handling PUT requests to update JobSeekerProfile instances with additional boolean fields.
+
+    Attributes:
+        - `serializer_class (AdditionalParameterSerializers)`: The serializer class to use for serializing and
+            deserializing JobSeekerProfile instances with additional boolean fields.
+        - `permission_classes ([permissions.IsAuthenticated])`: The permission classes to use for this view, which
+            require authentication for access.
+
+    Methods:
+        - `put(request)`: Handles PUT requests to update a JobSeekerProfile instance with additional boolean fields.
+
+    Returns:
+        - `response.Response`: A response object containing a success or error message and an HTTP status code.
+    """
+
+    serializer_class = AdditionalParameterSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request):
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(profile_instance, serializer.validated_data):
                     context['message'] = "Updated Successfully"
                     return response.Response(
                         data=context,
