@@ -4,7 +4,6 @@ from rest_framework import (
     generics, response, status,
     permissions, filters, serializers
 )
-from rest_framework.pagination import LimitOffsetPagination
 
 from datetime import datetime, date
 
@@ -156,6 +155,7 @@ class JobApplicationsView(generics.ListAPIView):
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request, jobId):
         context = dict()
@@ -163,24 +163,12 @@ class JobApplicationsView(generics.ListAPIView):
             try:
                 job_instance = JobDetails.objects.get(id=jobId, user=request.user)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance))
-                count = queryset.count()
-                next = None
-                previous = None
-                paginator = LimitOffsetPagination()
-                limit = self.request.query_params.get('limit')
-                if limit:
-                    queryset = paginator.paginate_queryset(queryset, request)
-                    count = paginator.count
-                    next = paginator.get_next_link()
-                    previous = paginator.get_previous_link()
-                serializer = self.serializer_class(queryset, many=True, context={"request": request})
-                return response.Response(
-                    {'count': count,
-                     "next": next,
-                     "previous": previous,
-                     "results": serializer.data
-                     }
-                )
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True, context={"request": request})
+                    return self.get_paginated_response(serializer.data)
+                serializer = self.get_serializer(queryset, many=True, context={"request": request})
+                return response.Response(serializer.data)
             except JobDetails.DoesNotExist:
                 return response.Response(
                     data={"job": "Does Not Exist"},
@@ -219,30 +207,19 @@ class RecentApplicationsView(generics.ListAPIView):
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-
+    pagination_class = CustomPagination
+    
     def list(self, request):
         context = dict()
         if self.request.user.role == "employer":
             try:
                 queryset = self.filter_queryset(self.get_queryset())
-                count = queryset.count()
-                next = None
-                previous = None
-                paginator = LimitOffsetPagination()
-                limit = self.request.query_params.get('limit')
-                if limit:
-                    queryset = paginator.paginate_queryset(queryset, request)
-                    count = paginator.count
-                    next = paginator.get_next_link()
-                    previous = paginator.get_previous_link()
-                serializer = self.serializer_class(queryset, many=True, context={"request": request})
-                return response.Response(
-                    {'count': count,
-                     "next": next,
-                     "previous": previous,
-                     "results": serializer.data
-                     }
-                )
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True, context={"request": request})
+                    return self.get_paginated_response(serializer.data)
+                serializer = self.get_serializer(queryset, many=True, context={"request": request})
+                return response.Response(serializer.data)
             except JobDetails.DoesNotExist:
                 return response.Response(
                     data={"job": "Does Not Exist"},

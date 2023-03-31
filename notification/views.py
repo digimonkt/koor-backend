@@ -5,7 +5,7 @@ from datetime import date
 from rest_framework import (
     generics, response, permissions, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
+from core.pagination import CustomPagination
 
 from job_seekers.models import SavedJob
 
@@ -34,12 +34,12 @@ class NotificationView(generics.ListAPIView):
         - queryset: The queryset to use for fetching notifications. This attribute is set to None to delay the query
             until the `list` method is called.
     """
-
     serializer_class = GetNotificationSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['type']
+    pagination_class = CustomPagination
 
     def list(self, request):
         """
@@ -59,26 +59,13 @@ class NotificationView(generics.ListAPIView):
             - 'previous': A URL for the previous page of results, or None if there is no previous page.
             - 'results': A list of notification objects, serialized as JSON.
         """
-
         queryset = Notification.objects.filter(user=self.request.user)
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
 
 
 def ExpiredSavedJobs():
