@@ -306,7 +306,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
         is_applied_record = False
         if 'user' in self.context:
             user = self.context['user']
-            if user:
+            if user.is_authenticated:
                 is_applied_record = AppliedJob.objects.filter(
                     job=obj,
                     user=user
@@ -316,10 +316,11 @@ class GetJobsSerializers(serializers.ModelSerializer):
     def get_is_saved(self, obj):
         is_saved_record = False
         if 'user' in self.context:
-            is_saved_record = SavedJob.objects.filter(
-                job=obj,
-                user=self.context['user']
-            ).exists()
+            if self.context['user'].is_authenticated:
+                is_saved_record = SavedJob.objects.filter(
+                    job=obj,
+                    user=self.context['user']
+                ).exists()
         return is_saved_record
 
     def get_applicant(self, obj):

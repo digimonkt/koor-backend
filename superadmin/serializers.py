@@ -159,32 +159,25 @@ class TagSerializers(serializers.ModelSerializer):
 
 class ChangePasswordSerializers(serializers.Serializer):
     """
-    A serializer class to validate the request data for changing user password.
+    The `ChangePasswordSerializers` class handles the serialization of data for changing user password.
 
-    `Attributes`:
-        - `old_password (serializers.CharField)`: A field to receive the old password from the request.
-        - `confirm_password (serializers.CharField)`: A field to receive the confirmation password from the request.
-        - `password (serializers.CharField)`: A field to receive the new password from the request.
+    Parameters:
+        - `old_password (str)`: The old password of the user.
+        - `password (str)`: The new password of the user.
 
-    `Methods`:
-        - `validate(data)`: A method to validate the request data. It receives a dictionary of request data and returns
-        a validated user object or raises a validation error. It compares the new password and confirm password fields,
-        authenticates the user using the old password, and updates the password if the authentication is successful.
+    Methods:
+        - `validate(data)`: Validates the old password provided by the user and sets the new password if it is valid.
 
-    `Raises`:
-        - `serializers.ValidationError`: If the request data is invalid or if the authentication fails.
+    Returns:
+        - `user (User)`: The updated user instance with the new password.
 
-    `Returns`:
-        - A validated user object after successful authentication and password update, or raises a validation error if
-        the request data is invalid or if the authentication fails.
+    Raises:
+        - `serializers.ValidationError`: If the old password provided is invalid or if any error occurs during the
+            validation process.
 
     """
 
     old_password = serializers.CharField(
-        style={"input_type": "text"},
-        write_only=True
-    )
-    confirm_password = serializers.CharField(
         style={"input_type": "text"},
         write_only=True
     )
@@ -196,11 +189,8 @@ class ChangePasswordSerializers(serializers.Serializer):
     def validate(self, data):
         old_password = data.get("old_password", "")
         password = data.get("password", "")
-        confirm_password = data.get("confirm_password", "")
         user_data = self.context['user']
         user = None
-        if password != confirm_password:
-            raise serializers.ValidationError({'password': 'Confirm password not match.'})
         try:
             user = cb.authenticate(self, identifier=user_data.email, password=old_password, role="admin")
             if user:
@@ -266,10 +256,11 @@ class JobListSerializers(serializers.ModelSerializer):
     """
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    company = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
-        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status']
+        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'company', 'status']
 
     def get_country(self, obj):
         """
@@ -306,6 +297,19 @@ class JobListSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+    
+    def get_company(self, obj):
+        """
+        Retrieves the serialized data for the city related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the city data for.
+
+        Returns:
+            A dictionary containing the serialized city data.
+
+        """
+        return obj.user.name
 
 
 class UserCountSerializers(serializers.Serializer):

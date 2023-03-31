@@ -17,6 +17,8 @@ from jobs.models import JobDetails, JobFilters
 from job_seekers.models import AppliedJob
 from jobs.serializers import GetAppliedJobsSerializers
 
+from notification.models import Notification
+
 from employers.models import BlackList
 
 from .serializers import (
@@ -308,23 +310,33 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def patch(self, request, applicationId):
+    def put(self, request, applicationId, action):
         context = dict()
         try:
             if applicationId:
-                action = request.data['action']
+                message = "Successfully "
                 if action == "shortlisted":
                     application_status = AppliedJob.objects.get(id=applicationId)
-                    application_status.shortlisted_at = datetime.now()
-                    application_status.save()
+                    if application_status.shortlisted_at:
+                        message = "Already "
+                    else:
+                        application_status.shortlisted_at = datetime.now()
+                        application_status.save()
+                        Notification.objects.create(
+                        user=application_status.user, application=application_status, 
+                        notification_type='shortlisted', created_by=request.user
+                        )
                 elif action == "rejected":
                     application_status = AppliedJob.objects.get(id=applicationId)
-                    application_status.rejected_at = datetime.now()
-                    application_status.save()
+                    if application_status.rejected_at:
+                        message = "Already "
+                    else:
+                        application_status.rejected_at = datetime.now()
+                        application_status.save()
                 elif action == "blacklisted":
                     application_data = AppliedJob.objects.get(id=applicationId)
                     BlackList.objects.create(user=request.user, blacklisted_user=application_data.user)
-                context['message'] = "Successfully " + str(action)
+                context['message'] = str(message) + str(action)
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
@@ -401,9 +413,9 @@ class JobSuggestionView(generics.ListAPIView):
                     output_field=IntegerField()
                 )
             )
-            jobs = annotated_job_details.filter(matches=4)
+            jobs = annotated_job_details.filter(matches=4).distinct()
             if jobs.count() == 0:
-                jobs = annotated_job_details.order_by('-matches')
+                jobs = annotated_job_details.order_by('-matches').distinct()
             page = self.paginate_queryset(jobs)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)

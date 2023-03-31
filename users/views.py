@@ -24,6 +24,8 @@ from user_profile.models import (
     EmployerProfile
 )
 
+from notification.models import Notification
+
 from superadmin.models import GooglePlaceApi
 
 from .models import UserSession, User
@@ -480,6 +482,10 @@ class ChangePasswordView(generics.GenericAPIView):
             user_instance.set_password(password)
             user_instance.is_verified = True
             user_instance.save()
+            Notification.objects.create(
+                user=user_instance, notification_type='password_update', 
+                created_by=user_instance
+                )
             context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,
