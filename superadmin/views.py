@@ -7,6 +7,8 @@ from rest_framework import (
 from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
+from core.pagination import CustomPagination
+
 from jobs.models import (
     JobCategory, JobDetails
 )
@@ -1111,33 +1113,23 @@ class CandidatesListView(generics.ListAPIView):
         - A Response object with a list of job seekers, or an error message if the user is not authorized.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CandidatesSerializers
+    permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
-
+    pagination_class = CustomPagination
+    
     def list(self, request):
+        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
-            count = queryset.count()
-            next = None
-            previous = None
-            paginator = LimitOffsetPagination()
-            limit = self.request.query_params.get('limit')
-            if limit:
-                queryset = paginator.paginate_queryset(queryset, request)
-                count = paginator.count
-                next = paginator.get_next_link()
-                previous = paginator.get_previous_link()
-            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-            return response.Response(
-                {'count': count,
-                "next": next,
-                "previous": previous,
-                "results": serializer.data
-                }
-            )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1171,34 +1163,25 @@ class EmployerListView(generics.ListAPIView):
     Returns:
         - A Response object with a list of employers, or an error message if the user is not authorized.
     """
-
-    permission_classes = [permissions.IsAuthenticated]
+    
     serializer_class = CandidatesSerializers
+    permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
+    pagination_class = CustomPagination
+    
 
     def list(self, request):
+        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
-            count = queryset.count()
-            next = None
-            previous = None
-            paginator = LimitOffsetPagination()
-            limit = self.request.query_params.get('limit')
-            if limit:
-                queryset = paginator.paginate_queryset(queryset, request)
-                count = paginator.count
-                next = paginator.get_next_link()
-                previous = paginator.get_previous_link()
-            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-            return response.Response(
-                {'count': count,
-                "next": next,
-                "previous": previous,
-                "results": serializer.data
-                }
-            )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1233,33 +1216,29 @@ class JobsListView(generics.ListAPIView):
         - A Response object with a list of jobs, or an error message if the user is not authorized.
     """
     
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = JobListSerializers
+    permission_classes = [permissions.IsAuthenticated]
     queryset = JobDetails.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = [
+        'title', 'description', 
+        'skill__title', 'highest_education__title', 
+        'job_category__title', 'country__title', 
+        'city__title'
+        ]
+    pagination_class = CustomPagination
+
 
     def list(self, request):
+        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
-            count = queryset.count()
-            next = None
-            previous = None
-            paginator = LimitOffsetPagination()
-            limit = self.request.query_params.get('limit')
-            if limit:
-                queryset = paginator.paginate_queryset(queryset, request)
-                count = paginator.count
-                next = paginator.get_next_link()
-                previous = paginator.get_previous_link()
-            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-            return response.Response(
-                {'count': count,
-                "next": next,
-                "previous": previous,
-                "results": serializer.data
-                }
-            )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
