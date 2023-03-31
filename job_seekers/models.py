@@ -11,7 +11,7 @@ from jobs.models import JobDetails
 
 from project_meta.models import (
     Media, Language, Skill,
-    EducationLevel
+    EducationLevel, JobSeekerCategory
 )
 
 
@@ -465,4 +465,30 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         verbose_name = "Job Preferences"
         verbose_name_plural = "Job Preferences"
         db_table = "JobPreferences"
+        ordering = ['-created']
+
+
+class Categories(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    category = models.ForeignKey(
+        JobSeekerCategory,
+        verbose_name=_('Category'),
+        on_delete=models.CASCADE,
+        db_column="category",
+        related_name='%(app_label)s_%(class)s_categories'
+    )
+
+    def __str__(self):
+        return str(self.category) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        db_table = "Categories"
         ordering = ['-created']
