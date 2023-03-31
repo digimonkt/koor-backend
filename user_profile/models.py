@@ -6,7 +6,7 @@ from core.models import (
 )
 from users.models import User, TimeStampedModel
 from project_meta.models import (
-    EducationLevel, Media
+    EducationLevel, Media, Country, City
 )
 
 class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -23,6 +23,8 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
     - `highest_education`: A  foreign key refrence to `project_meta.models.EducationLevel` representing the user's highest educational qualification.
     - `market_information_notification`: A boolean value indicating whether the user has opted to receive market information notifications.
     - `job_notification`: A boolean value indicating whether the user has opted to receive job notifications.
+    - `country (ForeignKey)`: A foreign key to the country associated with the job seeker profile.
+    - `city (ForeignKey)`: A foreign key to the city associated with the job seeker profile.
     """
     GENDER_CHOICE = (
         ('male', "Male"),
@@ -82,6 +84,24 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         verbose_name=_('Job Notification'),
         db_column="job_notification",
         default=True
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
     )
 
     def __str__(self):
