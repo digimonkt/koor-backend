@@ -178,3 +178,40 @@ class City(SlugBaseModel, models.Model):
         if not self.slug:
             self.slug = slugify(self.title) + "-" + slugify(self.country)
         return super().save(*args, **kwargs)
+
+class JobSeekerCategory(BaseModel, models.Model):
+    """
+    A model class representing the categories for job seekers.
+
+    Attributes:
+        - title (str): The title of the category.
+        - category (ForeignKey): The parent category of this category.
+        - Meta (class): A subclass of Model which defines the metadata for the model.
+
+    """
+
+    title = models.TextField(
+        verbose_name=_('Title'),
+        db_column="title",
+    )
+    category = models.ForeignKey(
+        to='self',
+        verbose_name=_('Category'),
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        db_column="category",
+        related_name='%(app_label)s_%(class)s_categories'
+    )
+    class Meta:
+        verbose_name = "JobSeekerCategory"
+        verbose_name_plural = "Job Seeker Categories"
+        db_table = "JobSeekerCategory"
+        ordering = ['title']
+        """
+        Metadata for the JobSeekerCategory model.
+        - verbose_name (str): Human-readable name for the model in singular and plural form.
+        - db_table (str): Database table name.
+        - ordering (list): Default ordering for the model.
+
+        """
