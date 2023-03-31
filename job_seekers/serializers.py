@@ -631,12 +631,13 @@ class GetAppliedJobsNotificationSerializers(serializers.ModelSerializer):
         user = dict()
         user['id'] = obj.user.id
         user['name'] = obj.user.name
-        if obj.user.image.title == "profile image":
-            user['image'] = str(obj.user.image.file_path)
-        else:
-            user['image'] = obj.user.image.file_path.url
+        if obj.user.image:
+            if obj.user.image.title == "profile image":
+                user['image'] = str(obj.user.image.file_path)
+            else:
+                user['image'] = obj.user.image.file_path.url
         return user
-
+        
 
 class AdditionalParameterSerializers(serializers.ModelSerializer):
     """
