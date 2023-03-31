@@ -4,17 +4,16 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
-
 from jobs.models import (
     JobCategory, JobDetails
 )
 from project_meta.models import (
     Country, City, EducationLevel,
-    Language, Skill, Tag
+    Language, Skill, Tag,
+    JobSeekerCategory
 )
 from users.models import UserSession, User
 from .models import Content
@@ -23,7 +22,7 @@ from .serializers import (
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
-    DashboardCountSerializers
+    DashboardCountSerializers, JobSeekerCategorySerializers
 )
 
 
@@ -1119,7 +1118,7 @@ class CandidatesListView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     pagination_class = CustomPagination
-    
+
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
@@ -1163,14 +1162,13 @@ class EmployerListView(generics.ListAPIView):
     Returns:
         - A Response object with a list of employers, or an error message if the user is not authorized.
     """
-    
+
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['name']
     pagination_class = CustomPagination
-    
 
     def list(self, request):
         context = dict()
@@ -1215,19 +1213,18 @@ class JobsListView(generics.ListAPIView):
     Returns:
         - A Response object with a list of jobs, or an error message if the user is not authorized.
     """
-    
+
     serializer_class = JobListSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = JobDetails.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = [
-        'title', 'description', 
-        'skill__title', 'highest_education__title', 
-        'job_category__title', 'country__title', 
+        'title', 'description',
+        'skill__title', 'highest_education__title',
+        'job_category__title', 'country__title',
         'city__title'
-        ]
+    ]
     pagination_class = CustomPagination
-
 
     def list(self, request):
         context = dict()
@@ -1613,4 +1610,83 @@ class DashboardView(generics.GenericAPIView):
             return response.Response(
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobSeekerCategoryView(generics.ListAPIView):
+    """
+    A view for displaying a list of job categories.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (JobSeekerCategorySerializers): The serializer class used for data validation and
+            serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `JobSeekerCategory.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = JobSeekerCategorySerializers
+    queryset = JobSeekerCategory.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
+
+    def post(self, request):
+        """
+        Handle POST request to create a new job seeker category.
+        The request must contain valid data for the job seeker category to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a job seeker category.
+
+        Returns:
+            - HTTP 201 CREATED with a message "JobSeekerCategory added successfully" if the job seeker category is
+            created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
             )
