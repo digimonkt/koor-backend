@@ -636,3 +636,53 @@ class GetAppliedJobsNotificationSerializers(serializers.ModelSerializer):
         else:
             user['image'] = obj.user.image.file_path.url
         return user
+
+
+class AdditionalParameterSerializers(serializers.ModelSerializer):
+    """
+        A serializer for `JobSeekerProfile` instances with additional boolean fields.
+        This serializer is used to serialize and deserialize `JobSeekerProfile` model instances with three additional
+        boolean fields: is_part_time, is_full_time, and has_contract.
+
+        Attributes:
+        - `is_part_time (bool)`: A required boolean field indicating whether the job seeker is looking for part-time work.
+        - `is_full_time (bool)`: A required boolean field indicating whether the job seeker is looking for full-time work.
+        - `has_contract (bool)`: A required boolean field indicating whether the job seeker is looking for work with a
+            contract.
+
+        Methods:
+        - `update(instance, validated_data)`: Overrides the default update method to update the associated `JobPreferences`
+            model instance with the validated data.
+
+    """
+
+    is_part_time = serializers.BooleanField (
+        required=True
+    )
+    is_full_time = serializers.BooleanField (
+        required=True
+    )
+    has_contract = serializers.BooleanField (
+        required=True
+    )
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = ['country', 'city', 'is_part_time', 
+                  'is_full_time', 'has_contract'
+                  ]
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        if JobPreferences.objects.filter(user=instance.user).exists():
+            preference_instance = JobPreferences.objects.get(user=instance.user)
+        else:
+            preference_instance = JobPreferences.objects.create(user=instance.user)
+        if 'is_part_time' in validated_data:
+            preference_instance.is_part_time = validated_data['is_part_time']
+        if 'is_full_time' in validated_data:
+            preference_instance.is_full_time = validated_data['is_full_time']
+        if 'has_contract' in validated_data:
+            preference_instance.has_contract = validated_data['has_contract']
+        preference_instance.save()
+        return instance
