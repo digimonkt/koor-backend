@@ -5,11 +5,10 @@ from core.models import (
     BaseModel, SoftDeleteModel
 )
 
-from job_seekers.models import Categories
-
 from users.models import User, TimeStampedModel
 from project_meta.models import (
-    EducationLevel, Media, Country, City
+    EducationLevel, Media, Country, 
+    City, JobSeekerCategory
 )
 
 class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -248,7 +247,7 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         related_name='%(app_label)s_%(class)s_city'
     )
     category = models.ManyToManyField(
-        to=Categories,
+        to=JobSeekerCategory,
         null=True,
         blank=True,
         verbose_name=_('Category'),
