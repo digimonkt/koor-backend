@@ -284,16 +284,18 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="has_contract",
     )
-    salary_min = models.TextField(
+    salary_min = models.CharField(
         verbose_name=_('Salary Min'),
-        null=True,
+        max_length=250,
         blank=True,
+        null=True,
         db_column="salary_min",
     )
-    salary_max = models.TextField(
+    salary_max = models.CharField(
         verbose_name=_('Salary Max'),
-        null=True,
+        max_length=250,
         blank=True,
+        null=True,
         db_column="salary_max",
     )
 
