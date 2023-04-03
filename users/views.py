@@ -810,3 +810,40 @@ class UserFilterView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def delete(self, request, filterId):
+        """
+        A function to delete a user filter instance for a user.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the user filter instance to be deleted.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `UserFilters.DoesNotExist`: If the user filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the deletion process.
+        """
+
+        context = dict()
+        try:
+            UserFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+            context['message'] = "Filter Removed"
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except UserFilters.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
