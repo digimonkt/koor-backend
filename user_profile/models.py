@@ -267,6 +267,12 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="is_part_time",
     )
+    availability = models.BooleanField(
+        verbose_name=_('Availability'),
+        null=True,
+        blank=True,
+        db_column="availability",
+    )
     is_notification= models.BooleanField(
         verbose_name=_('Is Notification'),
         null=True,
