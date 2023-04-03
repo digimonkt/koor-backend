@@ -1243,7 +1243,7 @@ class CategoryView(generics.GenericAPIView):
 
         Returns:
             A Response object with either a `200 OK` status code and a success message if the `update was successful`,
-            or a `400 BAD REQUES`T status code and a dictionary of `error` messages if the data was
+            or a `400 BAD REQUEST` status code and a dictionary of `error` messages if the data was
             `invalid or incomplete`.
             If the user is not a job seeker, a `401 UNAUTHORIZED` status code and an error message are returned.
         """
