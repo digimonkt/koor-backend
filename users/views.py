@@ -9,14 +9,13 @@ from rest_framework import (
     response, permissions, filters
 )
 
-
 from random import randint
 
 from koor.config.common import Common
 
 from core.middleware import JWTMiddleware
 from core.tokens import (
-    SessionTokenObtainPairSerializer, 
+    SessionTokenObtainPairSerializer,
     PasswordResetTokenObtainPairSerializer,
     PasswordChangeTokenObtainPairSerializer)
 from core.emails import get_email_object
@@ -40,7 +39,8 @@ from .serializers import (
     JobSeekerDetailSerializers,
     EmployerDetailSerializers,
     UpdateImageSerializers,
-    SocialLoginSerializers
+    SocialLoginSerializers,
+    UserFiltersSerializers
 )
 
 
@@ -133,7 +133,7 @@ class UserView(generics.GenericAPIView):
                     user=user,
                     user_id=user.id
                 )
-                response_context['token'] = str(otp_token) 
+                response_context['token'] = str(otp_token)
             else:
                 user.is_verified = True
                 user.save()
@@ -237,7 +237,7 @@ class CreateSessionView(generics.GenericAPIView):
                 user=serializer.validated_data,
                 session_id=user_session.id
             )
-            
+
             context["message"] = "User LoggedIn Successfully"
             return response.Response(
                 data=context,
@@ -407,7 +407,6 @@ class SendOtpView(generics.GenericAPIView):
 
 
 class OtpVerificationView(generics.GenericAPIView):
-
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, otp):
@@ -421,10 +420,10 @@ class OtpVerificationView(generics.GenericAPIView):
                 user_id = token['user_id']
             user_instance = User.objects.get(otp=otp, id=user_id)
             token = PasswordChangeTokenObtainPairSerializer.get_token(
-                    user=user_instance,
-                    user_id=user_instance.id,
-                    otp=user_instance.otp
-                )
+                user=user_instance,
+                user_id=user_instance.id,
+                otp=user_instance.otp
+            )
             context['token'] = str(token.access_token)
             return response.Response(
                 data=context,
@@ -488,9 +487,9 @@ class ChangePasswordView(generics.GenericAPIView):
             user_instance.is_verified = True
             user_instance.save()
             Notification.objects.create(
-                user=user_instance, notification_type='password_update', 
+                user=user_instance, notification_type='password_update',
                 created_by=user_instance
-                )
+            )
             context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,
@@ -646,7 +645,7 @@ class VerificationView(generics.GenericAPIView):
             token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
             if 'user_id' in token:
                 user_id = token['user_id']
-            
+
             user_instance = User.objects.get(otp=otp, id=user_id)
             if user_instance.is_verified == True:
                 context['message'] = "Your email address already verified."
@@ -692,7 +691,7 @@ class SearchView(generics.ListAPIView):
         - /candidates/developers/?limit=10&search=python
         - /candidates/managers/?search=project+management
     """
-    
+
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
@@ -702,7 +701,6 @@ class SearchView(generics.ListAPIView):
         'name', 'email'
     ]
     pagination_class = CustomPagination
-    
 
     def list(self, request, role):
         """
@@ -733,3 +731,48 @@ class SearchView(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
+
+
+class UserFilterView(generics.GenericAPIView):
+    """
+    A view that allows authenticated users to filter and retrieve information about users.
+
+    Attributes:
+        - `serializer_class (UserFiltersSerializers)`: A serializer class that defines the format of the data being
+            retrieved and filtered.
+        - `permission_classes (list)`: A list of permission classes that determine which authenticated users have access
+            to this view.
+    """
+
+    serializer_class = UserFiltersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handles a POST request to create a new resource with user data.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object containing the data to create the resource.
+
+        Returns:
+            - `HttpResponse`: A response containing the serialized data of the created resource and the HTTP status
+                code.
+
+        Raises:
+            - `serializers.ValidationError`: If the input data is invalid or does not meet the requirements of the
+                serializer.
+        """
+
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
