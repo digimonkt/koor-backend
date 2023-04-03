@@ -753,3 +753,57 @@ class CategoriesSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data
         return context
+
+
+class ModifyCategoriesSerializers(serializers.ModelSerializer):
+    """
+    Serializer for modifying the categories of a job seeker.
+
+    Fields:
+        - `category`: A list of category IDs to add or remove from the job seeker's existing categories.
+
+    Methods:
+        - `save(user)`: Saves the modified categories for the given user.
+    """
+
+    category = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = Categories
+        fields = ['id', 'category']
+
+    def save(self, user):
+        """
+        Saves the modified categories for the given user.
+
+        Args:
+            - `user (User)`: The user object to modify categories for.
+
+        Returns:
+            - This serializer object.
+        """
+
+        category_list = None
+        if 'category' in self.validated_data:
+            category_list = self.validated_data.pop('category')
+        if category_list:
+            updated_categories = JobSeekerCategory.objects.filter(id__in=category_list)
+            existing_jobseeker_categories = Categories.objects.filter(user=user).values('category')
+            existing_categories = JobSeekerCategory.objects.filter(id__in=existing_jobseeker_categories)
+            updated_qs = updated_categories.difference(existing_categories)
+            Categories.objects.bulk_create([
+                Categories(user=user, category=category) for category in updated_qs
+            ])
+            existing_jobseeker_categories = Categories.objects.filter(user=user).values('category')
+            existing_categories = JobSeekerCategory.objects.filter(id__in=existing_jobseeker_categories)
+            remove_jobseeker_categories = existing_categories.difference(updated_categories)
+            for category in remove_jobseeker_categories:
+                Categories.all_objects.filter(category=category, user=user).delete()
+        else:
+            Categories.all_objects.filter(user=user).delete()
+        return self
