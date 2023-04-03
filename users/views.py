@@ -2,10 +2,13 @@ import json, jwt
 import requests
 from datetime import datetime
 
+from django_filters import rest_framework as django_filters
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+
 
 from random import randint
 
@@ -30,6 +33,7 @@ from superadmin.models import GooglePlaceApi
 from superadmin.serializers import CandidatesSerializers
 
 from .models import UserSession, User
+from .filters import UsersFilter
 from .serializers import (
     CreateUserSerializers,
     CreateSessionSerializers,
@@ -692,7 +696,8 @@ class SearchView(generics.ListAPIView):
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
     search_fields = [
         'name', 'email'
     ]
