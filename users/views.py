@@ -724,6 +724,9 @@ class SearchView(generics.ListAPIView):
                 filter/search criteria
         """
         queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        category = request.GET.getlist('category')
+        if category:
+            queryset = queryset.filter(job_seekers_categories_user__category__title__in=category).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
