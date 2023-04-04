@@ -9,6 +9,8 @@ urlpatterns = [
     
     path('users/job-seeker', include('job_seekers.urls')),
     
+    path('users/vendor', include('vendors.urls')),
+    
     path('jobs', include('jobs.urls')),
     
     path('admin', include('superadmin.urls')),
