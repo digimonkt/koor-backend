@@ -168,6 +168,8 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
         fields (tuple): The fields from the model that will be serialized.
     """
     highest_education = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerProfile
         fields = (
@@ -177,7 +179,9 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'description',
             'market_information_notification',
             'job_notification',
-            'highest_education'
+            'highest_education',
+            'country',
+            'city'
         )
     
     def get_highest_education(self, obj):
@@ -187,6 +191,49 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             context['title'] = obj.highest_education.title
             return context
         return None
+    
+    def get_country(self, obj):
+        """Get the serialized country data for a JobFilters object.
+
+        This method uses the CountrySerializer to serialize the country associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose country data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized country data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """Get the serialized city data for a JobFilters object.
+
+        This method uses the CitySerializer to serialize the city associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose city data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized city data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
 
 
 class EducationRecordSerializer(serializers.ModelSerializer):
