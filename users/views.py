@@ -26,6 +26,7 @@ from core.pagination import CustomPagination
 from user_profile.models import (
     JobSeekerProfile,
     EmployerProfile,
+    VendorProfile,
     UserFilters
 )
 
@@ -146,6 +147,8 @@ class UserView(generics.GenericAPIView):
                 JobSeekerProfile.objects.create(user=user)
             elif user.role == "employer":
                 EmployerProfile.objects.create(user=user)
+            elif user.role == "vendor":
+                VendorProfile.objects.create(user=user)
             user_session = create_user_session(request, user)
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
