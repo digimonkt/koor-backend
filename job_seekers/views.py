@@ -22,7 +22,7 @@ from .serializers import (
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
     UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
-    CategoriesSerializers
+    CategoriesSerializers, ModifyCategoriesSerializers
 )
 
 
@@ -1196,7 +1196,7 @@ class CategoryView(generics.GenericAPIView):
         - `get`: Retrieves a list of job seeker categories and their associated sub-categories.
     """
 
-    serializer_class = CategoriesSerializers
+    serializer_class = ModifyCategoriesSerializers
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -1224,6 +1224,46 @@ class CategoryView(generics.GenericAPIView):
                 data=get_data.data,
                 status=status.HTTP_200_OK
             )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+    def put(self, request):
+        """
+        Handle HTTP `PUT` requests.
+
+        This method is used to update an existing user profile for job seekers only.
+        If the user is not a job seeker, a 401 UNAUTHORIZED response is returned.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object containing the user profile data to update.
+
+        Returns:
+            A Response object with either a `200 OK` status code and a success message if the `update was successful`,
+            or a `400 BAD REQUEST` status code and a dictionary of `error` messages if the data was
+            `invalid or incomplete`.
+            If the user is not a job seeker, a `401 UNAUTHORIZED` status code and an error message are returned.
+        """
+
+        response_context = dict()
+        if self.request.user.role == "job_seeker":
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user=request.user)
+                response_context['message'] = "Updated Successfully"
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_200_OK
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             response_context['message'] = "You do not have permission to perform this action."
             return response.Response(
