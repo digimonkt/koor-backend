@@ -4,9 +4,11 @@ from django.utils.translation import gettext as _
 from core.models import (
     BaseModel, SoftDeleteModel
 )
+
 from users.models import User, TimeStampedModel
 from project_meta.models import (
-    EducationLevel, Media, Country, City
+    EducationLevel, Media, Country, 
+    City, JobSeekerCategory
 )
 
 class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -186,3 +188,122 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         verbose_name_plural = "Employer Profiles"
         db_table = "EmployerProfile"
         ordering = ['created']
+
+
+class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Model representing a user filter created by a user to receive notifications about relevant User postings.
+
+    Attributes:
+        - `user (ForeignKey)`: A foreign key to the user who created the user filter.
+        - `title (TextField)`: The title of the user filter.
+        - `country (ForeignKey)`: A foreign key to the country associated with the user filter.
+        - `city (ForeignKey)`: A foreign key to the city associated with the user filter.
+        - `category (ManyToManyField)`: A many-to-many field to the categories associated with the user filter.
+        - `is_full_time (BooleanField)`: A boolean field indicating if the user filter is for full-time users.
+        - `is_part_time (BooleanField)`: A boolean field indicating if the user filter is for part-time users.
+        - `is_notification (BooleanField)`: A boolean field indicating if the user filter should send notification for user postings.
+        - `has_contract (BooleanField)`: A boolean field indicating if the user filter is for users with contracts.
+        - `salary_min (CharField)`: A character field indicating the minimum salary for the user filter.
+        - `salary_max (CharField)`: A character field indicating the maximum salary for the user filter.
+
+   Methods:
+       __str__(self): Returns a string representation of the user filter.
+
+   Meta:
+        - `verbose_name (str)`: The singular name for the model.
+        - `verbose_name_plural (str)`: The plural name for the model.
+        - `db_table (str)`: The name of the database table to use for the model.
+        - `ordering (list)`: The default ordering for the model.
+   """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    title = models.TextField(
+        verbose_name=_('Title'),
+        db_column="title",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
+    )
+    category = models.ManyToManyField(
+        to=JobSeekerCategory,
+        null=True,
+        blank=True,
+        verbose_name=_('Category'),
+        db_column="category",
+        related_name='%(app_label)s_%(class)s_category'
+    )
+    is_full_time = models.BooleanField(
+        verbose_name=_('Is Full-time'),
+        null=True,
+        blank=True,
+        db_column="is_full_time",
+    )
+    is_part_time = models.BooleanField(
+        verbose_name=_('Is Part-time'),
+        null=True,
+        blank=True,
+        db_column="is_part_time",
+    )
+    availability = models.BooleanField(
+        verbose_name=_('Availability'),
+        null=True,
+        blank=True,
+        db_column="availability",
+    )
+    is_notification= models.BooleanField(
+        verbose_name=_('Is Notification'),
+        null=True,
+        blank=True,
+        db_column="is_notification",
+    )
+    has_contract = models.BooleanField(
+        verbose_name=_('Has Contract'),
+        null=True,
+        blank=True,
+        db_column="has_contract",
+    )
+    salary_min = models.CharField(
+        verbose_name=_('Salary Min'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="salary_min",
+    )
+    salary_max = models.CharField(
+        verbose_name=_('Salary Max'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="salary_max",
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "User Filter"
+        verbose_name_plural = "User Filters"
+        db_table = "UserFilters"
+        ordering = ['-created']

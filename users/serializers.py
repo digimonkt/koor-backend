@@ -1,10 +1,13 @@
 from rest_framework import serializers
 
 from job_seekers.models import (
-    EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
+    EducationRecord, EmploymentRecord, 
+    Resume, JobSeekerLanguageProficiency, 
+    JobSeekerSkill
 )
 from user_profile.models import (
-    JobSeekerProfile, EmployerProfile
+    JobSeekerProfile, EmployerProfile,
+    UserFilters
 )
 
 from project_meta.models import Media
@@ -814,3 +817,31 @@ class SocialLoginSerializers(serializers.ModelSerializer):
             user_instance.image = media_instance
             user_instance.save()
         return self
+    
+
+class UserFiltersSerializers(serializers.ModelSerializer):
+    """
+    UserFiltersSerializers is a class-based serializer that inherits from the ModelSerializer class of the Django REST
+    Framework.
+    It defines a Meta class that specifies the UserFilters model and the fields to be included in the serialization.
+
+    Attributes:
+        - `model (class)`: The Django model class that this serializer is based on.
+        - `fields (list)`: A list of fields to be included in the serialized output.
+        
+    Usage:
+        - This serializer can be used to serialize UserFilters objects and convert them to JSON format for use in HTTP
+        requests and responses.
+    """
+
+    class Meta:
+        model = UserFilters
+        fields = [
+            'id', 'title', 'country', 'city', 'category',
+            'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
+            'salary_min', 'salary_max', 'availability'
+        ]
+   
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance

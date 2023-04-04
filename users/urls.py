@@ -5,7 +5,7 @@ from .views import (
     UserView, CreateSessionView, DeleteSessionView,
     DisplayImageView, SendOtpView, ChangePasswordView,
     GetLocationView, SocialLoginView, OtpVerificationView,
-    VerificationView, SearchView
+    VerificationView, SearchView, UserFilterView
     )
 
 app_name = "users"
@@ -35,4 +35,6 @@ urlpatterns = [
     path('/email-verification/<str:otp>', VerificationView.as_view(), name="verification"),
     
     path('/search/<str:role>', SearchView.as_view(), name="search"),
+    
+    path('/filter', UserFilterView.as_view(), name="user_filter"),
 ]
