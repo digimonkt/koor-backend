@@ -8,6 +8,8 @@ from core.pagination import CustomPagination
 
 from jobs.models import JobDetails
 
+from project_meta.models import JobSeekerCategory
+
 from user_profile.models import JobSeekerProfile
 from users.models import User
 
@@ -19,7 +21,8 @@ from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
-    UpdateJobPreferencesSerializers, AdditionalParameterSerializers
+    UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
+    CategoriesSerializers
 )
 
 
@@ -705,14 +708,13 @@ class JobsApplyView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the applied jobs.
         - `search_fields`: The fields to search for when filtering the applied jobs.
     """
-        
+
     serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
-    
 
     def list(self, request):
         """
@@ -928,7 +930,7 @@ class JobsSaveView(generics.ListAPIView):
             - `results (list)`: A list of serialized saved jobs for the authenticated user.
 
         """
-        
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -1178,5 +1180,53 @@ class AdditionalParameterView(generics.GenericAPIView):
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
                 data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class CategoryView(generics.GenericAPIView):
+    """
+    A view that returns a list of job seeker categories and their associated sub-categories.
+
+    Attributes:
+        - `serializer_class (CategoriesSerializers)`: The serializer class used for serializing the data.
+        - `permission_classes (list)`: The permission classes required for accessing the view.
+
+    Methods:
+        - `get`: Retrieves a list of job seeker categories and their associated sub-categories.
+    """
+
+    serializer_class = CategoriesSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve a list of job seeker categories and their associated sub-categories.
+
+        If the user is a job seeker, the method returns a list of categories and their associated sub-categories.
+        Otherwise, it returns an HTTP 401 Unauthorized response with an error message.
+
+        Args:
+            - `request (Request)`: The HTTP request object.
+
+        Returns:
+            - A Response object containing the serialized data and an HTTP status code.
+
+        Raises:
+            None.
+        """
+
+        response_context = dict()
+        if self.request.user.role == "job_seeker":
+            category_data = JobSeekerCategory.objects.filter(category=None)
+            get_data = CategoriesSerializers(category_data, many=True, context={'user': request.user})
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )

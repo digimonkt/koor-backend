@@ -11,7 +11,7 @@ from jobs.models import JobDetails
 
 from project_meta.models import (
     Media, Language, Skill,
-    EducationLevel
+    EducationLevel, JobSeekerCategory
 )
 
 
@@ -465,4 +465,47 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         verbose_name = "Job Preferences"
         verbose_name_plural = "Job Preferences"
         db_table = "JobPreferences"
+        ordering = ['-created']
+
+
+class Categories(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+        Represents a category associated with a user in the job seeker application.
+
+        Attributes:
+            - `user (ForeignKey)`: The user associated with the category.
+            - `category (ForeignKey)`: The job seeker category.
+
+        Methods:
+            - `__str__`: Returns a string representation of the category.
+
+        Meta:
+            - `verbose_name (str)`: A human-readable name for the model.
+            - `verbose_name_plural (str)`: A human-readable plural name for the model.
+            - `db_table (str)`: The name of the database table to use for the model.
+            - `ordering (list)`: The default ordering for the model records.
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    category = models.ForeignKey(
+        JobSeekerCategory,
+        verbose_name=_('Category'),
+        on_delete=models.CASCADE,
+        db_column="category",
+        related_name='%(app_label)s_%(class)s_categories'
+    )
+
+    def __str__(self):
+        return str(self.category) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+        db_table = "Categories"
         ordering = ['-created']
