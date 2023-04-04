@@ -17,13 +17,16 @@ from core.middleware import JWTMiddleware
 from core.tokens import (
     SessionTokenObtainPairSerializer,
     PasswordResetTokenObtainPairSerializer,
-    PasswordChangeTokenObtainPairSerializer)
+    PasswordChangeTokenObtainPairSerializer
+)
+
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
 from user_profile.models import (
     JobSeekerProfile,
-    EmployerProfile
+    EmployerProfile,
+    UserFilters
 )
 
 from notification.models import Notification
@@ -40,7 +43,8 @@ from .serializers import (
     EmployerDetailSerializers,
     UpdateImageSerializers,
     SocialLoginSerializers,
-    UserFiltersSerializers
+    UserFiltersSerializers,
+    GetUserFiltersSerializers
 )
 
 
@@ -774,5 +778,35 @@ class UserFilterView(generics.GenericAPIView):
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+            GET request handler for `UserFilters` objects.
+
+            This method retrieves `UserFilters` objects associated with the requesting user, serializes them using the
+            `GetUserFiltersSerializers` serializer, and returns them in the HTTP response.
+
+            Args:
+                - `request (rest_framework.request.Request)`: The HTTP request object.
+
+            Returns:
+                - `rest_framework.response.Response`: An HTTP response containing the serialized `UserFilters` objects,
+                    or an error message if an exception occurs during processing.
+        """
+
+        context = dict()
+        try:
+            user_filter_data = UserFilters.objects.filter(user=request.user)
+            get_data = GetUserFiltersSerializers(user_filter_data, many=True)
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
