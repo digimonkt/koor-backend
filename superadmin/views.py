@@ -1,5 +1,7 @@
 from datetime import datetime, date, timedelta
 
+from django_filters import rest_framework as django_filters
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
@@ -7,9 +9,13 @@ from rest_framework import (
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
+
 from jobs.models import (
     JobCategory, JobDetails
 )
+from jobs.filters import JobDetailsFilter
+from users.filters import UsersFilter
+
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
@@ -1115,8 +1121,9 @@ class CandidatesListView(generics.ListAPIView):
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
+    search_fields = ['name', 'email']
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -1166,7 +1173,8 @@ class EmployerListView(generics.ListAPIView):
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
     search_fields = ['name']
     pagination_class = CustomPagination
 
@@ -1217,7 +1225,8 @@ class JobsListView(generics.ListAPIView):
     serializer_class = JobListSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = JobDetails.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = JobDetailsFilter
     search_fields = [
         'title', 'description',
         'skill__title', 'highest_education__title',
