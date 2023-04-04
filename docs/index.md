@@ -9,4 +9,4 @@ This is the koor api docs we have different section in this
 2. [User](./user/user.md)
 3. [Job Seeker](./job-seeker/job-seeker.md)
 4. [Employer](./employer/employer.md)
-5. Vendor
+5. [Vendor](./vendor/vendor.md)
