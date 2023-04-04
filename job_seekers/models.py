@@ -410,7 +410,7 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         - `models.Model`: The base class for all Django models.
     """
 
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,

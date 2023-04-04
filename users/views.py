@@ -2,10 +2,13 @@ import json, jwt
 import requests
 from datetime import datetime
 
+from django_filters import rest_framework as django_filters
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+
 
 from random import randint
 
@@ -30,6 +33,7 @@ from superadmin.models import GooglePlaceApi
 from superadmin.serializers import CandidatesSerializers
 
 from .models import UserSession, User
+from .filters import UsersFilter
 from .serializers import (
     CreateUserSerializers,
     CreateSessionSerializers,
@@ -692,7 +696,8 @@ class SearchView(generics.ListAPIView):
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.AllowAny]
     queryset = User.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
     search_fields = [
         'name', 'email'
     ]
@@ -719,6 +724,9 @@ class SearchView(generics.ListAPIView):
                 filter/search criteria
         """
         queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        category = request.GET.getlist('category')
+        if category:
+            queryset = queryset.filter(job_seekers_categories_user__category__title__in=category).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

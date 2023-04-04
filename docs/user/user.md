@@ -11,6 +11,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 - **[Get user details](#get-user-details):** This route is used to get user details by id or by token
 - **[Update Profile Image](#update-profile-image):** This route is used to update profile Image
 - **[Get Location](#get-location):**
+- **[Get User Search](#get-user-search):**
 
 ## **Create User**
 
@@ -470,3 +471,78 @@ This api is used to get all `Get Location`
 
 > Note: When a `user` is creating we need to create a `session` of the `user` also
 
+
+
+## Get User Search
+
+This api is used to get all the `user search` of the employer.
+- route: `/search/:role`
+- method: `GET`
+- request:
+  ```js
+    // type one
+  {
+    "params": {
+      "role": "employer" || "job_seeker" || "vendor"
+    },
+    "query": 
+    {
+      "search": "", // show all results
+      "country": "india" || null;, // filter by country
+      "city": "delhi" || null;, // filter by city
+      "fullTime": true || false || null;, // filter is full time
+      "partTime": true || false || null;, // filter is part time
+      "contract": true || false || null;, // filter has contract
+      "availability": true || false || null;, // filter for availability
+      "salary_min": "3500" || null;, // filter for minimum salary
+      "salary_max": "4500" || null;, // filter for maximum salary
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+ 
+
+  // type two
+  {
+    "params": {
+      "role": "employer" || "job_seeker" || "vendor"
+    },
+    "query": 
+    {
+      "search": "b", // show only those results whose title includes `b` only
+      "country": "india" || null;, // filter by country
+      "city": "delhi" || null;, // filter by city
+      "fullTime": true || false || null;, // filter is full time
+      "partTime": true || false || null;, // filter is part time
+      "contract": true || false || null;, // filter has contract
+      "availability": true || false || null;, // filter for availability
+      "salary_min": "3500" || null;, // filter for minimum salary
+      "salary_max": "4500" || null;, // filter for maximum salary
+      "limit": "1" || null;, // page limit
+      "page": "1" || null;, // page number
+    },
+  }
+
+  ```
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": "762ab061-c083-486d-973f-7016b63528f8",
+            "role": "job_seeker",
+            "name": null,
+            "email": "praveen.vaidhya@digimonk.in",
+            "country_code": null,
+            "mobile_number": null,
+            "is_active": true
+        }
+      ]
+    }
+  }
+  ```
