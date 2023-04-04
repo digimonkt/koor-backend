@@ -64,7 +64,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         fields = ['gender', 'dob', 'employment_status', 'description',
                   'market_information_notification', 'job_notification',
                   'full_name', 'email', 'mobile_number', 'country_code',
-                  'highest_education'
+                  'highest_education', 'country', 'city'
                   ]
 
     def validate_mobile_number(self, mobile_number):
