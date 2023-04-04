@@ -7,7 +7,7 @@ from job_seekers.models import (
 )
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
-    UserFilters
+    UserFilters, VendorProfile
 )
 
 from project_meta.models import Media
@@ -527,6 +527,103 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data
         except EmployerProfile.DoesNotExist:
+            pass
+        finally:
+            return context
+
+
+class VendorProfileSerializer(serializers.ModelSerializer):
+    """
+    VendorProfileSerializer is a serializer class that serializes and deserializes the VendorProfile model into JSON
+    format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (VendorProfile): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+    license_id_file = serializers.SerializerMethodField()
+    registration_certificate = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VendorProfile
+        fields = (
+            'description',
+            'organization_type',
+            'license_id',
+            'license_id_file',
+            'registration_number',
+            'registration_certificate',
+            'operating_years',
+            'jobs_experience',
+        )
+
+    def get_license_id_file(self, obj):
+        context = {}
+        if obj.license_id_file:
+            context['id'] = obj.license_id_file.id
+            context['title'] = obj.license_id_file.title
+            context['path'] = obj.license_id_file.file_path.url
+            context['type'] = obj.license_id_file.media_type
+            return context
+        return None
+    
+    def get_registration_certificate(self, obj):
+        context = {}
+        if obj.registration_certificate:
+            context['id'] = obj.registration_certificate.id
+            context['title'] = obj.registration_certificate.title
+            context['path'] = obj.registration_certificate.file_path.url
+            context['type'] = obj.registration_certificate.media_type
+            return context
+        return None
+
+
+class VendorDetailSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for Vendor Detail
+
+    Serializes and deserializes vendor detail data from/to python objects and JSON format.
+    The fields are defined in the 'Meta' class and correspond to the User model.
+
+    Attributes:
+        serializers (Module): The serializers module from the Django REST framework.
+        ModelSerializer (class): The base serializer class from the Django REST framework.
+
+    Methods:
+        get_profile(self, obj):
+            Returns vendor profile data serialized into JSON format
+
+    """
+
+    profile = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
+        
+    def get_image(self, obj):
+        context = dict()
+        if obj.image:
+            context['id'] = obj.image.id
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
+            context['title'] = obj.image.title
+        return context
+
+    def get_profile(self, obj):
+        context = dict()
+        try:
+            user_data = VendorProfile.objects.get(user=obj)
+            get_data = VendorProfileSerializer(user_data)
+            if get_data.data:
+                context = get_data.data
+        except VendorProfile.DoesNotExist:
             pass
         finally:
             return context
