@@ -37,4 +37,5 @@ urlpatterns = [
     path('/search/<str:role>', SearchView.as_view(), name="search"),
     
     path('/filter', UserFilterView.as_view(), name="user_filter"),
+    path('/filter/<str:filterId>', UserFilterView.as_view(), name="user_filter"),
 ]
