@@ -1229,7 +1229,7 @@ class JobsListView(generics.ListAPIView):
 
     serializer_class = JobListSerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = JobDetails.objects.all()
+    queryset = JobDetails.objects.all().order_by('-created')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = [
