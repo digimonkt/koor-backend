@@ -18,6 +18,9 @@ from notification.models import Notification
 from user_profile.models import EmployerProfile
 from users.models import User
 
+from tenders.models import TenderDetails
+from tenders.serializers import TendersSerializers
+
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
@@ -293,15 +296,105 @@ def my_callback(sender, **kwargs):
 
 class TendersView(generics.ListAPIView):
     """
-    View for retrieving a list of `TenderDetails` instances.
+    A class-based view for retrieving a list of tenders filtered and paginated according to search criteria.
+
+    Serializer class used: TendersSerializers
+    Permission class used: permissions.IsAuthenticated
+    Filter backend used: filters.SearchFilter
+    Search fields used:
+        - 'title': title of the tender
+        - 'description': description of the tender
+        - 'tag__title': tag title associated with the tender
+        - 'tender_type': type of the tender
+        - 'sector': sector associated with the tender
+        - 'tender_category__title': tender category title associated with the tender
+        - 'country__title': country title associated with the tender
+        - 'city__title': city title associated with the tender
+
+    Pagination class used: CustomPagination
 
     Attributes:
-        - `permission_classes (list of permissions)`: The list of permissions that a user must have to access this
-            view. In this case, the user must be authenticated.
-
+        - serializer_class (TendersSerializers): The serializer class used to serialize the tenders
+        - permission_classes (list): The permission classes required for accessing the view
+        - queryset (None): The initial queryset used to retrieve the tenders. It is set to None and will be overridden.
+        - filter_backends (list): The filter backends used for filtering the tenders
+        - search_fields (list): The search fields used for searching the tenders
+        - pagination_class (CustomPagination): The pagination class used for pagination of the tenders
     """
 
+    serializer_class = TendersSerializers
     permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title', 'description',
+        'tag__title', 'tender_type', 'sector',
+        'tender_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+    
+    def list(self, request):
+        """
+        A method that handles the HTTP GET request for retrieving a list of resources, with the condition that the user
+        role is an employer.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A JSON response containing a list of serialized resources or an error message with an HTTP status code.
+
+        Raises:
+            N/A
+
+        Behaviour:
+            - If the user role is 'employer', the queryset is filtered and paginated before being serialized using the
+                `get_serializer` method, with the current user's details being passed into the context. The serialized
+                    data is then returned in a paginated response if paginated, or just the serialized data if not.
+            - If the user role is not 'employer', a message indicating the user's lack of permission is returned with
+                an HTTP status code of 401 (unauthorized).
+
+        Attributes:
+            N/A
+        """
+
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"user": request.user})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"user": request.user})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `TenderDetails instances`. It filters the queryset based on the
+        `employer ID` provided in the `request query parameters`.
+        If the `'employerId'` parameter is provided, it filters the queryset to include only the TenderDetails
+        instances associated with the specified `user ID`. Otherwise, it returns `all TenderDetails` instances.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of TenderDetails instances.
+
+        """
+
+        user_id = self.request.GET.get('employerId', None)
+        if not user_id:
+            user_id = self.request.user.id
+        user_data = User.objects.get(id=user_id)
+        return TenderDetails.objects.filter(user=user_data).order_by('-created')
 
     def post(self, request):
         """
