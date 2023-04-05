@@ -3,7 +3,8 @@ from rest_framework import serializers
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, 
     Resume, JobSeekerLanguageProficiency, 
-    JobSeekerSkill, JobSeekerCategory
+    JobSeekerSkill, JobSeekerCategory,
+    JobPreferences
 )
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
@@ -293,6 +294,31 @@ class EmploymentRecordSerializer(serializers.ModelSerializer):
             'description'
         )
 
+class JobPreferencesSerializer(serializers.ModelSerializer):
+    """
+    JobPreferencesSerializer is a serializer class that serializes and deserializes the JobPreferences model into
+     JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (JobPreferences): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = JobPreferences
+        fields = (
+            'id',
+            'is_available',
+            'is_display',
+            'is_part_time',
+            'is_full_time',
+            'has_contract',
+            'expected_salary'
+        )
+
 
 class ResumeSerializer(serializers.ModelSerializer):
     """
@@ -423,6 +449,7 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     education_record = serializers.SerializerMethodField()
     work_experience = serializers.SerializerMethodField()
+    job_preferences = serializers.SerializerMethodField()
     resume = serializers.SerializerMethodField()
     languages = serializers.SerializerMethodField()
     skills = serializers.SerializerMethodField()
@@ -430,8 +457,10 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
-                  'education_record', 'work_experience', 'resume', 'languages', 'skills']
+        fields = [
+            'id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
+            'education_record', 'work_experience', 'resume', 'languages', 'skills', 'job_preferences'
+        ]
 
     def get_image(self, obj):
         context = dict()
@@ -460,6 +489,14 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         context = []
         education_data = EducationRecord.objects.filter(user=obj)
         get_data = EducationRecordSerializer(education_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_job_preferences(self, obj):
+        context = []
+        job_preferences_data = JobPreferences.objects.filter(user=obj)
+        get_data = JobPreferencesSerializer(job_preferences_data)
         if get_data.data:
             context = get_data.data
         return context
