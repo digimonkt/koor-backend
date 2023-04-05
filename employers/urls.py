@@ -1,6 +1,9 @@
 from django.urls import path
 
-from .views import UpdateAboutView, JobsView, TendersView
+from .views import (
+    UpdateAboutView, JobsView,
+    TendersView, JobsStatusView
+)
 
 app_name = "employers"
 
@@ -10,6 +13,7 @@ urlpatterns = [
     
     path('/jobs', JobsView.as_view(), name="jobs"), 
     path('/jobs/<str:jobId>', JobsView.as_view(), name="jobs"),
+    path('/jobs/<str:jobId>/status', JobsStatusView.as_view(), name="jobs_status"),
     
     path('/tenders', TendersView.as_view(), name="tenders"),
     path('/tenders/<str:tendersId>', TendersView.as_view(), name="tenders"),
