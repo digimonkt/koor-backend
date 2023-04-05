@@ -14,8 +14,12 @@ from project_meta.models import (
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
 )
+
+from tenders.models import TenderCategory
+
 from users.backends import MobileOrEmailBackend as cb
 from users.models import User, UserSession
+
 from .models import Content
 
 
@@ -257,10 +261,11 @@ class JobListSerializers(serializers.ModelSerializer):
     """
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
-        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status']
+        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status', 'user']
 
     def get_country(self, obj):
         """
@@ -297,6 +302,9 @@ class JobListSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+    def get_user(self, obj):
+        return obj.user.name
 
 
 class UserCountSerializers(serializers.Serializer):
@@ -454,3 +462,17 @@ class JobSeekerCategorySerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError('Invalid category.', code='category')
         else:
             raise serializers.ValidationError('category can not be blank', code='category')
+
+
+class TenderCategorySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `TenderCategory` model.
+
+    The `TenderCategorySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `TenderCategory` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = TenderCategory
+        fields = ['id', 'title']
