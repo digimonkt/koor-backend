@@ -64,8 +64,8 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
 
     SECTOR_CHOICE = (
-        ('government', "Government"),
         ('ngo', "NGO"),
+        ('private', "Private"),
         ('public', "Public")
     )
     TENDER_TYPE_CHOICE = (
