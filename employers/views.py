@@ -21,7 +21,8 @@ from users.models import User
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
-    UpdateJobSerializers
+    UpdateJobSerializers,
+    CreateTendersSerializers
 )
 
 
@@ -288,3 +289,59 @@ def my_callback(sender, **kwargs):
         ]
     )
     request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+
+
+class TendersView(generics.ListAPIView):
+    """
+    View for retrieving a list of `TenderDetails` instances.
+
+    Attributes:
+        - `permission_classes (list of permissions)`: The list of permissions that a user must have to access this
+            view. In this case, the user must be authenticated.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handles POST requests to create a new `TenderDetails` instance.
+
+        Args:
+            - `request`: The HTTP request object.
+
+        Returns:
+            - A response object with the following possible status codes:
+                - `HTTP_201_CREATED`: The tender was created successfully.
+                - `HTTP_400_BAD_REQUEST`: The request data was invalid or there was an error saving the tender.
+                - `HTTP_401_UNAUTHORIZED`: The user does not have permission to create a tender.
+
+        """
+
+        context = dict()
+        serializer = CreateTendersSerializers(data=request.data)
+        try:
+            if self.request.user.role == "employer":
+                serializer.is_valid(raise_exception=True)
+                serializer.save(self.request.user)
+                context["message"] = "Tender added successfully."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return response.Response(
+                data=str(e),
+                status=status.HTTP_400_BAD_REQUEST
+            )
