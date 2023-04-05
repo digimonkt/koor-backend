@@ -261,10 +261,11 @@ class JobListSerializers(serializers.ModelSerializer):
     """
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
-        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status']
+        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status', 'user']
 
     def get_country(self, obj):
         """
@@ -301,6 +302,9 @@ class JobListSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+    def get_user(self, obj):
+        return obj.user.name
 
 
 class UserCountSerializers(serializers.Serializer):
