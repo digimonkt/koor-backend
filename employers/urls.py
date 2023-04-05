@@ -2,7 +2,8 @@ from django.urls import path
 
 from .views import (
     UpdateAboutView, JobsView,
-    TendersView, JobsStatusView
+    TendersView, JobsStatusView,
+    TendersStatusView
 )
 
 app_name = "employers"
@@ -17,5 +18,6 @@ urlpatterns = [
     
     path('/tenders', TendersView.as_view(), name="tenders"),
     path('/tenders/<str:tendersId>', TendersView.as_view(), name="tenders"),
+    path('/tenders/<str:tendersId>/status', TendersStatusView.as_view(), name="Tenders_status"),
     
 ]
