@@ -51,7 +51,8 @@ class TendersSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
-            'created', 'is_applied', 'is_saved', 'user', 'vendor'
+            'created', 'is_applied', 'is_saved', 'user', 'vendor',
+            'status'
         ]
 
     def get_tender_category(self, obj):
