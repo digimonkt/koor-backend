@@ -25,7 +25,8 @@ from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
     UpdateJobSerializers,
-    CreateTendersSerializers
+    CreateTendersSerializers,
+    UpdateTenderSerializers
 )
 
 
@@ -437,4 +438,60 @@ class TendersView(generics.ListAPIView):
             return response.Response(
                 data=str(e),
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def put(self, request, tendersId):
+        """
+        Update an existing tender instance with the provided request data.
+
+        Args:
+            - `request`: An instance of the Django Request object.
+
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
+            was updated successfully or not.
+
+        Raises:
+            - `Http404`: If the TenderDetails instance with the provided tendersId does not exist.
+
+        Notes:
+            This method requires a tendersId to be included in the request data, and will only update the tender if the
+            authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
+            is used to serialize the request data and update the tender instance. If the serializer is invalid or the
+            user does not have permission to update the tender instance, an appropriate error response is returned.
+        """
+        context = dict()
+        try:
+            tender_instance = TenderDetails.objects.get(id=tendersId)
+            if request.user == tender_instance.user:
+                serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(tender_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"tendersId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
