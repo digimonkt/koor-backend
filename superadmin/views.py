@@ -1910,7 +1910,7 @@ class SectorView(generics.ListAPIView):
         Sector.
         Args:
             request: A DRF request object.
-            educationId: An integer representing the ID of the Sector to be deleted.
+            sectorId: An integer representing the ID of the Sector to be deleted.
         Returns:
             A DRF response object with a success or error message and appropriate status code.
         """
