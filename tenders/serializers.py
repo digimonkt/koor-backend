@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from tenders.models import (
     TenderDetails, TenderCategory,
-    TenderAttachmentsItem
+    TenderAttachmentsItem, TenderFilter
 )
 
 from users.serializers import UserSerializer
@@ -397,3 +397,30 @@ class TendersDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+class TenderFiltersSerializers(serializers.ModelSerializer):
+    """
+    TenderFiltersSerializers is a class-based serializer that inherits from the ModelSerializer class of the Django REST
+    Framework.
+    It defines a Meta class that specifies the TenderFilter model and the fields to be included in the serialization.
+
+    Attributes:
+        - `model (class)`: The Django model class that this serializer is based on.
+        - `fields (list)`: A list of fields to be included in the serialized output.
+        
+    Usage:
+        - This serializer can be used to serialize TenderFilter objects and convert them to JSON format for use in HTTP
+        requests and responses.
+    """
+
+    class Meta:
+        model = TenderFilter
+        fields = [
+            'id', 'title', 'country', 'city', 'opportunity_type', 
+            'sector', 'deadline', 'budget', 'tender_category', 'tag',
+            'is_notification'
+        ]
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
