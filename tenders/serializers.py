@@ -398,6 +398,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+
 class TenderFiltersSerializers(serializers.ModelSerializer):
     """
     TenderFiltersSerializers is a class-based serializer that inherits from the ModelSerializer class of the Django REST
@@ -416,7 +417,7 @@ class TenderFiltersSerializers(serializers.ModelSerializer):
     class Meta:
         model = TenderFilter
         fields = [
-            'id', 'title', 'country', 'city', 'opportunity_type', 
+            'id', 'title', 'country', 'city', 'opportunity_type',
             'sector', 'deadline', 'budget', 'tender_category', 'tag',
             'is_notification'
         ]
