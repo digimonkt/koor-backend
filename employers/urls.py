@@ -1,6 +1,10 @@
 from django.urls import path
 
-from .views import UpdateAboutView, JobsView
+from .views import (
+    UpdateAboutView, JobsView,
+    TendersView, JobsStatusView,
+    TendersStatusView
+)
 
 app_name = "employers"
 
@@ -9,7 +13,11 @@ urlpatterns = [
     path('/about-me', UpdateAboutView.as_view(), name="update_about"),
     
     path('/jobs', JobsView.as_view(), name="jobs"), 
+    path('/jobs/<str:jobId>', JobsView.as_view(), name="jobs"),
+    path('/jobs/<str:jobId>/status', JobsStatusView.as_view(), name="jobs_status"),
     
-    path('/jobs/<str:jobId>', JobsView.as_view(), name="jobs")
+    path('/tenders', TendersView.as_view(), name="tenders"),
+    path('/tenders/<str:tendersId>', TendersView.as_view(), name="tenders"),
+    path('/tenders/<str:tendersId>/status', TendersStatusView.as_view(), name="Tenders_status"),
     
 ]

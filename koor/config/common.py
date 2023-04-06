@@ -34,6 +34,8 @@ class Common(Configuration):
         "employers.apps.EmployersConfig",
         "superadmin.apps.SuperadminConfig",
         "notification.apps.NotificationConfig",
+        "vendors.apps.VendorsConfig",
+        "tenders.apps.TendersConfig",
     )
     
     CRONJOBS = [

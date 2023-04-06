@@ -1,7 +1,10 @@
 from rest_framework import serializers
 
 from jobs.models import JobDetails
-from project_meta.models import Media, Language
+from project_meta.models import (
+    Media, Language, JobSeekerCategory
+
+)
 from user_profile.models import JobSeekerProfile
 
 from users.serializers import ApplicantDetailSerializers
@@ -13,7 +16,7 @@ from notification.models import Notification
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob, JobPreferences
+    SavedJob, JobPreferences, Categories
 )
 
 
@@ -61,7 +64,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         fields = ['gender', 'dob', 'employment_status', 'description',
                   'market_information_notification', 'job_notification',
                   'full_name', 'email', 'mobile_number', 'country_code',
-                  'highest_education'
+                  'highest_education', 'country', 'city'
                   ]
 
     def validate_mobile_number(self, mobile_number):
@@ -631,8 +634,176 @@ class GetAppliedJobsNotificationSerializers(serializers.ModelSerializer):
         user = dict()
         user['id'] = obj.user.id
         user['name'] = obj.user.name
-        if obj.user.image.title == "profile image":
-            user['image'] = str(obj.user.image.file_path)
-        else:
-            user['image'] = obj.user.image.file_path.url
+        if obj.user.image:
+            if obj.user.image.title == "profile image":
+                user['image'] = str(obj.user.image.file_path)
+            else:
+                user['image'] = obj.user.image.file_path.url
         return user
+
+
+class AdditionalParameterSerializers(serializers.ModelSerializer):
+    """
+        A serializer for `JobSeekerProfile` instances with additional boolean fields.
+        This serializer is used to serialize and deserialize `JobSeekerProfile` model instances with three additional
+        boolean fields: is_part_time, is_full_time, and has_contract.
+
+        Attributes:
+        - `is_part_time (bool)`: A required boolean field indicating whether the job seeker is looking for part-time work.
+        - `is_full_time (bool)`: A required boolean field indicating whether the job seeker is looking for full-time work.
+        - `has_contract (bool)`: A required boolean field indicating whether the job seeker is looking for work with a
+            contract.
+
+        Methods:
+        - `update(instance, validated_data)`: Overrides the default update method to update the associated `JobPreferences`
+            model instance with the validated data.
+
+    """
+
+    is_part_time = serializers.BooleanField(
+        required=True
+    )
+    is_full_time = serializers.BooleanField(
+        required=True
+    )
+    has_contract = serializers.BooleanField(
+        required=True
+    )
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = ['country', 'city', 'is_part_time',
+                  'is_full_time', 'has_contract'
+                  ]
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        if JobPreferences.objects.filter(user=instance.user).exists():
+            preference_instance = JobPreferences.objects.get(user=instance.user)
+        else:
+            preference_instance = JobPreferences.objects.create(user=instance.user)
+        if 'is_part_time' in validated_data:
+            preference_instance.is_part_time = validated_data['is_part_time']
+        if 'is_full_time' in validated_data:
+            preference_instance.is_full_time = validated_data['is_full_time']
+        if 'has_contract' in validated_data:
+            preference_instance.has_contract = validated_data['has_contract']
+        preference_instance.save()
+        return instance
+
+
+class SubCategorySerializer(serializers.ModelSerializer):
+    """
+        Serializer for the sub-categories of a `JobSeekerCategory` model.
+
+        Attributes:
+            - `status (SerializerMethodField)`: A field that indicates whether the user has selected the `sub-category`.
+
+        Meta:
+            - `model (JobSeekerCategory)`: The model that the serializer is based on.
+            - `fields (list)`: The fields to include in the serialized output.
+
+        Methods:
+            - `get_status`: A method that checks whether the user has selected the sub-category.
+    """
+
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobSeekerCategory
+        fields = ['id', 'title', 'status']
+
+    def get_status(self, obj):
+        status = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if Categories.objects.filter(user=user, category=obj).exists():
+                status = True
+        return status
+
+
+class CategoriesSerializers(serializers.ModelSerializer):
+    """
+        Serializer for the `JobSeekerCategory` model that includes its `sub-categories`.
+
+        Attributes:
+            - `sub_category (SerializerMethodField)`: A field that gets the `sub-categories` associated with the
+                `category`.
+
+        Meta:
+            - `model (JobSeekerCategory)`: The model that the serializer is based on.
+            - `fields (list)`: The fields to include in the serialized output.
+
+        Methods:
+            - `get_sub_category`: A method that retrieves the sub-categories associated with the category.
+    """
+
+    sub_category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobSeekerCategory
+        fields = ['id', 'title', 'sub_category']
+
+    def get_sub_category(self, obj):
+        context = []
+        if 'user' in self.context:
+            user = self.context['user']
+            category_data = JobSeekerCategory.objects.filter(category=obj)
+            get_data = SubCategorySerializer(category_data, many=True, context={'user': user})
+            if get_data.data:
+                context = get_data.data
+        return context
+
+
+class ModifyCategoriesSerializers(serializers.ModelSerializer):
+    """
+    Serializer for modifying the categories of a job seeker.
+
+    Fields:
+        - `category`: A list of category IDs to add or remove from the job seeker's existing categories.
+
+    Methods:
+        - `save(user)`: Saves the modified categories for the given user.
+    """
+
+    category = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = Categories
+        fields = ['id', 'category']
+
+    def save(self, user):
+        """
+        Saves the modified categories for the given user.
+
+        Args:
+            - `user (User)`: The user object to modify categories for.
+
+        Returns:
+            - This serializer object.
+        """
+
+        category_list = None
+        if 'category' in self.validated_data:
+            category_list = self.validated_data.pop('category')
+        if category_list:
+            updated_categories = JobSeekerCategory.objects.filter(id__in=category_list)
+            existing_jobseeker_categories = Categories.objects.filter(user=user).values('category')
+            existing_categories = JobSeekerCategory.objects.filter(id__in=existing_jobseeker_categories)
+            updated_qs = updated_categories.difference(existing_categories)
+            Categories.objects.bulk_create([
+                Categories(user=user, category=category) for category in updated_qs
+            ])
+            existing_jobseeker_categories = Categories.objects.filter(user=user).values('category')
+            existing_categories = JobSeekerCategory.objects.filter(id__in=existing_jobseeker_categories)
+            remove_jobseeker_categories = existing_categories.difference(updated_categories)
+            for category in remove_jobseeker_categories:
+                Categories.all_objects.filter(category=category, user=user).delete()
+        else:
+            Categories.all_objects.filter(user=user).delete()
+        return self

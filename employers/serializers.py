@@ -3,12 +3,26 @@ import json
 from rest_framework import serializers
 
 from jobs.models import JobDetails
-from project_meta.models import Media, Skill, Language
+
+from project_meta.models import (
+    Media, Skill, Language,
+    Tag
+)
+
+from tenders.models import (
+    TenderDetails,
+    TenderCategory,
+    TenderAttachmentsItem
+)
 
 from user_profile.models import EmployerProfile
 from users.models import User
 
-from jobs.models import JobCategory, JobAttachmentsItem, JobsLanguageProficiency
+from jobs.models import (
+    JobCategory,
+    JobAttachmentsItem,
+    JobsLanguageProficiency
+)
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -92,14 +106,8 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     def validate(self, data):
         country_code = data.get("country_code")
         mobile_number = data.get("mobile_number")
-        license_id = data.get("license_id")
-        license = data.get("license")
         if mobile_number and country_code in ["", None]:
             raise serializers.ValidationError({'country_code': 'Country code can not be blank.'})
-        # if license_id and license in ["", None]:
-        #     raise serializers.ValidationError({'license': 'License can not be blank.'})
-        # if license and license_id in ["", None]:
-        #     raise serializers.ValidationError({'license_id': 'License id can not be blank. hkhkh'})
         return data
 
     def update(self, instance, validated_data):
@@ -531,5 +539,203 @@ class UpdateJobSerializers(serializers.ModelSerializer):
                 media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 attachments_instance = JobAttachmentsItem.objects.create(job=instance, attachment=media_instance)
+                attachments_instance.save()
+        return instance
+
+
+class CreateTendersSerializers(serializers.ModelSerializer):
+    """
+    Serializer for creating `TenderDetails` instances.
+
+    Fields:
+        - `title (str)`: The title of the tender.
+        - `budget_currency (str)`: The currency used for the tender budget.
+        - `budget_amount (float)`: The amount of the tender budget.
+        - `description (str)`: A description of the tender.
+        - `country (str)`: The country where the tender is located.
+        - `city (str)`: The city where the tender is located.
+        - `tender_category (PrimaryKeyRelatedField)`: The category/categories of the tender. Accepts a list of primary
+            keys.
+        - `tender_type (str)`: The type of the tender.
+        - `sector (str)`: The sector of the tender.
+        - `tag (PrimaryKeyRelatedField)`: The tag/tags of the tender. Accepts a list of primary keys.
+
+    Methods:
+        - `validate_tender_category(self, tender_category)`: Validates the tender category field. Raises a
+            `ValidationError` if there are more than `3 categories`.
+        - `validate_tag(self, tag)`: Validates the tag field. Raises a `ValidationError` if there are more than
+            `3 tags`.
+        - `validate(self, data)`: Validates the `tender_category` and `tag` fields. Raises a ValidationError if they
+            are missing.
+        - `save(self, user)`: Saves the TenderDetails instance and creates `TenderAttachmentsItem` instances for any
+            attachments.
+
+    """
+
+    tender_category = serializers.PrimaryKeyRelatedField(
+        queryset=TenderCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    tag = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+        write_only=True
+    )
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = TenderDetails
+        fields = [
+            'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
+            'tender_category', 'tender_type', 'sector', 'tag', 'attachments'
+        ]
+
+    def validate_tender_category(self, tender_category):
+        if tender_category not in [None, ""]:
+            limit = 3
+            if len(tender_category) > limit:
+                raise serializers.ValidationError({'tender_category': 'Choices limited to ' + str(limit)})
+            return tender_category
+        else:
+            raise serializers.ValidationError({'tender_category': 'Tender category can not be blank.'})
+
+    def validate_tag(self, tag):
+        if tag not in [None, ""]:
+            limit = 3
+            if len(tag) > limit:
+                raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
+            return tag
+        else:
+            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
+
+    def save(self, user):
+        attachments = None
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        tender_instance = super().save(user=user, status='active')
+
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = TenderAttachmentsItem.objects.create(tender=tender_instance,
+                                                                            attachment=media_instance)
+                attachments_instance.save()
+        return self
+
+
+class UpdateTenderSerializers(serializers.ModelSerializer):
+    """
+    A serializer that handles the validation and updating of tender details for a PUT request.
+
+    Args:
+        - `serializers.ModelSerializer`: Inherits from the Django REST Framework's ModelSerializer.
+
+    Behaviour:
+        - Defines various fields as PrimaryKeyRelatedField and ListField for the tender category, tags, and attachments
+            of a tender. Validates these fields with custom validation methods.
+        - Defines a Meta class to specify the model and fields to be used in the serializer.
+        - Validates the tender category and tags fields and raises validation errors if necessary. Also ensures that
+            these fields are not empty.
+        - Overrides the update() method to allow updating of tender details, attachments, and attachment removal.
+
+    """
+
+    tender_category = serializers.PrimaryKeyRelatedField(
+        queryset=TenderCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    tag = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+        write_only=True
+    )
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+    attachments_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = TenderDetails
+        fields = [
+            'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
+            'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'attachments_remove'
+        ]
+
+    def validate_tender_category(self, tender_category):
+        if tender_category not in [None, ""]:
+            limit = 3
+            if len(tender_category) > limit:
+                raise serializers.ValidationError({'tender_category': 'Choices limited to ' + str(limit)})
+            return tender_category
+        else:
+            raise serializers.ValidationError({'tender_category': 'Tender category can not be blank.'})
+
+    def validate_tag(self, tag):
+        if tag not in [None, ""]:
+            limit = 3
+            if len(tag) > limit:
+                raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
+            return tag
+        else:
+            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
+
+    def validate(self, data):
+        tender_category = data.get("tender_category")
+        tag = data.get("tag")
+        if not tender_category:
+            raise serializers.ValidationError({'tender_category': 'This field is required.'})
+        if not tag:
+            raise serializers.ValidationError({'tag': 'This field is required.'})
+        return data
+
+    def update(self, instance, validated_data):
+        attachments = None
+        attachments_remove = None
+
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        if 'attachments_remove' in self.validated_data:
+            attachments_remove = self.validated_data.pop('attachments_remove')
+
+        super().update(instance, validated_data)
+        if attachments_remove:
+            for remove in attachments_remove:
+                TenderAttachmentsItem.objects.filter(id=remove).update(tender=None)
+
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = TenderAttachmentsItem.objects.create(tender=tender_instance,
+                                                                            attachment=media_instance)
                 attachments_instance.save()
         return instance
