@@ -546,3 +546,55 @@ class JobsStatusView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class TendersStatusView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, tendersId):
+        """
+        View function for `updating the status` of a tenders instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `tendersId`: Integer representing the ID of the tenders instance to be updated.
+
+        Returns:
+            Response object containing data about the updated tenders instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the tenders instance with the given `tendersId does not exist`.
+        """
+
+        context = dict()
+        try:
+            tenders_instance = TenderDetails.objects.get(id=tendersId)
+            if request.user == tenders_instance.user:
+                if tenders_instance.status == "hold":
+                    tenders_instance.status = "active"
+                    context['message'] = "This tender is active"
+                elif tenders_instance.status == "active":
+                    tenders_instance.status = "hold"
+                    context['message'] = "This tender placed on hold"
+                tenders_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"tendersId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )

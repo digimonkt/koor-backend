@@ -73,6 +73,13 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('ngo', "NGO"),
         ('business', "Business"),
     )
+    STATUS_CHOICE = (
+        ('active', "Active"),
+        ('inactive', "Inactive"),
+        ('hold', "Hold"),
+        ('deleted', "Deleted"),
+        ('expired', "Expired"),
+    )
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -152,6 +159,20 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="sector",
         max_length=25,
         choices=SECTOR_CHOICE,
+    )
+    deadline = models.DateField(
+        verbose_name=_('Deadline'),
+        db_column='deadline'
+    )
+    start_date = models.DateField(
+        verbose_name=_('Start Date'),
+        db_column='start_date',
+    )
+    status = models.CharField(
+        verbose_name=_('Status'),
+        db_column="status",
+        max_length=25,
+        choices=STATUS_CHOICE,
     )
 
     def __str__(self):

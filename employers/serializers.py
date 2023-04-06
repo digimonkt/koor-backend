@@ -618,7 +618,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         attachments = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
-        tender_instance = super().save(user=user)
+        tender_instance = super().save(user=user, status='active')
 
         if attachments:
             for attachment in attachments:
