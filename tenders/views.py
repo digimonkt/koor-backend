@@ -272,3 +272,40 @@ class TenderFilterView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    def delete(self, request, filterId):
+        """
+        A function to delete a tender filter instance.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the tender filter instance to be deleted.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `TenderFilter.DoesNotExist`: If the tender filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the deletion process.
+        """
+
+        context = dict()
+        try:
+            TenderFilter.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+            context['message'] = "Filter Removed"
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except TenderFilter.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
