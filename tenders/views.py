@@ -3,8 +3,8 @@ from datetime import date
 from django_filters import rest_framework as django_filters
 
 from rest_framework import (
-    generics, response, permissions,
-    filters, status
+    status, generics, serializers,
+    response, permissions, filters
 )
 
 from core.pagination import CustomPagination
@@ -12,7 +12,8 @@ from core.pagination import CustomPagination
 from tenders.models import TenderDetails
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
-    TendersSerializers, TendersDetailSerializers
+    TendersSerializers, TendersDetailSerializers,
+    TenderFiltersSerializers
 )
 
 
@@ -133,5 +134,51 @@ class TenderDetailView(generics.GenericAPIView):
             response_context["message"] = str(e)
             return response.Response(
                 data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class TenderFilterView(generics.GenericAPIView):
+    """
+    API view for filtering tenders.
+
+    - `Serializer`: TenderFiltersSerializers
+    - `Permissions`: IsAuthenticated
+
+    Attributes:
+        - `serializer_class (TenderFiltersSerializers)`: The serializer class used to serialize and validate the
+            request data.
+        - `permission_classes (list)`: The list of permission classes that the user must have to access this API.
+    """
+
+    serializer_class = TenderFiltersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Create a new object using the POST method.
+
+        Args:
+            - `request (HttpRequest)`: The request object containing the data to be serialized.
+
+        Returns:
+            - A Response object with the serialized data and an HTTP status code.
+
+        Raises:
+            - `ValidationError`: If the serializer's validation fails.
+
+        """
+
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
