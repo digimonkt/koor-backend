@@ -9,7 +9,7 @@ from rest_framework import (
 
 from core.pagination import CustomPagination
 
-from tenders.models import TenderDetails
+from tenders.models import TenderDetails, TenderFilter
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
     TendersSerializers, TendersDetailSerializers,
@@ -224,4 +224,51 @@ class TenderFilterView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def put(self, request, filterId):
+        """
+        Updates the `TenderFilter` instance corresponding to the given filterId and authenticated user with the provided
+        data in the request.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+            - `filterId (int)`: The id of the `TenderFilter` instance to be updated.
+
+        Returns:
+            - A Response object with status code and message indicating the success or failure of the operation.
+            - Successful response has status code 200 and a message "`Updated Successfully`".
+            - In case of invalid serializer data, returns a Response object with status code 400 and serializer errors.
+            - In case the TenderFilter instance with the given `filterId` does not exist for the authenticated user,
+            returns a Response object with status code 404 and `{"filterId": "Does Not Exist"}`.
+            - In case of any other exception, returns a Response object with status code 404 and the exception message.
+        """
+
+        context = dict()
+        try:
+            filter_instance = TenderFilter.all_objects.get(id=filterId, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=filter_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(filter_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except TenderFilter.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
