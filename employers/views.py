@@ -7,7 +7,8 @@ from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
+
+from core.pagination import CustomPagination
 
 from jobs.models import JobDetails, JobFilters
 from jobs.serializers import GetJobsSerializers
@@ -17,10 +18,15 @@ from notification.models import Notification
 from user_profile.models import EmployerProfile
 from users.models import User
 
+from tenders.models import TenderDetails
+from tenders.serializers import TendersSerializers
+
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
-    UpdateJobSerializers
+    UpdateJobSerializers,
+    CreateTendersSerializers,
+    UpdateTenderSerializers
 )
 
 
@@ -89,28 +95,30 @@ class JobsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = [
+        'title', 'description',
+        'skill__title', 'highest_education__title',
+        'job_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"user": request.user})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"user": request.user})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
     def post(self, request):
         """
@@ -284,3 +292,309 @@ def my_callback(sender, **kwargs):
         ]
     )
     request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+
+
+class TendersView(generics.ListAPIView):
+    """
+    A class-based view for retrieving a list of tenders filtered and paginated according to search criteria.
+
+    Serializer class used: TendersSerializers
+    Permission class used: permissions.IsAuthenticated
+    Filter backend used: filters.SearchFilter
+    Search fields used:
+        - 'title': title of the tender
+        - 'description': description of the tender
+        - 'tag__title': tag title associated with the tender
+        - 'tender_type': type of the tender
+        - 'sector': sector associated with the tender
+        - 'tender_category__title': tender category title associated with the tender
+        - 'country__title': country title associated with the tender
+        - 'city__title': city title associated with the tender
+
+    Pagination class used: CustomPagination
+
+    Attributes:
+        - serializer_class (TendersSerializers): The serializer class used to serialize the tenders
+        - permission_classes (list): The permission classes required for accessing the view
+        - queryset (None): The initial queryset used to retrieve the tenders. It is set to None and will be overridden.
+        - filter_backends (list): The filter backends used for filtering the tenders
+        - search_fields (list): The search fields used for searching the tenders
+        - pagination_class (CustomPagination): The pagination class used for pagination of the tenders
+    """
+
+    serializer_class = TendersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title', 'description',
+        'tag__title', 'tender_type', 'sector',
+        'tender_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        A method that handles the HTTP GET request for retrieving a list of resources, with the condition that the user
+        role is an employer.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A JSON response containing a list of serialized resources or an error message with an HTTP status code.
+
+        Raises:
+            N/A
+
+        Behaviour:
+            - If the user role is 'employer', the queryset is filtered and paginated before being serialized using the
+                `get_serializer` method, with the current user's details being passed into the context. The serialized
+                    data is then returned in a paginated response if paginated, or just the serialized data if not.
+            - If the user role is not 'employer', a message indicating the user's lack of permission is returned with
+                an HTTP status code of 401 (unauthorized).
+
+        Attributes:
+            N/A
+        """
+
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"user": request.user})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"user": request.user})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `TenderDetails instances`. It filters the queryset based on the
+        `employer ID` provided in the `request query parameters`.
+        If the `'employerId'` parameter is provided, it filters the queryset to include only the TenderDetails
+        instances associated with the specified `user ID`. Otherwise, it returns `all TenderDetails` instances.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of TenderDetails instances.
+
+        """
+
+        user_id = self.request.GET.get('employerId', None)
+        if not user_id:
+            user_id = self.request.user.id
+        user_data = User.objects.get(id=user_id)
+        return TenderDetails.objects.filter(user=user_data).order_by('-created')
+
+    def post(self, request):
+        """
+        Handles POST requests to create a new `TenderDetails` instance.
+
+        Args:
+            - `request`: The HTTP request object.
+
+        Returns:
+            - A response object with the following possible status codes:
+                - `HTTP_201_CREATED`: The tender was created successfully.
+                - `HTTP_400_BAD_REQUEST`: The request data was invalid or there was an error saving the tender.
+                - `HTTP_401_UNAUTHORIZED`: The user does not have permission to create a tender.
+
+        """
+
+        context = dict()
+        serializer = CreateTendersSerializers(data=request.data)
+        try:
+            if self.request.user.role == "employer":
+                serializer.is_valid(raise_exception=True)
+                serializer.save(self.request.user)
+                context["message"] = "Tender added successfully."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return response.Response(
+                data=str(e),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def put(self, request, tendersId):
+        """
+        Update an existing tender instance with the provided request data.
+
+        Args:
+            - `request`: An instance of the Django Request object.
+
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
+            was updated successfully or not.
+
+        Raises:
+            - `Http404`: If the TenderDetails instance with the provided tendersId does not exist.
+
+        Notes:
+            This method requires a tendersId to be included in the request data, and will only update the tender if the
+            authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
+            is used to serialize the request data and update the tender instance. If the serializer is invalid or the
+            user does not have permission to update the tender instance, an appropriate error response is returned.
+        """
+        context = dict()
+        try:
+            tender_instance = TenderDetails.objects.get(id=tendersId)
+            if request.user == tender_instance.user:
+                serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(tender_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"tendersId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class JobsStatusView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, jobId):
+        """
+        View function for `updating the status` of a job instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `jobId`: Integer representing the ID of the job instance to be updated.
+
+        Returns:
+            Response object containing data about the updated job instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the job instance with the given `jobId does not exist`.
+        """
+
+        context = dict()
+        try:
+            jobs_instance = JobDetails.objects.get(id=jobId)
+            if request.user == jobs_instance.user:
+                if jobs_instance.status == "hold":
+                    jobs_instance.status = "active"
+                    context['message'] = "This job is active"
+                elif jobs_instance.status == "active":
+                    jobs_instance.status = "hold"
+                    context['message'] = "This job placed on hold"
+                jobs_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"jobId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class TendersStatusView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, tendersId):
+        """
+        View function for `updating the status` of a tenders instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `tendersId`: Integer representing the ID of the tenders instance to be updated.
+
+        Returns:
+            Response object containing data about the updated tenders instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the tenders instance with the given `tendersId does not exist`.
+        """
+
+        context = dict()
+        try:
+            tenders_instance = TenderDetails.objects.get(id=tendersId)
+            if request.user == tenders_instance.user:
+                if tenders_instance.status == "hold":
+                    tenders_instance.status = "active"
+                    context['message'] = "This tender is active"
+                elif tenders_instance.status == "active":
+                    tenders_instance.status = "hold"
+                    context['message'] = "This tender placed on hold"
+                tenders_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"tendersId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )

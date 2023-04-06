@@ -2,10 +2,11 @@ import json, jwt
 import requests
 from datetime import datetime
 
+from django_filters import rest_framework as django_filters
 
 from rest_framework import (
     status, generics, serializers,
-    response, permissions
+    response, permissions, filters
 )
 
 from random import randint
@@ -14,28 +15,38 @@ from koor.config.common import Common
 
 from core.middleware import JWTMiddleware
 from core.tokens import (
-    SessionTokenObtainPairSerializer, 
+    SessionTokenObtainPairSerializer,
     PasswordResetTokenObtainPairSerializer,
-    PasswordChangeTokenObtainPairSerializer)
+    PasswordChangeTokenObtainPairSerializer
+)
+
 from core.emails import get_email_object
+from core.pagination import CustomPagination
 
 from user_profile.models import (
     JobSeekerProfile,
-    EmployerProfile
+    EmployerProfile,
+    VendorProfile,
+    UserFilters
 )
 
 from notification.models import Notification
 
 from superadmin.models import GooglePlaceApi
+from superadmin.serializers import CandidatesSerializers
 
 from .models import UserSession, User
+from .filters import UsersFilter
 from .serializers import (
     CreateUserSerializers,
     CreateSessionSerializers,
     JobSeekerDetailSerializers,
     EmployerDetailSerializers,
+    VendorDetailSerializers,
     UpdateImageSerializers,
-    SocialLoginSerializers
+    SocialLoginSerializers,
+    UserFiltersSerializers,
+    GetUserFiltersSerializers
 )
 
 
@@ -128,7 +139,7 @@ class UserView(generics.GenericAPIView):
                     user=user,
                     user_id=user.id
                 )
-                response_context['token'] = str(otp_token) 
+                response_context['token'] = str(otp_token)
             else:
                 user.is_verified = True
                 user.save()
@@ -137,6 +148,8 @@ class UserView(generics.GenericAPIView):
                 JobSeekerProfile.objects.create(user=user)
             elif user.role == "employer":
                 EmployerProfile.objects.create(user=user)
+            elif user.role == "vendor":
+                VendorProfile.objects.create(user=user)
             user_session = create_user_session(request, user)
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
@@ -178,12 +191,13 @@ class UserView(generics.GenericAPIView):
                     user_id = request.user.id
                 user_data = User.objects.get(id=user_id)
                 if user_data.role == "job_seeker":
-
                     get_data = JobSeekerDetailSerializers(user_data)
                     context = get_data.data
-
                 elif user_data.role == "employer":
                     get_data = EmployerDetailSerializers(user_data)
+                    context = get_data.data
+                elif user_data.role == "vendor":
+                    get_data = VendorDetailSerializers(user_data)
                     context = get_data.data
 
                 return response.Response(
@@ -232,7 +246,7 @@ class CreateSessionView(generics.GenericAPIView):
                 user=serializer.validated_data,
                 session_id=user_session.id
             )
-            
+
             context["message"] = "User LoggedIn Successfully"
             return response.Response(
                 data=context,
@@ -402,7 +416,6 @@ class SendOtpView(generics.GenericAPIView):
 
 
 class OtpVerificationView(generics.GenericAPIView):
-
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, otp):
@@ -416,10 +429,10 @@ class OtpVerificationView(generics.GenericAPIView):
                 user_id = token['user_id']
             user_instance = User.objects.get(otp=otp, id=user_id)
             token = PasswordChangeTokenObtainPairSerializer.get_token(
-                    user=user_instance,
-                    user_id=user_instance.id,
-                    otp=user_instance.otp
-                )
+                user=user_instance,
+                user_id=user_instance.id,
+                otp=user_instance.otp
+            )
             context['token'] = str(token.access_token)
             return response.Response(
                 data=context,
@@ -483,9 +496,9 @@ class ChangePasswordView(generics.GenericAPIView):
             user_instance.is_verified = True
             user_instance.save()
             Notification.objects.create(
-                user=user_instance, notification_type='password_update', 
+                user=user_instance, notification_type='password_update',
                 created_by=user_instance
-                )
+            )
             context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,
@@ -641,7 +654,7 @@ class VerificationView(generics.GenericAPIView):
             token = jwt.decode(token, key=Common.SECRET_KEY, algorithms=Common.SIMPLE_JWT.get('ALGORITHM', ['HS256', ]))
             if 'user_id' in token:
                 user_id = token['user_id']
-            
+
             user_instance = User.objects.get(otp=otp, id=user_id)
             if user_instance.is_verified == True:
                 context['message'] = "Your email address already verified."
@@ -665,4 +678,223 @@ class VerificationView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class SearchView(generics.ListAPIView):
+    """
+    A view that returns a list of candidates filtered by role and optionally searched by title.
+    The `role` parameter is required in the URL path.
+    The `limit` query parameter can be used to paginate the results.
+
+    - `Serializer class`: CandidatesSerializers
+    - `Permission classes`: AllowAny
+    - `Queryset`: all User objects
+    - `Filter backends`: SearchFilter
+    - `Search fields`: 'title'
+
+    HTTP methods:
+        - `GET`: returns a paginated list of candidates filtered by role and optionally searched by title.
+
+    Sample URLs:
+        - /candidates/developers/?limit=10&search=python
+        - /candidates/managers/?search=project+management
+    """
+
+    serializer_class = CandidatesSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = User.objects.all()
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
+    search_fields = [
+        'name', 'email'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request, role):
+        """
+        Returns a paginated list of candidates filtered by role and optionally searched by title.
+
+        Parameters:
+            - `role`: str, the role of the candidates to retrieve (e.g., 'developers', 'managers')
+
+        Query parameters:
+            - `limit`: int, the maximum number of results to return per page (default: 100)
+            - `search`: str, the keyword(s) to search in the 'title' field of the candidates
+
+        Returns:
+        A JSON response with the following keys:
+            - `count`: int, the total number of candidates matching the filter/search criteria
+            - `next`: str or None, a URL to the next page of results (if any)
+            - `previous`: str or None, a URL to the previous page of results (if any)
+            - `results`: list of dicts, the serialized representations of the candidates matching the 
+                filter/search criteria
+        """
+        queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        category = request.GET.getlist('category')
+        if category:
+            queryset = queryset.filter(job_seekers_categories_user__category__title__in=category).distinct()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+
+class UserFilterView(generics.GenericAPIView):
+    """
+    A view that allows authenticated users to filter and retrieve information about users.
+
+    Attributes:
+        - `serializer_class (UserFiltersSerializers)`: A serializer class that defines the format of the data being
+            retrieved and filtered.
+        - `permission_classes (list)`: A list of permission classes that determine which authenticated users have access
+            to this view.
+    """
+
+    serializer_class = UserFiltersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handles a POST request to create a new resource with user data.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object containing the data to create the resource.
+
+        Returns:
+            - `HttpResponse`: A response containing the serialized data of the created resource and the HTTP status
+                code.
+
+        Raises:
+            - `serializers.ValidationError`: If the input data is invalid or does not meet the requirements of the
+                serializer.
+        """
+
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+            GET request handler for `UserFilters` objects.
+
+            This method retrieves `UserFilters` objects associated with the requesting user, serializes them using the
+            `GetUserFiltersSerializers` serializer, and returns them in the HTTP response.
+
+            Args:
+                - `request (rest_framework.request.Request)`: The HTTP request object.
+
+            Returns:
+                - `rest_framework.response.Response`: An HTTP response containing the serialized `UserFilters` objects,
+                    or an error message if an exception occurs during processing.
+        """
+
+        context = dict()
+        try:
+            user_filter_data = UserFilters.objects.filter(user=request.user)
+            get_data = GetUserFiltersSerializers(user_filter_data, many=True)
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, filterId):
+        """
+        A function to delete a user filter instance for a user.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the user filter instance to be deleted.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `UserFilters.DoesNotExist`: If the user filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the deletion process.
+        """
+
+        context = dict()
+        try:
+            UserFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+            context['message'] = "Filter Removed"
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except UserFilters.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def put(self, request, filterId):
+        """
+        A function to partially update a user filter instance for a user.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the user filter instance to be updated.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `UserFilters.DoesNotExist`: If the user filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the partial update process.
+        """
+
+        context = dict()
+        try:
+            filter_instance = UserFilters.all_objects.get(id=filterId, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=filter_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(filter_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except UserFilters.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )

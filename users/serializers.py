@@ -1,14 +1,22 @@
 from rest_framework import serializers
 
 from job_seekers.models import (
-    EducationRecord, EmploymentRecord, Resume, JobSeekerLanguageProficiency, JobSeekerSkill
+    EducationRecord, EmploymentRecord, 
+    Resume, JobSeekerLanguageProficiency, 
+    JobSeekerSkill, JobSeekerCategory,
+    JobPreferences
 )
 from user_profile.models import (
-    JobSeekerProfile, EmployerProfile
+    JobSeekerProfile, EmployerProfile,
+    UserFilters, VendorProfile
 )
 
 from project_meta.models import Media
-from project_meta.serializers import SkillSerializer
+
+from project_meta.serializers import (
+    CitySerializer, CountrySerializer, 
+    SkillSerializer
+)
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
@@ -161,6 +169,8 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
         fields (tuple): The fields from the model that will be serialized.
     """
     highest_education = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerProfile
         fields = (
@@ -170,7 +180,9 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'description',
             'market_information_notification',
             'job_notification',
-            'highest_education'
+            'highest_education',
+            'country',
+            'city'
         )
     
     def get_highest_education(self, obj):
@@ -180,6 +192,49 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             context['title'] = obj.highest_education.title
             return context
         return None
+    
+    def get_country(self, obj):
+        """Get the serialized country data for a JobFilters object.
+
+        This method uses the CountrySerializer to serialize the country associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose country data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized country data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """Get the serialized city data for a JobFilters object.
+
+        This method uses the CitySerializer to serialize the city associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose city data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized city data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
 
 
 class EducationRecordSerializer(serializers.ModelSerializer):
@@ -237,6 +292,31 @@ class EmploymentRecordSerializer(serializers.ModelSerializer):
             'end_date',
             'organization',
             'description'
+        )
+
+class JobPreferencesSerializer(serializers.ModelSerializer):
+    """
+    JobPreferencesSerializer is a serializer class that serializes and deserializes the JobPreferences model into
+     JSON format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (JobPreferences): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+
+    class Meta:
+        model = JobPreferences
+        fields = (
+            'id',
+            'is_available',
+            'is_display',
+            'is_part_time',
+            'is_full_time',
+            'has_contract',
+            'expected_salary'
         )
 
 
@@ -369,6 +449,7 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     education_record = serializers.SerializerMethodField()
     work_experience = serializers.SerializerMethodField()
+    job_preferences = serializers.SerializerMethodField()
     resume = serializers.SerializerMethodField()
     languages = serializers.SerializerMethodField()
     skills = serializers.SerializerMethodField()
@@ -376,8 +457,10 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
-                  'education_record', 'work_experience', 'resume', 'languages', 'skills']
+        fields = [
+            'id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
+            'education_record', 'work_experience', 'resume', 'languages', 'skills', 'job_preferences'
+        ]
 
     def get_image(self, obj):
         context = dict()
@@ -406,6 +489,14 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         context = []
         education_data = EducationRecord.objects.filter(user=obj)
         get_data = EducationRecordSerializer(education_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_job_preferences(self, obj):
+        context = []
+        job_preferences_data = JobPreferences.objects.filter(user=obj)
+        get_data = JobPreferencesSerializer(job_preferences_data)
         if get_data.data:
             context = get_data.data
         return context
@@ -520,6 +611,103 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data
         except EmployerProfile.DoesNotExist:
+            pass
+        finally:
+            return context
+
+
+class VendorProfileSerializer(serializers.ModelSerializer):
+    """
+    VendorProfileSerializer is a serializer class that serializes and deserializes the VendorProfile model into JSON
+    format.
+
+    This serializer uses the Django Rest Framework's ModelSerializer class, which automatically generates fields based
+     on the model.
+
+    Attributes:
+    model (VendorProfile): The model that will be serialized.
+    fields (tuple): The fields from the model that will be serialized.
+    """
+    license_id_file = serializers.SerializerMethodField()
+    registration_certificate = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VendorProfile
+        fields = (
+            'description',
+            'organization_type',
+            'license_id',
+            'license_id_file',
+            'registration_number',
+            'registration_certificate',
+            'operating_years',
+            'jobs_experience',
+        )
+
+    def get_license_id_file(self, obj):
+        context = {}
+        if obj.license_id_file:
+            context['id'] = obj.license_id_file.id
+            context['title'] = obj.license_id_file.title
+            context['path'] = obj.license_id_file.file_path.url
+            context['type'] = obj.license_id_file.media_type
+            return context
+        return None
+    
+    def get_registration_certificate(self, obj):
+        context = {}
+        if obj.registration_certificate:
+            context['id'] = obj.registration_certificate.id
+            context['title'] = obj.registration_certificate.title
+            context['path'] = obj.registration_certificate.file_path.url
+            context['type'] = obj.registration_certificate.media_type
+            return context
+        return None
+
+
+class VendorDetailSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for Vendor Detail
+
+    Serializes and deserializes vendor detail data from/to python objects and JSON format.
+    The fields are defined in the 'Meta' class and correspond to the User model.
+
+    Attributes:
+        serializers (Module): The serializers module from the Django REST framework.
+        ModelSerializer (class): The base serializer class from the Django REST framework.
+
+    Methods:
+        get_profile(self, obj):
+            Returns vendor profile data serialized into JSON format
+
+    """
+
+    profile = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
+        
+    def get_image(self, obj):
+        context = dict()
+        if obj.image:
+            context['id'] = obj.image.id
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
+            context['title'] = obj.image.title
+        return context
+
+    def get_profile(self, obj):
+        context = dict()
+        try:
+            user_data = VendorProfile.objects.get(user=obj)
+            get_data = VendorProfileSerializer(user_data)
+            if get_data.data:
+                context = get_data.data
+        except VendorProfile.DoesNotExist:
             pass
         finally:
             return context
@@ -814,3 +1002,149 @@ class SocialLoginSerializers(serializers.ModelSerializer):
             user_instance.image = media_instance
             user_instance.save()
         return self
+    
+
+class UserFiltersSerializers(serializers.ModelSerializer):
+    """
+    UserFiltersSerializers is a class-based serializer that inherits from the ModelSerializer class of the Django REST
+    Framework.
+    It defines a Meta class that specifies the UserFilters model and the fields to be included in the serialization.
+
+    Attributes:
+        - `model (class)`: The Django model class that this serializer is based on.
+        - `fields (list)`: A list of fields to be included in the serialized output.
+        
+    Usage:
+        - This serializer can be used to serialize UserFilters objects and convert them to JSON format for use in HTTP
+        requests and responses.
+    """
+
+    class Meta:
+        model = UserFilters
+        fields = [
+            'id', 'title', 'country', 'city', 'category',
+            'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
+            'salary_min', 'salary_max', 'availability'
+        ]
+   
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
+class UserCategorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `JobSeekerCategory` model.
+
+    Meta:
+        - `model (JobSeekerCategory)`: The model that the serializer is based on.
+        - `fields (list)`: The fields to include in the serialized output.
+
+    """
+
+    class Meta:
+        model = JobSeekerCategory
+        fields = ['id', 'title']
+
+
+class GetUserFiltersSerializers(serializers.ModelSerializer):
+    """
+    A serializer class to convert `UserFilters` model instances into Python objects that can be easily rendered into
+    JSON format.
+
+    The serializer returns a serialized representation of the model fields specified in the 'Meta' class, along with
+    additional fields generated by the `SerializerMethodField()` methods.
+
+    Attributes:
+        - `country (serializers.SerializerMethodField())`: A SerializerMethodField() method to generate the `country`
+            field for the serialized representation.
+        - `city (serializers.SerializerMethodField())`: A SerializerMethodField() method to generate the `city` field
+            for the serialized representation.
+        - `category (serializers.SerializerMethodField())`: A SerializerMethodField() method to generate the `category`
+            field for the serialized representation.
+
+    Meta:
+        - `model (UserFilters)`: The model that this serializer class is based on.
+        - `fields (list)`: A list of strings representing the fields to be serialized, in the order they should appear.
+
+    Returns:
+        - A serialized representation of UserFilters model instances, along with additional fields generated by the
+            `SerializerMethodField()` methods.
+
+    """
+
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserFilters
+        fields = [
+            'id', 'title', 'country', 'city', 'category',
+            'is_full_time', 'is_part_time', 'has_contract',  'availability', 
+            'is_notification','salary_min','salary_max'
+        ]
+
+    def get_country(self, obj):
+        """Get the serialized country data for a JobFilters object.
+
+        This method uses the CountrySerializer to serialize the country associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose country data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized country data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """Get the serialized city data for a JobFilters object.
+
+        This method uses the CitySerializer to serialize the city associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose city data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized city data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_category(self, obj):
+        """Get the serialized category data for a UserFilters object.
+
+        This method uses the UserCategorySerializer to serialize the categories associated with a UserFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A UserFilters object whose category data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized job category data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = UserCategorySerializer(obj.category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context

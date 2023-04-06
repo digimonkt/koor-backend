@@ -3,9 +3,12 @@ from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
+
+from core.pagination import CustomPagination
 
 from jobs.models import JobDetails
+
+from project_meta.models import JobSeekerCategory
 
 from user_profile.models import JobSeekerProfile
 from users.models import User
@@ -18,7 +21,8 @@ from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
-    UpdateJobPreferencesSerializers
+    UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
+    CategoriesSerializers, ModifyCategoriesSerializers
 )
 
 
@@ -304,7 +308,8 @@ class LanguageView(generics.GenericAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 try:
-                    if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'], user=request.user):
+                    if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'],
+                                                                user=request.user):
                         context['language'] = 'Language already in use.'
                         return response.Response(
                             data=context,
@@ -703,12 +708,13 @@ class JobsApplyView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the applied jobs.
         - `search_fields`: The fields to search for when filtering the applied jobs.
     """
-    
+
     serializer_class = GetAppliedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         """
@@ -716,9 +722,6 @@ class JobsApplyView(generics.ListAPIView):
 
         This method returns a paginated list of applied jobs for the authenticated user. The applied jobs are
         serialized using the `GetAppliedJobsSerializers` class.
-
-        If a 'limit' query parameter is provided in the request, the queryset will be paginated using the
-        `LimitOffsetPagination` class. Otherwise, the entire queryset will be returned.
 
         Args:
             request: The HTTP request object.
@@ -732,31 +735,16 @@ class JobsApplyView(generics.ListAPIView):
             - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
             - `results (list)`: A list of serialized applied jobs for the authenticated user.
 
-        The `'count'`, `'next'`, and `'previous'` fields are determined by the `LimitOffsetPagination` class if a limit
-        query parameter is provided. Otherwise, the count will be the length of the entire queryset and next
-        and previous will be null.
         """
 
         queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
-        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
+
     def post(self, request, jobId):
         """
         Creates a new application for a job posting by a job seeker.
@@ -822,7 +810,7 @@ class JobsApplyView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-              
+
     def delete(self, request, jobId):
         """
         Deletes an AppliedJob object with the given job if the authenticated user is a job seeker and owns the
@@ -850,10 +838,10 @@ class JobsApplyView(generics.ListAPIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
             except JobDetails.DoesNotExist:
-                    return response.Response(
-                        data={"job": "Does Not Exist"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             except Exception as e:
                 context["message"] = e
                 return response.Response(
@@ -866,7 +854,7 @@ class JobsApplyView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-   
+
     def get_queryset(self, **kwargs):
         """
         Returns the queryset of applied jobs for the authenticated user.
@@ -889,7 +877,7 @@ class JobsApplyView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return AppliedJob.objects.filter(user=self.request.user).order_by("-"+str(order_by))
+                    return AppliedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
                 else:
                     return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
             else:
@@ -915,22 +903,19 @@ class JobsSaveView(generics.ListAPIView):
         - `filter_backends`: A list of filter backends to use for filtering the saved jobs.
         - `search_fields`: The fields to search for when filtering the saved jobs.
     """
-    
     serializer_class = GetSavedJobsSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    
+    pagination_class = CustomPagination
+
     def list(self, request):
         """
         Returns a paginated list of serialized saved jobs for the authenticated user.
 
         This method returns a paginated list of saved jobs for the authenticated user. The saved jobs are
         serialized using the `GetSavedJobsSerializers` class.
-
-        If a 'limit' query parameter is provided in the request, the queryset will be paginated using the
-        `LimitOffsetPagination` class. Otherwise, the entire queryset will be returned.
 
         Args:
             request: The HTTP request object.
@@ -944,31 +929,16 @@ class JobsSaveView(generics.ListAPIView):
             - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
             - `results (list)`: A list of serialized saved jobs for the authenticated user.
 
-        The `'count'`, `'next'`, and `'previous'` fields are determined by the `LimitOffsetPagination` class if a limit
-        query parameter is provided. Otherwise, the count will be the length of the entire queryset and next
-        and previous will be null.
         """
 
         queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True, context={"request": request})
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
-        
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
+
     def post(self, request, jobId):
         """
         Creates a new application for a job posting by a job seeker.
@@ -1034,7 +1004,7 @@ class JobsSaveView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-          
+
     def delete(self, request, jobId):
         """
         Deletes an SavedJob object with the given job if the authenticated user is a job seeker and owns the
@@ -1062,10 +1032,10 @@ class JobsSaveView(generics.ListAPIView):
                         status=status.HTTP_404_NOT_FOUND
                     )
             except JobDetails.DoesNotExist:
-                    return response.Response(
-                        data={"job": "Does Not Exist"},
-                        status=status.HTTP_404_NOT_FOUND
-                    )
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
             except Exception as e:
                 context["message"] = e
                 return response.Response(
@@ -1101,7 +1071,7 @@ class JobsSaveView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return SavedJob.objects.filter(user=self.request.user).order_by("-"+str(order_by))
+                    return SavedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
                 else:
                     return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
             else:
@@ -1145,7 +1115,7 @@ class UpdateJobPreferencesView(generics.GenericAPIView):
                 preference_instance = get_object_or_404(JobPreferences, user=request.user)
             else:
                 preference_instance = JobPreferences.objects.create(user=request.user)
-                
+
             serializer = self.serializer_class(data=request.data, instance=preference_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
@@ -1164,5 +1134,139 @@ class UpdateJobPreferencesView(generics.GenericAPIView):
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
                 data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class AdditionalParameterView(generics.GenericAPIView):
+    """
+    A view for handling PUT requests to update JobSeekerProfile instances with additional boolean fields.
+
+    Attributes:
+        - `serializer_class (AdditionalParameterSerializers)`: The serializer class to use for serializing and
+            deserializing JobSeekerProfile instances with additional boolean fields.
+        - `permission_classes ([permissions.IsAuthenticated])`: The permission classes to use for this view, which
+            require authentication for access.
+
+    Methods:
+        - `put(request)`: Handles PUT requests to update a JobSeekerProfile instance with additional boolean fields.
+
+    Returns:
+        - `response.Response`: A response object containing a success or error message and an HTTP status code.
+    """
+
+    serializer_class = AdditionalParameterSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request):
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(profile_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class CategoryView(generics.GenericAPIView):
+    """
+    A view that returns a list of job seeker categories and their associated sub-categories.
+
+    Attributes:
+        - `serializer_class (CategoriesSerializers)`: The serializer class used for serializing the data.
+        - `permission_classes (list)`: The permission classes required for accessing the view.
+
+    Methods:
+        - `get`: Retrieves a list of job seeker categories and their associated sub-categories.
+    """
+
+    serializer_class = ModifyCategoriesSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve a list of job seeker categories and their associated sub-categories.
+
+        If the user is a job seeker, the method returns a list of categories and their associated sub-categories.
+        Otherwise, it returns an HTTP 401 Unauthorized response with an error message.
+
+        Args:
+            - `request (Request)`: The HTTP request object.
+
+        Returns:
+            - A Response object containing the serialized data and an HTTP status code.
+
+        Raises:
+            None.
+        """
+
+        response_context = dict()
+        if self.request.user.role == "job_seeker":
+            category_data = JobSeekerCategory.objects.filter(category=None)
+            get_data = CategoriesSerializers(category_data, many=True, context={'user': request.user})
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+    def put(self, request):
+        """
+        Handle HTTP `PUT` requests.
+
+        This method is used to update an existing user profile for job seekers only.
+        If the user is not a job seeker, a 401 UNAUTHORIZED response is returned.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object containing the user profile data to update.
+
+        Returns:
+            A Response object with either a `200 OK` status code and a success message if the `update was successful`,
+            or a `400 BAD REQUEST` status code and a dictionary of `error` messages if the data was
+            `invalid or incomplete`.
+            If the user is not a job seeker, a `401 UNAUTHORIZED` status code and an error message are returned.
+        """
+
+        response_context = dict()
+        if self.request.user.role == "job_seeker":
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user=request.user)
+                response_context['message'] = "Updated Successfully"
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_200_OK
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )

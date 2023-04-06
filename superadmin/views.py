@@ -1,27 +1,39 @@
 from datetime import datetime, date, timedelta
 
+from django_filters import rest_framework as django_filters
+
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
+from core.pagination import CustomPagination
+
 from jobs.models import (
     JobCategory, JobDetails
 )
+from jobs.filters import JobDetailsFilter
+
+from users.filters import UsersFilter
+from users.models import UserSession, User
+
 from project_meta.models import (
     Country, City, EducationLevel,
-    Language, Skill, Tag
+    Language, Skill, Tag,
+    JobSeekerCategory
 )
-from users.models import UserSession, User
+
+from tenders.models import TenderCategory
+
 from .models import Content
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
-    DashboardCountSerializers
+    DashboardCountSerializers, JobSeekerCategorySerializers,
+    TenderCategorySerializers
 )
 
 
@@ -1111,33 +1123,24 @@ class CandidatesListView(generics.ListAPIView):
         - A Response object with a list of job seekers, or an error message if the user is not authorized.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CandidatesSerializers
+    permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
+    search_fields = ['name', 'email']
+    pagination_class = CustomPagination
 
     def list(self, request):
+        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
-            count = queryset.count()
-            next = None
-            previous = None
-            paginator = LimitOffsetPagination()
-            limit = self.request.query_params.get('limit')
-            if limit:
-                queryset = paginator.paginate_queryset(queryset, request)
-                count = paginator.count
-                next = paginator.get_next_link()
-                previous = paginator.get_previous_link()
-            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-            return response.Response(
-                {'count': count,
-                "next": next,
-                "previous": previous,
-                "results": serializer.data
-                }
-            )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1172,33 +1175,24 @@ class EmployerListView(generics.ListAPIView):
         - A Response object with a list of employers, or an error message if the user is not authorized.
     """
 
-    permission_classes = [permissions.IsAuthenticated]
     serializer_class = CandidatesSerializers
+    permission_classes = [permissions.IsAuthenticated]
     queryset = User.objects.all()
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = UsersFilter
     search_fields = ['name']
+    pagination_class = CustomPagination
 
     def list(self, request):
+        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
-            count = queryset.count()
-            next = None
-            previous = None
-            paginator = LimitOffsetPagination()
-            limit = self.request.query_params.get('limit')
-            if limit:
-                queryset = paginator.paginate_queryset(queryset, request)
-                count = paginator.count
-                next = paginator.get_next_link()
-                previous = paginator.get_previous_link()
-            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-            return response.Response(
-                {'count': count,
-                "next": next,
-                "previous": previous,
-                "results": serializer.data
-                }
-            )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1232,34 +1226,30 @@ class JobsListView(generics.ListAPIView):
     Returns:
         - A Response object with a list of jobs, or an error message if the user is not authorized.
     """
-    
-    permission_classes = [permissions.IsAuthenticated]
+
     serializer_class = JobListSerializers
-    queryset = JobDetails.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = JobDetails.objects.all().order_by('-created')
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = JobDetailsFilter
+    search_fields = [
+        'title', 'description',
+        'skill__title', 'highest_education__title',
+        'job_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
 
     def list(self, request):
+        context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
-            count = queryset.count()
-            next = None
-            previous = None
-            paginator = LimitOffsetPagination()
-            limit = self.request.query_params.get('limit')
-            if limit:
-                queryset = paginator.paginate_queryset(queryset, request)
-                count = paginator.count
-                next = paginator.get_next_link()
-                previous = paginator.get_previous_link()
-            serializer = self.serializer_class(queryset, many=True, context={"user": request.user})
-            return response.Response(
-                {'count': count,
-                "next": next,
-                "previous": previous,
-                "results": serializer.data
-                }
-            )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
@@ -1635,3 +1625,201 @@ class DashboardView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class JobSeekerCategoryView(generics.ListAPIView):
+    """
+    A view for displaying a list of job categories.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (JobSeekerCategorySerializers): The serializer class used for data validation and
+            serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `JobSeekerCategory.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = JobSeekerCategorySerializers
+    queryset = JobSeekerCategory.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
+
+    def post(self, request):
+        """
+        Handle POST request to create a new job seeker category.
+        The request must contain valid data for the job seeker category to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a job seeker category.
+
+        Returns:
+            - HTTP 201 CREATED with a message "JobSeekerCategory added successfully" if the job seeker category is
+            created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class TenderCategoryView(generics.ListAPIView):
+    """
+    A view for displaying a list of tender categories .
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (TenderCategorySerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `TenderCategory.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = TenderCategorySerializers
+    queryset = TenderCategory.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
+
+    def post(self, request):
+        """
+        Handle POST request to create a new tender category.
+        The request must contain valid data for the tender category to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a tender category.
+
+        Returns:
+            - HTTP 201 CREATED with added tender category data (id, title) if the tender category is created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                    TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, tenderCategoryId):
+        """
+        Deletes an TenderCategory object with the given ID if the authenticated user is a job seeker and owns the
+        TenderCategory.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the TenderCategory to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                TenderCategory.objects.get(id=tenderCategoryId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except TenderCategory.DoesNotExist:
+                return response.Response(
+                    data={"tenderCategoryId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
