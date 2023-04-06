@@ -102,7 +102,6 @@ class JobsView(generics.ListAPIView):
         'city__title'
     ]
     pagination_class = CustomPagination
-    
 
     def list(self, request):
         context = dict()
@@ -334,7 +333,7 @@ class TendersView(generics.ListAPIView):
         'city__title'
     ]
     pagination_class = CustomPagination
-    
+
     def list(self, request):
         """
         A method that handles the HTTP GET request for retrieving a list of resources, with the condition that the user
@@ -491,6 +490,58 @@ class TendersView(generics.ListAPIView):
             )
         except Exception as e:
             context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class JobsStatusView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, jobId):
+        """
+        View function for `updating the status` of a job instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `jobId`: Integer representing the ID of the job instance to be updated.
+
+        Returns:
+            Response object containing data about the updated job instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the job instance with the given `jobId does not exist`.
+        """
+
+        context = dict()
+        try:
+            jobs_instance = JobDetails.objects.get(id=jobId)
+            if request.user == jobs_instance.user:
+                if jobs_instance.status == "hold":
+                    jobs_instance.status = "active"
+                    context['message'] = "This job is active"
+                elif jobs_instance.status == "active":
+                    jobs_instance.status = "hold"
+                    context['message'] = "This job placed on hold"
+                jobs_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"jobId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
             return response.Response(
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
