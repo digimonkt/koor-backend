@@ -4,7 +4,7 @@ from django_filters import rest_framework as django_filters
 
 from rest_framework import (
     generics, response, permissions,
-    filters
+    filters, status
 )
 
 from core.pagination import CustomPagination
@@ -12,7 +12,7 @@ from core.pagination import CustomPagination
 from tenders.models import TenderDetails
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
-    TendersSerializers
+    TendersSerializers, TendersDetailSerializers
 )
 
 
@@ -83,3 +83,55 @@ class TenderSearchView(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True, context=context)
         return response.Response(serializer.data)
+
+
+class TenderDetailView(generics.GenericAPIView):
+    """
+    A view that returns a serialized `TenderDetails` object for a given `tenderId`.
+
+    Parameters:
+        - `tenderId (int)`: The ID of the tender to retrieve details for.
+
+    Returns:
+        - `data (dict)`: A dictionary containing the serialized tender details.
+        - `status (int)`: The HTTP status code of the response.
+    """
+
+    serializer_class = TendersDetailSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, tenderId):
+        """
+        A Django view function that retrieves the details of a tender with a given `tenderId` using the `TenderDetails`
+        model and returns the data serialized using the serializer_class.
+
+        Parameters:
+            - `request (HttpRequest)`: The HTTP request object.
+            - `tenderId (int)`: The id of the tender to retrieve.
+
+        Returns:
+            - A Response object with data containing the serialized tender details and status 200 if successful.
+            - A Response object with data containing an error message and status 400 if an exception occurs during the
+                retrieval.
+
+        """
+
+        response_context = dict()
+        context = dict()
+        try:
+            if request.user.is_authenticated:
+                context = {"user": request.user}
+            if tenderId:
+                job_data = TenderDetails.objects.get(id=tenderId)
+                get_data = self.serializer_class(job_data, context=context)
+                response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            response_context["message"] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
