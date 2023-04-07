@@ -1,4 +1,4 @@
-from django.db.models import Value, F, Case, When, IntegerField
+from django.db.models import Value, F, Case, When, IntegerField, Q
 
 from rest_framework import (
     generics, response, status,
@@ -162,7 +162,12 @@ class JobApplicationsView(generics.ListAPIView):
         if self.request.user.role == "employer":
             try:
                 job_instance = JobDetails.objects.get(id=jobId, user=request.user)
-                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance))
+                filters = Q(job=job_instance)
+                filter_list = self.request.GET.getlist('filter')
+                for filter_data in filter_list:
+                    if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
+                    if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
+                queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
                 if page is not None:
                     serializer = self.get_serializer(page, many=True, context={"request": request})
