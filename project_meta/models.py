@@ -215,3 +215,18 @@ class JobSeekerCategory(BaseModel, models.Model):
         - ordering (list): Default ordering for the model.
 
         """
+
+class Sector(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a sector.
+
+    Columns: 
+    - `title`: A string representing the name of the sector. 
+    - `slug`: A string representing the slug for the sector, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Sector"
+        verbose_name_plural = "Sectors"
+        db_table = "Sector"
+        ordering = ['title']
