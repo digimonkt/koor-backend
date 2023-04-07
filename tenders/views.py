@@ -13,7 +13,8 @@ from tenders.models import TenderDetails
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
     TendersSerializers, TendersDetailSerializers,
-    TenderFiltersSerializers
+    TenderFiltersSerializers,
+    GetTenderFilterSerializers
 )
 
 
@@ -180,5 +181,47 @@ class TenderFilterView(generics.GenericAPIView):
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+        get is a method of the `TenderFilterView` class that handles HTTP GET requests to retrieve TenderFilter objects
+        saved by a particular user.
+
+        Args:
+            - `request (HttpRequest)`: An HTTP GET request.
+
+        Returns:
+            - `HttpResponse`: A JSON response containing a serialized list of TenderFilter objects associated with the
+                authenticated user who made the request and a status code of 200 OK, or a JSON error response with a
+                status code of 400 BAD REQUEST.
+
+        Raises:
+            - `Exception`: If there is an error retrieving the TenderFilter objects.
+
+        Usage:
+            - This method is used to handle GET requests made to the TenderFilterView view. It first creates a context
+                dictionary to store any additional data to be passed to the serializer.
+            - It then retrieves all TenderFilter objects associated with the authenticated user who made the request
+                using the filter method.
+            - The data is serialized using the GetTenderFilterSerializers class and returned as a JSON response with a
+                status code of 200 OK.
+            - If there is an error retrieving the data, a JSON error response is returned with a status code of 400
+                BAD REQUEST.
+        """
+
+        context = dict()
+        try:
+            tender_filter_data = TenderFilter.objects.filter(user=request.user)
+            get_data = GetTenderFilterSerializers(tender_filter_data, many=True)
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
