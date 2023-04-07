@@ -219,7 +219,7 @@ class TenderAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models
         - `attachment`: the attachment uploaded for the tender
 
     """
-    
+
     tender = models.ForeignKey(
         TenderDetails,
         verbose_name=_('Tender'),
@@ -243,4 +243,130 @@ class TenderAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, models
         verbose_name = "Tender Attachments Item"
         verbose_name_plural = "Tender Attachments Items"
         db_table = "TenderAttachmentsItem"
+        ordering = ['-created']
+
+
+class TenderFilter(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    A Django model that represents a filter for tender opportunities.
+
+    Attributes:
+        - `user (ForeignKey)`: The user associated with this filter.
+        - `title (TextField)`: The title of this filter.
+        - `country (ForeignKey)`: The country associated with this filter.
+        - `city (ForeignKey)`: The city associated with this filter.
+        - `opportunity_type (CharField)`: The type of tender opportunities this filter is interested in.
+        - `sector (CharField)`: The sector this filter is interested in.
+        - `deadline (DateField)`: The deadline by which the tender opportunities must be submitted.
+        - `budget (DecimalField)`: The budget for the tender opportunities.
+        - `tender_category (ManyToManyField)`: The categories of tender opportunities this filter is interested in.
+        - `tag (ManyToManyField)`: The tags associated with this filter.
+        - `is_notification (BooleanField)`: Whether this filter should send notifications for new tender opportunities.
+
+    Meta:
+        - `verbose_name (str)`: The human-readable name for this model in singular.
+        - `verbose_name_plural (str)`: The human-readable name for this model in plural.
+        - `db_table (str)`: The database table name for this model.
+        - `ordering (list)`: The default ordering for this model.
+    """
+
+    TENDER_TYPE_CHOICE = (
+        ('government', "Government"),
+        ('ngo', "NGO"),
+        ('business', "Business"),
+    )
+    SECTOR_CHOICE = (
+        ('ngo', "NGO"),
+        ('private', "Private"),
+        ('public', "Public")
+    )
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    title = models.TextField(
+        verbose_name=_('Title'),
+        db_column="title",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
+    )
+    opportunity_type = models.CharField(
+        verbose_name=_('Opportunity Type'),
+        db_column="opportunity_type",
+        null=True,
+        blank=True,
+        max_length=105,
+        choices=TENDER_TYPE_CHOICE,
+    )
+    sector = models.CharField(
+        verbose_name=_('Sector'),
+        db_column="sector",
+        null=True,
+        blank=True,
+        max_length=105,
+        choices=SECTOR_CHOICE,
+    )
+    deadline = models.DateField(
+        verbose_name=_('Deadline'),
+        db_column="deadline",
+        null=True,
+        blank=True
+    )
+    budget = models.DecimalField(
+        max_digits=19,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Budget'),
+        db_column="budget"
+    )
+    tender_category = models.ManyToManyField(
+        to=TenderCategory,
+        null=True,
+        blank=True,
+        verbose_name=_('Tender Category'),
+        db_column="tender_category",
+        related_name='%(app_label)s_%(class)s_tender_category'
+    )
+    tag = models.ManyToManyField(
+        to=Tag,
+        null=True,
+        blank=True,
+        verbose_name=_('Tag'),
+        db_column="tag",
+        related_name='%(app_label)s_%(class)s_tags'
+    )
+    is_notification = models.BooleanField(
+        verbose_name=_('Is Notification'),
+        null=True,
+        blank=True,
+        db_column="is_notification",
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Tender Filter"
+        verbose_name_plural = "Tender Filters"
+        db_table = "TenderFilter"
         ordering = ['-created']
