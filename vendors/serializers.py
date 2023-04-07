@@ -1,6 +1,9 @@
 from rest_framework import serializers
 
+from project_meta.models import Media
 from user_profile.models import VendorProfile
+
+from .models import SavedTender
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -137,3 +140,32 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             instance.registration_certificate = media_instance
             instance.save()
         return instance
+
+
+class SavedTenderSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the `SavedTender` model, which extends the `ModelSerializer` class.
+    It serializes the 'id' field of a `SavedTender` instance and defines a custom '`save`' method to create a new
+    `SavedTender` instance with the specified user and tender instance.
+
+    Attributes:
+        - `Meta (class)`: defines the model to be serialized and the fields to include in the serializer.
+
+    Methods:
+        - `save(user, tender_instace)`: creates and saves a new `SavedTender` instance with the specified user and
+        ``tender instance`.
+            - `Args`:
+                - `user (User)`: the user who saved the tender.
+                - `tender_instace (Tender)`: the tender instance that was saved.
+            - `Returns:
+                - `self (SavedTenderSerializers)`: the instance of the `SavedTenderSerializers` class.
+    """
+
+    class Meta:
+        model = SavedTender
+        fields = ['id', ]
+
+    def save(self, user, tender_instace):
+
+        super().save(user=user, tender=tender_instace)
+        return self
