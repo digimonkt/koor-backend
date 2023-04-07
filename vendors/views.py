@@ -2,17 +2,20 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework import (
     generics, response, status,
-    permissions, serializers
+    permissions, serializers, filters
 )
 
-from tenders.models import TenderDetails
+from core.pagination import CustomPagination
 
 from user_profile.models import VendorProfile
+
+from tenders.models import TenderDetails
 
 from .models import SavedTender
 from .serializers import (
     UpdateAboutSerializers,
-    SavedTenderSerializers
+    SavedTenderSerializers,
+    GetSavedTenderSerializers
 
 )
 
@@ -63,24 +66,94 @@ class UpdateAboutView(generics.GenericAPIView):
 
 class TenderSaveView(generics.ListAPIView):
     """
-    A view that lists all saved tenders for the authenticated user.
+    View for retrieving saved tenders by authenticated users.
 
-    Attributes:
-        - `permission_classes (list)`: a list of permission classes that the user must have in order to access this
-            view.
-            In this case, only authenticated users can access this view.
+    - `serializer_class`: A serializer class for `serializing/deserializing` the saved tender data.
+    - `permission_classes`: A list of permission classes that define the permission policy for this view.
+    - `queryset`: The queryset used for retrieving the saved tenders. This is set to None as the actual queryset is
+        generated dynamically based on the authenticated user.
+    - `filter_backends`: A list of filter backend classes used for filtering the saved tenders.
+    - `search_fields`: A list of fields on which the search filter should be applied.
+    - `pagination_class`: A pagination class used for pagination of the retrieved saved tenders.
 
-    Methods:
-        - `get(self, request, *args, **kwargs)`: retrieves the saved tenders for the authenticated user.
-            - `Args`:
-                - `request (HttpRequest)`: the HTTP request object that contains the request data.
-                - `*args`: variable length argument list.
-               - ` **kwargs`: keyword arguments.
-            - `Returns:
-                - A serialized list of saved tenders for the authenticated user.
     """
 
+    serializer_class = GetSavedTenderSerializers
     permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Returns a paginated list of serialized saved tenders for the authenticated user.
+
+        This method returns a paginated list of saved tenders for the authenticated user. The saved tenders are
+        serialized using the `GetSavedTenderSerializers` class.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A HTTP response object containing a paginated list of serialized saved tenders.
+
+        The response includes the following fields:
+            - `count (int)`: The total number of saved tenders for the authenticated user.
+            - `next (str)`: The URL for the next page of results, or null if there are no more pages.
+            - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
+            - `results (list)`: A list of serialized saved tenders for the authenticated user.
+
+        """
+
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
+
+    def get_queryset(self, **kwargs):
+        """
+        Returns the queryset of saved tenders for the authenticated user.
+
+        This method returns a queryset of SavedTender objects for the authenticated user, ordered by their creation date
+        in descending order.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            A queryset of SavedTender objects for the authenticated user, ordered by their creation date in descending
+            order.
+        """
+        if 'search_by' in self.request.GET:
+            search_by = self.request.GET['search_by']
+            if search_by == 'salary':
+                order_by = 'tender__budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'tender__deadline'
+            if 'order_by' in self.request.GET:
+                if 'descending' in self.request.GET['order_by']:
+                    return SavedTender.objects.filter(
+                        user=self.request.user,
+                        tender__is_removed=False
+                    ).order_by("-" + str(order_by))
+                else:
+                    return SavedTender.objects.filter(
+                        user=self.request.user,
+                        ob__is_removed=False
+                    ).order_by(str(order_by))
+            else:
+                return SavedTender.objects.filter(
+                    user=self.request.user,
+                    tender__is_removed=False
+                ).order_by(str(order_by))
+        return SavedTender.objects.filter(
+            user=self.request.user,
+            tender__is_removed=False
+        )
 
     def post(self, request, tenderId):
         """
