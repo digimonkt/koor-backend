@@ -1,4 +1,6 @@
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+
 from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
@@ -1294,3 +1296,14 @@ class CategoryView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+def RemoveAvailability():
+    """
+    Sets the availability flag of all JobPreferences objects to False.
+
+    Returns:
+        - `HttpResponse`: A response indicating that the operation has been completed.
+    """
+    JobPreferences.objects.all().update(is_available=False)
+    return HttpResponse("done")
