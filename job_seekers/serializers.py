@@ -541,7 +541,7 @@ class UpdateJobPreferencesSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = JobPreferences
-        fields = ['is_available', 'is_display', 'is_part_time',
+        fields = ['is_available', 'display_in_search', 'is_part_time',
                   'is_full_time', 'has_contract', 'expected_salary'
                   ]
 

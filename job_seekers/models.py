@@ -391,7 +391,7 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
     Fields:
         - `user`: A foreign key to the User model.
         - `is_available`: A boolean indicating if the user is available for work.
-        - `is_display`: A boolean indicating if the user's job Preferences are visible to employers.
+        - `display_in_search`: A boolean indicating if the user's job Preferences are visible to employers.
         - `is_part_time`: A boolean indicating if the user is looking for part-time work.
         - `is_full_time`: A boolean indicating if the user is looking for full-time work.
         - `has_contract`: A boolean indicating if the user is looking for work with a contract.
@@ -424,11 +424,11 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         db_column="is_available",
         default=False
     )
-    is_display = models.BooleanField(
-        verbose_name=_('Is Display'),
+    display_in_search = models.BooleanField(
+        verbose_name=_('Display in Search'),
         null=True,
         blank=True,
-        db_column="is_display",
+        db_column="display_in_search",
         default=False
     )
     is_part_time = models.BooleanField(

@@ -312,7 +312,7 @@ class JobPreferencesSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'is_available',
-            'is_display',
+            'display_in_search',
             'is_part_time',
             'is_full_time',
             'has_contract',
