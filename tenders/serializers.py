@@ -5,6 +5,10 @@ from tenders.models import (
     TenderAttachmentsItem, TenderFilter
 )
 
+from vendors.models import (
+    SavedTender
+)
+
 from users.serializers import UserSerializer
 
 from project_meta.serializers import (
@@ -105,19 +109,19 @@ class TendersSerializers(serializers.ModelSerializer):
             user = self.context['user']
             # if user.is_authenticated:
             #     is_applied_record = AppliedJob.objects.filter(
-            #         job=obj,
+            #         tender=obj,
             #         user=user
             #     ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
         is_saved_record = False
-        # if 'user' in self.context:
-        #     if self.context['user'].is_authenticated:
-        #         is_saved_record = SavedJob.objects.filter(
-        #             job=obj,
-        #             user=self.context['user']
-        #         ).exists()
+        if 'user' in self.context:
+            if self.context['user'].is_authenticated:
+                is_saved_record = SavedTender.objects.filter(
+                    tender=obj,
+                    user=self.context['user']
+                ).exists()
         return is_saved_record
 
     def get_vendor(self, obj):
@@ -352,7 +356,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
         return context
 
     def get_vendor(self, obj):
-        # return AppliedJob.objects.filter(job=obj).count()
+        # return AppliedJob.objects.filter(tender=obj).count()
         return 0
 
     def get_is_applied(self, obj):
@@ -360,19 +364,19 @@ class TendersDetailSerializers(serializers.ModelSerializer):
         # if 'user' in self.context:
         #     user = self.context['user']
         #     is_applied_record = AppliedJob.objects.filter(
-        #         job=obj,
+        #         tender=obj,
         #         user=user
         #     ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
         is_saved_record = False
-        # if 'user' in self.context:
-        #     user = self.context['user']
-        #     is_saved_record = SavedJob.objects.filter(
-        #         job=obj,
-        #         user=user
-        #     ).exists()
+        if 'user' in self.context:
+            user = self.context['user']
+            is_saved_record = SavedTender.objects.filter(
+                tender=obj,
+                user=user
+            ).exists()
         return is_saved_record
 
     def get_attachments(self, obj):

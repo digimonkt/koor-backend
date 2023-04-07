@@ -1,7 +1,12 @@
 from rest_framework import serializers
 
 from project_meta.models import Media
+from tenders.models import TenderDetails
 from user_profile.models import VendorProfile
+
+from tenders.serializers import (
+    TendersDetailSerializers
+)
 
 from .models import SavedTender
 
@@ -169,3 +174,52 @@ class SavedTenderSerializers(serializers.ModelSerializer):
 
         super().save(user=user, tender=tender_instace)
         return self
+
+
+class GetSavedTenderSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the SavedTender model that returns details of saved tenders.
+
+    This serializer includes the following fields:
+        - id (int): The ID of the applied tender.
+        - tender (dict): A dictionary containing details of the tender posting.
+
+    The 'tender' field is a serialized representation of the related TenderDetails object, and is populated
+    using the `get_tender` method of the GetSavedTenderSerializers class.
+    """
+
+    tender = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SavedTender
+        fields = ['id', 'tender']
+
+    def get_tender(self, obj):
+        """
+        A method for retrieving the details of a tender.
+
+        - `obj`: An instance of a model that has a related TenderDetails object.
+        - `return_context`: A dictionary that contains the serialized data of the related tender details.
+
+        The method attempts to retrieve the serialized data of the related tender details object by:
+            - Checking if a 'request' object is present in the context.
+            - Retrieving the authenticated user from the '`request`' object.
+            - Serializing the tender details object using the `TendersDetailSerializers` and passing the authenticated
+                user as context.
+            - Checking if the serialized data is `not empty`.
+            - If the above steps are successful, the serialized data is returned as a dictionary.
+        If the TenderDetails object does not exist, an exception is caught and nothing is returned.
+
+        """
+
+        return_context = dict()
+        try:
+            if 'request' in self.context:
+                user = self.context['request'].user
+                get_data = TendersDetailSerializers(obj.tender, context={"user": user})
+                if get_data.data:
+                    return_context = get_data.data
+        except TenderDetails.DoesNotExist:
+            pass
+        finally:
+            return return_context
