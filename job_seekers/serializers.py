@@ -498,7 +498,7 @@ class GetSavedJobsSerializers(serializers.ModelSerializer):
     job = serializers.SerializerMethodField()
 
     class Meta:
-        model = AppliedJob
+        model = SavedJob
         fields = ['id', 'job']
 
     def get_job(self, obj):
