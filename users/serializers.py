@@ -495,7 +495,7 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     
     def get_job_preferences(self, obj):
         context = []
-        job_preferences_data = JobPreferences.objects.filter(user=obj)
+        job_preferences_data = JobPreferences.objects.get(user=obj)
         get_data = JobPreferencesSerializer(job_preferences_data)
         if get_data.data:
             context = get_data.data
