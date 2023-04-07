@@ -877,12 +877,12 @@ class JobsApplyView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return AppliedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
+                    return AppliedJob.objects.filter(user=self.request.user).filter(job__is_removed=False).order_by("-" + str(order_by))
                 else:
-                    return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
+                    return AppliedJob.objects.filter(user=self.request.user).filter(job__is_removed=False).order_by(str(order_by))
             else:
-                return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
-        return AppliedJob.objects.filter(user=self.request.user)
+                return AppliedJob.objects.filter(user=self.request.user).filter(job__is_removed=False).order_by(str(order_by))
+        return AppliedJob.objects.filter(user=self.request.user).filter(job__is_removed=False)
 
 
 class JobsSaveView(generics.ListAPIView):
@@ -1071,12 +1071,12 @@ class JobsSaveView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return SavedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
+                    return SavedJob.objects.filter(user=self.request.user).filter(job__is_removed=False).order_by("-" + str(order_by))
                 else:
-                    return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
+                    return SavedJob.objects.filter(user=self.request.user).filter(job__is_removed=False).order_by(str(order_by))
             else:
-                return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
-        return SavedJob.objects.filter(user=self.request.user)
+                return SavedJob.objects.filter(user=self.request.user).filter(job__is_removed=False).order_by(str(order_by))
+        return SavedJob.objects.filter(user=self.request.user).filter(job__is_removed=False)
 
 
 class UpdateJobPreferencesView(generics.GenericAPIView):
