@@ -222,3 +222,47 @@ class TenderSaveView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+    def delete(self, request, tenderId):
+        """
+        Deletes an SavedTender object with the given tender if the authenticated user is a vendor and owns the
+        SavedTender.
+        Args:
+            request: A DRF request object.
+            tenderId: An integer representing the ID of the SavedTender to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if request.user.role == "vendor":
+            try:
+                tender_instace = TenderDetails.objects.get(id=tenderId)
+                try:
+                    SavedTender.all_objects.get(tender=tender_instace, user=request.user).delete(soft=False)
+                    context['message'] = "Tender Unsaved"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                except SavedTender.DoesNotExist:
+                    return response.Response(
+                        data={"savedTenderId": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
