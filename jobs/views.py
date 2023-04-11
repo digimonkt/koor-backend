@@ -360,6 +360,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                     if application_status.rejected_at:
                         message = "Already "
                     else:
+                        application_status.shortlisted_at = None
                         application_status.rejected_at = datetime.now()
                         application_status.save()
                 elif action == "blacklisted":
@@ -579,30 +580,23 @@ class JobFilterView(generics.GenericAPIView):
         """
 
         context = dict()
-        if request.user.role == "job_seeker":
-            try:
-                JobFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
-                context['message'] = "Filter Removed"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except JobFilters.DoesNotExist:
-                return response.Response(
-                    data={"filterId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
+        try:
+            JobFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+            context['message'] = "Filter Removed"
             return response.Response(
                 data=context,
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_200_OK
+            )
+        except JobFilters.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
 
     def patch(self, request, filterId):
