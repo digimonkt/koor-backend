@@ -11,7 +11,17 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 - **[Get user details](#get-user-details):** This route is used to get user details by id or by token
 - **[Update Profile Image](#update-profile-image):** This route is used to update profile Image
 - **[Get Location](#get-location):**
+- **[Social Login](#social-login):**
 - **[Get User Search](#get-user-search):**
+- **[Send OTP](#send-otp):**
+- **[OTP Verification](#otp-verification):**
+- **[Email Verification](#email-verification):**
+- **[Change Password](#change-password):**
+- **[Get Notification](#get-notification):**
+- **[Save Advanced Filter for User](#save-advanced-filter-for-user):**
+- **[Get Advanced Filter for User](#get-advanced-filter-for-user):**
+- **[Delete Advanced Filter for User](#delete-advanced-filter-for-user):**
+- **[Update Advanced Filter for User](#update-advanced-filter-for-user):**
 
 ## **Create User**
 
@@ -26,7 +36,7 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
   ```js
   {
     "body": {
-      	"email": "test@test.com",
+      "email": "test@test.com",
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor"
     }
@@ -34,20 +44,20 @@ These are the APIs for all 3 types of `users` `job-seeker`, `employer`, and `ven
 
   {
     "body": {
-        "email": "test@test.com",
-  		"mobileNumber": "1234567890",
+      "email": "test@test.com",
+  		"mobile_number": "1234567890",
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor",
-  		"countryCode": "+91"
+  		"country_code": "+91"
       }
   }
 
   {
     "body": {
-  		"mobileNumber": "123456789",
+  		"mobile_number": "123456789",
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor",
-  		"countryCode": "+91"
+  		"country_code": "+91"
       }
   }
   ```
@@ -311,7 +321,7 @@ This route is used to get `user` details. If `userId` is provided inside the `qu
   // vendor pending
   ```
 
-## Update Profile Image
+## **Update Profile Image**
 
 ### Summary
 
@@ -342,7 +352,7 @@ This API is used to update the `display_image` of the user.
   }
   ```
 
-## Get Location
+## **Get Location**
 
 This api is used to get all `Get Location`
 
@@ -429,27 +439,28 @@ This api is used to get all `Get Location`
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor",
       "source": "google" || "facebook" || "apple"
+      "display_image": "https://lh3.googleusercontent.com/a/AGNmyxal8J_JI7khcLOMzjacmvXYbBMLcSV3i__M4TyL=s96-c"
     }
   }
 
   {
     "body": {
         "email": "test@test.com",
-  		"mobileNumber": "1234567890",
+  		"mobile_number": "1234567890",
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor",
       "source": "google" || "facebook" || "apple",
-  		"countryCode": "+91"
+  		"country_code": "+91"
       }
   }
 
   {
     "body": {
-  		"mobileNumber": "123456789",
+  		"mobile_number": "123456789",
   		"password": "123456789",
   		"role": "job_seeker" || "employer" || "vendor",
       "source": "google" || "facebook" || "apple",
-  		"countryCode": "+91"
+  		"country_code": "+91"
       }
   }
   ```
@@ -473,7 +484,7 @@ This api is used to get all `Get Location`
 
 
 
-## Get User Search
+## **Get User Search**
 
 This api is used to get all the `user search` of the employer.
 - route: `/search/:role`
@@ -546,3 +557,383 @@ This api is used to get all the `user search` of the employer.
     }
   }
   ```
+
+## **Send OTP**
+
+### Summary
+
+- route: `/send-otp`
+- method: `GET`
+- request :
+
+  request can be one of the following types:
+
+  ```js
+  {
+    "query": {
+      "email": "test@gmail.com"
+    }
+  }
+
+  ```
+
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      "token": "${JWT_TOKEN}",
+      "message": "OTP sent to test@gmail.com"
+    }
+  }
+  ```
+
+
+## **OTP Verification**
+
+### Summary
+
+- route: `/otp-verification`
+- method: `GET`
+- request :
+
+  request can be one of the following types:
+
+  ```js
+  {
+    "query": {
+      "token": "${JWT_TOKEN}"
+    }
+    "params": {
+      "otp":"1234"
+    }
+  }
+
+  ```
+
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      "token": "${JWT_TOKEN}",
+    }
+  }
+  ```
+
+
+## **Change Password**
+
+### Summary
+
+- route: `/change-password`
+- method: `GET`
+- request :
+
+  request can be one of the following types:
+
+  ```js
+  {
+    "query": {
+      "token": "${JWT_TOKEN}"
+    }
+    "body": {
+      "password":"testpassword"
+    }
+  }
+
+  ```
+
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      "message": "Password updated successfully."
+    }
+  }
+  ```
+
+
+## **Email Verification**
+
+### Summary
+
+- route: `/email-verification`
+- method: `GET`
+- request :
+
+  request can be one of the following types:
+
+  ```js
+  {
+    "query": {
+      "token": "${JWT_TOKEN}"
+    }
+    "params": {
+      "otp":"1234"
+    }
+  }
+
+  ```
+
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      "message": "Your email address is verified.",
+    }
+  }
+  ```
+
+
+## **Get Notification**
+
+### Summary
+
+- route: `/notification`
+- method: `GET`
+
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      "count": 1,
+      "next": null,
+      "previous": null,
+      "results": [
+        {
+            "id": "${UUID}",
+            "notification_type": "applied",
+            "application": {
+                "id": "${UUID}",
+                "shortlisted_at": "2023-04-10T05:22:25",
+                "rejected_at": null,
+                "short_letter": null,
+                "attachments": [],
+                "job": {
+                    "id": "${UUID}",
+                    "title": "Job Title"
+                },
+                "user": {
+                    "id": "${UUID}",
+                    "name": "User Name",
+                    "image": "/${PATH}"
+                }
+            },
+            "job": null,
+            "job_filter": null,
+            "seen": false,
+            "created": "2023-04-05T06:55:52"
+        },
+      ]
+    }
+  }
+  ```
+
+
+## **Save Advanced Filter for User**
+
+### Summary
+
+- route: `/filter`
+- method: `POST`
+- request:
+  ```js
+  {
+    "query": 
+    {
+      "title": "test", // show all results
+      "country": "${UUID}" || null;, // filter by country
+      "city": "${UUID}" || null;, // filter by city
+      "category": "${UUID}" || null;, // filter by category
+      "category": "${UUID}" || null;, // filter by category
+      "is_full_time": true || false || null;, // filter is full time
+      "is_part_time": true || false || null;, // filter is part time
+      "has_contract": true || false || null;, // filter has contract
+      "is_notification": true || false || null;, // filter for availability
+      "availability": true || false || null;, // filter for availability
+      "salary_min": "3500" || null;, // filter for minimum salary
+      "salary_max": "4500" || null;, // filter for maximum salary
+    },
+  }
+ 
+  ```
+
+- response:
+
+  ```js
+  
+  {
+    "code": 201,
+    "body": {
+      {
+        "id": "${UUID}",
+        "title": "first user filter",
+        "country": "${UUID}",
+        "city": "${UUID}",
+        "category": [
+            "${UUID}",
+            "${UUID}"
+        ],
+        "is_full_time": false,
+        "is_part_time": false,
+        "has_contract": false,
+        "is_notification": false,
+        "salary_min": null,
+        "salary_max": null,
+        "availability": false
+      }
+    }
+  }
+  ```
+
+
+## **Get Advanced Filter for User**
+
+### Summary
+
+- route: `/filter`
+- method: `GET`
+
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      {
+        "id": "${UUID}",
+        "title": "first user filter",
+        "country":  {
+            "id": "${UUID}",
+            "title": "India"
+        },
+        "city":  {
+            "id": "${UUID}",
+            "title": "Bhopal"
+        },
+        "category": [
+            {
+              "id": "${UUID}",
+              "title": "category 1"
+            },
+            {
+              "id": "${UUID}",
+              "title": "category 2"
+            },
+        ],
+        "is_full_time": false,
+        "is_part_time": false,
+        "has_contract": false,
+        "availability": false,
+        "is_notification": false,
+        "salary_min": null,
+        "salary_max": null
+      }
+    }
+  }
+  ```
+
+
+## **Delete Advanced Filter for User**
+
+### Summary
+
+- route: `/filter`
+- method: `DELETE`
+- request:
+
+  ```js
+  {
+    "params": {
+  	    "filterId": "${UUID}"
+    }
+  }
+  ```
+- response:
+
+  ```js
+  
+  {
+    "code": 200,
+    "body": {
+      {
+        "message": "Filter Removed"
+      }
+    }
+  }
+  ```
+
+
+## **Update Advanced Filter for User**
+
+### Summary
+
+- route: `/filter`
+- method: `PUT`
+- request:
+  ```js
+  {
+    "params": {
+      "filterId": "${UUID}"
+    },
+    "body": {
+      "title": "test", // show all results
+      "country": "${UUID}" || null;, // filter by country
+      "city": "${UUID}" || null;, // filter by city
+      "category": "${UUID}" || null;, // filter by category
+      "category": "${UUID}" || null;, // filter by category
+      "is_full_time": true || false || null;, // filter is full time
+      "is_part_time": true || false || null;, // filter is part time
+      "has_contract": true || false || null;, // filter has contract
+      "is_notification": true || false || null;, // filter for availability
+      "availability": true || false || null;, // filter for availability
+      "salary_min": "3500" || null;, // filter for minimum salary
+      "salary_max": "4500" || null;, // filter for maximum salary
+    },
+  }
+ 
+  ```
+
+- response:
+
+  ```js
+  
+  {
+    "code": 201,
+    "body": {
+      {
+        "id": "${UUID}",
+        "title": "first user filter",
+        "country": "${UUID}",
+        "city": "${UUID}",
+        "category": [
+            "${UUID}",
+            "${UUID}"
+        ],
+        "is_full_time": false,
+        "is_part_time": false,
+        "has_contract": false,
+        "is_notification": false,
+        "salary_min": null,
+        "salary_max": null,
+        "availability": false
+      }
+    }
+  }
+  ```
+
