@@ -167,11 +167,18 @@ class JobApplicationsView(generics.ListAPIView):
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
+                    if filter_data == "planned_interviews": filters = filters & Q(job=None)
+                    if filter_data == "blacklisted": filters = filters & Q(job=None)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
                 if page is not None:
                     serializer = self.get_serializer(page, many=True, context={"request": request})
-                    return self.get_paginated_response(serializer.data)
+                    serialized_response =  self.get_paginated_response(serializer.data)
+                    serialized_response.data['rejected_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(rejected_at=None)).count()
+                    serialized_response.data['shortlisted_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(shortlisted_at=None)).count()
+                    serialized_response.data['planned_interview_count'] = 0
+                    serialized_response.data['blacklisted_count'] = 0
+                    return response.Response(data=serialized_response.data, status=status.HTTP_200_OK)
                 serializer = self.get_serializer(queryset, many=True, context={"request": request})
                 return response.Response(serializer.data)
             except JobDetails.DoesNotExist:
@@ -347,7 +354,7 @@ class JobSuggestionView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         try:
             job_instance = JobDetails.objects.get(id=jobId)
-            annotated_job_details = JobDetails.objects.annotate(
+            annotated_job_details = JobDetails.objects.filter(~Q(id=job_instance.id)).annotate(
                 matches=Value(0)
             ).annotate(
                 matches=Case(
