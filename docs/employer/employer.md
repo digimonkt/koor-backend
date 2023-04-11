@@ -14,6 +14,11 @@ These APIs are for the `CRUD` of an `employer`
 - **[Create Job](#create-job)**
 - **[Get Job](#get-jobs)**
 - **[Update Job](#update-job)**
+- **[Create Tenders](#create-tenders)**
+- **[Get Tenders](#get-tenders)**
+- **[Update Tenders](#update-tenders)**
+- **[Active Inactive Job](#active-inactive-job)**
+- **[Active Inactive Tender](#active-inactive-tender)**
 
 ## Update About
 
@@ -66,21 +71,21 @@ This route is used to create `jobs`
   {
     body: {
       title: "Senior Software Developer",
-      budgetCurrency: "USD",
-      budgetAmount: 2000,
-      budgetPayPeriod: "yearly",
+      budget_currency: "USD",
+      budget_amount: 2000,
+      budget_pay_period: "yearly",
       description: "This is the job description...",
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
-      jobCategory: ["${jobCategoryId}"],
-      isFulltime: true,
-      isPartime: false,
-      hasContract: false,
-      contactEmail: "saral.shrivastava@digimonk.in",
-      contactPhone: null,
-      contactWhatsapp: null,
-      highestEducation: "${educationLevelId}",
+      job_category: ["${jobCategoryId}"],
+      is_full_time: true,
+      is_part_time: false,
+      has_contract: false,
+      contact_email: "saral.shrivastava@digimonk.in",
+      contact_phone: null,
+      contact_whatsapp: null,
+      highest_education: "${educationLevelId}",
       language: [{"language":"${languageId}","spoken":"fluent","written":"conversational"}],
       skill: ["${skillId}"],
       working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
@@ -167,27 +172,31 @@ This `api` is used to update existing job
   {
     body: {
       title: "Senior Software Developer",
-      budgetCurrency: "USD",
-      budgetAmount: 2000,
-      budgetPayPeriod: "yearly",
+      budget_currency: "USD",
+      budget_amount: 2000,
+      budget_pay_period: "yearly",
       description: "This is the job description...",
       country: "${countryId}",
       city: "${cityId}",
       address: "Gwalior, Madhya Pradesh",
-      jobCategory: ["${jobCategoryId}"],
-      isFulltime: true,
-      isPartime: false,
-      hasContract: false,
-      contactEmail: "saral.shrivastava@digimonk.in",
-      contactPhone: null,
-      contactWhatsapp: null,
-      highestEducation: "${educationLevelId}",
+      job_category: ["${jobCategoryId}"],
+      is_full_time: true,
+      is_part_time: false,
+      has_contract: false,
+      contact_email: "saral.shrivastava@digimonk.in",
+      contact_phone: null,
+      contact_whatsapp: null,
+      highest_education: "${educationLevelId}",
       language: [
         '{"language":"${languageId}","spoken":"fluent","written":"conversational"}' || 
         '{"id":"${UUID}","language":"${languageId}","spoken":"fluent","written":"conversational"}' 
         ],
       language_remove: ["${UUID}"],
       skill: ["${skillId}"],
+      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      attachments: [File],
+      attachments_remove: ["${UUID}"],
+      deadline: "YYYY-MM-DD",
       start_date: "YYYY-MM-DD"
     }
   }
@@ -198,6 +207,193 @@ This `api` is used to update existing job
     code: 200,
     data: {
       message: "Updated Successfully"
+    }
+  }
+  ```
+
+## Create Tenders
+
+This route is used to create `tenders`
+
+- route: `/tenders`
+- method: `POST`
+- request:
+
+  ```js
+  {
+    body: {
+      tender_category: ["${tenderCategoryId}"],
+      tag: ["${tagId}"],
+      attachments: [File],
+      title: "test title",
+      budget_currency: "USD",
+      budget_amount: 2000,
+      description: "This is the tenders description...",
+      country: "${countryId}",
+      city: "${cityId}",
+      address: "Gwalior, Madhya Pradesh",
+      tender_type: "government" || "ngo" || "business" ,
+      sector: "ngo" || "private" || "public",
+      deadline: "yyyy-mm-dd",
+      start_date: "yyyy-mm-dd"
+    }
+  }
+  ```
+
+- response:
+  ```js
+  {
+    code: 201,
+    data: {
+      message: "Tender added successfully."
+    }
+  }
+  ```
+
+## Get Tenders
+
+This api is used to get all the `tenders` of the employer.
+- route: `/tenders`
+- method: `GET`
+- request:
+  ```js
+  {
+    "query": {
+      "employerId": "${UUID}" || null
+    }
+  }
+  ```
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      "count": 1,
+      "next": null,
+      "previous": null,
+      "results": [
+          {
+              "id": "${UUID}",
+              "title": "test data",
+              "description": null,
+              "tender_category": [
+                  {
+                      "id": "${UUID}",
+                      "title": "Auduting"
+                  }
+              ],
+              "sector": "ngo",
+              "created": "2023-04-11T16:13:21",
+              "is_applied": false,
+              "is_saved": false,
+              "user": {
+                  "id": "${UUID}",
+                  "name": "TCS",
+                  "email": "test@email.com",
+                  "country_code": "+91",
+                  "mobile_number": "9988990099",
+                  "image": null,
+                  "description": null
+              },
+              "vendor": 0,
+              "status": "active"
+          }
+      ]
+    }
+  }
+  ```
+
+## Update Tenders
+
+This api is used to update existing `tenders`
+
+- route: `/tenders`
+- method: `PUT`
+- request:
+
+  ```js
+  {
+    params: {
+      "tendersId": "${UUID}",
+    },
+    body: {
+      tender_category: ["${tenderCategoryId}"],
+      tag: ["${tagId}"],
+      attachments: [File],
+      title: "test title",
+      budget_currency: "USD",
+      budget_amount: 2000,
+      description: "This is the tenders description...",
+      country: "${countryId}",
+      city: "${cityId}",
+      address: "Gwalior, Madhya Pradesh",
+      tender_type: "government" || "ngo" || "business" ,
+      sector: "ngo" || "private" || "public",
+      deadline: "yyyy-mm-dd",
+      start_date: "yyyy-mm-dd"
+    }
+  }
+  ```
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      message: "Updated Successfully"
+    }
+  }
+  ```
+
+## Active Inactive Job
+
+This route is used to active inactive `jobs`
+
+- route: `/jobs/:jobId/status`
+- method: `PUT`
+- request:
+
+  ```js
+  {
+    params: {
+      "jobId": "${UUID}",
+    },
+  }
+  ```
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      message: "This job is active" || "This job placed on hold"
+    }
+  }
+  ```
+
+## Active Inactive Tender
+
+This route is used to active inactive `tenders`
+
+- route: `/tenders/:tendersId/status`
+- method: `PUT`
+- request:
+
+  ```js
+  {
+    params: {
+      "tendersId": "${UUID}",
+    },
+  }
+  ```
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+      message: "This tender placed on hold" || "This tender is active"
     }
   }
   ```
