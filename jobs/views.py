@@ -58,7 +58,7 @@ class JobSearchView(generics.ListAPIView):
 
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.filter(deadline__gte=date.today())
+    queryset = None
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = [
@@ -98,6 +98,46 @@ class JobSearchView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True, context=context)
         return response.Response(serializer.data)
 
+    def get_queryset(self, **kwargs):
+        """
+        Returns the queryset of applied jobs for the authenticated user.
+
+        This method returns a queryset of AppliedJob objects for the authenticated user, ordered by their creation date
+        in descending order.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
+            order.
+        """
+        if 'search_by' in self.request.GET:
+            search_by = self.request.GET['search_by']
+            if search_by == 'salary':
+                order_by = 'budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'deadline'
+            if 'order_by' in self.request.GET:
+                if 'descending' in self.request.GET['order_by']:
+                    return JobDetails.objects.filter(
+                        deadline__gte=date.today(),
+                        is_removed=False
+                    ).order_by("-" + str(order_by))
+                else:
+                    return JobDetails.objects.filter(
+                        deadline__gte=date.today(),
+                        is_removed=False
+                    ).order_by(str(order_by))
+            else:
+                return JobDetails.objects.filter(
+                    deadline__gte=date.today(),
+                    is_removed=False
+                ).order_by(str(order_by))
+        return JobDetails.objects.filter(
+            deadline__gte=date.today(),
+            is_removed=False
+        )
 
 class JobDetailView(generics.GenericAPIView):
     """
