@@ -11,10 +11,15 @@ These APIs are for the `CRUD` of a job
 ## Table Of Content
 
 - **[Get Jobs Search](#get-jobs-search)**
+- **[Get Jobs Detail](#get-jobs-detail)**
 - **[Get Applications](#get-applications)**
 - **[Get Recent Applications](#get-recent-applications)**
 - **[Get Applications Detail](#get-applications-detail)**
 - **[Modify Applications](#modify-applications)**
+- **[Get Job Suggestion](#get-job-suggestion)**
+- **[Save Job Filter](#save-job-filter)**
+- **[Get Job Filter](#get-job-filter)**
+- **[Delete Job Filter](#delete-job-filter)**
 
 
 
@@ -140,6 +145,9 @@ From this API get Applications of any Jobs.
 
   ```js
   {
+    "query": {
+      "filter": "rejected" || "shortlisted"|| "planned_interviews"|| "blacklisted"
+    }
     "params": {
       "jobId": "${UUID}"
     },
@@ -151,23 +159,34 @@ From this API get Applications of any Jobs.
   ```js
   {
     "code": 200,
-    "data": [
-                {
-                    "id": "${UUID}",
-                    "shortlisted_at": null,
-                    "rejected_at": null,
-                    "created": "2023-02-20T17:16:11",
-                    "short_letter": "This is the short letter of the applications...",
-                    "user": 
-                    {
-                        ...
-                    },
-                    "education": true,
-                    "language": true,
-                    "skill": true
+    "data": {
+        "count": 1,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "id": "${UUID}",
+                "shortlisted_at": "2023-04-10T05:22:25",
+                "rejected_at": "2023-04-11T10:48:07",
+                "created": "2023-04-05T06:55:52",
+                "short_letter": "",
+                "user": {
+                    ....
+                },
+                "education": false,
+                "language": false,
+                "skill": false,
+                "job": {
+                    ....
                 }
-            ]
-    }
+            }
+        ],
+        "rejected_count": 1,
+        "shortlisted_count": 3,
+        "planned_interview_count": 0,
+        "blacklisted_count": 0
+      }
+  }
   ```
 
 ## Get Recent Applications:
@@ -189,22 +208,24 @@ From this API Get Recent Applications of any Jobs.
               "next": null,
               "previous": null,
               "results": [
-                    {
-                      "id": "${UUID}",
-                      "shortlisted_at": null,
-                      "rejected_at": null,
-                      "created": "2023-02-20T17:16:11",
-                      "short_letter": "This is the short letter of the applications...",
-                      "user": 
-                      {
-                          ...
-                      },
-                      "education": true,
-                      "language": true,
-                      "skill": true
+                  {
+                    "id": "${UUID}",
+                    "shortlisted_at": "2023-04-10T05:22:25",
+                    "rejected_at": "2023-04-11T10:48:07",
+                    "created": "2023-04-05T06:55:52",
+                    "short_letter": "",
+                    "user": {
+                        ....
+                    },
+                    "education": false,
+                    "language": false,
+                    "skill": false,
+                    "job": {
+                        ....
                     }
-                  ]
-            }
+                }
+              ],
+      }
   }
   ```
 
@@ -232,22 +253,19 @@ From this API Get Applications Detail of any Jobs.
   {
     "code": 200,
     "data": {
-              "id": "${UUID}",
-              "shortlisted_at": null,
-              "rejected_at": null,
-              "short_letter": "second time apply job in another jobs title.",
-              "attachments": [
-                              {
-                                "id": "${UUID}",
-                                "path": "file_path",
-                                "title": "file_title",
-                                "type": "file_type"
-                              },
-                            ],
-                "job": {
-                        ...
-                        }
-              }
+        "id": "${UUID}",
+        "shortlisted_at": "2023-03-27T13:17:44",
+        "rejected_at": null,
+        "short_letter": null,
+        "created": "2023-03-17T10:20:28",
+        "attachments": [],
+        "job": {
+            ....
+        },
+        "user": {
+            ....
+        }
+    }
   }
   ```
 
@@ -257,18 +275,16 @@ From this API Get Applications Detail of any Jobs.
 
 From this API Modify Applications of any Jobs.
 
-- route: `/applications-detail/:applicationId`
-- method: `PATCH`
+- route: `/applications-detail/:applicationId/:action`
+- method: `PUT`
 - request:
 
   ```js
   {
     "params": {
-      "applicationId": "${UUID}"
-    },
-    "body":{
+      "applicationId": "${UUID}",
       "action":"shortlisted" || "rejected" || "blacklisted"
-    }
+    },
   }
   ```
 
@@ -280,5 +296,178 @@ From this API Modify Applications of any Jobs.
     "data": {
              "message": "Successfully shortlisted"
             }
+  }
+  ```
+
+## Get Job Suggestion:
+
+### Summary:
+
+From this API get suggested jobs.
+
+- route: `/:jobId/suggestion`
+- method: `GET`
+- request:
+
+  ```js
+  {
+    "params": {
+      "jobId": "${UUID}"
+    },
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "count": 1,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "id": "${UUID}",
+                "title": "test title",
+                "description": "this is testing job profile",
+                "budget_currency": "usd",
+                "budget_amount": "100.00",
+                "budget_pay_period": "hourly",
+                "country": {
+                    ....
+                },
+                "city": {
+                    ....
+                },
+                "is_full_time": true,
+                "is_part_time": true,
+                "has_contract": true,
+                "working_days": "6",
+                "status": "active",
+                "applicant": 3,
+                "deadline": "2035-01-31",
+                "start_date": "2023-04-01",
+                "created": "2023-03-17T10:18:06",
+                "is_applied": false,
+                "is_saved": false,
+                "user": {
+                    ....
+                }
+            }
+        ]
+    }
+  }
+  ```
+
+## Save Job Filter:
+
+### Summary:
+
+From this API save job filters.
+
+- route: `/filter`
+- method: `POST`
+- request:
+
+  ```js
+  {
+    "body":{
+        "title": "a",
+        "city": "${UUID}",
+        "country": "${UUID}",
+        "job_category": ["${UUID}"],
+        "is_full_time": true || false || null
+        "is_part_time": true || false || null
+        "has_contract": true || false || null
+        "is_notification": true || false || null
+        "working_days": 1 || 2 || 3 || 4 || 5 || 6 || 7
+    }
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 201,
+    "data": {
+        "id": "accf2781-687e-4660-9f22-6eb49e08e2fa",
+        "title": "a",
+        "country": "d66842b7-dbc5-4da8-b1d9-fd0b1989ce0a",
+        "city": "1c3feef3-0d8c-4e4d-9e6b-c0e85dcf8a49",
+        "job_category": [],
+        "is_full_time": null,
+        "is_part_time": null,
+        "has_contract": null,
+        "is_notification": null,
+        "working_days": "5"
+    }
+  }
+  ```
+
+## Get Job Filter:
+
+### Summary:
+
+From this API get job filters.
+
+- route: `/filter`
+- method: `GET`
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": [
+        {
+            "id": "${UUID}",
+            "title": "a",
+            "country": {
+                "id": "${UUID}",
+                "title": "India"
+            },
+            "city": {
+                "id": "${UUID}",
+                "title": "Bhopal"
+            },
+            "job_category": [],
+            "is_full_time": null,
+            "is_part_time": null,
+            "has_contract": null,
+            "is_notification": null,
+            "working_days": "5"
+        }
+    ]
+  }
+  ```
+
+## Delete Job Filter:
+
+### Summary:
+
+From this API delete any job filters.
+
+- route: `/filter/:filterId`
+- method: `DELETE`
+- request:
+
+  ```js
+  {
+    "params":{
+        "filterId": "${UUID}"
+    }
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "message": "Filter Removed"
+    }
   }
   ```

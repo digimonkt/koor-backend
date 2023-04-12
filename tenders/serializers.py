@@ -422,7 +422,7 @@ class TenderFiltersSerializers(serializers.ModelSerializer):
         model = TenderFilter
         fields = [
             'id', 'title', 'country', 'city', 'opportunity_type',
-            'sector', 'deadline', 'budget', 'tender_category', 'tag',
+            'sector', 'deadline', 'budget_min', 'budget_max', 'tender_category', 'tag',
             'is_notification'
         ]
 
@@ -463,7 +463,7 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
         model = TenderFilter
         fields = [
             'id', 'title', 'country', 'city', 'opportunity_type',
-            'sector', 'deadline', 'budget', 'tender_category', 'tag',
+            'sector', 'deadline', 'budget_min', 'budget_max', 'tender_category', 'tag',
             'is_notification'
         ]
 
