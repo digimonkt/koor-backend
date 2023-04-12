@@ -61,11 +61,16 @@ class CountryView(generics.ListAPIView):
     queryset = Country.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -180,6 +185,7 @@ class CityView(generics.ListAPIView):
     queryset = City.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         country_id = request.GET.get('countryId', None)
@@ -187,8 +193,12 @@ class CityView(generics.ListAPIView):
         if country_id:
             queryset = City.objects.filter(country_id=country_id)
         queryset = self.filter_queryset(queryset)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -304,11 +314,16 @@ class JobCategoryView(generics.ListAPIView):
     queryset = JobCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -332,7 +347,11 @@ class JobCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                if JobCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                    JobCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
                 context["data"] = serializer.data
                 return response.Response(
                     data=context,
@@ -354,6 +373,43 @@ class JobCategoryView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, jobCategoryId):
+        """
+        Deletes an JobCategory object with the given ID if the authenticated user is a job seeker and owns the
+        JobCategory.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the JobCategory to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobCategory.objects.get(id=jobCategoryId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobCategory.DoesNotExist:
+                return response.Response(
+                    data={"jobCategoryId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
 
@@ -382,11 +438,16 @@ class EducationLevelView(generics.ListAPIView):
     queryset = EducationLevel.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -410,7 +471,11 @@ class EducationLevelView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                serializer.save()
+                if EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                    EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
                 context["data"] = serializer.data
                 return response.Response(
                     data=context,
@@ -432,6 +497,43 @@ class EducationLevelView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, educationLevelId):
+        """
+        Deletes an EducationLevel object with the given ID if the authenticated user is a job seeker and owns the
+        EducationLevel.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the EducationLevel to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                EducationLevel.objects.get(id=educationLevelId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except EducationLevel.DoesNotExist:
+                return response.Response(
+                    data={"educationLevelId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
 
@@ -460,11 +562,16 @@ class LanguageView(generics.ListAPIView):
     queryset = Language.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -578,6 +685,7 @@ class SkillView(generics.ListAPIView):
     queryset = Skill.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         exclude = request.GET.get('exclude', None)
@@ -585,8 +693,12 @@ class SkillView(generics.ListAPIView):
             queryset = self.filter_queryset(self.get_queryset().exclude(title__in=exclude.split(",")))
         else:
             queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -700,11 +812,16 @@ class TagView(generics.ListAPIView):
     queryset = Tag.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -1653,11 +1770,16 @@ class JobSeekerCategoryView(generics.ListAPIView):
     queryset = JobSeekerCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -1682,9 +1804,8 @@ class JobSeekerCategoryView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-                context["data"] = serializer.data
                 return response.Response(
-                    data=context,
+                    data=serializer.data,
                     status=status.HTTP_201_CREATED
                 )
             else:
@@ -1703,6 +1824,43 @@ class JobSeekerCategoryView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, jobSeekerCategoryId):
+        """
+        Deletes an JobSeekerCategory object with the given ID if the authenticated user is a job seeker and owns the
+        JobSeekerCategory.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the JobSeekerCategory to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobSeekerCategory.objects.get(id=jobSeekerCategoryId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobSeekerCategory.DoesNotExist:
+                return response.Response(
+                    data={"jobSeekerCategoryId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
 
 
@@ -1731,11 +1889,16 @@ class TenderCategoryView(generics.ListAPIView):
     queryset = TenderCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination    
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -1763,9 +1926,8 @@ class TenderCategoryView(generics.ListAPIView):
                         is_removed=False)
                 else:
                     serializer.save()
-                context["data"] = serializer.data
                 return response.Response(
-                    data=context,
+                    data=serializer.data,
                     status=status.HTTP_201_CREATED
                 )
             else:
@@ -1849,11 +2011,16 @@ class SectorView(generics.ListAPIView):
     queryset = Sector.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return response.Response({'results': serializer.data})
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -1881,9 +2048,8 @@ class SectorView(generics.ListAPIView):
                         is_removed=False)
                 else:
                     serializer.save()
-                context["data"] = serializer.data
                 return response.Response(
-                    data=context,
+                    data=serializer.data,
                     status=status.HTTP_201_CREATED
                 )
             else:
