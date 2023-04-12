@@ -402,9 +402,9 @@ class JobSuggestionView(generics.ListAPIView):
                     output_field=IntegerField()
                 )
             )
-            jobs = annotated_job_details.filter(matches=4).distinct()
+            jobs = annotated_job_details.filter(matches=4).order_by('-matches').distinct('matches')
             if jobs.count() == 0:
-                jobs = annotated_job_details.order_by('-matches').distinct()
+                jobs = annotated_job_details.order_by('-matches').distinct('matches')
             page = self.paginate_queryset(jobs)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
