@@ -1,4 +1,4 @@
-from django.db.models import Value, F, Case, When, IntegerField
+from django.db.models import Value, F, Case, When, IntegerField, Q
 
 from rest_framework import (
     generics, response, status,
@@ -58,14 +58,14 @@ class JobSearchView(generics.ListAPIView):
 
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.filter(deadline__gte=date.today())
+    queryset = None
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = [
         'title', 'description', 
         'skill__title', 'highest_education__title', 
         'job_category__title', 'country__title', 
-        'city__title'
+        'city__title', 'user__name'
         ]
     pagination_class = CustomPagination
 
@@ -98,6 +98,46 @@ class JobSearchView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True, context=context)
         return response.Response(serializer.data)
 
+    def get_queryset(self, **kwargs):
+        """
+        Returns the queryset of applied jobs for the authenticated user.
+
+        This method returns a queryset of AppliedJob objects for the authenticated user, ordered by their creation date
+        in descending order.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
+            order.
+        """
+        if 'search_by' in self.request.GET:
+            search_by = self.request.GET['search_by']
+            if search_by == 'salary':
+                order_by = 'budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'deadline'
+            if 'order_by' in self.request.GET:
+                if 'descending' in self.request.GET['order_by']:
+                    return JobDetails.objects.filter(
+                        deadline__gte=date.today(),
+                        is_removed=False
+                    ).order_by("-" + str(order_by))
+                else:
+                    return JobDetails.objects.filter(
+                        deadline__gte=date.today(),
+                        is_removed=False
+                    ).order_by(str(order_by))
+            else:
+                return JobDetails.objects.filter(
+                    deadline__gte=date.today(),
+                    is_removed=False
+                ).order_by(str(order_by))
+        return JobDetails.objects.filter(
+            deadline__gte=date.today(),
+            is_removed=False
+        )
 
 class JobDetailView(generics.GenericAPIView):
     """
@@ -162,11 +202,23 @@ class JobApplicationsView(generics.ListAPIView):
         if self.request.user.role == "employer":
             try:
                 job_instance = JobDetails.objects.get(id=jobId, user=request.user)
-                queryset = self.filter_queryset(AppliedJob.objects.filter(job=job_instance))
+                filters = Q(job=job_instance)
+                filter_list = self.request.GET.getlist('filter')
+                for filter_data in filter_list:
+                    if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
+                    if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
+                    if filter_data == "planned_interviews": filters = filters & Q(job=None)
+                    if filter_data == "blacklisted": filters = filters & Q(job=None)
+                queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
                 if page is not None:
                     serializer = self.get_serializer(page, many=True, context={"request": request})
-                    return self.get_paginated_response(serializer.data)
+                    serialized_response =  self.get_paginated_response(serializer.data)
+                    serialized_response.data['rejected_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(rejected_at=None)).count()
+                    serialized_response.data['shortlisted_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(shortlisted_at=None)).count()
+                    serialized_response.data['planned_interview_count'] = 0
+                    serialized_response.data['blacklisted_count'] = 0
+                    return response.Response(data=serialized_response.data, status=status.HTTP_200_OK)
                 serializer = self.get_serializer(queryset, many=True, context={"request": request})
                 return response.Response(serializer.data)
             except JobDetails.DoesNotExist:
@@ -308,6 +360,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                     if application_status.rejected_at:
                         message = "Already "
                     else:
+                        application_status.shortlisted_at = None
                         application_status.rejected_at = datetime.now()
                         application_status.save()
                 elif action == "blacklisted":
@@ -342,7 +395,7 @@ class JobSuggestionView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         try:
             job_instance = JobDetails.objects.get(id=jobId)
-            annotated_job_details = JobDetails.objects.annotate(
+            annotated_job_details = JobDetails.objects.filter(~Q(id=job_instance.id)).annotate(
                 matches=Value(0)
             ).annotate(
                 matches=Case(
@@ -390,9 +443,9 @@ class JobSuggestionView(generics.ListAPIView):
                     output_field=IntegerField()
                 )
             )
-            jobs = annotated_job_details.filter(matches=4).distinct()
+            jobs = annotated_job_details.filter(matches=4).order_by('-matches').distinct('matches')
             if jobs.count() == 0:
-                jobs = annotated_job_details.order_by('-matches').distinct()
+                jobs = annotated_job_details.order_by('-matches').distinct('matches')
             page = self.paginate_queryset(jobs)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -527,30 +580,23 @@ class JobFilterView(generics.GenericAPIView):
         """
 
         context = dict()
-        if request.user.role == "job_seeker":
-            try:
-                JobFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
-                context['message'] = "Filter Removed"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except JobFilters.DoesNotExist:
-                return response.Response(
-                    data={"filterId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
+        try:
+            JobFilters.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+            context['message'] = "Filter Removed"
             return response.Response(
                 data=context,
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_200_OK
+            )
+        except JobFilters.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
 
     def patch(self, request, filterId):

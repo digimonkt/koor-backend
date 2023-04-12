@@ -7,7 +7,7 @@ from .views import (
     PrivacyPolicyView, CandidatesListView, EmployerListView,
     JobsListView, UsersCountView, UserView,
     JobsRevertView, DashboardView, JobSeekerCategoryView,
-    TenderCategoryView
+    TenderCategoryView, SectorView
     )
 
 app_name = "superadmin"
@@ -58,4 +58,8 @@ urlpatterns = [
         
     path('/tender-category', TenderCategoryView.as_view(), name="tender_category"),
     path('/tender-category/<str:tenderCategoryId>', TenderCategoryView.as_view(), name="tender_category"),
+    
+        
+    path('/sector', SectorView.as_view(), name="sector"),
+    path('/sector/<str:sectorId>', SectorView.as_view(), name="sector"),
 ]

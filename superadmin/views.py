@@ -21,7 +21,7 @@ from users.models import UserSession, User
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory
+    JobSeekerCategory, Sector
 )
 
 from tenders.models import TenderCategory
@@ -33,7 +33,7 @@ from .serializers import (
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
     DashboardCountSerializers, JobSeekerCategorySerializers,
-    TenderCategorySerializers
+    TenderCategorySerializers, SectorSerializers
 )
 
 
@@ -1823,3 +1823,120 @@ class TenderCategoryView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+
+class SectorView(generics.ListAPIView):
+    """
+    A view for displaying a list of sectors .
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (SectorSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `Sector.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = SectorSerializers
+    queryset = Sector.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response({'results': serializer.data})
+
+    def post(self, request):
+        """
+        Handle POST request to create a new sector.
+        The request must contain valid data for the sector to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a sector.
+
+        Returns:
+            - HTTP 201 CREATED with added sector data (id, title) if the sector is created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if Sector.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                    Sector.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, sectorId):
+        """
+        Deletes an Sector object with the given ID if the authenticated user is a job seeker and owns the
+        Sector.
+        Args:
+            request: A DRF request object.
+            sectorId: An integer representing the ID of the Sector to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                Sector.objects.get(id=sectorId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Sector.DoesNotExist:
+                return response.Response(
+                    data={"sector": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )

@@ -11,9 +11,11 @@ These APIs are for the `CRUD` of an `vendor`
 ## Table Of Content
 
 - **[Update About](#update-about)**
+- **[Save Tenders](#save-tenders)**
+- **[Get Tenders](#get-tenders)**
 
 
-## Update About
+## Update About:
 
 ### Summary
 
@@ -50,6 +52,65 @@ This API is used to update `employer`'s about section
     "code": 200,
     "data": {
       "message": "Updated Successfully"
+    }
+  }
+  ```
+
+## Save Tenders:
+
+### Summary:
+
+From this API `vendor` will be able to save `tender`.
+
+- route: `/tender/save/:tenderId`
+- method: `POST`
+- request:
+
+  ```js
+  {
+    "params": {
+      "tenderId": "${UUID}"
+    }
+  }
+  ```
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Saved Successfully"
+    }
+  }
+  ```
+
+## Get Tenders:
+
+### Summary:
+
+From this API `vendor` will be able to get saved `tender`.
+
+- route: `/tender/save`
+- method: `GET`
+
+- response:
+
+  ```js
+  {
+    "code": 200,
+    "data": {
+        "count": 1,
+        "next": null,
+        "previous": null,
+        "results": [
+            {
+                "id": "${UUID}",
+                "tender": {
+                    .....
+                }
+            }
+        ]
     }
   }
   ```
