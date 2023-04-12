@@ -65,7 +65,7 @@ class JobSearchView(generics.ListAPIView):
         'title', 'description', 
         'skill__title', 'highest_education__title', 
         'job_category__title', 'country__title', 
-        'city__title'
+        'city__title', 'user__name'
         ]
     pagination_class = CustomPagination
 
