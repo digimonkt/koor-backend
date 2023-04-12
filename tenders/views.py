@@ -3,16 +3,18 @@ from datetime import date
 from django_filters import rest_framework as django_filters
 
 from rest_framework import (
-    generics, response, permissions,
-    filters, status
+    status, generics, serializers,
+    response, permissions, filters
 )
 
 from core.pagination import CustomPagination
 
-from tenders.models import TenderDetails
+from tenders.models import TenderDetails, TenderFilter
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
-    TendersSerializers, TendersDetailSerializers
+    TendersSerializers, TendersDetailSerializers,
+    TenderFiltersSerializers,
+    GetTenderFilterSerializers
 )
 
 
@@ -134,4 +136,176 @@ class TenderDetailView(generics.GenericAPIView):
             return response.Response(
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class TenderFilterView(generics.GenericAPIView):
+    """
+    API view for filtering tenders.
+
+    - `Serializer`: TenderFiltersSerializers
+    - `Permissions`: IsAuthenticated
+
+    Attributes:
+        - `serializer_class (TenderFiltersSerializers)`: The serializer class used to serialize and validate the
+            request data.
+        - `permission_classes (list)`: The list of permission classes that the user must have to access this API.
+    """
+
+    serializer_class = TenderFiltersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Create a new object using the POST method.
+
+        Args:
+            - `request (HttpRequest)`: The request object containing the data to be serialized.
+
+        Returns:
+            - A Response object with the serialized data and an HTTP status code.
+
+        Raises:
+            - `ValidationError`: If the serializer's validation fails.
+
+        """
+
+        serializer = self.serializer_class(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=request.user)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def get(self, request):
+        """
+        get is a method of the `TenderFilterView` class that handles HTTP GET requests to retrieve TenderFilter objects
+        saved by a particular user.
+
+        Args:
+            - `request (HttpRequest)`: An HTTP GET request.
+
+        Returns:
+            - `HttpResponse`: A JSON response containing a serialized list of TenderFilter objects associated with the
+                authenticated user who made the request and a status code of 200 OK, or a JSON error response with a
+                status code of 400 BAD REQUEST.
+
+        Raises:
+            - `Exception`: If there is an error retrieving the TenderFilter objects.
+
+        Usage:
+            - This method is used to handle GET requests made to the TenderFilterView view. It first creates a context
+                dictionary to store any additional data to be passed to the serializer.
+            - It then retrieves all TenderFilter objects associated with the authenticated user who made the request
+                using the filter method.
+            - The data is serialized using the GetTenderFilterSerializers class and returned as a JSON response with a
+                status code of 200 OK.
+            - If there is an error retrieving the data, a JSON error response is returned with a status code of 400
+                BAD REQUEST.
+        """
+
+        context = dict()
+        try:
+            tender_filter_data = TenderFilter.objects.filter(user=request.user)
+            get_data = GetTenderFilterSerializers(tender_filter_data, many=True)
+            return response.Response(
+                data=get_data.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def put(self, request, filterId):
+        """
+        Updates the `TenderFilter` instance corresponding to the given filterId and authenticated user with the provided
+        data in the request.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+            - `filterId (int)`: The id of the `TenderFilter` instance to be updated.
+
+        Returns:
+            - A Response object with status code and message indicating the success or failure of the operation.
+            - Successful response has status code 200 and a message "`Updated Successfully`".
+            - In case of invalid serializer data, returns a Response object with status code 400 and serializer errors.
+            - In case the TenderFilter instance with the given `filterId` does not exist for the authenticated user,
+            returns a Response object with status code 404 and `{"filterId": "Does Not Exist"}`.
+            - In case of any other exception, returns a Response object with status code 404 and the exception message.
+        """
+
+        context = dict()
+        try:
+            filter_instance = TenderFilter.all_objects.get(id=filterId, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=filter_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(filter_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except TenderFilter.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, filterId):
+        """
+        A function to delete a tender filter instance.
+
+        Args:
+        - `request (HttpRequest)`: An HTTP request object.
+        - `filterId (int)`: An integer representing the ID of the tender filter instance to be deleted.
+
+        Returns:
+        - A Response object with a JSON representation of a message indicating the result of the operation and the HTTP
+            status code.
+
+        Raises:
+        - `TenderFilter.DoesNotExist`: If the tender filter instance with the given filterId and user does not exist.
+        - `Exception`: If there is any other error during the deletion process.
+        """
+
+        context = dict()
+        try:
+            TenderFilter.all_objects.get(id=filterId, user=request.user).delete(soft=False)
+            context['message'] = "Filter Removed"
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except TenderFilter.DoesNotExist:
+            return response.Response(
+                data={"filterId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )

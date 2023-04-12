@@ -9,7 +9,7 @@ from jobs.models import (
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory
+    JobSeekerCategory, Sector
 )
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
@@ -475,4 +475,18 @@ class TenderCategorySerializers(serializers.ModelSerializer):
 
     class Meta:
         model = TenderCategory
+        fields = ['id', 'title']
+
+
+class SectorSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `Sector` model.
+
+    The `SectorSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `Sector` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = Sector
         fields = ['id', 'title']

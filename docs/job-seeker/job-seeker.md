@@ -14,20 +14,24 @@ These APIs are for the `CRUD` of a job seeker
 - **[Add Education](#add-education)**
 - **[Update Education](#update-education)**
 - **[Delete Education](#delete-education)**
-- **[Add Languages](#add-language)**
+- **[Add Language](#add-language)**
 - **[Update Language](#update-language)**
 - **[Delete Language](#delete-language)**
 - **[Add Work experience](#add-work-experience)**
 - **[Update Work experience](#update-work-experience)**
 - **[Delete Work experience](#delete-work-experience)**
-- **[Add Skill](#add-skills)**
-- **[Delete Skill](#delete-skills)**
+- **[Add Skills](#add-skills)**
 - **[Add Resume](#add-resume)**
 - **[Update Resume](#update-resume)**
 - **[Apply for a job](#apply-for-a-job)**
 - **[Get Applied jobs](#get-applied-jobs)**
 - **[Save a job](#save-a-job)**
 - **[Get Saved Jobs](#get-saved-jobs)**
+- **[Unsave a job](#unsave-a-job)**
+- **[Revoke applied job](#revoke-applied-job)**
+- **[Update Job Preferences](#update-job-preferences)**
+- **[Get Category for Job Seekers](#get-category-for-job-jeekers)**
+- **[Update Category for Job Seekers](#update-category-for-job-seekers)**
 
 ## Edit About Me:
 
@@ -36,7 +40,7 @@ These APIs are for the `CRUD` of a job seeker
 From this API `job-seeker` will be able to update only his profile.
 
 - route: `/about-me`
-- method: `PUT`
+- method: `PATCH`
 - request:
 
   ```js
@@ -44,11 +48,17 @@ From this API `job-seeker` will be able to update only his profile.
     "body": {
       "gender": "male" || "female",
       "dob": "YYYY-MM-DD",
-      "employmentStatus": "employed" || "fresher" || "other",
+      "employment_status": "employed" || "other" || "fresher",
       "description": "This is the description of the user...",
-      "marketInformation": false,
-      "jobNotification": false,
-      "fullName": "Test User"
+      "market_information_notification": false,
+      "job_notification": false,
+      "full_name": "Test User"
+      "email": "test@test.com"
+      "mobile_number": "9900998877"
+      "country_code": "+91"
+      "highest_education": "${UUID}"
+      "country": "${UUID}"
+      "city": "${UUID}"
     }
   }
   ```
@@ -64,11 +74,11 @@ From this API `job-seeker` will be able to update only his profile.
   }
   ```
 
-## Add Education
+## Add Education:
 
 ### Summary:
 
-From this API `user` will be able to add new education to his profile
+From this API `job-seeker` will be able to add new education to his profile
 
 - route: `/educations`
 - method: `POST`
@@ -78,10 +88,10 @@ From this API `user` will be able to add new education to his profile
   {
     "body": {
       "title": "Software Engineer",
-      "startDate": "DD/MM/YYYY",
-      "endDate": "DD/MM/YYYY" || null,
+      "start_date": "DD/MM/YYYY",
+      "end_date": "DD/MM/YYYY" || null,
       "institute": "MIT",
-      "description": "This is the description of the education..."
+      "education_level": "${UUID}"
     }
   }
   ```
@@ -90,14 +100,14 @@ From this API `user` will be able to add new education to his profile
 
   ```js
   {
-    "code": 200,
+    "code": 201,
     "data": {
       "id": "${UUID}",
       "title": "Software Engineer",
-      "startDate": "DD/MM/YYYY",
-      "endDate": "DD/MM/YYYY" || null,
+      "start_date": "DD/MM/YYYY",
+      "end_date": "DD/MM/YYYY" || null,
       "institute": "MIT",
-      "description": "This is the description of the education..."
+      "education_level": "${UUID}"
     }
   }
   ```
@@ -118,7 +128,11 @@ From this API `users` can update their Education details
       "educationId": "${UUID}"
     }
     "body": {
-      "description": "This is the new description of the education..."
+      "title": "Software Engineer" || null,
+      "start_date": "DD/MM/YYYY" || null,
+      "end_date": "DD/MM/YYYY" || null,
+      "institute": "MIT" || null,
+      "education_level": "${UUID}" || null
     }
   }
   ```
@@ -129,9 +143,9 @@ From this API `users` can update their Education details
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
-      "message": "Update Successful"
+      "message": "Updated Successfully"
     }
   }
   ```
@@ -158,7 +172,7 @@ From this API users can delete their `education` details.
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Deleted Successfully"
     }
@@ -171,7 +185,7 @@ From this API users can delete their `education` details.
 
 From this API users can add their `language` details.
 
-- route: `/languages`
+- route: `/language`
 - method: `POST`
 - request:
 
@@ -187,7 +201,7 @@ From this API users can add their `language` details.
 
   ```js
   {
-    "code": 200,
+    "code": 201,
     "data": {
       "id": "${UUID}",
       "language": "English",
@@ -213,7 +227,8 @@ From this API users can update their `language` details.
       languageId: "${UUID}"
     },
     "body": {
-      "written": "basic" || "conversational" || "fluent"
+      "written": "basic" || "conversational" || "fluent",
+      "spoken": "basic" || "conversational" || "fluent"
     }
   }
   ```
@@ -226,7 +241,7 @@ From this API users can update their `language` details.
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Updated Successfully"
     }
@@ -255,7 +270,7 @@ From this API users can delete their language
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Deleted Successfully"
     }
@@ -276,10 +291,9 @@ From this API users can add new work experience.
   {
     "body": {
       "title": "Software Engineer",
-      "startDate": "DD/MM/YYYY",
-      "endDate": "DD/MM/YYYY" || null,
-      "present": false,
-      "organization": "MIT",
+      "start_date": "DD/MM/YYYY",
+      "end_date": "DD/MM/YYYY" || null,
+      "organization": MIT,
       "description": "This is the description of the work experience..."
     }
   }
@@ -289,7 +303,7 @@ From this API users can add new work experience.
 
   ```js
   {
-    "code": 200,
+    "code": 201,
     "data": {
       "id": "${UUID}",
       "title": "Software Engineer",
@@ -302,7 +316,7 @@ From this API users can add new work experience.
   }
   ```
 
-## Update Work Experience
+## Update Work Experience:
 
 ### Summary:
 
@@ -327,14 +341,14 @@ From this API users can update their existing work experiences.
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Updated Successfully"
     }
   }
   ```
 
-## Delete Work Experience
+## Delete Work Experience:
 
 ### Summary:
 
@@ -356,27 +370,28 @@ From this API users can delete their existing work experiences.
 
   ```js
   {
-    "code": 204,
+    "code": 200,
     "data": {
       "message": "Deleted Successfully"
     }
   }
   ```
 
-## Add Skills
+## Add Skills:
 
 ### Summary:
 
 From this API users and add new skills to their profile
 
-- route: `/skills/:originalSkillId`
+- route: `/skills`
 - method: `POST`
 - request:
 
   ```js
   {
-    "params": {
-      "originalSkillId": "${UUID}"
+    "body": {
+      "skill_remove": ["${UUID}"]
+      "skill_add": ["${UUID}"]
     }
   }
   ```
@@ -387,37 +402,7 @@ From this API users and add new skills to their profile
   {
     "code": 200,
     "data": {
-      "id": ${UUID},
-      "title": "Software Engineer"
-    }
-  }
-  ```
-
-## Delete Skills
-
-### Summary:
-
-From this API users can delete their existing skills
-
-- route: `/skills/:skillId`
-- method: `DELETE`
-- request:
-
-  ```js
-  {
-    "params": {
-      "skillId": "${UUID}"
-    }
-  }
-  ```
-
-- response:
-
-  ```js
-  {
-    "code": 204,
-    "data": {
-      "message": "Deleted Successfully"
+      "message": "Skills added."
     }
   }
   ```
@@ -494,7 +479,7 @@ From this API users can update their resume
   }
   ```
 
-## Apply for a job
+## Apply for a job:
 
 ### Summary:
 
@@ -527,7 +512,7 @@ This api is used to apply for a job by job-seeker
   }
   ```
 
-## Get Applied jobs
+## Get Applied jobs:
 
 This api is used to get `user`'s applied jobs
 
@@ -537,6 +522,8 @@ This api is used to get `user`'s applied jobs
   ```js
   {
     query: {
+      order_by: "descending" || "ascending",
+      search_by: "expiration" || "salary",
       page: 1,
       limit: 10,
     }
@@ -574,7 +561,7 @@ This api is used to get `user`'s applied jobs
   }
   ```
 
-## Save a job
+## Save a job:
 
 This api is used to save a `job`
 
@@ -596,7 +583,7 @@ This api is used to save a `job`
   }
   ```
 
-## Get Saved jobs
+## Get Saved jobs:
 
 This api is used to get `user`'s applied jobs
 
@@ -644,7 +631,7 @@ This api is used to get `user`'s applied jobs
   }
   ```
 
-## Unsave a job
+## Unsave a job:
 
 This api is used to save a `unsave a job`
 
@@ -667,7 +654,7 @@ This api is used to save a `unsave a job`
   ```
 
 
-## Revoke applied job
+## Revoke applied job:
 
 This api is used to save a `revoke applied job`
 
@@ -686,6 +673,152 @@ This api is used to save a `revoke applied job`
     data:{
       message: "Revoked applied job"
     }
+  }
+  ```
+
+
+## Update Job Preferences:
+
+This api is used to save a `update job preferences`
+
+- route: `/job-preferences`
+- method: `PATCH`
+- request:
+  ```js
+  {
+    "body": {
+        "is_available":false || true,
+        "display_in_search":false || true,
+        "is_part_time":false || true,
+        "is_full_time":false || true,
+        "has_contract":false || true,
+        "expected_salary":300000
+    }
+  }
+  ```
+- response:
+ ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Updated Successfully"
+    }
+  }
+  ```
+
+
+## Get Category for Job Seekers:
+
+This api is used to save a `get category for job seekers`
+
+- route: `/category`
+- method: `GET`
+
+- response:
+ ```js
+  {
+    "code": 200,
+    "data": [
+        {
+            "id": "${UUID}",
+            "title": "title 1",
+            "sub_category": [
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 1",
+                    "status": true
+                },
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 2",
+                    "status": false
+                }
+            ]
+        },
+        {
+            "id": "${UUID}",
+            "title": "title 2",
+            "sub_category": [
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 1",
+                    "status": true
+                },
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 2",
+                    "status": false
+                },
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 3",
+                    "status": false
+                }
+            ]
+        }
+    ]
+  }
+  ```
+
+
+## Update Category for Job Seekers:
+
+This api is used to save a `update category for job seekers`
+
+- route: `/category`
+- method: `PUT`
+- request:
+  ```js
+  {
+    body: {
+      "category": ["${UUID}", "${UUID}"]
+    }
+  }
+  ```
+
+- response:
+ ```js
+  {
+    "code": 200,
+    "data": [
+        {
+            "id": "${UUID}",
+            "title": "title 1",
+            "sub_category": [
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 1",
+                    "status": true
+                },
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 2",
+                    "status": false
+                }
+            ]
+        },
+        {
+            "id": "${UUID}",
+            "title": "title 2",
+            "sub_category": [
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 1",
+                    "status": true
+                },
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 2",
+                    "status": false
+                },
+                {
+                    "id": "${UUID}",
+                    "title": "sub title 3",
+                    "status": false
+                }
+            ]
+        }
+    ]
   }
   ```
 

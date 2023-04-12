@@ -1,4 +1,6 @@
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+
 from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
@@ -877,12 +879,24 @@ class JobsApplyView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return AppliedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
+                    return AppliedJob.objects.filter(
+                        user=self.request.user,
+                        job__is_removed=False
+                    ).order_by("-" + str(order_by))
                 else:
-                    return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
+                    return AppliedJob.objects.filter(
+                        user=self.request.user,
+                        job__is_removed=False
+                    ).order_by(str(order_by))
             else:
-                return AppliedJob.objects.filter(user=self.request.user).order_by(str(order_by))
-        return AppliedJob.objects.filter(user=self.request.user)
+                return AppliedJob.objects.filter(
+                    user=self.request.user,
+                    job__is_removed=False
+                ).order_by(str(order_by))
+        return AppliedJob.objects.filter(
+            user=self.request.user,
+            job__is_removed=False
+        )
 
 
 class JobsSaveView(generics.ListAPIView):
@@ -1071,12 +1085,24 @@ class JobsSaveView(generics.ListAPIView):
                 order_by = 'job__deadline'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
-                    return SavedJob.objects.filter(user=self.request.user).order_by("-" + str(order_by))
+                    return SavedJob.objects.filter(
+                        user=self.request.user,
+                        job__is_removed=False
+                    ).order_by("-" + str(order_by))
                 else:
-                    return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
+                    return SavedJob.objects.filter(
+                        user=self.request.user,
+                        job__is_removed=False
+                    ).order_by(str(order_by))
             else:
-                return SavedJob.objects.filter(user=self.request.user).order_by(str(order_by))
-        return SavedJob.objects.filter(user=self.request.user)
+                return SavedJob.objects.filter(
+                    user=self.request.user,
+                    job__is_removed=False
+                ).order_by(str(order_by))
+        return SavedJob.objects.filter(
+            user=self.request.user,
+            job__is_removed=False
+        )
 
 
 class UpdateJobPreferencesView(generics.GenericAPIView):
@@ -1270,3 +1296,14 @@ class CategoryView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+def RemoveAvailability():
+    """
+    Sets the availability flag of all JobPreferences objects to False.
+
+    Returns:
+        - `HttpResponse`: A response indicating that the operation has been completed.
+    """
+    JobPreferences.objects.all().update(is_available=False)
+    return HttpResponse("done")

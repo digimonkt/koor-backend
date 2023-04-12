@@ -312,7 +312,7 @@ class JobPreferencesSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'is_available',
-            'is_display',
+            'display_in_search',
             'is_part_time',
             'is_full_time',
             'has_contract',
@@ -495,11 +495,15 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     
     def get_job_preferences(self, obj):
         context = []
-        job_preferences_data = JobPreferences.objects.filter(user=obj)
-        get_data = JobPreferencesSerializer(job_preferences_data)
-        if get_data.data:
-            context = get_data.data
-        return context
+        try:
+            job_preferences_data = JobPreferences.objects.get(user=obj)
+            get_data = JobPreferencesSerializer(job_preferences_data)
+            if get_data.data:
+                context = get_data.data
+        except JobPreferences.DoesNotExist:
+            pass
+        finally:
+            return context
 
     def get_work_experience(self, obj):
         context = []
