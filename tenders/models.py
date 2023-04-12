@@ -331,13 +331,21 @@ class TenderFilter(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         null=True,
         blank=True
     )
-    budget = models.DecimalField(
+    budget_min = models.DecimalField(
         max_digits=19,
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name=_('Budget'),
-        db_column="budget"
+        verbose_name=_('Budget Minimum'),
+        db_column="budget_min"
+    )
+    budget_max = models.DecimalField(
+        max_digits=19,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Budget Maximum'),
+        db_column="budget_max"
     )
     tender_category = models.ManyToManyField(
         to=TenderCategory,
