@@ -21,8 +21,10 @@ urlpatterns = [
     path('/city/<str:cityId>', CityView.as_view(), name="city"),
     
     path('/job-category', JobCategoryView.as_view(), name="job_category"),
+    path('/job-category/<str:jobCategoryId>', JobCategoryView.as_view(), name="job_category"),
     
     path('/education-level', EducationLevelView.as_view(), name="education_level"),
+    path('/education-level/<str:educationLevelId>', EducationLevelView.as_view(), name="education_level"),
     
     path('/language', LanguageView.as_view(), name="language"),
     path('/language/<str:languageId>', LanguageView.as_view(), name="language"),
@@ -54,6 +56,7 @@ urlpatterns = [
     path('/dashboard', DashboardView.as_view(), name="dashboard"),
     
     path('/job-seeker-category', JobSeekerCategoryView.as_view(), name="job_seeker_category"),
+    path('/job-seeker-category/<str:jobSeekerCategoryId>', JobSeekerCategoryView.as_view(), name="job_seeker_category"),
     
         
     path('/tender-category', TenderCategoryView.as_view(), name="tender_category"),
