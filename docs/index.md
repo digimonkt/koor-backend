@@ -10,3 +10,4 @@ This is the koor api docs we have different section in this
 3. [Job Seeker](./job-seeker/job-seeker.md)
 4. [Employer](./employer/employer.md)
 5. [Vendor](./vendor/vendor.md)
+6. [Tenders](./tenders/tenders.md)
