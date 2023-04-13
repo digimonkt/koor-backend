@@ -88,7 +88,8 @@ This route is used to create `jobs`
       highest_education: "${educationLevelId}",
       language: [{"language":"${languageId}","spoken":"fluent","written":"conversational"}],
       skill: ["${skillId}"],
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       attachments: [File],
       deadline: "YYYY-MM-DD"
       start_date: "YYYY-MM-DD"
@@ -154,7 +155,8 @@ This api is used to get all the `jobs` of the employer.
       is_fulltime: true,
       is_partime: false,
       has_contract: false,
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       status: "active" || "inactive" || "hold",
       user: {...userDetails} // full user details
     }]
@@ -193,7 +195,8 @@ This `api` is used to update existing job
         ],
       language_remove: ["${UUID}"],
       skill: ["${skillId}"],
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       attachments: [File],
       attachments_remove: ["${UUID}"],
       deadline: "YYYY-MM-DD",

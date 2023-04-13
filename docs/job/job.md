@@ -86,7 +86,8 @@ This api is used to get all the `jobs search` of the employer.
       is_fulltime: true,
       is_partime: false,
       has_contract: false,
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       status: "active" || "inactive" || "hold",
       user: {...userDetails} // full user details
     }]
@@ -125,7 +126,8 @@ This api is used to get all the `get jobs detail` of the employer.
       is_fulltime: true,
       is_partime: false,
       has_contract: false,
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       status: "active" || "inactive" || "hold",
       user: {...userDetails} // full user details
     }]
@@ -343,7 +345,8 @@ From this API get suggested jobs.
                 "is_full_time": true,
                 "is_part_time": true,
                 "has_contract": true,
-                "working_days": "6",
+                "duration": 20,
+                "experience": 3,
                 "status": "active",
                 "applicant": 3,
                 "deadline": "2035-01-31",
@@ -381,7 +384,8 @@ From this API save job filters.
         "is_part_time": true || false || null
         "has_contract": true || false || null
         "is_notification": true || false || null
-        "working_days": 1 || 2 || 3 || 4 || 5 || 6 || 7
+        "duration": 20,
+        "experience": 3
     }
   }
   ```
@@ -401,7 +405,8 @@ From this API save job filters.
         "is_part_time": null,
         "has_contract": null,
         "is_notification": null,
-        "working_days": "5"
+        "duration": 20,
+        "experience": 3
     }
   }
   ```
@@ -437,7 +442,8 @@ From this API get job filters.
             "is_part_time": null,
             "has_contract": null,
             "is_notification": null,
-            "working_days": "5"
+            "duration": 20,
+            "experience": 3
         }
     ]
   }
