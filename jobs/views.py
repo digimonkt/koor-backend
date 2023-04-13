@@ -431,7 +431,7 @@ class JobSuggestionView(generics.ListAPIView):
             ).annotate(
                 matches=Case(
                     When(
-                        working_days=job_instance.working_days,
+                        duration=job_instance.duration,
                         then=F('matches') + 1
                     ),
                     default=F('matches'),

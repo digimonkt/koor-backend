@@ -171,11 +171,14 @@ class CreateJobsSerializers(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(
         queryset=Skill.objects.all(),
         many=True,
-        write_only=True
+        write_only=True,
+        allow_null=True
     )
     language = serializers.ListField(
         style={"input_type": "text"},
-        write_only=True
+        write_only=True,
+        allow_null=True,
+        required=False
     )
     attachments = serializers.ListField(
         style={"input_type": "file"},
@@ -190,7 +193,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'attachments', 'deadline', 'start_date'
+            'duration', 'attachments', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):
@@ -402,7 +405,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
-            'skill', 'working_days', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
+            'skill', 'duration', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):

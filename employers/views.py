@@ -277,7 +277,7 @@ def my_callback(sender, **kwargs):
     ).filter(
         Q(has_contract=job_instance.has_contract) | Q(has_contract=None)
     ).filter(
-        Q(working_days=job_instance.working_days) | Q(working_days=None)
+        Q(duration=job_instance.duration) | Q(duration=None)
     )
 
     Notification.objects.bulk_create(

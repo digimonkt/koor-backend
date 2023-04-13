@@ -28,7 +28,7 @@ class JobDetailsFilter(filters.FilterSet):
     fullTime = filters.BooleanFilter(field_name='is_full_time')
     partTime = filters.BooleanFilter(field_name='is_part_time')
     contract = filters.BooleanFilter(field_name='has_contract')
-    timing = filters.CharFilter(field_name='working_days', lookup_expr='iexact')
+    timing = filters.CharFilter(field_name='duration', lookup_expr='iexact')
     salary = filters.RangeFilter(field_name='budget_amount', lookup_expr='iexact')
     class Meta:
         model = JobDetails
