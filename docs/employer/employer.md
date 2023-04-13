@@ -19,6 +19,7 @@ These APIs are for the `CRUD` of an `employer`
 - **[Update Tenders](#update-tenders)**
 - **[Active Inactive Job](#active-inactive-job)**
 - **[Active Inactive Tender](#active-inactive-tender)**
+- **[Dashboard Activity](#dashboard-activity)**
 
 ## Update About
 
@@ -397,6 +398,25 @@ This route is used to active inactive `tenders`
     code: 200,
     data: {
       message: "This tender placed on hold" || "This tender is active"
+    }
+  }
+  ```
+
+## Dashboard Activity
+
+This api is used to get count of `activity` for employer dashboard.
+- route: `/activity`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+        "active_jobs": 6,
+        "active_tender": 2,
+        "applied_jobs": 4,
+        "applied_tender": 0
     }
   }
   ```
