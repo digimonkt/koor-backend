@@ -193,7 +193,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'duration', 'attachments', 'deadline', 'start_date'
+            'duration','experience', 'attachments', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):
@@ -405,7 +405,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
-            'skill', 'duration', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
+            'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):
