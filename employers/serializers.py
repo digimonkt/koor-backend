@@ -371,11 +371,13 @@ class UpdateJobSerializers(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(
         queryset=Skill.objects.all(),
         many=True,
-        write_only=True
+        write_only=True,
+        required=False
     )
     language = serializers.ListField(
         style={"input_type": "text"},
-        write_only=True
+        write_only=True,
+        required=False
     )
     language_remove = serializers.ListField(
         style={"input_type": "text"},
@@ -413,7 +415,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
 
     def validate_language(self, language):
-        if language not in [None, ""]:
+        if language not in [""]:
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
@@ -436,7 +438,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'language': 'Language can not be blank.'})
 
     def validate_skill(self, skill):
-        if skill not in [None, ""]:
+        if skill not in [""]:
             limit = 3
             if len(skill) > limit:
                 raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
@@ -446,14 +448,8 @@ class UpdateJobSerializers(serializers.ModelSerializer):
 
     def validate(self, data):
         job_category = data.get("job_category")
-        skill = data.get("skill")
-        language = data.get("language")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not skill:
-            raise serializers.ValidationError({'skill': 'This field is required.'})
-        if not language:
-            raise serializers.ValidationError({'language': 'This field is required.'})
         return data
 
     def update(self, instance, validated_data):
