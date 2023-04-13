@@ -172,7 +172,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         queryset=Skill.objects.all(),
         many=True,
         write_only=True,
-        allow_null=True
+        allow_null=True,
+        required=False
     )
     language = serializers.ListField(
         style={"input_type": "text"},
@@ -235,7 +236,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         greater than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If
         the language is not blank and its length is within limits, the language is returned.
         """
-        if language not in [None, ""]:
+        if language not in [""]:
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
@@ -272,7 +273,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If the skill
         is not blank and its length is within limits, the skill is returned.
         """
-        if skill not in [None, ""]:
+        if skill not in [""]:
             limit = 3
             if len(skill) > limit:
                 raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
@@ -282,14 +283,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 
     def validate(self, data):
         job_category = data.get("job_category")
-        skill = data.get("skill")
-        language = data.get("language")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not skill:
-            raise serializers.ValidationError({'skill': 'This field is required.'})
-        if not language:
-            raise serializers.ValidationError({'language': 'This field is required.'})
         return data
 
     def save(self, user):
