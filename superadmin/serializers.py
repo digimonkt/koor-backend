@@ -463,7 +463,21 @@ class JobSeekerCategorySerializers(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError('category can not be blank', code='category')
 
-
+    def validate(self, data):
+        title = data.get("title")
+        category = data.get("category")
+        if title and category in ["", None]:
+            if JobSeekerCategory.objects.filter(title=title, category=None).exists():
+                raise serializers.ValidationError({'title': 'Category already exists'})
+            else:
+                return data
+        else:
+            if JobSeekerCategory.objects.filter(title=title, category=category).exists():
+                raise serializers.ValidationError({'title': 'Sub category already exists'})
+            else:
+                return data
+    
+    
 class TenderCategorySerializers(serializers.ModelSerializer):
     """
     Serializer class for the `TenderCategory` model.
@@ -476,6 +490,13 @@ class TenderCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = TenderCategory
         fields = ['id', 'title']
+    
+    def validate(self, data):
+        title = data.get("title")
+        if TenderCategory.objects.filter(title=title).exists():
+            raise serializers.ValidationError({'title': str(title) + ' already exists'})
+        else:
+            return data
 
 
 class SectorSerializers(serializers.ModelSerializer):
@@ -490,3 +511,10 @@ class SectorSerializers(serializers.ModelSerializer):
     class Meta:
         model = Sector
         fields = ['id', 'title']
+        
+    def validate(self, data):
+        title = data.get("title")
+        if Sector.objects.filter(title=title).exists():
+            raise serializers.ValidationError({'title': str(title) + ' already exists'})
+        else:
+            return data
