@@ -57,6 +57,7 @@ class GetNotificationSerializers(serializers.ModelSerializer):
             user = dict()
             user['id'] = obj.job.user.id
             user['name'] = obj.job.user.name
+            user['email'] = obj.job.user.email
             if obj.job.user.image.title == "profile image":
                 user['image'] = str(obj.job.user.image.file_path)
             else:
