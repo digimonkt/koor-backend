@@ -1,6 +1,7 @@
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.signals import request_finished
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 
 from rest_framework import (
@@ -639,13 +640,67 @@ class ActivityView(generics.GenericAPIView):
         Returns:
             A Response object containing the serialized activity-related information or an error message.
         """
-        
+
         context = dict()
         if self.request.user.role == "employer":
             try:
                 serializer = self.get_serializer(request.user)
                 return response.Response(
                     data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobAnalysisView(generics.GenericAPIView):
+    """
+    A view that returns month-wise count of job details created by employers.
+
+    permission_classes:
+        - `IsAuthenticated`: User must be authenticated.
+
+    HTTP Methods:
+        - `GET`: Get the count of job details created by employers per month.
+
+    Returns:
+        - `200 OK`: Returns a JSON object with the `month-wise count` of job details.
+        - `400 BAD REQUEST`: Returns a JSON object with an error message if an exception occurs.
+        - `401 UNAUTHORIZED`: Returns a JSON object with an error message if the user is not an employer.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Get the count of job details created by employers per month.
+
+            - If the user is an employer, returns a JSON object with the month-wise count of job details.
+            - If the user is not an employer, returns a JSON object with an error message.
+            - If an exception occurs, returns a JSON object with an error message.
+
+        Returns:
+            - A JSON object with the month-wise count of job details or an error message.
+        """
+
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                order_counts = JobDetails.objects.annotate(
+                    month=TruncMonth('created')
+                ).values('month').annotate(count=Count('id'))
+                data = {'order_counts': list(order_counts)}
+                return response.Response(
+                    data=data,
                     status=status.HTTP_200_OK
                 )
             except Exception as e:
