@@ -420,3 +420,28 @@ This api is used to get count of `activity` for employer dashboard.
     }
   }
   ```
+
+## Dashboard Job Analysis
+
+This api is used to get count of `job analysis` for employer dashboard.
+- route: `/job-analysis`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+        "order_counts": [
+            {
+                "month": "YYYY-MM-DD HH:mm:ss",
+                "count": 2
+            },
+            {
+                "month": "YYYY-MM-DD HH:mm:ss",
+                "count": 9
+            }
+        ]
+    }
+  }
+  ```
