@@ -26,7 +26,8 @@ from .serializers import (
     CreateJobsSerializers,
     UpdateJobSerializers,
     CreateTendersSerializers,
-    UpdateTenderSerializers
+    UpdateTenderSerializers,
+    ActivitySerializers
 )
 
 
@@ -597,4 +598,65 @@ class TendersStatusView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ActivityView(generics.GenericAPIView):
+    """
+    View for retrieving various activity-related information for a user.
+
+    This view requires the user to be authenticated and returns information on active jobs and tenders that a user has,
+    as well as jobs and tenders that the user has applied for.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes that the view requires.
+        - `serializer_class`: The serializer class to be used for this view.
+
+    Methods:
+        - `get`: Handles GET requests and retrieves activity-related information for the user.
+
+    Usage:
+        To use this view, make a GET request to the view's endpoint. For example:
+
+            GET `/activity/`
+
+        The request must include a valid authentication token in the Authorization header.
+        If the user is an employer, the view will return activity-related information for that employer. If the user
+        is not an employer, the view will return an error message.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ActivitySerializers
+
+    def get(self, request):
+        """
+        Retrieves activity-related information for the user.
+
+        If the user is an employer, returns information on active jobs and tenders that the user has, as well as jobs
+        and tenders that the user has applied for. If the user is not an employer, returns an error message.
+
+        Returns:
+            A Response object containing the serialized activity-related information or an error message.
+        """
+        
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                serializer = self.get_serializer(request.user)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
