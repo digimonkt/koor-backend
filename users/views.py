@@ -33,7 +33,6 @@ from user_profile.models import (
 from notification.models import Notification
 
 from superadmin.models import GooglePlaceApi
-from superadmin.serializers import CandidatesSerializers
 
 from .models import UserSession, User
 from .filters import UsersFilter
@@ -46,7 +45,8 @@ from .serializers import (
     UpdateImageSerializers,
     SocialLoginSerializers,
     UserFiltersSerializers,
-    GetUserFiltersSerializers
+    GetUserFiltersSerializers,
+    SearchUserSerializers
 )
 
 
@@ -687,7 +687,7 @@ class SearchView(generics.ListAPIView):
     The `role` parameter is required in the URL path.
     The `limit` query parameter can be used to paginate the results.
 
-    - `Serializer class`: CandidatesSerializers
+    - `Serializer class`: SearchUserSerializers
     - `Permission classes`: AllowAny
     - `Queryset`: all User objects
     - `Filter backends`: SearchFilter
@@ -701,9 +701,9 @@ class SearchView(generics.ListAPIView):
         - /candidates/managers/?search=project+management
     """
 
-    serializer_class = CandidatesSerializers
+    serializer_class = SearchUserSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_active=True)
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
     search_fields = [
