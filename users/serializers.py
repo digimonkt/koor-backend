@@ -834,8 +834,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.description
         return None
     
     def get_is_blacklisted(self, obj):
