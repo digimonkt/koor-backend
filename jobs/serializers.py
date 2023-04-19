@@ -244,7 +244,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
-            'has_contract', 'working_days', 'status', 'applicant', 'deadline', 'start_date',
+            'has_contract', 'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date',
             'created', 'is_applied', 'is_saved', 'user'
         ]
 
@@ -365,7 +365,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
+            'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
             'is_applied', 'is_saved'
 
         ]
@@ -803,7 +803,7 @@ class JobFiltersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'country', 'city', 'job_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'working_days'
+            'duration'
         ]
 
     def update(self, instance, validated_data):
@@ -843,7 +843,7 @@ class GetJobFiltersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'country', 'city', 'job_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'working_days'
+            'duration'
         ]
 
     def get_country(self, obj):

@@ -208,11 +208,14 @@ class JobApplicationsView(generics.ListAPIView):
                 job_instance = JobDetails.objects.get(id=jobId, user=request.user)
                 filters = Q(job=job_instance)
                 filter_list = self.request.GET.getlist('filter')
+                blacklisted_user_list = []
+                for data in BlackList.objects.all():
+                    blacklisted_user_list.append(data.blacklisted_user)
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
                     if filter_data == "planned_interviews": filters = filters & Q(job=None)
-                    if filter_data == "blacklisted": filters = filters & Q(job=None)
+                    if filter_data == "blacklisted": filters = filters & Q(user__in=blacklisted_user_list)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
                 if page is not None:
@@ -221,7 +224,10 @@ class JobApplicationsView(generics.ListAPIView):
                     serialized_response.data['rejected_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(rejected_at=None)).count()
                     serialized_response.data['shortlisted_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(shortlisted_at=None)).count()
                     serialized_response.data['planned_interview_count'] = 0
-                    serialized_response.data['blacklisted_count'] = 0
+                    user_list = []
+                    for data in AppliedJob.objects.filter(job=job_instance):
+                        user_list.append(data.user)
+                    serialized_response.data['blacklisted_count'] = BlackList.objects.filter(blacklisted_user__in=user_list).order_by('blacklisted_user').distinct('blacklisted_user').count()
                     return response.Response(data=serialized_response.data, status=status.HTTP_200_OK)
                 serializer = self.get_serializer(queryset, many=True, context={"request": request})
                 return response.Response(serializer.data)
@@ -431,7 +437,7 @@ class JobSuggestionView(generics.ListAPIView):
             ).annotate(
                 matches=Case(
                     When(
-                        working_days=job_instance.working_days,
+                        duration=job_instance.duration,
                         then=F('matches') + 1
                     ),
                     default=F('matches'),

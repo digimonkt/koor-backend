@@ -32,23 +32,33 @@
   - [Delete Cities](#delete-cities)
   - [Create Job Category](#create-job-category)
   - [Get Job Category](#get-job-category)
+  - [Delete Job Categories](#delete-job-categories)
   - [Get Users Count](#get-users-count)
   - [Get Credit](#get-credit)
   - [Get Dashboard](#get-dashboard)
   - [Get Jobs List](#get-jobs-list)
   - [Delete Jobs](#delete-jobs)
-  - [Revert Jobs](#revert-jobs)
-  - [Inactive Jobs](#inactive-jobs)
-  - [Get Tenders List](#get-tenders-list)
+  - [Restored Job](#restored-job)
+  - [Active Inactive Jobs](#active-inactive-jobs)
   - [Get Employers List](#get-employers-list)
+  - [Get Candidates List](#get-candidates-list)
   - [Delete Users](#delete-users)
   - [Inactive Users](#inactive-users)
-  - [Get Candidates List](#get-candidates-list)
   - [Get User Rights](#get-user-rights)
   - [Update User Rights](#update-user-rights)
   - [Get Privacy Policy](#get-privacy-policy)
   - [Update Privacy Policy](#update-privacy-policy)
   - [Change Password](#change-password)
+  - [Create Job Seekers Category](#create-job-seekers-category)
+  - [Get Job Seekers Category](#get-job-seekers-category)
+  - [Delete Job Seekers Category](#delete-job-seekers-category)
+  - [Create Tender Category](#create-tender-category)
+  - [Get Tender Category](#get-tender-category)
+  - [Delete Tender Category](#delete-tender-category)
+  - [Create Sectors](#create-sectors)
+  - [Get Sectors](#get-sectors)
+  - [Delete Sector](#delete-sector)
+
 ## Create Tag
 
 This API is used to create `tags`.
@@ -66,7 +76,7 @@ This API is used to create `tags`.
 - response:
   ```js
   {
-    "code": 200,
+    "code": 201,
     "data": {
       "id": "${UUID}",
       "title": "Backend"
@@ -85,20 +95,20 @@ This api is used to get all `tags`
   ```js
   // type one
   {
-    "searchfilter": {
-      "title": "" // show all results
+    "query": {
+      "search": "" // show all results
+      "page": 1,
+      "limit": 10,
     },
-    "page": 1,
-    "limit": 10,
   }
 
   // type two
   {
-    "searchfilter": {
-      "title": "b" // show only those results whose title includes `b` only
+    "query": {
+      "search": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10,
     },
-    "page": 1,
-    "limit": 10,
   }
   ```
 
@@ -107,13 +117,14 @@ This api is used to get all `tags`
   {
     "code": 200,
     "data": {
-      "tags": [{
+      "count": 200, // total number of skills available
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
+      "results": [{
         "id": "${UUID}"
         "title": "Backend"
       }],
-      "total": 200, // total number of skills available
-      "current_page": 1, // current page of which data is fetched
-      "current_limit": 10 // maximum number of data can be in `tags` list
+
     }
   }
   ```
@@ -122,7 +133,7 @@ This api is used to get all `tags`
 
 This api is used to `delete` tag
 
-- route: `/tag`
+- route: `/tag/:tagId`
 - method: `DELETE`
 - request:
   ```js
@@ -179,14 +190,18 @@ This api is used get list of `languages`
   // type one
   {
     "query": {
-      "title": "" // show all results
+      "search": "" // show all results
+      "page": 1,
+      "limit": 10
     },
   }
 
   // type two
   {
     "query": {
-      "title": "b" // show only those results whose title includes `b` only
+      "search": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10,
     },
   }
   ```
@@ -196,6 +211,9 @@ This api is used get list of `languages`
   {
     "code": 200,
     "data": {
+      "count": 200, // total number of skills available
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
       "results": [{
         "id": "${UUID}"
         "title": "Backend"
@@ -208,13 +226,13 @@ This api is used get list of `languages`
 
 This api is used to delete `language`.
 
-- route: `/languages`
+- route: `/language/:languageId`
 - method: `DELETE`
 - request:
   ```js
   {
-    "query": {
-      "languageIds": ["${UUID}"]
+    "params": {
+      "languageId": "${UUID}"
     }
   }
   ```
@@ -261,7 +279,9 @@ This api is used to delete `language`.
   // type one
   {
     "query": {
-      "title": "" // show all results
+      "search": "" // show all results
+      "page": 1,
+      "limit": 10
     },
   }
 
@@ -269,6 +289,8 @@ This api is used to delete `language`.
   {
     "query": {
       "title": "p" // show only those results whose title includes `p` only
+      "page": 1,
+      "limit": 10
     },
   }
   ```
@@ -278,6 +300,9 @@ This api is used to delete `language`.
   {
     "code": 200,
     "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
       "results": [{
         "id": "${UUID}"
         "title": "Python"
@@ -288,13 +313,13 @@ This api is used to delete `language`.
 
 ## Delete Skills
 
-- route: `/skills`
+- route: `/skills/:skillId`
 - method: `DELETE`
 - request:
   ```js
   {
     "query": {
-      "skillsIds": ["${UUID}"]
+      "skillId": "${UUID}"
     }
   }
   ```
@@ -341,14 +366,18 @@ This api is used to delete `language`.
   // type one
   {
     "query": {
-      "title": "" // show all results
+      "search": "" // show all results
+      "page": 1,
+      "limit": 10
     },
   }
 
   // type two
   {
     "query": {
-      "title": "b" // show only those results whose title includes `p` only
+      "search": "b" // show only those results whose title includes `p` only
+      "page": 1,
+      "limit": 10
     },
   }
   ```
@@ -358,6 +387,9 @@ This api is used to delete `language`.
   {
     "code": 200,
     "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
       "results": [{
         "id": "${UUID}"
         "title": "Bachelors"
@@ -368,13 +400,13 @@ This api is used to delete `language`.
 
 ## Delete Education Level
 
-- route: `/skills`
+- route: `/education-level/:educationLevelId`
 - method: `DELETE`
 - request:
   ```js
   {
     "query": {
-      "educationLevelIds": ["${UUID}"]
+      "educationLevelId": "${UUID}"
     }
   }
   ```
@@ -436,6 +468,8 @@ This api is used to get all `countries`
     "query": 
     {
       "search": "" // show all results
+      "page": 1,
+      "limit": 10
     },
   }
  
@@ -444,7 +478,9 @@ This api is used to get all `countries`
   {
     "query": 
     {
-      "title": "b" // show only those results whose title includes `b` only
+      "search": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10
     },
   }
 
@@ -455,6 +491,9 @@ This api is used to get all `countries`
   {
     "code": 200,
     "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
       "results": [{
         "id": "${UUID}"
         "title": "India",
@@ -532,7 +571,9 @@ This api is used to get all `cities`
     "query": 
     {
       "search": "", // show all results
-      "countryId":"${UUID}"
+      "countryId":"${UUID}",
+      "page": 1,
+      "limit": 10
     },
   }
  
@@ -543,6 +584,8 @@ This api is used to get all `cities`
     {
       "title": "b" // show only those results whose title includes `b` only
       "countryId":"${UUID}"
+      "page": 1,
+      "limit": 10
     },
   }
 
@@ -553,6 +596,9 @@ This api is used to get all `cities`
   {
     "code": 200,
     "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
       "results": [{
         "id": "${UUID}",
         "title": "Gwalior",
@@ -564,7 +610,7 @@ This api is used to get all `cities`
 
 ## Delete Cities
 
-This api is used to `delete` tag
+This api is used to `delete` cities
 
 - route: `/city/:cityId`
 - method: `DELETE`
@@ -625,6 +671,8 @@ This api is used to get all `Job Categories`
     "query": 
     {
       "search": "" // show all results
+      "page": 1,
+      "limit": 10
     },
   }
  
@@ -634,6 +682,8 @@ This api is used to get all `Job Categories`
     "query": 
     {
       "title": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10
     },
   }
 
@@ -644,6 +694,9 @@ This api is used to get all `Job Categories`
   {
     "code": 200,
     "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
       "results": [{
         "id": "${UUID}",
         "title": "Teacher"
@@ -652,6 +705,29 @@ This api is used to get all `Job Categories`
   }
   ```
 
+## Delete Job Categories
+
+This api is used to `delete` job categories
+
+- route: `/job-category/:jobCategoryId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "jobCategoryId": ["${UUID}"]
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
 
 ## Get Users Count
 
@@ -665,17 +741,13 @@ This api is used to get all `Users Count`
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "active_user": 352371,
-        "visitor_today": 143344,
-        "active_post": 50021,
-        "jobs_posted": 345
-        "users"{
-            "total": 1934300,
-            "job_seekers": 780183,
-            "employers": 664153,
-            "vendors": 507004
-        }
+        "total_user": 36,
+        "job_seekers": 26,
+        "employers": 7,
+        "vendors": 3,
+        "active_user": 35,
+        "total_jobs": 8,
+        "active_jobs": 3
     }
   }
   ```
@@ -760,8 +832,17 @@ This api is used to get all `Jobs List `
   {
     "query": 
     {
-      "search": "search keyword" || ""  // for search data
-      "filter": "location" || ""  // for filtering data according to location
+      "search": "search keyword" || "",  // for search data
+      "country": "country name" || "",
+      "city": "city name" || "",
+      "fullTime": true || false || null,
+      "partTime": true || false || null,
+      "contract": true || false || null,
+      "timing": 1 || 2 || 3 || 4 || 5 || 6 || 7,
+      "salary_min": 1000,
+      "salary_max": 2000,
+      "limit": 10,
+      "page": 1
     },
   }
   ```
@@ -771,19 +852,43 @@ This api is used to get all `Jobs List `
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "title": "Job Title",
-        "company": "Jobs Company",
-        "location": "Jobs Location"
+            "count": 200,
+            "next": "${NEXT_PAGE_PATH}",
+            "previous": "${PREVIOUS_PAGE_PATH}",
+            "results": [
+                {
+                    "id": "${UUID}",
+                    "job_id": "6513-7666",
+                    "title": "Online Data Entry Job in Swedan",
+                    "address": "Los Angeles, CA, USA",
+                    "city": {
+                        ....
+                    },
+                    "country": {
+                        ....
+                    },
+                    "status": "active",
+                    "user": "TCS"
+                }
+            ]
     }
   }
   ```
+
 ## Delete Jobs
 
 This api is used to Delete `Jobs`
 
 - route: `/jobs/:jobId`
 - method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "jobId": "${UUID}"
+    }
+  }
+  ```
 
 - response:
   ```js
@@ -794,12 +899,21 @@ This api is used to Delete `Jobs`
     }
   }
   ```
-## Revert Jobs
+
+## Restored Job
 
 This api is used to revert `Jobs`
 
 - route: `/jobs/:jobId/revert`
-- method: `PATCH  `
+- method: `PATCH`
+- request:
+  ```js
+  {
+    "params": {
+      "jobId": "${UUID}"
+    }
+  }
+  ```
 
 - response:
   ```js
@@ -810,50 +924,28 @@ This api is used to revert `Jobs`
     }
   }
   ```
-  ## Inactive Jobs
+
+## Active Inactive Jobs
 
 This api is used to inactivate `Jobs`
 
 - route: `/jobs/:jobId`
 - method: `PUT`
-
-- response:
+- request:
   ```js
   {
-    "code": 200,
-    "data": {
-      "message": "This job is inactive"
+    "params": {
+      "jobId": "${UUID}"
     }
   }
   ```
 
-## Get Tenders List
-
-This api is used to get all `Ttenders List `
-
-- route: `/tenders`
-- method: `GET`
-- request:
-
-  ```js
-  {
-    "query": 
-    {
-      "search": "search keyword" || ""  // for search data
-      "filter": "location" || ""  // for filtering data according to location
-    },
-  }
-  ```
-
 - response:
   ```js
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "title": "Tenders Title",
-        "company": "Tenders Company",
-        "location": "Tenders Location"
+      "message": "This job is inactive" || "This job is active"
     }
   }
   ```
@@ -862,7 +954,7 @@ This api is used to get all `Ttenders List `
 
 This api is used to get all `Employers List `
 
-- route: `/employers`
+- route: `/employer`
 - method: `GET`
 - request:
 
@@ -871,7 +963,16 @@ This api is used to get all `Employers List `
     "query": 
     {
       "search": "search keyword" || ""  // for search data
-      "filter": "location" || ""  // for filtering data according to location
+      "country": "country name" || "",
+      "city": "city name" || "",
+      "fullTime": true || false || null,
+      "partTime": true || false || null,
+      "contract": true || false || null,
+      "availability": true || false || null,
+      "salary_min": 1000,
+      "salary_max": 2000,
+      "page": 1,
+      "limit": 10
     },
   }
   ```
@@ -881,48 +982,24 @@ This api is used to get all `Employers List `
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "name": "Name",
-        "email": "email@email.com",
-        "country_code": "+1",
-        "mobile_number": "8899887788",
-        "company": "Company Name",
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
+      "results": [
+          {
+            "id": "${UUID}",
+            "role": "employer",
+            "name": "Name",
+            "email": "email@email.com",
+            "country_code": "+1",
+            "mobile_number": "8899887788",
+            "is_active": true || false
+          }
+      ]
     }
   }
   ```
 
-## Delete Users
-
-This api is used to Delete `Users`
-
-- route: `/user/:userId`
-- method: `DELETE`
-
-- response:
-  ```js
-  {
-    "code": 200,
-    "data": {
-      "message": "Deleted Successfully"
-    }
-  }
-  ```
-  ## Inactive Users
-
-This api is used to inactivate `Users`
-
-- route: `/user/:userId`
-- method: `Patch`
-
-- response:
-  ```js
-  {
-    "code": 200,
-    "data": {
-      "message": "This user is inactive"
-    }
-  }
-  ```
 ## Get Candidates List
 
 This api is used to get all `Candidates List `
@@ -936,7 +1013,16 @@ This api is used to get all `Candidates List `
     "query": 
     {
       "search": "search keyword" || ""  // for search data
-      "filter": "location" || ""  // for filtering data according to location
+      "country": "country name" || "",
+      "city": "city name" || "",
+      "fullTime": true || false || null,
+      "partTime": true || false || null,
+      "contract": true || false || null,
+      "availability": true || false || null,
+      "salary_min": 1000,
+      "salary_max": 2000,
+      "page": 1,
+      "limit": 10
     },
   }
   ```
@@ -946,18 +1032,69 @@ This api is used to get all `Candidates List `
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "role": "job_seeker",
-        "name": "Name",
-        "email": "email@email.com",
-        "country_code": "+1",
-        "mobile_number": "8899887788"
+        "count": 200,
+        "next": "${NEXT_PAGE_PATH}",
+        "previous": "${PREVIOUS_PAGE_PATH}",
+        "results": [
+            {
+              "id": "${UUID}",
+              "role": "job_seeker",
+              "name": "Name",
+              "email": "email@email.com",
+              "country_code": "+1",
+              "mobile_number": "8899887788",
+              "is_active": true || false
+            }
+        ]
     }
   }
   ```
+
+## Delete Users
+
+This api is used to Delete `Users`
+
+- route: `/user/:userId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "userId": "${UUID}",
+    }
+  }
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+
+## Inactive Users
+
+This api is used to activate or inactivate `Users`
+
+- route: `/user/:userId`
+- method: `Patch`
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "This user is inactive" || "This user is active"
+    }
+  }
+  ```
+
 ## Get User Rights
 
-This api is used to get all `User Rights`
+This api is used to get `User Rights`
 
 - route: `/user-rights`
 - method: `GET`
@@ -967,7 +1104,6 @@ This api is used to get all `User Rights`
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
         "description": "This is the description of the user rights..."
     }
   }
@@ -975,7 +1111,7 @@ This api is used to get all `User Rights`
 
 ## Update User Rights
 
-This api is used to get all `User Rights`
+This api is used to update or create `User Rights` data.
 
 - route: `/user-rights`
 - method: `PATCH`
@@ -989,21 +1125,19 @@ This api is used to get all `User Rights`
   }
   ```
 
-
 - response:
   ```js
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "description": "This is the new description of the user rights..."
+        "message": "Updated Successfully"
     }
   }
   ```
 
 ## Get Privacy Policy
 
-This api is used to get all `Privacy Policy`
+This api is used to get `Privacy Policy` data.
 
 - route: `/privacy-policy`
 - method: `GET`
@@ -1013,7 +1147,6 @@ This api is used to get all `Privacy Policy`
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
         "description": "This is the description of the privacy policy..."
     }
   }
@@ -1021,7 +1154,7 @@ This api is used to get all `Privacy Policy`
 
 ## Update Privacy Policy
 
-This api is used to get all `Privacy Policy`
+This api is used to update or create `Privacy Policy`
 
 - route: `/privacy-policy`
 - method: `PATCH`
@@ -1041,15 +1174,14 @@ This api is used to get all `Privacy Policy`
   {
     "code": 200,
     "data": {
-        "id": "${UUID}",
-        "description": "This is the new description of the privacy policy..."
+        "message": "Updated Successfully"
     }
   }
   ```
 
 ## Change Password
 
-This api is used to get all `Change Password`
+This api is used to change admin password `Change Password`
 
 - route: `/change-password`
 - method: `PATCH`
@@ -1071,6 +1203,316 @@ This api is used to get all `Change Password`
     "code": 200,
     "data": {
         "message": "Password update successfully."
+    }
+  }
+  ```
+
+
+## Create Job Seekers Category
+
+This api is used to `Create Job Seekers Category` from admin.
+
+- route: `/job-seeker-category`
+- method: `POST`
+- request:
+
+  ```js
+  {
+    "body": {
+      "title": "main category"
+    }
+  }
+  
+  {
+    "body": {
+      "title": "sub category"
+      "category":"${mainCategoryId}"
+    }
+  }
+  ```
+
+
+- response:
+  ```js
+  {
+    "code": 201,
+    "data": {
+        "id": "681df447-6f75-4316-a921-77bf20f3aba3",
+        "title": "Librarians, Curators, and Archivists",
+        "category": "b47d9c47-d19e-4bdd-b943-43a7cb75113f" || null
+    }
+  }
+
+  ```
+
+## Get Job Seekers Category
+
+This api is used to get all `job seekers category`
+
+- route: `/job-seeker-category`
+- method: `GET`
+- request:
+
+  ```js
+  // type one
+  {
+    "query": 
+    {
+      "search": "", // show all results
+      "page": 1,
+      "limit": 10
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "title": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10
+    },
+  }
+
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
+      "results": [{
+        "id": "${UUID}",
+        "title": "Computer and Mathematica",
+        "category": "${UUID}" || null
+      }],
+    }
+  }
+  ```
+
+## Delete Job Seekers Category
+
+This api is used to `delete` job seekers categories
+
+- route: `/job-seeker-category/:jobSeekerCategoryId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "jobSeekerCategoryId": ["${UUID}"]
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+
+## Create Tender Category
+
+This api is used to `Create Tender Category` from admin.
+
+- route: `/tender-category`
+- method: `POST`
+- request:
+
+  ```js
+  {
+    "body": {
+      "title": "Service"
+    }
+  }
+  ```
+
+- response:
+  ```js
+  {
+    "code": 201,
+    "data": {
+        "id": "681df447-6f75-4316-a921-77bf20f3aba3",
+        "title": "Service"
+    }
+  }
+
+  ```
+
+## Get Tender Category
+
+This api is used to get all `tender category`
+
+- route: `/tender-category`
+- method: `GET`
+- request:
+
+  ```js
+  // type one
+  {
+    "query": 
+    {
+      "search": "", // show all results
+      "page": 1,
+      "limit": 10
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "title": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10
+    },
+  }
+
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
+      "results": [{
+        "id": "${UUID}",
+        "title": "Auduting"
+      }],
+    }
+  }
+  ```
+
+## Delete Tender Category
+
+This api is used to `delete` tender categories
+
+- route: `/tender-category/:tenderCategoryId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "tenderCategoryId": ["${UUID}"]
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
+    }
+  }
+  ```
+
+## Create Sectors
+
+This api is used to `Create Sectors` from admin.
+
+- route: `/sector`
+- method: `POST`
+- request:
+
+  ```js
+  {
+    "body": {
+      "title": "Private"
+    }
+  }
+  ```
+
+- response:
+  ```js
+  {
+    "code": 201,
+    "data": {
+        "title": "Private"
+    }
+  }
+
+  ```
+
+## Get Sectors
+
+This api is used to get all `sectors`
+
+- route: `/sector`
+- method: `GET`
+- request:
+
+  ```js
+  // type one
+  {
+    "query": 
+    {
+      "search": "", // show all results
+      "page": 1,
+      "limit": 10
+    },
+  }
+ 
+
+  // type two
+  {
+    "query": 
+    {
+      "title": "b" // show only those results whose title includes `b` only
+      "page": 1,
+      "limit": 10
+    },
+  }
+
+  ```
+
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "count": 200,
+      "next": "${NEXT_PAGE_PATH}",
+      "previous": "${PREVIOUS_PAGE_PATH}",
+      "results": [{
+        "id": "${UUID}",
+        "title": "Private"
+      }],
+    }
+  }
+  ```
+
+## Delete Sector
+
+This api is used to `delete` sectors
+
+- route: `/tender-category/:sectorId`
+- method: `DELETE`
+- request:
+  ```js
+  {
+    "params": {
+      "sectorId": ["${UUID}"]
+    }
+  }
+  ```
+- response:
+  ```js
+  {
+    "code": 200,
+    "data": {
+      "message": "Deleted Successfully"
     }
   }
   ```

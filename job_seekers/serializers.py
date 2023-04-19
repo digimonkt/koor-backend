@@ -634,6 +634,7 @@ class GetAppliedJobsNotificationSerializers(serializers.ModelSerializer):
         user = dict()
         user['id'] = obj.user.id
         user['name'] = obj.user.name
+        user['email'] = obj.user.email
         if obj.user.image:
             if obj.user.image.title == "profile image":
                 user['image'] = str(obj.user.image.file_path)

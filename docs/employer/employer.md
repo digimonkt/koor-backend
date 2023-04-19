@@ -19,6 +19,7 @@ These APIs are for the `CRUD` of an `employer`
 - **[Update Tenders](#update-tenders)**
 - **[Active Inactive Job](#active-inactive-job)**
 - **[Active Inactive Tender](#active-inactive-tender)**
+- **[Dashboard Activity](#dashboard-activity)**
 
 ## Update About
 
@@ -88,7 +89,8 @@ This route is used to create `jobs`
       highest_education: "${educationLevelId}",
       language: [{"language":"${languageId}","spoken":"fluent","written":"conversational"}],
       skill: ["${skillId}"],
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       attachments: [File],
       deadline: "YYYY-MM-DD"
       start_date: "YYYY-MM-DD"
@@ -154,7 +156,8 @@ This api is used to get all the `jobs` of the employer.
       is_fulltime: true,
       is_partime: false,
       has_contract: false,
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       status: "active" || "inactive" || "hold",
       user: {...userDetails} // full user details
     }]
@@ -193,7 +196,8 @@ This `api` is used to update existing job
         ],
       language_remove: ["${UUID}"],
       skill: ["${skillId}"],
-      working_days: "1" || "2" || "3" || "4" || "5" || "6" || "7",
+      duration: 20,
+      experience: 3,
       attachments: [File],
       attachments_remove: ["${UUID}"],
       deadline: "YYYY-MM-DD",
@@ -394,6 +398,50 @@ This route is used to active inactive `tenders`
     code: 200,
     data: {
       message: "This tender placed on hold" || "This tender is active"
+    }
+  }
+  ```
+
+## Dashboard Activity
+
+This api is used to get count of `activity` for employer dashboard.
+- route: `/activity`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+        "active_jobs": 6,
+        "active_tender": 2,
+        "applied_jobs": 4,
+        "applied_tender": 0
+    }
+  }
+  ```
+
+## Dashboard Job Analysis
+
+This api is used to get count of `job analysis` for employer dashboard.
+- route: `/job-analysis`
+- method: `GET`
+
+- response:
+  ```js
+  {
+    code: 200,
+    data: {
+        "order_counts": [
+            {
+                "month": "YYYY-MM-DD HH:mm:ss",
+                "count": 2
+            },
+            {
+                "month": "YYYY-MM-DD HH:mm:ss",
+                "count": 9
+            }
+        ]
     }
   }
   ```

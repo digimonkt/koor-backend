@@ -1,6 +1,7 @@
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.signals import request_finished
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
 
 from rest_framework import (
@@ -26,7 +27,8 @@ from .serializers import (
     CreateJobsSerializers,
     UpdateJobSerializers,
     CreateTendersSerializers,
-    UpdateTenderSerializers
+    UpdateTenderSerializers,
+    ActivitySerializers
 )
 
 
@@ -277,7 +279,7 @@ def my_callback(sender, **kwargs):
     ).filter(
         Q(has_contract=job_instance.has_contract) | Q(has_contract=None)
     ).filter(
-        Q(working_days=job_instance.working_days) | Q(working_days=None)
+        Q(duration=job_instance.duration) | Q(duration=None)
     )
 
     Notification.objects.bulk_create(
@@ -597,4 +599,119 @@ class TendersStatusView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ActivityView(generics.GenericAPIView):
+    """
+    View for retrieving various activity-related information for a user.
+
+    This view requires the user to be authenticated and returns information on active jobs and tenders that a user has,
+    as well as jobs and tenders that the user has applied for.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes that the view requires.
+        - `serializer_class`: The serializer class to be used for this view.
+
+    Methods:
+        - `get`: Handles GET requests and retrieves activity-related information for the user.
+
+    Usage:
+        To use this view, make a GET request to the view's endpoint. For example:
+
+            GET `/activity/`
+
+        The request must include a valid authentication token in the Authorization header.
+        If the user is an employer, the view will return activity-related information for that employer. If the user
+        is not an employer, the view will return an error message.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ActivitySerializers
+
+    def get(self, request):
+        """
+        Retrieves activity-related information for the user.
+
+        If the user is an employer, returns information on active jobs and tenders that the user has, as well as jobs
+        and tenders that the user has applied for. If the user is not an employer, returns an error message.
+
+        Returns:
+            A Response object containing the serialized activity-related information or an error message.
+        """
+
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                serializer = self.get_serializer(request.user)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobAnalysisView(generics.GenericAPIView):
+    """
+    A view that returns month-wise count of job details created by employers.
+
+    permission_classes:
+        - `IsAuthenticated`: User must be authenticated.
+
+    HTTP Methods:
+        - `GET`: Get the count of job details created by employers per month.
+
+    Returns:
+        - `200 OK`: Returns a JSON object with the `month-wise count` of job details.
+        - `400 BAD REQUEST`: Returns a JSON object with an error message if an exception occurs.
+        - `401 UNAUTHORIZED`: Returns a JSON object with an error message if the user is not an employer.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Get the count of job details created by employers per month.
+
+            - If the user is an employer, returns a JSON object with the month-wise count of job details.
+            - If the user is not an employer, returns a JSON object with an error message.
+            - If an exception occurs, returns a JSON object with an error message.
+
+        Returns:
+            - A JSON object with the month-wise count of job details or an error message.
+        """
+
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                order_counts = JobDetails.objects.annotate(
+                    month=TruncMonth('created')
+                ).values('month').annotate(count=Count('id'))
+                data = {'order_counts': list(order_counts)}
+                return response.Response(
+                    data=data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )

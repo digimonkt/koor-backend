@@ -59,7 +59,6 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('weekly', "Weekly"),
         ('hourly', "Hourly"),
     )
-    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,8)]
     STATUS_CHOICE = (
         ('active', "Active"),
         ('inactive', "Inactive"),
@@ -193,15 +192,23 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     skill = models.ManyToManyField(
         to=Skill,
+        null=True,
+        blank=True,
         verbose_name=_('Skill'),
         db_column="skill",
         related_name='%(app_label)s_%(class)s_skill'
     )
-    working_days = models.CharField(
-        verbose_name=_('Working Days'),
-        db_column="working_days",
-        max_length=25,
-        choices=WORKING_DAYS_CHOICE,
+    duration = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Duration'),
+        db_column="duration",
+    )
+    experience = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Experience'),
+        db_column="experience",
     )
     deadline = models.DateField(
         verbose_name=_('Deadline'),
@@ -209,6 +216,8 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     start_date = models.DateField(
         verbose_name=_('Start Date'),
+        null=True,
+        blank=True,
         db_column='start_date',
     )
     status = models.CharField(
@@ -338,7 +347,7 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `is_part_time (BooleanField)`: A boolean field indicating if the job filter is for part-time jobs.
         - `is_notification (BooleanField)`: A boolean field indicating if the job filter should send notification for job postings.
         - `has_contract (BooleanField)`: A boolean field indicating if the job filter is for jobs with contracts.
-        - `working_days (CharField)`: A character field indicating the working days for the job filter.
+        - `duration (CharField)`: A character field indicating the working days for the job filter.
 
    Methods:
        __str__(self): Returns a string representation of the job filter.
@@ -350,7 +359,6 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `ordering (list)`: The default ordering for the model.
    """
 
-    WORKING_DAYS_CHOICE = [(str(i), str(i)) for i in range(1,8)]
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -412,13 +420,11 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="has_contract",
     )
-    working_days = models.CharField(
-        verbose_name=_('Working Days'),
-        db_column="working_days",
+    duration = models.BigIntegerField(
         null=True,
         blank=True,
-        max_length=25,
-        choices=WORKING_DAYS_CHOICE,
+        verbose_name=_('Duration'),
+        db_column="duration",
     )
 
     def __str__(self):
