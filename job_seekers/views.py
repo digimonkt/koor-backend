@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -835,11 +836,16 @@ class JobsApplyView(generics.ListAPIView):
         """
         context = dict()
         if request.user.role == "job_seeker":
+            # print(timezone.now())
             try:
                 job_instace = JobDetails.objects.get(id=jobId)
                 try:
-                    AppliedJob.all_objects.get(job=job_instace, user=request.user).delete(soft=False)
-                    context['message'] = "Revoked applied job"
+                    applied_job = AppliedJob.all_objects.get(job=job_instace, user=request.user)
+                    if applied_job.shortlisted_at or  applied_job.rejected_at or  applied_job.created.date() < date.today():
+                        context['message'] = "You cannot revoke this applied job"
+                    else:
+                        applied_job.delete(soft=False)
+                        context['message'] = "Revoked applied job"
                     return response.Response(
                         data=context,
                         status=status.HTTP_200_OK
