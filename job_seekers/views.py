@@ -1408,9 +1408,15 @@ class ResumeView(generics.GenericAPIView):
             document.add_heading('EDUCATION', level=2)
             education_data = EducationRecord.objects.filter(user=profile_instance.user)
             for data in education_data:
+                period = " "
+                if data.start_date:
+                    period = str(data.start_date.year)
+                if data.end_date:
+                    period = period + " - " + str(data.end_date.year)
+                else:
+                    period = period + " - " + "Present"
                 p = document.add_paragraph(
-                    str(data.start_date.year) + " - " +
-                    str(data.end_date.year) + " " +
+                    period + " " +
                     data.education_level.title + ", " +
                     data.institute
                 )
@@ -1419,7 +1425,14 @@ class ResumeView(generics.GenericAPIView):
             for data in employment_data:
                 document.add_heading(data.title, level=3)
                 document.add_heading(data.organization, level=4)
-                document.add_heading(str(data.start_date.year) + " - " + str(data.end_date.year), level=5)
+                period = " "
+                if data.start_date:
+                    period = str(data.start_date.year)
+                if data.end_date:
+                    period = period + " - " + str(data.end_date.year)
+                else:
+                    period = period + " - " + "Present"
+                document.add_heading(period, level=5)
                 p = document.add_paragraph(data.description)
             document.add_heading('LANGUAGES', level=2)
             languages_data = JobSeekerLanguageProficiency.objects.filter(user=profile_instance.user)
