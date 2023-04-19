@@ -5,7 +5,8 @@ from .views import (
     UserView, CreateSessionView, DeleteSessionView,
     DisplayImageView, SendOtpView, ChangePasswordView,
     GetLocationView, SocialLoginView, OtpVerificationView,
-    VerificationView, SearchView, UserFilterView
+    VerificationView, SearchView, UserFilterView,
+    VisitorLogView
     )
 
 app_name = "users"
@@ -38,4 +39,6 @@ urlpatterns = [
     
     path('/filter', UserFilterView.as_view(), name="user_filter"),
     path('/filter/<str:filterId>', UserFilterView.as_view(), name="user_filter"),
+    
+    path('/visitor-log', VisitorLogView.as_view(), name="visitor_log"),
 ]

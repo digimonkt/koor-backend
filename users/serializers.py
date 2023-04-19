@@ -18,6 +18,8 @@ from project_meta.serializers import (
     SkillSerializer
 )
 
+from employers.models import BlackList
+
 from .backends import MobileOrEmailBackend as cb
 from .models import User
 
@@ -801,6 +803,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
     image = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
+    is_blacklisted = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -812,6 +815,7 @@ class UserSerializer(serializers.ModelSerializer):
             'mobile_number',
             'image',
             'description',
+            'is_blacklisted'
         )
 
     def get_image(self, obj):
@@ -830,10 +834,17 @@ class UserSerializer(serializers.ModelSerializer):
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.description
         return None
-
+    
+    def get_is_blacklisted(self, obj):
+        is_blacklisted_record = False
+        is_blacklisted_record = BlackList.objects.filter(
+            blacklisted_user=obj
+        ).exists()
+        return is_blacklisted_record
 
 class ApplicantDetailSerializers(serializers.ModelSerializer):
     """
@@ -871,11 +882,12 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     skills = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    is_blacklisted = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
-                  'languages', 'skills']
+                  'languages', 'skills', 'is_blacklisted']
     
     def get_image(self, obj):
         context = {}
@@ -889,6 +901,13 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
             context['type'] = obj.image.media_type
             return context
         return None
+    
+    def get_is_blacklisted(self, obj):
+        is_blacklisted_record = False
+        is_blacklisted_record = BlackList.objects.filter(
+            blacklisted_user=obj
+        ).exists()
+        return is_blacklisted_record
     
     def get_description(self, obj):
         context = {}
