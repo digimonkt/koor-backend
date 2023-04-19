@@ -203,3 +203,49 @@ class UserSession(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "User Sessions"
         db_table = "UserSession"
         ordering = ['created']
+
+
+class VisitorLog(BaseModel, models.Model):
+    """
+    Model representing a visitor log entry.
+
+    Attributes:
+        - `ip_address (str)`: The IP address of the visitor.
+        - `agent (JSON)`: The agent information of the visitor.
+        - `created_at (date)`: The date of creation for the visitor log entry.
+    """
+    
+    ip_address = models.GenericIPAddressField(
+        verbose_name=_('IP Address'),
+        protocol='both',
+        unpack_ipv4=False,
+        null=True,
+        blank=True,
+        db_column="ip_address"
+    )
+    agent = models.JSONField(
+        verbose_name=_('Agent'),
+        null=True,
+        db_column="agent"
+    )
+    created_at = models.DateField(
+        verbose_name=_('Created At'),
+        null=True,
+        blank=True,
+        db_column='created_at',
+    )
+
+    def __str__(self):
+        """
+        Return a string representation of the visitor log entry.
+
+        Returns:
+            - `str`: A string representing the IP address and agent information.
+        """
+        return str(self.ip_address) + "(" + str(self.agent) + ")"
+
+    class Meta:
+        verbose_name = "Visitor Log"
+        verbose_name_plural = "Visitor Logs"
+        db_table = "VisitorLog"
+        ordering = ['created_at']
