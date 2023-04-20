@@ -1309,6 +1309,28 @@ class EmployerListView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'employers.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Name", "Email", "Mobile Number"]
+                    )
+                    for counter, rows in enumerate(queryset):
+                        mobile_number = "-"
+                        if rows.country_code:
+                            mobile_number = str(rows.country_code) + str(rows.mobile_number)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.name), str(rows.email), mobile_number
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1398,10 +1420,13 @@ class JobsListView(generics.ListAPIView):
                     file_writer.writerow(
                         ["Number", "Job ID", "Job Title", "Company", "Location"])
                     for counter, rows in enumerate(queryset):
+                        location = "-"
+                        if rows.city:
+                            location = str(rows.city) + ", " + str(rows.country)
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.job_id), str(rows.title),
-                                str(rows.user.name), str(rows.city) + ", " + str(rows.country)
+                                str(rows.user.name), location
                             ]
                         )
                 return response.Response(
