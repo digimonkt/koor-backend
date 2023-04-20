@@ -118,6 +118,10 @@ class EducationLevelSerializers(serializers.ModelSerializer):
     class Meta:
         model = EducationLevel
         fields = ['id', 'title']
+        
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class LanguageSerializers(serializers.ModelSerializer):
