@@ -1,9 +1,9 @@
 import pathlib
 import os
 import csv
-
 from datetime import datetime, date, timedelta
 
+from django.db.models import Q
 from django_filters import rest_framework as django_filters
 
 from rest_framework import (
@@ -1256,7 +1256,29 @@ class CandidatesListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
+            queryset = self.filter_queryset(self.get_queryset().filter(Q(role="job_seeker") | Q(role="vendor")))
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'candidate.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Role", "Name", "Email", "Mobile Number"]
+                    )
+                    for counter, rows in enumerate(queryset):
+                        mobile_number = "None"
+                        if rows.country_code:
+                            mobile_number = str(rows.country_code) + str(rows.mobile_number)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.role), str(rows.name), str(rows.email), mobile_number
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1319,7 +1341,7 @@ class EmployerListView(generics.ListAPIView):
                         ["Number", "Name", "Email", "Mobile Number"]
                     )
                     for counter, rows in enumerate(queryset):
-                        mobile_number = "-"
+                        mobile_number = "None"
                         if rows.country_code:
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
@@ -1420,7 +1442,7 @@ class JobsListView(generics.ListAPIView):
                     file_writer.writerow(
                         ["Number", "Job ID", "Job Title", "Company", "Location"])
                     for counter, rows in enumerate(queryset):
-                        location = "-"
+                        location = "None"
                         if rows.city:
                             location = str(rows.city) + ", " + str(rows.country)
                         file_writer.writerow(
