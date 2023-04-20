@@ -27,6 +27,31 @@ class JobCategory(SlugBaseModel, TimeStampedModel, models.Model):
         db_table = "JobCategory"
         ordering = ['title']
 
+
+class JobSubCategory(SlugBaseModel, TimeStampedModel, models.Model):
+    """
+    This table is used to store details about a Job Sub Category.
+
+    Columns: 
+    - `title`: A string representing the name of the tag. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    - `category`: the category associated with the JobCategory
+    """
+    category = models.ForeignKey(
+        JobCategory,
+        verbose_name=_('Category'),
+        on_delete=models.CASCADE,
+        db_column="category",
+        related_name='%(app_label)s_%(class)s_categories'
+    )
+    
+    class Meta:
+        verbose_name = "Job Sub Category"
+        verbose_name_plural = "Job Sub Categories"
+        db_table = "JobSubCategory"
+        ordering = ['title']
+
+
 class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This is a Django model for a Job object, with the following fields:
