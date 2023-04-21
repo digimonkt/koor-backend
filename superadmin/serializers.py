@@ -172,6 +172,10 @@ class TagSerializers(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'title']
+                
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class ChangePasswordSerializers(serializers.Serializer):
