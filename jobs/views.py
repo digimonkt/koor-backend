@@ -64,8 +64,8 @@ class JobSearchView(generics.ListAPIView):
     search_fields = [
         'title', 'description', 
         'skill__title', 'highest_education__title', 
-        'job_category__title', 'country__title', 
-        'city__title', 'user__name'
+        'job_category__title', 'job_sub_category__title',
+        'country__title', 'city__title', 'user__name'
         ]
     pagination_class = CustomPagination
 
@@ -91,6 +91,9 @@ class JobSearchView(generics.ListAPIView):
         jobCategory = request.GET.getlist('jobCategory')
         if jobCategory:
             queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
+        jobSubCategory = request.GET.getlist('jobSubCategory')
+        if jobSubCategory:
+            queryset = queryset.filter(job_sub_category__title__in=jobSubCategory).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
@@ -429,6 +432,15 @@ class JobSuggestionView(generics.ListAPIView):
                 matches=Case(
                     When(
                         job_category__in=job_instance.job_category.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        job_sub_category__in=job_instance.job_sub_category.all(),
                         then=F('matches') + 1
                     ),
                     default=F('matches'),
