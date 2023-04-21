@@ -11,12 +11,14 @@ from user_profile.models import (
     UserFilters, VendorProfile
 )
 
-from project_meta.models import Media
+from project_meta.models import Media, EducationLevel
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, 
     SkillSerializer
 )
+
+from employers.models import BlackList
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
@@ -801,6 +803,7 @@ class UserSerializer(serializers.ModelSerializer):
     """
     image = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
+    is_blacklisted = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -812,6 +815,7 @@ class UserSerializer(serializers.ModelSerializer):
             'mobile_number',
             'image',
             'description',
+            'is_blacklisted'
         )
 
     def get_image(self, obj):
@@ -830,10 +834,17 @@ class UserSerializer(serializers.ModelSerializer):
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.description
         return None
-
+    
+    def get_is_blacklisted(self, obj):
+        is_blacklisted_record = False
+        is_blacklisted_record = BlackList.objects.filter(
+            blacklisted_user=obj
+        ).exists()
+        return is_blacklisted_record
 
 class ApplicantDetailSerializers(serializers.ModelSerializer):
     """
@@ -871,11 +882,12 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     skills = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    is_blacklisted = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
-                  'languages', 'skills']
+                  'languages', 'skills', 'is_blacklisted']
     
     def get_image(self, obj):
         context = {}
@@ -889,6 +901,13 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
             context['type'] = obj.image.media_type
             return context
         return None
+    
+    def get_is_blacklisted(self, obj):
+        is_blacklisted_record = False
+        is_blacklisted_record = BlackList.objects.filter(
+            blacklisted_user=obj
+        ).exists()
+        return is_blacklisted_record
     
     def get_description(self, obj):
         context = {}
@@ -1152,3 +1171,83 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class SearchUserSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `User` model.
+
+    The `SearchUserSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `User` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'role', 'name', 'email', 'image', 'description', 'skills', 'highest_education', 'country', 'city'.
+    """
+    image = serializers.SerializerMethodField()
+    description = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
+    highest_education = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ['id', 'role', 'name', 'email', 'image', 
+                  'description', 'skills','country', 'city', 
+                  'highest_education'
+                  ]
+
+    def get_image(self, obj):
+        context = {}
+        if obj.image:
+            context['id'] = obj.image.id
+            context['title'] = obj.image.title
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
+        return None
+    
+    def get_description(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+            return jobseeker_data.description
+        elif obj.role == 'vendor':
+            jobseeker_data = VendorProfile.objects.get(user=obj)
+            return jobseeker_data.description
+        return None    
+    
+    def get_highest_education(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+            if jobseeker_data.highest_education:
+                return jobseeker_data.highest_education.title
+        return None
+    
+    def get_country(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+            if jobseeker_data.country:
+                return jobseeker_data.country.title
+        return None
+    
+    def get_city(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+            if jobseeker_data.city:
+                return jobseeker_data.city.title
+        return None
+    
+    def get_skills(self, obj):
+        context = []
+        if obj.role == 'job_seeker':
+            skills_data = JobSeekerSkill.objects.filter(user=obj)
+            get_data = JobSeekerSkillSerializer(skills_data, many=True)
+            if get_data.data:
+                context = get_data.data
+            return context
+        return None

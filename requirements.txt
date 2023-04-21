@@ -42,3 +42,6 @@ django-cors-headers==3.13
 
 # Crontab
 django-crontab==0.7.1
+
+# Docx File
+python-docx==0.8.11

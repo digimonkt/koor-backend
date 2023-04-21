@@ -1,8 +1,10 @@
+from datetime import date
+
 import json
 
 from rest_framework import serializers
 
-from jobs.models import JobDetails
+from job_seekers.models import AppliedJob
 
 from project_meta.models import (
     Media, Skill, Language,
@@ -21,7 +23,8 @@ from users.models import User
 from jobs.models import (
     JobCategory,
     JobAttachmentsItem,
-    JobsLanguageProficiency
+    JobsLanguageProficiency,
+    JobDetails
 )
 
 
@@ -171,11 +174,15 @@ class CreateJobsSerializers(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(
         queryset=Skill.objects.all(),
         many=True,
-        write_only=True
+        write_only=True,
+        allow_null=True,
+        required=False
     )
     language = serializers.ListField(
         style={"input_type": "text"},
-        write_only=True
+        write_only=True,
+        allow_null=True,
+        required=False
     )
     attachments = serializers.ListField(
         style={"input_type": "file"},
@@ -190,7 +197,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'working_days', 'attachments', 'deadline', 'start_date'
+            'duration', 'experience', 'attachments', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):
@@ -232,7 +239,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         greater than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If
         the language is not blank and its length is within limits, the language is returned.
         """
-        if language not in [None, ""]:
+        if language not in [""]:
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
@@ -269,7 +276,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If the skill
         is not blank and its length is within limits, the skill is returned.
         """
-        if skill not in [None, ""]:
+        if skill not in [""]:
             limit = 3
             if len(skill) > limit:
                 raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
@@ -279,14 +286,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 
     def validate(self, data):
         job_category = data.get("job_category")
-        skill = data.get("skill")
-        language = data.get("language")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not skill:
-            raise serializers.ValidationError({'skill': 'This field is required.'})
-        if not language:
-            raise serializers.ValidationError({'language': 'This field is required.'})
         return data
 
     def save(self, user):
@@ -373,11 +374,13 @@ class UpdateJobSerializers(serializers.ModelSerializer):
     skill = serializers.PrimaryKeyRelatedField(
         queryset=Skill.objects.all(),
         many=True,
-        write_only=True
+        write_only=True,
+        required=False
     )
     language = serializers.ListField(
         style={"input_type": "text"},
-        write_only=True
+        write_only=True,
+        required=False
     )
     language_remove = serializers.ListField(
         style={"input_type": "text"},
@@ -402,7 +405,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
-            'skill', 'working_days', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
+            'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
 
     def validate_job_category(self, job_category):
@@ -415,7 +418,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
 
     def validate_language(self, language):
-        if language not in [None, ""]:
+        if language not in [""]:
             limit = 3
             if len(language) > limit:
                 raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
@@ -438,7 +441,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'language': 'Language can not be blank.'})
 
     def validate_skill(self, skill):
-        if skill not in [None, ""]:
+        if skill not in [""]:
             limit = 3
             if len(skill) > limit:
                 raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
@@ -448,14 +451,8 @@ class UpdateJobSerializers(serializers.ModelSerializer):
 
     def validate(self, data):
         job_category = data.get("job_category")
-        skill = data.get("skill")
-        language = data.get("language")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not skill:
-            raise serializers.ValidationError({'skill': 'This field is required.'})
-        if not language:
-            raise serializers.ValidationError({'language': 'This field is required.'})
         return data
 
     def update(self, instance, validated_data):
@@ -593,7 +590,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
-            'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline', 
+            'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
             'start_date'
         ]
 
@@ -740,3 +737,97 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
                                                                             attachment=media_instance)
                 attachments_instance.save()
         return instance
+
+
+class ActivitySerializers(serializers.Serializer):
+    """
+    Serializer for retrieving various activity-related information for a user.
+
+    The serializer provides information on active jobs and tenders that a user has, as well as jobs and tenders that
+    the user has applied for.
+
+    Fields:
+        - `active_jobs`: The number of active jobs that the user has.
+        - `active_tender`: The number of active tenders that the user has.
+        - `applied_jobs`: The number of jobs that the user has applied for.
+        - `applied_tender`: The number of tenders that the user has applied for.
+
+    Methods:
+        - `get_active_jobs`: Returns the number of active jobs that the user has.
+        - `get_active_tender`: Returns the number of active tenders that the user has.
+        - `get_applied_jobs`: Returns the number of jobs that the user has applied for.
+        - `get_applied_tender`: Returns the number of tenders that the user has applied for.
+
+    Attributes:
+        - `model`: The Django User model that the serializer is based on.
+        - `fields`: A list of fields to be included in the serialized representation.
+
+    Usage:
+        To use this serializer, create an instance of it and pass in a User object as the argument to the `data`
+        parameter of the serializer's `__init__()` method. For example:
+
+            user = User.objects.get(pk=1)
+            serializer = ActivitySerializers(data=user)
+            serialized_data = serializer.data
+
+    """
+    active_jobs = serializers.SerializerMethodField()
+    active_tender = serializers.SerializerMethodField()
+    applied_jobs = serializers.SerializerMethodField()
+    applied_tender = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'active_jobs', 'active_tender', 'applied_jobs', 'applied_tender'
+        ]
+
+    def get_active_jobs(self, obj):
+        """
+        Returns the number of active jobs that the user has.
+
+        Args:
+            - `obj`: The User object for which to retrieve the number of active jobs.
+
+        Returns:
+            An integer representing the number of active jobs that the user has.
+        """
+        return JobDetails.objects.filter(status='active', user=obj,
+                                         deadline__gte=date.today()).count()
+
+    def get_active_tender(self, obj):
+        """
+        Returns the number of active tenders that the user has.
+
+        Args:
+            - `obj`: The User object for which to retrieve the number of active tenders.
+
+        Returns:
+            An integer representing the number of active tenders that the user has.
+        """
+        return TenderDetails.objects.filter(status='active', user=obj,
+                                            deadline__gte=date.today()).count()
+
+    def get_applied_jobs(self, obj):
+        """
+        Returns the number of jobs that the user has applied for.
+
+        Args:
+            - `obj`: The User object for which to retrieve the number of applied jobs.
+
+        Returns:
+            An integer representing the number of jobs that the user has applied for.
+        """
+        return AppliedJob.objects.filter(job__user=obj).count()
+
+    def get_applied_tender(self, obj):
+        """
+        Returns the number of tenders that the user has applied for.
+
+        Args:
+            - `obj`: The User object for which to retrieve the number of applied tenders.
+
+        Returns:
+            An integer representing the number of tenders that the user has applied for.
+        """
+        return 0

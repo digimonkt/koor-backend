@@ -1,5 +1,11 @@
+import os
+
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+
+from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Cm, Pt, RGBColor
 
 from rest_framework import (
     generics, response, status,
@@ -10,15 +16,19 @@ from core.pagination import CustomPagination
 
 from jobs.models import JobDetails
 
+from koor.config.common import Common
+
 from project_meta.models import JobSeekerCategory
 
 from user_profile.models import JobSeekerProfile
+
 from users.models import User
 
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
     JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
 )
+
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
@@ -1256,7 +1266,7 @@ class CategoryView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-            
+
     def put(self, request):
         """
         Handle HTTP `PUT` requests.
@@ -1307,3 +1317,146 @@ def RemoveAvailability():
     """
     JobPreferences.objects.all().update(is_available=False)
     return HttpResponse("done")
+
+
+class ResumeView(generics.GenericAPIView):
+    """
+    View for generating a resume in Microsoft Word format (.docx).
+
+    The view supports only authenticated users with a role of 'job_seeker'.
+    The generated resume includes the user's name, contact information, profile summary, skills, education,
+    employment summary, and language proficiency.
+
+    The generated file is saved to the media folder and the response includes the URL to download the file.
+
+    Note:
+        This view uses the `python-docx` library for generating the Word document.
+
+    Serializer:
+        ModifyCategoriesSerializers
+
+    Permissions:
+        IsAuthenticated
+
+    Methods:
+        get -- Generates a resume based on the logged-in user's information.
+
+    Return:
+        A JSON response containing the URL to download the generated file.
+
+    Example:
+        {
+            "url": "/media/123.docx"
+        }
+    """
+
+    serializer_class = ModifyCategoriesSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+
+        response_context = dict()
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            document = Document()
+            section = document.sections[0]
+            page_width = section.page_width - section.left_margin - section.right_margin
+            section_width = page_width - Cm(0.5)
+            section.page_width = section_width + section.left_margin + section.right_margin
+            intense_quote_style = document.styles['Intense Quote']
+            intense_quote_style.paragraph_format.left_indent = 0
+            intense_quote_style.paragraph_format.right_indent = 0
+            intense_quote_style.paragraph_format.first_line_indent = 0
+            intense_quote_style.font.size = Pt(1)
+            intense_quote_style.font.color.rgb = RGBColor(0, 0, 0)
+            for i in range(1, 10):
+                heading_style = document.styles['Heading %d' % i]
+                heading_style.font.color.rgb = RGBColor(0, 0, 0)
+            heading_style1 = document.styles['Heading 1']
+            heading_style1.font.name = 'Calibri'
+            heading_style1.font.size = Pt(16)
+            heading_style1.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+            heading_style1.paragraph_format.space_after = Pt(0)
+            heading_style1.paragraph_format.space_before = Pt(0)
+            heading_style2 = document.styles['Heading 2']
+            heading_style2.font.name = 'Calibri'
+            heading_style2.font.size = Pt(14)
+            heading_style2.font.color.rgb = RGBColor(0, 0, 0)
+            heading_style2.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            heading_style2.paragraph_format.space_after = Pt(0)
+            heading_style2.paragraph_format.space_before = Pt(0)
+            document.add_heading('CURICULUM VITAE (CV)', level=1)
+            if profile_instance.user.name:
+                document.add_heading(profile_instance.user.name.upper(), level=1)
+            if profile_instance.user.mobile_number:
+                mobile_number = profile_instance.user.mobile_number
+                new_mobile_number = " "
+                for i in range(0, len(mobile_number), 5):
+                    new_mobile_number += mobile_number[i:i + 5] + " "
+                contact_number = profile_instance.user.country_code + new_mobile_number
+                document.add_heading('Phone : ' + contact_number, level=1)
+            if profile_instance.user.email:
+                document.add_heading('Email : ' + profile_instance.user.email.lower(), level=1)
+            paragraph = document.add_paragraph('', style='Intense Quote')
+            document.add_heading('PROFILE SUMMARY', level=2)
+            if profile_instance.description:
+                p = document.add_paragraph(profile_instance.description)
+            document.add_heading('SKILLS', level=2)
+            sills_data = JobSeekerSkill.objects.filter(user=profile_instance.user)
+            for data in sills_data:
+                p = document.add_paragraph(data.skill.title)
+            document.add_heading('EDUCATION', level=2)
+            education_data = EducationRecord.objects.filter(user=profile_instance.user)
+            for data in education_data:
+                period = " "
+                if data.start_date:
+                    period = str(data.start_date.year)
+                if data.end_date:
+                    period = period + " - " + str(data.end_date.year)
+                else:
+                    period = period + " - " + "Present"
+                p = document.add_paragraph(
+                    period + " " +
+                    data.education_level.title + ", " +
+                    data.institute
+                )
+            document.add_heading('EMPLOYMENT SUMMARY', level=2)
+            employment_data = EmploymentRecord.objects.filter(user=profile_instance.user)
+            for data in employment_data:
+                document.add_heading(data.title, level=3)
+                document.add_heading(data.organization, level=4)
+                period = " "
+                if data.start_date:
+                    period = str(data.start_date.year)
+                if data.end_date:
+                    period = period + " - " + str(data.end_date.year)
+                else:
+                    period = period + " - " + "Present"
+                document.add_heading(period, level=5)
+                p = document.add_paragraph(data.description)
+            document.add_heading('LANGUAGES', level=2)
+            languages_data = JobSeekerLanguageProficiency.objects.filter(user=profile_instance.user)
+            for data in languages_data:
+                paragraph1 = document.add_paragraph('', style='List Bullet')
+                paragraph1.add_run(data.language.title).bold = True
+                paragraph2 = document.add_paragraph('Spoken: ' + data.spoken)
+                paragraph3 = document.add_paragraph('Written: ' + data.written)
+                paragraph_format1 = paragraph1.paragraph_format
+                paragraph_format2 = paragraph2.paragraph_format
+                paragraph_format3 = paragraph3.paragraph_format
+                paragraph_format1.left_indent = Pt(34)
+                paragraph_format2.left_indent = Pt(30)
+                paragraph_format3.left_indent = Pt(30)
+            file_name = str(profile_instance.id) + '.docx'
+            document_path = os.path.join(Common.MEDIA_ROOT, file_name)
+            document.save(document_path)
+            return response.Response(
+                data={"url": "/media/" + file_name},
+                status=status.HTTP_200_OK
+            )
+        else:
+            response_context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )

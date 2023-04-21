@@ -1,6 +1,6 @@
 import json, jwt
 import requests
-from datetime import datetime
+from datetime import datetime, date
 
 from django_filters import rest_framework as django_filters
 
@@ -33,9 +33,10 @@ from user_profile.models import (
 from notification.models import Notification
 
 from superadmin.models import GooglePlaceApi
-from superadmin.serializers import CandidatesSerializers
 
-from .models import UserSession, User
+from .models import (
+    UserSession, User, VisitorLog
+)
 from .filters import UsersFilter
 from .serializers import (
     CreateUserSerializers,
@@ -46,7 +47,8 @@ from .serializers import (
     UpdateImageSerializers,
     SocialLoginSerializers,
     UserFiltersSerializers,
-    GetUserFiltersSerializers
+    GetUserFiltersSerializers,
+    SearchUserSerializers
 )
 
 
@@ -687,7 +689,7 @@ class SearchView(generics.ListAPIView):
     The `role` parameter is required in the URL path.
     The `limit` query parameter can be used to paginate the results.
 
-    - `Serializer class`: CandidatesSerializers
+    - `Serializer class`: SearchUserSerializers
     - `Permission classes`: AllowAny
     - `Queryset`: all User objects
     - `Filter backends`: SearchFilter
@@ -701,9 +703,9 @@ class SearchView(generics.ListAPIView):
         - /candidates/managers/?search=project+management
     """
 
-    serializer_class = CandidatesSerializers
+    serializer_class = SearchUserSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_active=True)
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
     search_fields = [
@@ -898,3 +900,54 @@ class UserFilterView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+class VisitorLogView(generics.GenericAPIView):
+    """
+    View for logging visitor information.
+
+    This view handles POST requests and logs the IP address and user agent information of the visitor. If a log entry
+    with the same IP address and current date already exists, the view does not create a new log entry.
+
+    Permissions:
+        - `AllowAny`: Any user can access this view without authentication.
+
+    HTTP Methods:
+        - `POST`: Log visitor information.
+
+    Returns:
+        - `201 CREATED`: If the log entry is created successfully.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        """
+        Log visitor information.
+
+        This method creates a new log entry with the IP address and user agent information of the visitor. If a log
+        entry with the same IP address and current date already exists, no new log entry is created.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - `Response`: HTTP response object with status 201 CREATED.
+        """
+        context = dict()
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            IPAddr = x_forwarded_for.split(',')[0]
+        else:
+            IPAddr = request.META.get('REMOTE_ADDR')
+        agent = {'User-Agent': request.headers.get('User-Agent')}
+        if VisitorLog.objects.filter(ip_address=IPAddr, created_at=date.today()).exists():
+            pass
+        else:
+            log_data = VisitorLog.objects.create(
+                ip_address=IPAddr,
+                agent=agent,
+                created_at=date.today()
+            )
+            log_data.save()
+        return response.Response(
+            status=status.HTTP_201_CREATED
+        )
