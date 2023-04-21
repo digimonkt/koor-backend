@@ -1,5 +1,9 @@
+import pathlib
+import os
+import csv
 from datetime import datetime, date, timedelta
 
+from django.db.models import Q
 from django_filters import rest_framework as django_filters
 
 from rest_framework import (
@@ -471,7 +475,8 @@ class EducationLevelView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                if EducationLevel.all_objects.filter(title=serializer.validated_data['title'],
+                                                     is_removed=True).exists():
                     EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
@@ -1251,7 +1256,29 @@ class CandidatesListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
+            queryset = self.filter_queryset(self.get_queryset().filter(Q(role="job_seeker") | Q(role="vendor")))
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'candidate.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Role", "Name", "Email", "Mobile Number"]
+                    )
+                    for counter, rows in enumerate(queryset):
+                        mobile_number = "None"
+                        if rows.country_code:
+                            mobile_number = str(rows.country_code) + str(rows.mobile_number)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.role), str(rows.name), str(rows.email), mobile_number
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1304,6 +1331,28 @@ class EmployerListView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'employers.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Name", "Email", "Mobile Number"]
+                    )
+                    for counter, rows in enumerate(queryset):
+                        mobile_number = "None"
+                        if rows.country_code:
+                            mobile_number = str(rows.country_code) + str(rows.mobile_number)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.name), str(rows.email), mobile_number
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1358,9 +1407,54 @@ class JobsListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
+        """
+        Retrieve a list of jobs with optional download capability for staff users.
+
+        This view returns a paginated list of jobs based on the queryset defined in `get_queryset()`. For staff users,
+        the view provides an option to download the job data as a CSV file. Non-staff users will receive an unauthorized
+        response.
+
+        Parameters:
+            - `request` : rest_framework.request.Request
+                The HTTP request object.
+
+        Returns:
+            - `Response` : rest_framework.response.Response
+                The HTTP response object containing the paginated job data or a download URL for staff users.
+
+        Raises:
+            - `PermissionDenied` : rest_framework.exceptions.PermissionDenied
+                If the user does not have staff status and attempts to download job data.
+
+        IOError : builtins.IOError
+            If an error occurs during file I/O while creating the CSV file for download.
+        """
+
         context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'jobs.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Job ID", "Job Title", "Company", "Location"])
+                    for counter, rows in enumerate(queryset):
+                        location = "None"
+                        if rows.city:
+                            location = str(rows.city) + ", " + str(rows.country)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.job_id), str(rows.title),
+                                str(rows.user.name), location
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1889,7 +1983,7 @@ class TenderCategoryView(generics.ListAPIView):
     queryset = TenderCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination    
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -1921,7 +2015,8 @@ class TenderCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
+                if TenderCategory.all_objects.filter(title=serializer.validated_data['title'],
+                                                     is_removed=True).exists():
                     TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
@@ -2106,3 +2201,26 @@ class SectorView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+def create_directory():
+    """
+    Create a directory for storing CSV files in the 'media' directory with the current date as the subdirectory name.
+
+    Returns:
+    - `directory_url` : str
+        The URL of the created directory.
+
+    Raises:
+    - `OSError`:
+        If directory creation fails due to permission issues or other reasons.
+    """
+
+    directory_url = '{0}/{1}/{2}'.format('media', 'csv_file', date.today())
+    directory_url_path_check = pathlib.Path(directory_url)
+    if directory_url_path_check.exists():
+        directory_url = directory_url
+    else:
+        os.makedirs(directory_url)
+        directory_url = directory_url
+    return directory_url
