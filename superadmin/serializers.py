@@ -154,6 +154,10 @@ class SkillSerializers(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ['id', 'title']
+            
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class TagSerializers(serializers.ModelSerializer):
