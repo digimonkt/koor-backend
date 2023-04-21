@@ -136,6 +136,10 @@ class LanguageSerializers(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ['id', 'title']
+            
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class SkillSerializers(serializers.ModelSerializer):
