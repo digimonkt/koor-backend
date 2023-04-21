@@ -1,6 +1,4 @@
-import pathlib
-import os
-import csv
+import io, csv, os, pathlib
 from datetime import datetime, date, timedelta
 
 from django.db.models import Q
@@ -25,7 +23,8 @@ from users.models import UserSession, User
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory, Sector
+    JobSeekerCategory, Sector,
+    AllCountry
 )
 
 from tenders.models import TenderCategory
@@ -2224,3 +2223,78 @@ def create_directory():
         os.makedirs(directory_url)
         directory_url = directory_url
     return directory_url
+
+
+class UploadCountryView(generics.GenericAPIView):
+    """
+    API view for uploading country data from a CSV file.
+
+    - This view handles the HTTP POST request for uploading country data from a CSV file.
+    - The uploaded CSV file is read, parsed, and the data is saved to the AllCountry model in the database.
+    - The user must be authenticated and have staff permissions to access this view.
+
+    Attributes:
+        - `permission_classes (list)`: List of permission classes required to access this view.
+                Only authenticated users with staff permissions are allowed.
+    
+    Methods:
+        - `post(request)`: Handles the POST request for uploading country data.
+                Reads and parses the uploaded CSV file, and saves the data to the AllCountry model.
+                Returns a response with a success message and HTTP 201 status code if successful, or an error message
+                and HTTP 401 status code if the user is not authenticated or does not have staff permissions.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handles the POST request for uploading country data from a CSV file.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - `Response`: A response object containing a success message and HTTP 201 status code if the country data
+                        is uploaded successfully, or an error message and HTTP 401 status code if the user is not
+                        authenticated or does not have staff permissions.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            csv_file = request.FILES.get('csv_file', None)
+            if csv_file:
+                data_set = csv_file.read().decode('UTF-8')
+                io_string = io.StringIO(data_set)
+                # next(io_string)
+                get_data = csv.reader(io_string)
+                for row in get_data:
+                    if row[0].isdigit():
+                        if AllCountry.objects.filter(id=row[0]).exists():
+                            AllCountry.objects.filter(id=row[0]).update(
+                                title=row[1], iso3=row[2], iso2=row[3],
+                                numeric_code=row[4], phone_code=row[5], capital=row[6],
+                                currency=row[7], currency_name=row[8], currency_symbol=row[9],
+                                tld=row[10], native=row[11], region=row[12], subregion=row[13],
+                                timezones=row[14], latitude=row[15], longitude=row[16],
+                                emoji=row[17], emojiU=row[18]
+                            )
+                        else:
+                            AllCountry.objects.create(
+                                id=row[0], title=row[1], iso3=row[2], iso2=row[3],
+                                numeric_code=row[4], phone_code=row[5], capital=row[6],
+                                currency=row[7], currency_name=row[8], currency_symbol=row[9],
+                                tld=row[10], native=row[11], region=row[12], subregion=row[13],
+                                timezones=row[14], latitude=row[15], longitude=row[16],
+                                emoji=row[17], emojiU=row[18]
+                            )
+            context['message'] = "Countries added successfully"
+            return response.Response(
+                data=context,
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )

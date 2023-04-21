@@ -6,7 +6,6 @@ from core.models import (
     BaseModel, SlugBaseModel, upload_directory_path
 )
 
-# Create your models here.
 
 class Media(BaseModel, models.Model):
     """ 
@@ -52,6 +51,7 @@ class Media(BaseModel, models.Model):
         verbose_name_plural = "Media"
         db_table = "Media"
 
+
 class Tag(SlugBaseModel, models.Model):
     """
     This table is used to store details about a tag.
@@ -66,6 +66,7 @@ class Tag(SlugBaseModel, models.Model):
         verbose_name_plural = "Tags"
         db_table = "Tag"
         ordering = ['title']
+
 
 class Language(SlugBaseModel, models.Model):
     """
@@ -82,6 +83,7 @@ class Language(SlugBaseModel, models.Model):
         db_table = "Language"
         ordering = ['title']
 
+
 class Skill(SlugBaseModel, models.Model):
     """
     This table is used to store details about a skill.
@@ -97,6 +99,7 @@ class Skill(SlugBaseModel, models.Model):
         db_table = "Skill"
         ordering = ['title']
 
+
 class EducationLevel(SlugBaseModel, models.Model):
     """
     This table is used to store details about a Education Level.
@@ -111,6 +114,7 @@ class EducationLevel(SlugBaseModel, models.Model):
         verbose_name_plural = "Education Levels"
         db_table = "EducationLevel"
         ordering = ['title']
+
 
 class Country(SlugBaseModel, models.Model):
     """
@@ -151,6 +155,7 @@ class Country(SlugBaseModel, models.Model):
         db_table = "Country"
         ordering = ['title']
 
+
 class City(SlugBaseModel, models.Model):
     """
     This table is used to store details about a City.
@@ -168,16 +173,18 @@ class City(SlugBaseModel, models.Model):
         db_column="country",
         related_name='%(app_label)s_%(class)s_country'
     )
+
     class Meta:
         verbose_name = "City"
         verbose_name_plural = "Cities"
         db_table = "City"
         ordering = ['title']
-        
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title) + "-" + slugify(self.country)
         return super().save(*args, **kwargs)
+
 
 class JobSeekerCategory(BaseModel, models.Model):
     """
@@ -203,6 +210,7 @@ class JobSeekerCategory(BaseModel, models.Model):
         db_column="category",
         related_name='%(app_label)s_%(class)s_categories'
     )
+
     class Meta:
         verbose_name = "JobSeekerCategory"
         verbose_name_plural = "Job Seeker Categories"
@@ -215,6 +223,7 @@ class JobSeekerCategory(BaseModel, models.Model):
         - ordering (list): Default ordering for the model.
 
         """
+
 
 class Sector(SlugBaseModel, models.Model):
     """
@@ -229,4 +238,144 @@ class Sector(SlugBaseModel, models.Model):
         verbose_name = "Sector"
         verbose_name_plural = "Sectors"
         db_table = "Sector"
+        ordering = ['title']
+
+
+class AllCountry(models.Model):
+    """
+    This is the docstring for the AllCountry model class.
+
+    AllCountry is a Django model representing country information including title, ISO codes, numeric code, phone code,
+    capital, currency, and other details.
+
+    Attributes:
+        - title (CharField): Title of the country, with a maximum length of 150 characters.
+        - iso3 (CharField): ISO Code 3 of the country, with a maximum length of 10 characters.
+        - iso2 (CharField): ISO Code 2 of the country, with a maximum length of 10 characters.
+        - numeric_code (BigIntegerField): Numeric code of the country, which can be null and blank, representing a
+            BigInteger.
+        - phone_code (CharField): Phone code of the country, with a maximum length of 50 characters.
+        - capital (CharField): Capital of the country, with a maximum length of 100 characters.
+        - currency (CharField): Currency of the country, with a maximum length of 20 characters.
+        - currency_name (CharField): Currency name of the country, with a maximum length of 80 characters.
+        - currency_symbol (TextField): Currency symbol of the country, which can be null and blank, representing a
+            TextField.
+        - tld (CharField): Top-level domain (TLD) of the country, with a maximum length of 10 characters.
+        - native (CharField): Native name of the country, with a maximum length of 200 characters.
+        - region (CharField): Region of the country, with a maximum length of 150 characters.
+        - subregion (CharField): Subregion of the country, with a maximum length of 50 characters.
+        - timezones (TextField): Timezones of the country, which can be null and blank, representing a TextField.
+        - latitude (CharField): Latitude of the country, with a maximum length of 100 characters.
+        - longitude (CharField): Longitude of the country, with a maximum length of 100 characters.
+        - emoji (TextField): Emoji of the country, which can be null and blank, representing a TextField.
+        - emojiU (TextField): Emoji U of the country, which can be null and blank, representing a TextField.
+
+    Meta:
+        - verbose_name (str): The singular name for the model, which is "All Country".
+        - verbose_name_plural (str): The plural name for the model, which is "All Countries".
+        - db_table (str): The name of the database table for the model, which is "AllCountry".
+        - ordering (list): The default ordering for the model, which is based on the "title" attribute.
+
+    """
+
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=150,
+        db_column="title",
+    )
+    iso3 = models.CharField(
+        verbose_name=_('ISO Code 3'),
+        max_length=10,
+        db_column="iso3",
+    )
+    iso2 = models.CharField(
+        verbose_name=_('ISO Code 2'),
+        max_length=10,
+        db_column="iso2",
+    )
+    numeric_code = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Numeric Code'),
+        db_column="numeric_code",
+    )
+    phone_code = models.CharField(
+        verbose_name=_('Phone Code'),
+        max_length=50,
+        db_column="phone_code",
+    )
+    capital = models.CharField(
+        verbose_name=_('Capital'),
+        max_length=100,
+        db_column="capital",
+    )
+    currency = models.CharField(
+        verbose_name=_('Currency'),
+        max_length=20,
+        db_column="currency",
+    )
+    currency_name = models.CharField(
+        verbose_name=_('Currency Name'),
+        max_length=80,
+        db_column="currency_name",
+    )
+    currency_symbol = models.TextField(
+        verbose_name=_('Currency Symbol'),
+        null=True,
+        blank=True,
+        db_column="currency_symbol",
+    )
+    tld = models.CharField(
+        verbose_name=_('tld'),
+        max_length=10,
+        db_column="tld",
+    )
+    native = models.CharField(
+        verbose_name=_('Native'),
+        max_length=200,
+        db_column="native",
+    )
+    region = models.CharField(
+        verbose_name=_('Region'),
+        max_length=150,
+        db_column="region",
+    )
+    subregion = models.CharField(
+        verbose_name=_('Subregion'),
+        max_length=50,
+        db_column="subregion",
+    )
+    timezones = models.TextField(
+        verbose_name=_('Timezones'),
+        null=True,
+        blank=True,
+        db_column="timezones",
+    )
+    latitude = models.CharField(
+        verbose_name=_('Latitude'),
+        max_length=100,
+        db_column="latitude",
+    )
+    longitude = models.CharField(
+        verbose_name=_('Longitude'),
+        max_length=100,
+        db_column="longitude",
+    )
+    emoji = models.TextField(
+        verbose_name=_('Emoji '),
+        null=True,
+        blank=True,
+        db_column="emoji",
+    )
+    emojiU = models.TextField(
+        verbose_name=_('emoji U'),
+        null=True,
+        blank=True,
+        db_column="emojiU",
+    )
+
+    class Meta:
+        verbose_name = "All Country"
+        verbose_name_plural = "All Countries"
+        db_table = "AllCountry"
         ordering = ['title']
