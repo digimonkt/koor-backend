@@ -540,6 +540,53 @@ class EducationLevelView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, educationLevelId):
+        """
+        Update an `EducationLevel` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `educationLevelId (int)`: The ID of the `EducationLevel` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `EducationLevel.DoesNotExist`: If the EducationLevel instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            education_level_instance = EducationLevel.all_objects.get(id=educationLevelId)
+            serializer = self.serializer_class(data=request.data, instance=education_level_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(education_level_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except EducationLevel.DoesNotExist:
+            return response.Response(
+                data={"educationLevelId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class LanguageView(generics.ListAPIView):
     """
