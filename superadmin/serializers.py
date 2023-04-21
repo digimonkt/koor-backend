@@ -104,6 +104,10 @@ class JobCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobCategory
         fields = ['id', 'title']
+        
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class EducationLevelSerializers(serializers.ModelSerializer):
