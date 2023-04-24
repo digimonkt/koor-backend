@@ -465,6 +465,21 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('Duration'),
         db_column="duration",
     )
+    salary_min = models.CharField(
+        verbose_name=_('Salary Min'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="salary_min",
+    )
+    salary_max = models.CharField(
+        verbose_name=_('Salary Max'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="salary_max",
+    )
+
 
     def __str__(self):
         return str(self.title)
