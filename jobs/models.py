@@ -489,3 +489,67 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Job Filters"
         db_table = "JobFilters"
         ordering = ['-created']
+
+
+class JobShare(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    A model representing job sharing details for a specific job.
+
+    This model inherits from `BaseModel`, `SoftDeleteModel`, and `TimeStampedModel`, and is a subclass of Django's
+    models.Model. It contains fields for various job sharing methods such as `WhatsApp`, `Telegram`, `Facebook`, and
+    `Mail`, along with a foreign key to the related `JobDetails` model.
+
+    Attributes:
+        - `job (ForeignKey)`: Foreign key to the related JobDetails model.
+        - `whatsapp (BigIntegerField)`: Number of shares via `WhatsApp`.
+        - `telegram (BigIntegerField)`: Number of shares via `Telegram`.
+        - `facebook (BigIntegerField)`: Number of shares via `Facebook`.
+        - `mail (BigIntegerField)`: Number of shares via `Mail`.
+
+    Methods:
+        - `__str__()`: Returns the title of the related job as a string.
+
+    Meta:
+        - `verbose_name (str)`: Singular name for the model used in Django admin.
+        - `verbose_name_plural (str)`: Plural name for the model used in Django admin.
+        - `db_table (str)`: Custom database table name for the model.
+        - `ordering (list)`: Ordering of records in the model's default queryset.
+
+    """
+
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    whatsapp = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Whats App'),
+        db_column="whatsapp",
+    )
+    telegram = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Telegram'),
+        db_column="telegram",
+    )
+    facebook = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Facebook'),
+        db_column="facebook",
+    )
+    mail = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Mail'),
+        db_column="mail",
+    )
+
+    def __str__(self):
+        return str(self.job.title)
+
+    class Meta:
+        verbose_name = "Job Share"
+        verbose_name_plural = "Job Shares"
+        db_table = "JobShare"
+        ordering = ['-created']
