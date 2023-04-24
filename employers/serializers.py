@@ -19,6 +19,7 @@ from tenders.models import (
 
 from user_profile.models import EmployerProfile
 from users.models import User
+from users.serializers import UserSerializer
 
 from jobs.models import (
     JobCategory,
@@ -27,6 +28,8 @@ from jobs.models import (
     JobDetails,
     JobSubCategory
 )
+
+from .models import BlackList
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -886,3 +889,51 @@ class ActivitySerializers(serializers.Serializer):
             An integer representing the number of tenders that the user has applied for.
         """
         return 0
+
+
+class BlacklistedUserSerializers(serializers.ModelSerializer):
+    """
+    Serializer for BlackListedUser model.
+
+    This serializer is used to serialize the BlackListedUser model and convert it into a JSON format. It includes the
+    'user', 'blacklisted_user', and 'reason' fields from the BlackList model, and adds a custom field
+    'blacklisted_user' using a SerializerMethodField.
+
+    Attributes:
+        blacklisted_user (serializers.SerializerMethodField): A custom field that uses a method to determine the
+        serialized representation of the blacklisted_user field.
+
+    Meta:
+        model (class): The model to be serialized, which is the BlackList model.
+        fields (list): A list of field names to be included in the serialized representation, which includes 'user',
+        'blacklisted_user', and 'reason'.
+
+    """
+
+    blacklisted_user = serializers.SerializerMethodField()
+    class Meta:
+        model = BlackList
+        fields = ['user', 'blacklisted_user', 'reason']
+
+
+    def get_blacklisted_user(self, obj):
+        """Get the serialized user data for a BlackList object.
+
+        This method uses the UserSerializer to serialize the users associated with a BlackList
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A BlackList object whose user data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized user data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.blacklisted_user:
+            get_data = UserSerializer(obj.blacklisted_user)
+            if get_data.data:
+                context = get_data.data
+        return context
