@@ -393,11 +393,14 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             application_status.save()
                     elif action == "blacklisted":
                         if 'reason' in request.data:
-                            BlackList.objects.create(
-                                user=request.user,
-                                blacklisted_user=application_status.user,
-                                reason=request.data['reason']
-                            )
+                            if BlackList.objects.filter(user=request.user, blacklisted_user=application_status.user):
+                                message = "Already "
+                            else:
+                                BlackList.objects.create(
+                                    user=request.user,
+                                    blacklisted_user=application_status.user,
+                                    reason=request.data['reason']
+                                )
                         else:
                             return response.Response(
                                 data={"message": "Please enter a reason"},
