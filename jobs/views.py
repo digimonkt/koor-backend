@@ -356,49 +356,67 @@ class ApplicationsDetailView(generics.GenericAPIView):
         context = dict()
         try:
             if applicationId:
-                message = "Successfully "
-                if action == "shortlisted":
-                    application_status = AppliedJob.objects.get(id=applicationId)
-                    if application_status.shortlisted_at:
-                        message = "Already "
-                    else:
-                        application_status.shortlisted_at = datetime.now()
-                        application_status.save()
-                        Notification.objects.create(
-                        user=application_status.user, application=application_status, 
-                        notification_type='shortlisted', created_by=request.user
-                        )
-                        if application_status.user.email:
-                            email_context = dict()
-                            if application_status.user.name:
-                                user_name = application_status.user.name
-                            else:
-                                user_name = application_status.user.email
-                            email_context["yourname"] = user_name
-                            email_context["notification_type"] = "shortlisted jobs"
-                            email_context["job_instance"] = application_status.job
-                            get_email_object(
-                                subject=f'Notification for shortlisted job',
-                                email_template_name='email-templates/send-notification.html',
-                                context=email_context,
-                                to_email=[application_status.user.email, ]
+                application_status = AppliedJob.objects.get(id=applicationId)
+                if application_status.job.user == request.user:
+                    message = "Successfully "
+                    if action == "shortlisted":
+                        if application_status.shortlisted_at:
+                            message = "Already "
+                        else:
+                            application_status.shortlisted_at = datetime.now()
+                            application_status.save()
+                            Notification.objects.create(
+                            user=application_status.user, application=application_status, 
+                            notification_type='shortlisted', created_by=request.user
                             )
-                elif action == "rejected":
-                    application_status = AppliedJob.objects.get(id=applicationId)
-                    if application_status.rejected_at:
-                        message = "Already "
-                    else:
-                        application_status.shortlisted_at = None
-                        application_status.rejected_at = datetime.now()
-                        application_status.save()
-                elif action == "blacklisted":
-                    application_data = AppliedJob.objects.get(id=applicationId)
-                    BlackList.objects.create(user=request.user, blacklisted_user=application_data.user)
-                context['message'] = str(message) + str(action)
-            return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
-            )
+                            if application_status.user.email:
+                                email_context = dict()
+                                if application_status.user.name:
+                                    user_name = application_status.user.name
+                                else:
+                                    user_name = application_status.user.email
+                                email_context["yourname"] = user_name
+                                email_context["notification_type"] = "shortlisted jobs"
+                                email_context["job_instance"] = application_status.job
+                                get_email_object(
+                                    subject=f'Notification for shortlisted job',
+                                    email_template_name='email-templates/send-notification.html',
+                                    context=email_context,
+                                    to_email=[application_status.user.email, ]
+                                )
+                    elif action == "rejected":
+                        if application_status.rejected_at:
+                            message = "Already "
+                        else:
+                            application_status.shortlisted_at = None
+                            application_status.rejected_at = datetime.now()
+                            application_status.save()
+                    elif action == "blacklisted":
+                        if 'reason' in request.data:
+                            if BlackList.objects.filter(user=request.user, blacklisted_user=application_status.user):
+                                message = "Already "
+                            else:
+                                BlackList.objects.create(
+                                    user=request.user,
+                                    blacklisted_user=application_status.user,
+                                    reason=request.data['reason']
+                                )
+                        else:
+                            return response.Response(
+                                data={"message": "Please enter a reason"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                    context['message'] = str(message) + str(action)
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                else:
+                    context['message'] = "You do not have permission to perform this action."
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
         except Exception as e:
             context["message"] = str(e)
             return response.Response(
