@@ -489,6 +489,21 @@ class ChangePasswordView(generics.GenericAPIView):
                 user=user_instance, notification_type='password_update',
                 created_by=user_instance
             )
+            if user_instance.email:
+                email_context = dict()
+                if user_instance.name:
+                    user_name = user_instance.name
+                else:
+                    user_name = user_instance.email
+                email_context["yourname"] = user_name
+                email_context["notification_type"] = "update password"
+                email_context["job_instance"] = "update password"
+                get_email_object(
+                    subject=f'Notification for update password',
+                    email_template_name='email-templates/send-notification.html',
+                    context=email_context,
+                    to_email=[user_instance.email, ]
+                )
             context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,
