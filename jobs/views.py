@@ -368,6 +368,21 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         user=application_status.user, application=application_status, 
                         notification_type='shortlisted', created_by=request.user
                         )
+                        if application_status.user.email:
+                            email_context = dict()
+                            if application_status.user.name:
+                                user_name = application_status.user.name
+                            else:
+                                user_name = application_status.user.email
+                            email_context["yourname"] = user_name
+                            email_context["notification_type"] = "shortlisted jobs"
+                            email_context["job_instance"] = application_status.job
+                            get_email_object(
+                                subject=f'Notification for shortlisted job',
+                                email_template_name='email-templates/send-notification.html',
+                                context=email_context,
+                                to_email=[application_status.user.email, ]
+                            )
                 elif action == "rejected":
                     application_status = AppliedJob.objects.get(id=applicationId)
                     if application_status.rejected_at:
