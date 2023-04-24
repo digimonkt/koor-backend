@@ -855,7 +855,7 @@ class JobFiltersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'country', 'city', 'job_category', 'job_sub_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'duration'
+            'salary_min', 'salary_max', 'duration'
         ]
 
     def update(self, instance, validated_data):

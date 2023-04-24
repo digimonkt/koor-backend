@@ -912,8 +912,11 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.description
+            except JobSeekerProfile.DoesNotExist:
+                pass  
         return None
 
     def get_education_record(self, obj):
