@@ -100,8 +100,8 @@ class JobsView(generics.ListAPIView):
     search_fields = [
         'title', 'description',
         'skill__title', 'highest_education__title',
-        'job_category__title', 'country__title',
-        'city__title'
+        'job_category__title', 'job_sub_category__title',
+        'country__title', 'city__title'
     ]
     pagination_class = CustomPagination
 
@@ -272,6 +272,9 @@ def my_callback(sender, **kwargs):
     ).filter(
         Q(job_category__in=[(job_category_value) for job_category_value in job_instance.job_category.all()]) | Q(
             job_category=None)
+    ).filter(
+        Q(job_sub_category__in=[(job_sub_category_value) for job_sub_category_value in job_instance.job_sub_category.all()]) | Q(
+            job_sub_category=None)
     ).filter(
         Q(is_full_time=job_instance.is_full_time) | Q(is_full_time=None)
     ).filter(

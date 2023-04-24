@@ -165,6 +165,12 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="job_category",
         related_name='%(app_label)s_%(class)s_job_category'
     )
+    job_sub_category = models.ManyToManyField(
+        to=JobSubCategory,
+        verbose_name=_('Job Sub Category'),
+        db_column="job_sub_category",
+        related_name='%(app_label)s_%(class)s_job_sub_category'
+    )
     is_full_time = models.BooleanField(
         verbose_name=_('Is Full-time'),
         null=True,
