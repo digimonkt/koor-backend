@@ -26,7 +26,8 @@ from jobs.models import (
     JobAttachmentsItem,
     JobsLanguageProficiency,
     JobDetails,
-    JobSubCategory
+    JobSubCategory,
+    JobShare
 )
 
 from .models import BlackList
@@ -351,6 +352,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         job_instance = super().save(user=user, status='active')
+        JobShare.objects.create(job=job_instance)
         if language:
             for language_data in language:
                 language_data = json.loads(language_data)

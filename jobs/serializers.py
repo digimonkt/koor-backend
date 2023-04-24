@@ -657,8 +657,8 @@ class AppliedJobSerializers(serializers.ModelSerializer):
     class Meta:
         model = AppliedJob
         fields = [
-            'id', 'shortlisted_at', 'rejected_at', 'created', 'short_letter', 'user',
-            'education', 'language', 'skill', 'job'
+            'id', 'shortlisted_at', 'rejected_at', 'interview_at', 'created', 
+            'short_letter', 'user', 'education', 'language', 'skill', 'job'
         ]
 
     def get_user(self, obj):

@@ -9,9 +9,10 @@ from datetime import datetime, date
 
 from django_filters import rest_framework as django_filters
 
+from core.emails import get_email_object
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails, JobFilters
+from jobs.models import JobDetails, JobFilters, JobShare
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import GetAppliedJobsSerializers
@@ -62,11 +63,11 @@ class JobSearchView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = [
-        'title', 'description', 
-        'skill__title', 'highest_education__title', 
+        'title', 'description',
+        'skill__title', 'highest_education__title',
         'job_category__title', 'job_sub_category__title',
         'country__title', 'city__title', 'user__name'
-        ]
+    ]
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -146,6 +147,7 @@ class JobSearchView(generics.ListAPIView):
             status="active"
         )
 
+
 class JobDetailView(generics.GenericAPIView):
     """
     A view that returns a serialized JobDetail object for a given jobId.
@@ -217,20 +219,25 @@ class JobApplicationsView(generics.ListAPIView):
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
-                    if filter_data == "planned_interviews": filters = filters & Q(job=None)
+                    if filter_data == "planned_interviews": filters = filters & Q(interview_at=None)
                     if filter_data == "blacklisted": filters = filters & Q(user__in=blacklisted_user_list)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
                 if page is not None:
                     serializer = self.get_serializer(page, many=True, context={"request": request})
-                    serialized_response =  self.get_paginated_response(serializer.data)
-                    serialized_response.data['rejected_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(rejected_at=None)).count()
-                    serialized_response.data['shortlisted_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(shortlisted_at=None)).count()
-                    serialized_response.data['planned_interview_count'] = 0
+                    serialized_response = self.get_paginated_response(serializer.data)
+                    serialized_response.data['rejected_count'] = AppliedJob.objects.filter(job=job_instance).filter(
+                        ~Q(rejected_at=None)).count()
+                    serialized_response.data['shortlisted_count'] = AppliedJob.objects.filter(job=job_instance).filter(
+                        ~Q(shortlisted_at=None)).count()
+                    serialized_response.data['planned_interview_count'] = AppliedJob.objects.filter(
+                        job=job_instance).filter(~Q(interview_at=None)).count()
                     user_list = []
                     for data in AppliedJob.objects.filter(job=job_instance):
                         user_list.append(data.user)
-                    serialized_response.data['blacklisted_count'] = BlackList.objects.filter(blacklisted_user__in=user_list).order_by('blacklisted_user').distinct('blacklisted_user').count()
+                    serialized_response.data['blacklisted_count'] = BlackList.objects.filter(
+                        blacklisted_user__in=user_list).order_by('blacklisted_user').distinct(
+                        'blacklisted_user').count()
                     return response.Response(data=serialized_response.data, status=status.HTTP_200_OK)
                 serializer = self.get_serializer(queryset, many=True, context={"request": request})
                 return response.Response(serializer.data)
@@ -273,7 +280,7 @@ class RecentApplicationsView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
-    
+
     def list(self, request):
         context = dict()
         if self.request.user.role == "employer":
@@ -366,8 +373,8 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             application_status.shortlisted_at = datetime.now()
                             application_status.save()
                             Notification.objects.create(
-                            user=application_status.user, application=application_status, 
-                            notification_type='shortlisted', created_by=request.user
+                                user=application_status.user, application=application_status,
+                                notification_type='shortlisted', created_by=request.user
                             )
                             if application_status.user.email:
                                 email_context = dict()
@@ -404,6 +411,26 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         else:
                             return response.Response(
                                 data={"message": "Please enter a reason"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                    elif action == "interview_planned":
+                        if application_status.rejected_at is None:
+                            if 'interview_at' in request.data:
+                                if application_status.interview_at:
+                                    message = "Already "
+                                else:
+                                    if application_status.shortlisted_at is None:
+                                        application_status.shortlisted_at = datetime.now()
+                                    application_status.interview_at = request.data['interview_at']
+                                    application_status.save()
+                            else:
+                                return response.Response(
+                                    data={"interview_at": "This field is requeired."},
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                        else:
+                            return response.Response(
+                                data={"message": "Application already rejected."},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
                     context['message'] = str(message) + str(action)
@@ -705,4 +732,67 @@ class JobFilterView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobShareView(generics.GenericAPIView):
+    """
+    A view for updating job sharing details for a specific job on a particular platform.
+
+    This view allows updating the number of shares for a job on a specific platform, such as `WhatsApp`, `Telegram`,
+    `Facebook`, or Mail. It takes the jobId and platform as URL parameters and uses a `PUT` request to update the
+    corresponding `JobShare` instance. If the `JobDetails` or `JobShare` instance does not exist, it returns a
+    `404 Not Found` response. If there is any other error, it returns a `400 Bad Request` response.
+
+    Methods:
+        - `put(request, jobId, platform)`: Updates the number of shares for a job on a specific platform.
+
+    Args:
+        - `request (Request)`: The HTTP request object.
+        - `jobId (int)`: The ID of the job to update the sharing details for.
+        - `platform (str)`: The name of the platform to update the sharing details on.
+
+    Returns:
+        - `Response`: A response object with status code and message.
+
+    Raises:
+        - `None`.
+    """
+
+    def put(self, request, jobId, platform):
+        context = dict()
+        try:
+            job_instance = JobDetails.objects.get(id=jobId)
+            job_share_instance = JobShare.objects.get(job=job_instance)
+            if platform == "whatsapp":
+                job_share_instance.whatsapp = job_share_instance.whatsapp + 1
+                job_share_instance.save()
+            elif platform == "telegram":
+                job_share_instance.telegram = job_share_instance.telegram + 1
+                job_share_instance.save()
+            elif platform == "facebook":
+                job_share_instance.facebook = job_share_instance.facebook + 1
+                job_share_instance.save()
+            elif platform == "mail":
+                job_share_instance.mail = job_share_instance.mail + 1
+                job_share_instance.save()
+            return response.Response(
+                data={"message": "Share details updated"},
+                status=status.HTTP_200_OK
+            )
+        except JobShare.DoesNotExist:
+            return response.Response(
+                data={"message": "Job share does not exist with this job."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"jobId": "Does Not Exist."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
             )
