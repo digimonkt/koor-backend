@@ -217,7 +217,7 @@ class JobApplicationsView(generics.ListAPIView):
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
-                    if filter_data == "planned_interviews": filters = filters & Q(job=None)
+                    if filter_data == "planned_interviews": filters = filters & Q(interview_at=None)
                     if filter_data == "blacklisted": filters = filters & Q(user__in=blacklisted_user_list)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
@@ -226,7 +226,7 @@ class JobApplicationsView(generics.ListAPIView):
                     serialized_response =  self.get_paginated_response(serializer.data)
                     serialized_response.data['rejected_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(rejected_at=None)).count()
                     serialized_response.data['shortlisted_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(shortlisted_at=None)).count()
-                    serialized_response.data['planned_interview_count'] = 0
+                    serialized_response.data['planned_interview_count'] = AppliedJob.objects.filter(job=job_instance).filter(~Q(interview_at=None)).count()
                     user_list = []
                     for data in AppliedJob.objects.filter(job=job_instance):
                         user_list.append(data.user)
@@ -404,6 +404,26 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         else:
                             return response.Response(
                                 data={"message": "Please enter a reason"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                    elif action == "interview_planned":
+                        if application_status.rejected_at == None:
+                            if 'interview_at' in request.data:
+                                if application_status.interview_at:
+                                    message = "Already "
+                                else:
+                                    if application_status.shortlisted_at == None:
+                                        application_status.shortlisted_at = datetime.now()
+                                    application_status.interview_at = request.data['interview_at']
+                                    application_status.save()
+                            else:
+                                return response.Response(
+                                    data={"interview_at": "This field is requeired."},
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                        else:
+                            return response.Response(
+                                data={"message": "Application already rejected."},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
                     context['message'] = str(message) + str(action)
