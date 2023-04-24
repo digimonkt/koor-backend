@@ -4,7 +4,8 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from jobs.models import (
-    JobCategory, JobDetails
+    JobCategory, JobDetails,
+    JobSubCategory
 )
 from project_meta.models import (
     Country, City, EducationLevel,
@@ -85,7 +86,7 @@ class CitySerializers(serializers.ModelSerializer):
         else:
             try:
                 if Country.objects.get(title=country.title):
-                    if City.objects.filter(title=title, country=country).exists():
+                    if City.objects.filter(title__iexact=title, country=country).exists():
                         raise serializers.ValidationError({'title': title + ' in ' + country.title + ' already exist.'})
                     return data
             except Country.DoesNotExist:
@@ -104,6 +105,31 @@ class JobCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobCategory
         fields = ['id', 'title']
+        
+            
+    def validate(self, data):
+        """
+        Validate the data before saving to the database.
+        
+        The validate method checks if the category field is blank and raises a validation error if it is.
+        It also checks if a job sub category with the same title and category already exists and raises a validation error if it
+        does.
+        Finally, it checks if the category exists in the database and raises a validation error if it does not.
+
+        Args:
+            data (dict): Dictionary of data to be validated.
+
+        Raises:
+            serializers.ValidationError: Raised if the category field is blank or if a job sub category with the same title and
+            category already exists or if the category does not exist in the database.
+
+        Returns:
+            data (dict): The validated data.
+        """
+        title = data.get("title")
+        if JobCategory.objects.filter(title__iexact=title, is_removed=False).exists():
+            raise serializers.ValidationError({'title': title + ' already exist.'})
+        return data
         
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -538,3 +564,54 @@ class SectorSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'title': str(title) + ' already exists'})
         else:
             return data
+
+
+class JobSubCategorySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `JobSubCategory` model.
+
+    The `JobSubCategorySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `JobSubCategory` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'category'.
+    """
+
+    class Meta:
+        model = JobSubCategory
+        fields = ['id', 'title', 'category']
+        
+    def validate(self, data):
+        """
+        Validate the data before saving to the database.
+        
+        The validate method checks if the category field is blank and raises a validation error if it is.
+        It also checks if a job sub category with the same title and category already exists and raises a validation error if it
+        does.
+        Finally, it checks if the category exists in the database and raises a validation error if it does not.
+
+        Args:
+            data (dict): Dictionary of data to be validated.
+
+        Raises:
+            serializers.ValidationError: Raised if the category field is blank or if a job sub category with the same title and
+            category already exists or if the category does not exist in the database.
+
+        Returns:
+            data (dict): The validated data.
+        """
+        category = data.get("category")
+        title = data.get("title")
+        if category in ["", None]:
+            raise serializers.ValidationError({'category': 'category can not be blank'})
+        else:
+            try:
+                if JobCategory.objects.get(title=category.title):
+                    if JobSubCategory.objects.filter(title__iexact=title, category=category).exists():
+                        raise serializers.ValidationError({'title': title + ' in ' + category.title + ' already exist.'})
+                    return data
+            except JobCategory.DoesNotExist:
+                raise serializers.ValidationError('Job category not available.', code='category')
+
+        
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance

@@ -13,7 +13,8 @@ from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
 
 from jobs.models import (
-    JobCategory, JobDetails
+    JobCategory, JobDetails,
+    JobSubCategory
 )
 from jobs.filters import JobDetailsFilter
 
@@ -36,7 +37,7 @@ from .serializers import (
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
     DashboardCountSerializers, JobSeekerCategorySerializers,
-    TenderCategorySerializers, SectorSerializers
+    TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers
 )
 
 
@@ -97,8 +98,8 @@ class CountryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Country.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Country.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -185,17 +186,17 @@ class CityView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = CitySerializers
-    queryset = City.objects.all()
+    queryset = City.objects.filter(country__is_removed=False)
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
 
     def list(self, request):
         country_id = request.GET.get('countryId', None)
-        queryset = City.objects.all()
         if country_id:
-            queryset = City.objects.filter(country_id=country_id)
-        queryset = self.filter_queryset(queryset)
+            queryset = self.filter_queryset(self.get_queryset().filter(country_id=country_id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -224,9 +225,9 @@ class CityView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if City.all_objects.filter(title=serializer.validated_data['title'],
+                if City.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                            country=serializer.validated_data['country'], is_removed=True).exists():
-                    City.all_objects.filter(title=serializer.validated_data['title'],
+                    City.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                             country=serializer.validated_data['country'], is_removed=True).update(
                         is_removed=False)
                 else:
@@ -350,8 +351,8 @@ class JobCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if JobCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    JobCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -521,9 +522,9 @@ class EducationLevelView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if EducationLevel.all_objects.filter(title=serializer.validated_data['title'],
+                if EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                      is_removed=True).exists():
-                    EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                    EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -692,8 +693,8 @@ class LanguageView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Language.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Language.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -867,8 +868,8 @@ class SkillView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Skill.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Skill.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -1038,8 +1039,8 @@ class TagView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Tag.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Tag.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2252,9 +2253,9 @@ class TenderCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if TenderCategory.all_objects.filter(title=serializer.validated_data['title'],
+                if TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                      is_removed=True).exists():
-                    TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                    TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2375,8 +2376,8 @@ class SectorView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Sector.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Sector.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2535,4 +2536,179 @@ class UploadCountryView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobSubCategoryView(generics.ListAPIView):
+    """
+    A view for displaying a list of job sub categories.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (JobSubCategorySerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `JobSubCategory.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = JobSubCategorySerializers
+    queryset = JobSubCategory.objects.filter(category__is_removed=False).order_by("category")
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'category__title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        category_id = request.GET.get('categoryId', None)
+        if category_id:
+            queryset = self.filter_queryset(self.get_queryset().filter(category_id=category_id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle POST request to create a new job sub category.
+        The request must contain valid data for the job sub category to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a job sub category.
+
+        Returns:
+            - HTTP 201 CREATED with a message "JobSubCategory added successfully" if the job sub category is created
+            successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, jobSubCategoryId):
+        """
+        Deletes an JobSubCategory object with the given ID if the authenticated user is a job seeker and owns the
+        JobSubCategory.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the JobSubCategory to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobSubCategory.objects.get(id=jobSubCategoryId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobSubCategory.DoesNotExist:
+                return response.Response(
+                    data={"jobSubCategoryId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, jobSubCategoryId):
+        """
+        Update an `JobSubCategory` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `jobSubCategoryId (int)`: The ID of the `JobSubCategory` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `JobSubCategory.DoesNotExist`: If the JobSubCategory instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            job_sub_category_instance = JobSubCategory.all_objects.get(id=jobSubCategoryId)
+            serializer = self.serializer_class(data=request.data, instance=job_sub_category_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_sub_category_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except JobSubCategory.DoesNotExist:
+            return response.Response(
+                data={"jobSubCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
