@@ -4,10 +4,12 @@ from django.core import mail
 from django.core.mail.backends.smtp import EmailBackend
 from django.template.loader import get_template
 
+from koor.config.common import Common
+
 from superadmin.models import SMTPSetting
 
 
-def get_email_object(subject, email_template_name, context, to_email, content_subtype="html", base_url=None, **kwargs):
+def get_email_object(subject, email_template_name, context, to_email, content_subtype="html", **kwargs):
     """
     Sends an email message using `SMTP settings` from the latest `SMTPSetting object` in the database.
 
@@ -40,7 +42,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
         context.update({
             'FOOTER': 'Block No 5 Software Technology Parks Of India (IT Park, Morena Link Rd, Gwalior, Madhya Pradesh '
                       '474005',
-            'LOGO': base_url + smtp_setting.logo.url
+            'LOGO': Common.BASE_URL + smtp_setting.logo.url
         })
         mail_obj = EmailBackend(host=host, port=host_port, password=host_password, username=host_user, use_tls=True,
                                 timeout=10)

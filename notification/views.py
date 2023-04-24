@@ -86,6 +86,21 @@ def ExpiredSavedJobs():
             ) for saved_job in saved_job_data
         ]
     )
+    if saved_job.user.email:
+        email_context = dict()
+        if saved_job.user.name:
+            user_name = saved_job.user.name
+        else:
+            user_name = saved_job.user.email
+        email_context["yourname"] = user_name
+        email_context["notification_type"] = "expired save job"
+        email_context["job_instance"] = saved_job.job
+        get_email_object(
+            subject=f'Notification for expired save job',
+            email_template_name='email-templates/send-notification.html',
+            context=email_context,
+            to_email=[job_filter.user.email, ]
+        )
     saved_job_data = SavedJob.objects.filter(
         job__deadline__lte=date.today(), notified=False
     ).update(notified=True)

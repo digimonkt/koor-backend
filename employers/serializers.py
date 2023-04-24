@@ -24,7 +24,8 @@ from jobs.models import (
     JobCategory,
     JobAttachmentsItem,
     JobsLanguageProficiency,
-    JobDetails
+    JobDetails,
+    JobSubCategory
 )
 
 
@@ -154,6 +155,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         - `city`: city where the job is located
         - `address`: address of the job location
         - `job_category`: categories related to the job
+        - `job_sub_category`: sub-categories related to the job
         - `is_full_time`: boolean indicating if the job is full-time
         - `is_part_time`: boolean indicating if the job is part-time
         - `has_contract`: boolean indicating if the job has a contract
@@ -164,10 +166,15 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         - `language`: languages required for the job
         - `skill`: skills required for the job
 
-    The `job_category`, `language`, and `skill` fields are related fields that are read-only.
+    The `job_category`, `job_sub_category`, `language`, and `skill` fields are related fields that are read-only.
     """
     job_category = serializers.PrimaryKeyRelatedField(
         queryset=JobCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    job_sub_category = serializers.PrimaryKeyRelatedField(
+        queryset=JobSubCategory.objects.all(),
         many=True,
         write_only=True
     )
@@ -195,7 +202,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         model = JobDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
-            'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'attachments', 'deadline', 'start_date'
         ]
@@ -223,6 +230,30 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             return job_category
         else:
             raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
+
+    def validate_job_sub_category(self, job_sub_category):
+        """
+        validate_job_sub_category - A function to validate the job sub category for a job instance.
+
+        Parameters:
+            job_sub_category (str): The job category to be validated.
+
+        Returns:
+            job_sub_category (str): The validated job sub category.
+
+            This function validates the job category of a job instance. If the job sub category is an empty string, a
+        ValidationError is raised with a message indicating that the job sub category cannot be blank. If the length of
+        the job sub category string is greater than 3, a ValidationError is raised with a message indicating that the
+        choices are limited to 3. If the job sub category is not blank and its length is within limits, the job sub category
+        is returned.
+        """
+        if job_sub_category not in [None, ""]:
+            limit = 3
+            if len(job_sub_category) > limit:
+                raise serializers.ValidationError({'job_sub_category': 'Choices limited to ' + str(limit)})
+            return job_sub_category
+        else:
+            raise serializers.ValidationError({'job_sub_category': 'Job sub category can not be blank.'})
 
     def validate_language(self, language):
         """
@@ -286,8 +317,11 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 
     def validate(self, data):
         job_category = data.get("job_category")
+        job_sub_category = data.get("job_sub_category")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
+        if not job_sub_category:
+            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
         return data
 
     def save(self, user):
@@ -344,12 +378,14 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 class UpdateJobSerializers(serializers.ModelSerializer):
     """
     Serializer class for updating JobDetails model instances.
-    This class defines a set of fields to be updated and provides validation methods for job_category, language and
+    This class defines a set of fields to be updated and provides validation methods for job_category, job_sub_category, language and
     skill fields. Additionally, it handles the updating of the attachments and attachments_remove fields. It takes an
     existing instance of JobDetails and validated data, then performs the update operation on the instance.
     Attributes:
         - `job_category`: PrimaryKeyRelatedField to JobCategory model objects, many to many relationship, used to update
         job categories.
+        - `job_sub_category`: PrimaryKeyRelatedField to JobSubCategory model objects, many to many relationship, used to update
+        job sub categories.
         - `language`: PrimaryKeyRelatedField to Language model objects, many to many relationship, used to update
         languages.
         - `skill`: PrimaryKeyRelatedField to Skill model objects, many to many relationship, used to update skills.
@@ -357,6 +393,8 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         - `attachments_remove`: ListField of text inputs, used to remove attachments from the job instance.
     Methods:
         - `validate_job_category`: validates the job_category field and raises a ValidationError if the value is empty
+        or exceeds a specified limit.
+        - `validate_job_sub_category`: validates the job_sub_category field and raises a ValidationError if the value is empty
         or exceeds a specified limit.
         - `validate_language`: validates the language field and raises a ValidationError if the value is empty or
         exceeds a specified limit.
@@ -368,6 +406,11 @@ class UpdateJobSerializers(serializers.ModelSerializer):
 
     job_category = serializers.PrimaryKeyRelatedField(
         queryset=JobCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    job_sub_category = serializers.PrimaryKeyRelatedField(
+        queryset=JobSubCategory.objects.all(),
         many=True,
         write_only=True
     )
@@ -403,7 +446,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         model = JobDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
-            'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
             'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
@@ -416,6 +459,15 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             return job_category
         else:
             raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
+
+    def validate_job_sub_category(self, job_sub_category):
+        if job_sub_category not in [None, ""]:
+            limit = 3
+            if len(job_sub_category) > limit:
+                raise serializers.ValidationError({'job_sub_category': 'Choices limited to ' + str(limit)})
+            return job_sub_category
+        else:
+            raise serializers.ValidationError({'job_sub_category': 'Job sub category can not be blank.'})
 
     def validate_language(self, language):
         if language not in [""]:
@@ -451,8 +503,11 @@ class UpdateJobSerializers(serializers.ModelSerializer):
 
     def validate(self, data):
         job_category = data.get("job_category")
+        job_sub_category = data.get("job_sub_category")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
+        if not job_sub_category:
+            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
         return data
 
     def update(self, instance, validated_data):

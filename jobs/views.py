@@ -64,8 +64,8 @@ class JobSearchView(generics.ListAPIView):
     search_fields = [
         'title', 'description', 
         'skill__title', 'highest_education__title', 
-        'job_category__title', 'country__title', 
-        'city__title', 'user__name'
+        'job_category__title', 'job_sub_category__title',
+        'country__title', 'city__title', 'user__name'
         ]
     pagination_class = CustomPagination
 
@@ -91,6 +91,9 @@ class JobSearchView(generics.ListAPIView):
         jobCategory = request.GET.getlist('jobCategory')
         if jobCategory:
             queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
+        jobSubCategory = request.GET.getlist('jobSubCategory')
+        if jobSubCategory:
+            queryset = queryset.filter(job_sub_category__title__in=jobSubCategory).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
@@ -365,6 +368,21 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         user=application_status.user, application=application_status, 
                         notification_type='shortlisted', created_by=request.user
                         )
+                        if application_status.user.email:
+                            email_context = dict()
+                            if application_status.user.name:
+                                user_name = application_status.user.name
+                            else:
+                                user_name = application_status.user.email
+                            email_context["yourname"] = user_name
+                            email_context["notification_type"] = "shortlisted jobs"
+                            email_context["job_instance"] = application_status.job
+                            get_email_object(
+                                subject=f'Notification for shortlisted job',
+                                email_template_name='email-templates/send-notification.html',
+                                context=email_context,
+                                to_email=[application_status.user.email, ]
+                            )
                 elif action == "rejected":
                     application_status = AppliedJob.objects.get(id=applicationId)
                     if application_status.rejected_at:
@@ -429,6 +447,15 @@ class JobSuggestionView(generics.ListAPIView):
                 matches=Case(
                     When(
                         job_category__in=job_instance.job_category.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        job_sub_category__in=job_instance.job_sub_category.all(),
                         then=F('matches') + 1
                     ),
                     default=F('matches'),
