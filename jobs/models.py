@@ -505,6 +505,8 @@ class JobShare(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `telegram (BigIntegerField)`: Number of shares via `Telegram`.
         - `facebook (BigIntegerField)`: Number of shares via `Facebook`.
         - `mail (BigIntegerField)`: Number of shares via `Mail`.
+        - `linked_in (BigIntegerField)`: Number of shares via `Linked In`.
+        - `direct_link (BigIntegerField)`: Number of shares via `Direct Link`.
 
     Methods:
         - `__str__()`: Returns the title of the related job as a string.
@@ -538,11 +540,21 @@ class JobShare(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         default=0,
         verbose_name=_('Facebook'),
         db_column="facebook",
+    )    
+    linked_in = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Linked In'),
+        db_column="linked_in",
     )
     mail = models.BigIntegerField(
         default=0,
         verbose_name=_('Mail'),
         db_column="mail",
+    )
+    direct_link = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Direct Link'),
+        db_column="direct_link",
     )
 
     def __str__(self):

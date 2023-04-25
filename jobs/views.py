@@ -26,7 +26,8 @@ from .serializers import (
     GetJobsDetailSerializers,
     AppliedJobSerializers,
     JobFiltersSerializers,
-    GetJobFiltersSerializers
+    GetJobFiltersSerializers,
+    ShareCountSerializers
 )
 from .filters import JobDetailsFilter
 
@@ -758,6 +759,25 @@ class JobShareView(generics.GenericAPIView):
     Raises:
         - `None`.
     """
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ShareCountSerializers
+
+    def get(self, request, jobId):
+        context = dict()
+        try:
+            job_instance = JobDetails.objects.get(id=jobId)
+            queryset = JobShare.objects.get(job=job_instance)
+            serializer = self.get_serializer(queryset)
+            return response.Response(
+                data=serializer.data,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def put(self, request, jobId, platform):
         context = dict()
@@ -775,6 +795,12 @@ class JobShareView(generics.GenericAPIView):
                 job_share_instance.save()
             elif platform == "mail":
                 job_share_instance.mail = job_share_instance.mail + 1
+                job_share_instance.save()
+            elif platform == "linked_in":
+                job_share_instance.linked_in = job_share_instance.linked_in + 1
+                job_share_instance.save()
+            elif platform == "direct_link":
+                job_share_instance.direct_link = job_share_instance.direct_link + 1
                 job_share_instance.save()
             return response.Response(
                 data={"message": "Share details updated"},
