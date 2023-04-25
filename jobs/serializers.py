@@ -459,10 +459,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = []
+        context = {}
         get_data = JobCategorySerializer(obj.job_category, many=True)
         if get_data.data:
-            context = get_data.data
+            context = get_data.data[0]
         return context
 
     def get_job_sub_category(self, obj):
@@ -480,10 +480,10 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = []
+        context = {}
         get_data = JobSubCategorySerializer(obj.job_sub_category, many=True)
         if get_data.data:
-            context = get_data.data
+            context = get_data.data[0]
         return context
 
     def get_highest_education(self, obj):
@@ -986,24 +986,6 @@ class GetJobFiltersSerializers(serializers.ModelSerializer):
 
 
 class ShareCountSerializers(serializers.ModelSerializer):
-    """
-    A Django Rest Framework serializer for the `ShareCount` model, which calculates the `total share count` by
-    summing up the individual share counts for different social media platforms like `WhatsApp`, `Telegram`,
-    `Facebook`, `LinkedIn`, `Mail`, and `Direct Link`.
-
-    Attributes:
-        - `total (serializers.SerializerMethodField)`: A serializer method field that calculates the
-            `total share count`.
-
-    Meta:
-        - `model (class)`: The model to be used for serialization, in this case, the `JobShare` model.
-        - `fields (list)`: The fields to be included in the serialized representation, including the social
-                        media platform share counts and the total share count.
-
-    Methods:
-        - `get_total(obj)`: A method that calculates the total share count by summing up the individual share counts for
-                        different social media platforms.
-    """
 
     total = serializers.SerializerMethodField()
 
