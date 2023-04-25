@@ -414,7 +414,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                 data={"message": "Please enter a reason"},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
-                    elif action == "interview_planned":
+                    elif action == "planned_interviews":
                         if application_status.rejected_at is None:
                             if 'interview_at' in request.data:
                                 if application_status.interview_at:
