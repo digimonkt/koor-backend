@@ -825,3 +825,77 @@ class ModifyCategoriesSerializers(serializers.ModelSerializer):
         else:
             Categories.all_objects.filter(user=user).delete()
         return self
+
+
+class UpdateAppliedJobSerializers(serializers.ModelSerializer):
+    """
+    Serializer for updating an AppliedJob instance with attachments and attachment removal.
+
+    This serializer is used to update an existing `AppliedJob instance` with new attachments or remove existing
+    attachments. It provides the ability to upload multiple attachments as files, and also remove attachments by
+    specifying their IDs. The serializer validates the data, updates the instance with the validated data, and
+    handles attachments and attachment removal appropriately.
+
+    Attributes:
+        - `attachments (ListField)`: A list of file attachments to be added to the AppliedJob instance.
+        - `attachments_remove (ListField)`: A list of attachment IDs to be removed from the AppliedJob instance.
+
+    Meta:
+        - `model (AppliedJob)`: The model to be used for the serializer.
+        - `fields (list)`: The fields to be included in the serialized representation of the model.
+
+    Methods:
+        - `update(instance, validated_data)`: Update the instance with the validated data.
+
+    Raises:
+        N/A
+
+    """
+
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+    attachments_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = AppliedJob
+        fields = ['id', 'attachments', 'attachments_remove', 'short_letter']
+
+    def update(self, instance, validated_data):
+        attachments = None
+        attachments_remove = None
+
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        if 'attachments_remove' in self.validated_data:
+            attachments_remove = self.validated_data.pop('attachments_remove')
+
+        applied_job_instance = super().update(instance, validated_data)
+        if attachments_remove:
+            for remove in attachments_remove:
+                AppliedJobAttachmentsItem.objects.filter(id=remove).update(applied_job=None)
+
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = AppliedJobAttachmentsItem.objects.create(applied_job=applied_job_instance,
+                                                                                attachment=media_instance)
+                attachments_instance.save()
+
+        return instance
