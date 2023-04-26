@@ -601,7 +601,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
                 user=user,
                 shortlisted_at = None,
                 rejected_at = None,
-                created__date__lt = date.today()
+                created__date__gte = date.today()
             ).exists()
         return is_editable_record
     
