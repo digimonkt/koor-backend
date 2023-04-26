@@ -5,6 +5,8 @@ from datetime import date
 from rest_framework import (
     generics, response, permissions, filters
 )
+
+from core.emails import get_email_object
 from core.pagination import CustomPagination
 
 from job_seekers.models import SavedJob
