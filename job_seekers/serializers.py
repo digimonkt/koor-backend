@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from core.emails import get_email_object
+
 from jobs.models import JobDetails
 from project_meta.models import (
     Media, Language, JobSeekerCategory

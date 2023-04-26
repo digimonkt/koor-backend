@@ -824,6 +824,51 @@ class JobsApplyView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, jobId):
+
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            serializer = AppliedJobSerializers(data=request.data)
+            try:
+                job_instace = JobDetails.objects.get(id=jobId)
+                try:
+                    application_instance =  AppliedJob.objects.get(job=job_instace, user=request.user)
+                    serializer.is_valid(raise_exception=True)
+                    if serializer.update(application_instance, serializer.validated_data):
+                        context['message'] = "Updated Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )   
+                except AppliedJob.DoesNotExist:
+                    return response.Response(
+                        data={"application": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
     def delete(self, request, jobId):
         """
         Deletes an AppliedJob object with the given job if the authenticated user is a job seeker and owns the
