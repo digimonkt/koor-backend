@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from datetime import date
 
 from jobs.models import (
     JobDetails, JobAttachmentsItem, JobCategory,
@@ -390,6 +391,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     is_applied = serializers.SerializerMethodField()
     application = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
+    is_editable = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -398,7 +400,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'country', 'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
-            'is_applied', 'application', 'is_saved'
+            'is_applied', 'application', 'is_saved', 'is_editable'
 
         ]
 
@@ -589,6 +591,19 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
                 user=user
             ).exists()
         return is_applied_record
+    
+    def get_is_editable(self, obj):
+        is_editable_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            is_editable_record = AppliedJob.objects.filter(
+                job=obj,
+                user=user,
+                shortlisted_at = None,
+                rejected_at = None,
+                created__date__gte = date.today()
+            ).exists()
+        return is_editable_record
     
     def get_application(self, obj):
         application_context = dict()
