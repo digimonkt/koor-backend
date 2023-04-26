@@ -388,6 +388,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     applicant = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     is_applied = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
 
     class Meta:
@@ -397,7 +398,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'country', 'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
-            'is_applied', 'is_saved'
+            'is_applied', 'application', 'is_saved'
 
         ]
 
@@ -588,6 +589,16 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
                 user=user
             ).exists()
         return is_applied_record
+    
+    def get_application(self, obj):
+        application_context = dict()
+        if 'user' in self.context:
+            user = self.context['user']
+            if AppliedJob.objects.filter(job=obj, user=user).exists():
+                application = AppliedJob.objects.get(job=obj, user=user)
+                application_context['id'] = application.id
+                application_context['created'] = application.created
+        return application_context
 
     def get_is_saved(self, obj):
         is_saved_record = False
