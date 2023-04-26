@@ -395,7 +395,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
             'country', 'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
             'is_applied', 'is_saved'
 

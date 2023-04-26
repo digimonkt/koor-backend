@@ -70,7 +70,8 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     - `is_part_time`: a Boolean indicating whether the job is part-time or not
     - `has_contract`: a Boolean indicating whether the job has a contract or not
     - `contact_email`: the contact email for the job
-    - `contact_phone`: the contact phone number for the job
+    - `cc1`: the cc1 for the job
+    - `cc2`: the cc2 for the job
     - `contact_whatsapp`: the contact Whatsapp number for the job
     - `highest_education`: the highest level of education required for the job
     - `language`: the language(s) required for the job
@@ -198,12 +199,17 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="contact_email",
     )
-    contact_phone = models.CharField(
-        verbose_name=_('Contact Phone'),
+    cc1 = models.EmailField(
+        verbose_name=_('CC Email 1'),
         null=True,
         blank=True,
-        max_length=15,
-        db_column="contact_phone",
+        db_column="cc1",
+    )
+    cc2 = models.EmailField(
+        verbose_name=_('CC Email 2'),
+        null=True,
+        blank=True,
+        db_column="cc2",
     )
     contact_whatsapp = models.CharField(
         verbose_name=_('Contact Whatsapp'),

@@ -164,7 +164,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         - `is_part_time`: boolean indicating if the job is part-time
         - `has_contract`: boolean indicating if the job has a contract
         - `contact_email`: contact email for the job
-        - `contact_phone`: contact phone for the job
+        - `cc1`: cc1 for the job
+        - `cc2`: cc2 for the job
         - `contact_whatsapp`: contact WhatsApp for the job
         - `highest_education`: highest education required for the job
         - `language`: languages required for the job
@@ -207,7 +208,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'attachments', 'deadline', 'start_date'
         ]
 
@@ -452,7 +453,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
+            'contact_email', 'cc1',  'cc2', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
             'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
 
