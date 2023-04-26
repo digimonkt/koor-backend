@@ -368,6 +368,7 @@ class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, mo
         verbose_name=_('Applied Job'),
         on_delete=models.CASCADE,
         db_column="applied_job",
+        null=True,
         related_name='%(app_label)s_%(class)s_applied_job'
     )
     attachment = models.OneToOneField(
