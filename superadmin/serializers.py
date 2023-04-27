@@ -10,7 +10,8 @@ from jobs.models import (
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory, Sector
+    JobSeekerCategory, Sector,
+    AllCountry
 )
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
@@ -615,3 +616,17 @@ class JobSubCategorySerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+class AllCountrySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `AllCountry` model.
+
+    The `AllCountrySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `AllCountry` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'currency', 'phone_code', 'iso_code2', and 'iso_code3'.
+    """
+
+    class Meta:
+        model = AllCountry
+        fields = ['id', 'title', 'currency', 'phone_code', 'iso2', 'iso3']
