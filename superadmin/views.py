@@ -37,7 +37,8 @@ from .serializers import (
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
     DashboardCountSerializers, JobSeekerCategorySerializers,
-    TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers
+    TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
+    AllCountrySerializers
 )
 
 
@@ -2712,3 +2713,35 @@ class JobSubCategoryView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class WorldCountryView(generics.ListAPIView):
+    """
+    A view that returns a list of all countries in the world.
+
+    This view supports searching for countries by title using the `title` query parameter.
+
+    Attributes:
+    - `permission_classes` : list of classes
+        - The list of permission classes that the view requires.
+        - In this case, any user is allowed to access the view.
+    - `serializer_class` : Serializer class
+        - The serializer class that will be used to serialize the country data returned by the view. In this 
+        case, the `AllCountrySerializers` serializer will be used.
+    - `queryset` : QuerySet
+        - The queryset of all countries that will be used by the view.
+        - In this case, the `AllCountry` model's all objects will be used.
+    - `filter_backends` : list of classes
+        - The list of filter backend classes that the view will use to filter
+        the queryset. In this case, the `SearchFilter` backend will be used.
+    - `search_fields` : list of strings
+        - The list of fields that will be used for searching countries by title.
+        - In this case, only the `title` field will be searched with the "^" prefix, which means that 
+        the search is case-insensitive and searches for the start of the field value.
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AllCountrySerializers
+    queryset = AllCountry.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['^title']
