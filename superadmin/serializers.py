@@ -523,7 +523,10 @@ class JobSeekerCategorySerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError({'title': 'Sub category already exists'})
             else:
                 return data
-    
+ 
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance   
     
 class TenderCategorySerializers(serializers.ModelSerializer):
     """
@@ -566,6 +569,24 @@ class SectorSerializers(serializers.ModelSerializer):
         else:
             return data
 
+
+class GetJobSubCategorySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `JobSubCategory` model.
+
+    The `GetJobSubCategorySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `JobSubCategory` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'category'.
+    """
+    category = serializers.SerializerMethodField()
+    class Meta:
+        model = JobSubCategory
+        fields = ['id', 'title', 'category']
+        
+    def get_category(self, obj):
+        return {"id": obj.category.id, "title": obj.category.title}
+
+        
 
 class JobSubCategorySerializers(serializers.ModelSerializer):
     """
@@ -611,7 +632,6 @@ class JobSubCategorySerializers(serializers.ModelSerializer):
                     return data
             except JobCategory.DoesNotExist:
                 raise serializers.ValidationError('Job category not available.', code='category')
-
         
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
