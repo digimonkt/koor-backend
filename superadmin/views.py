@@ -25,7 +25,7 @@ from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
     JobSeekerCategory, Sector,
-    AllCountry
+    AllCountry, AllCity
 )
 
 from tenders.models import TenderCategory
@@ -38,7 +38,7 @@ from .serializers import (
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
     DashboardCountSerializers, JobSeekerCategorySerializers,
     TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
-    AllCountrySerializers
+    AllCountrySerializers, GetJobSubCategorySerializers
 )
 
 
@@ -2552,29 +2552,83 @@ class UploadCountryView(generics.GenericAPIView):
             if csv_file:
                 data_set = csv_file.read().decode('UTF-8')
                 io_string = io.StringIO(data_set)
-                # next(io_string)
                 get_data = csv.reader(io_string)
                 for row in get_data:
                     if row[0].isdigit():
                         if AllCountry.objects.filter(id=row[0]).exists():
                             AllCountry.objects.filter(id=row[0]).update(
                                 title=row[1], iso3=row[2], iso2=row[3],
-                                numeric_code=row[4], phone_code=row[5], capital=row[6],
-                                currency=row[7], currency_name=row[8], currency_symbol=row[9],
-                                tld=row[10], native=row[11], region=row[12], subregion=row[13],
-                                timezones=row[14], latitude=row[15], longitude=row[16],
-                                emoji=row[17], emojiU=row[18]
+                                phone_code=row[4], currency=row[5]
                             )
                         else:
                             AllCountry.objects.create(
                                 id=row[0], title=row[1], iso3=row[2], iso2=row[3],
-                                numeric_code=row[4], phone_code=row[5], capital=row[6],
-                                currency=row[7], currency_name=row[8], currency_symbol=row[9],
-                                tld=row[10], native=row[11], region=row[12], subregion=row[13],
-                                timezones=row[14], latitude=row[15], longitude=row[16],
-                                emoji=row[17], emojiU=row[18]
+                                phone_code=row[4], currency=row[5]
                             )
             context['message'] = "Countries added successfully"
+            return response.Response(
+                data=context,
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UploadCityView(generics.GenericAPIView):
+    """
+    API view for `uploading cities` data from a CSV file.
+
+    Attributes:
+        - `permission_classes (list)`: The list of permission classes that the view requires.
+
+    Methods:
+        - `post(request)`: Handles HTTP POST requests to upload cities data from a `CSV file`.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handle HTTP POST requests to `upload cities data from a CSV file`.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A Response object with a JSON-encoded representation of the response data.
+
+        Raises:
+            - N/A
+
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            csv_file = request.FILES.get('csv_file', None)
+            if csv_file:
+                data_set = csv_file.read().decode('UTF-8')
+                io_string = io.StringIO(data_set)
+                get_data = csv.reader(io_string)
+                for row in get_data:
+                    if row[0].isdigit():
+                        if AllCity.objects.filter(id=row[0]).exists():
+                            if AllCountry.objects.filter(id=row[2]).exists():
+                                country = AllCountry.objects.get(id=row[2])
+                                AllCity.objects.filter(id=row[0]).update(
+                                    title=row[1], country=country
+                                )
+                        else:
+                            if AllCountry.objects.filter(id=row[2]).exists():
+                                country = AllCountry.objects.get(id=row[2])
+                                AllCity.objects.create(
+                                    id=row[0], title=row[1], country=country
+                                )
+            context['message'] = "Cities added successfully"
             return response.Response(
                 data=context,
                 status=status.HTTP_201_CREATED
@@ -2608,7 +2662,7 @@ class JobSubCategoryView(generics.ListAPIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    serializer_class = JobSubCategorySerializers
+    serializer_class = GetJobSubCategorySerializers
     queryset = JobSubCategory.objects.filter(category__is_removed=False).order_by("category")
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'category__title']
@@ -2645,7 +2699,7 @@ class JobSubCategoryView(generics.ListAPIView):
             Exception: If an unexpected error occurs during the request handling.
         """
         context = dict()
-        serializer = self.serializer_class(data=request.data)
+        serializer = JobSubCategorySerializers(data=request.data)
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
@@ -2735,7 +2789,7 @@ class JobSubCategoryView(generics.ListAPIView):
         context = dict()
         try:
             job_sub_category_instance = JobSubCategory.all_objects.get(id=jobSubCategoryId)
-            serializer = self.serializer_class(data=request.data, instance=job_sub_category_instance, partial=True)
+            serializer = JobSubCategorySerializers(data=request.data, instance=job_sub_category_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(job_sub_category_instance, serializer.validated_data):
