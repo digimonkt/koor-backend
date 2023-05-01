@@ -36,6 +36,7 @@ class Common(Configuration):
         "notification.apps.NotificationConfig",
         "vendors.apps.VendorsConfig",
         "tenders.apps.TendersConfig",
+        "chat.apps.ChatConfig",
     )
     
     CRONJOBS = [
