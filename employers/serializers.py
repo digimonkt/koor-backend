@@ -1,5 +1,5 @@
 from datetime import date
-
+from django.db.models import Sum
 import json
 
 from rest_framework import serializers
@@ -453,7 +453,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'cc1',  'cc2', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
             'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date'
         ]
 
@@ -794,7 +794,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
                 media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 # save media instance into license id file into employer profile table.
-                attachments_instance = TenderAttachmentsItem.objects.create(tender=tender_instance,
+                attachments_instance = TenderAttachmentsItem.objects.create(tender=instance,
                                                                             attachment=media_instance)
                 attachments_instance.save()
         return instance
@@ -914,10 +914,10 @@ class BlacklistedUserSerializers(serializers.ModelSerializer):
     """
 
     blacklisted_user = serializers.SerializerMethodField()
+
     class Meta:
         model = BlackList
         fields = ['user', 'blacklisted_user', 'reason']
-
 
     def get_blacklisted_user(self, obj):
         """Get the serialized user data for a BlackList object.
@@ -940,3 +940,153 @@ class BlacklistedUserSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data
         return context
+
+
+class ShareCountSerializers(serializers.ModelSerializer):
+    """
+    A Django REST Framework serializer for computing share counts for a user's jobs.
+
+    This serializer computes the number of shares for a user's jobs on various platforms, including `WhatsApp`,
+    `Telegram`, `Facebook`, `LinkedIn`, `email`, and `direct link`. It also computes the `total number` of shares
+     across all platforms.
+
+    Attributes:
+        - `whatsapp (serializers.SerializerMethodField)`: A method field for computing the number of `WhatsApp` shares.
+        - `telegram (serializers.SerializerMethodField)`: A method field for computing the number of `Telegram` shares.
+        - `facebook (serializers.SerializerMethodField)`: A method field for computing the number of `Facebook` shares.
+        - `linked_in (serializers.SerializerMethodField)`: A method field for computing the number of `LinkedIn` shares.
+        - `mail (serializers.SerializerMethodField)`: A method field for computing the number of `email` shares.
+        - `direct_link (serializers.SerializerMethodField)`: A method field for computing the number of `direct link`
+            shares.
+        - `total (serializers.SerializerMethodField)`: A method field for computing the `total number` of shares across
+            all platforms.
+
+    """
+
+    whatsapp = serializers.SerializerMethodField()
+    telegram = serializers.SerializerMethodField()
+    facebook = serializers.SerializerMethodField()
+    linked_in = serializers.SerializerMethodField()
+    mail = serializers.SerializerMethodField()
+    direct_link = serializers.SerializerMethodField()
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'whatsapp', 'telegram', 'facebook', 'linked_in',
+            'mail', 'direct_link', 'total'
+        ]
+
+    def get_whatsapp(self, obj):
+        """
+        Computes the number of WhatsApp shares for a user's jobs.
+
+        Args:
+            obj (User): The user whose share count is being computed.
+
+        Returns:
+            int: The total number of WhatsApp shares.
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        whatsapp = job_share.aggregate(total_whatsapp=Sum('whatsapp'))['total_whatsapp'] or 0
+        return whatsapp
+
+    def get_telegram(self, obj):
+        """
+        Computes the number of Telegram shares for a user's jobs.
+
+        Args:
+            obj (User): The user whose share count is being computed.
+
+        Returns:
+            int: The total number of Telegram shares.
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        telegram = job_share.aggregate(total_telegram=Sum('telegram'))['total_telegram'] or 0
+        return telegram
+
+    def get_facebook(self, obj):
+        """
+        Computes the number of Facebook shares for a user's jobs.
+
+        Args:
+            obj (User): The user whose share count is being computed.
+
+        Returns:
+            int: The total number of Facebook shares.
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        facebook = job_share.aggregate(total_facebook=Sum('facebook'))['total_facebook'] or 0
+        return facebook
+
+    def get_linked_in(self, obj):
+        """
+        Computes the number of LinkedIn shares for a user's jobs.
+
+        Args:
+            obj (User): The user whose share count is being computed.
+
+        Returns:
+            int: The total number of LinkedIn shares.
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        linked_in = job_share.aggregate(total_linked_in=Sum('linked_in'))['total_linked_in'] or 0
+        return linked_in
+
+    def get_mail(self, obj):
+        """
+        Computes the number of email shares for a user's jobs.
+
+        Args:
+            obj (User): The user whose share count is being computed.
+
+        Returns:
+            int: The total number of email shares.
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        mail = job_share.aggregate(total_mail=Sum('mail'))['total_mail'] or 0
+        return mail
+
+    def get_direct_link(self, obj):
+        """
+        Computes the number of direct link shares for a user's jobs.
+
+        Args:
+            obj (User): The user whose share count is being computed.
+
+        Returns:
+            int: The total number of direct link shares.
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        direct_link = job_share.aggregate(total_direct_link=Sum('direct_link'))['total_direct_link'] or 0
+        return direct_link
+
+    def get_total(self, obj):
+        """
+        Return the total number of shares made by the user across different social media platforms.
+
+        Args:
+            obj: A User object for which the share counts need to be calculated.
+
+        Returns:
+            An integer representing the total number of shares made by the user.
+
+        """
+
+        job_share = JobShare.objects.filter(job__user=obj)
+        total_counts = job_share.aggregate(
+            total_whatsapp=Sum('whatsapp'),
+            total_telegram=Sum('telegram'),
+            total_facebook=Sum('facebook'),
+            total_linked_in=Sum('linked_in'),
+            total_mail=Sum('mail'),
+            total_direct_link=Sum('direct_link')
+        )
+        return sum(total_counts.values())

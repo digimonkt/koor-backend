@@ -31,7 +31,8 @@ from .serializers import (
     CreateTendersSerializers,
     UpdateTenderSerializers,
     ActivitySerializers,
-    BlacklistedUserSerializers
+    BlacklistedUserSerializers,
+    ShareCountSerializers
 )
 
 
@@ -783,6 +784,57 @@ class BlacklistedUserView(generics.ListAPIView):
                 return self.get_paginated_response(serializer.data)
             serializer = self.get_serializer(queryset, many=True)
             return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class ShareCountView(generics.GenericAPIView):
+    """
+    The ShareCountView is a class-based view that returns the number of shares made by the authenticated user.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that must be satisfied in order for the view to be
+            accessed. In this case, only authenticated users can access the view.
+        - `serializer_class (class)`: The serializer class that will be used to serialize and deserialize the data
+            returned by the view.
+
+    Methods:
+        - `get(self, request)`: Returns the number of shares made by the authenticated user. If the user is an
+            employer, the view will attempt to serialize the user data using the serializer class specified in
+            the serializer_class attribute and return the serialized data in the response. If the serialization
+            fails, a 400 bad request response will be returned with an error message. If the user is not an employer,
+            a 401 unauthorized response will be returned with a message indicating that the user does not have
+            permission to perform the action.
+
+    Usage:
+        Instantiate ShareCountView in urls.py to map the view to a URL and provide the required authentication
+        credentials for the user.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ShareCountSerializers
+
+    def get(self, request):
+
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                serializer = self.get_serializer(request.user)
+                return response.Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
