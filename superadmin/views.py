@@ -38,7 +38,8 @@ from .serializers import (
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
     DashboardCountSerializers, JobSeekerCategorySerializers,
     TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
-    AllCountrySerializers, GetJobSubCategorySerializers
+    AllCountrySerializers, GetJobSubCategorySerializers,
+    AllCitySerializers
 )
 
 
@@ -2846,3 +2847,55 @@ class WorldCountryView(generics.ListAPIView):
     queryset = AllCountry.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['^title']
+
+
+class WorldCityView(generics.ListAPIView):
+    """
+    API view for retrieving a list of cities from the database.
+
+    Attributes:
+        - `permission_classes (list)`: The list of permission classes that the view requires.
+        - `serializer_class (class)`: The serializer class to use for the view.
+        - `queryset (QuerySet)`: The queryset to use for the view.
+        - `filter_backends (list)`: The list of filter backend classes to use for the view.
+        - `search_fields (list)`: The list of model fields to search against for the search filter.
+        - `pagination_class (class)`: The pagination class to use for the view.
+
+    Methods:
+        - `list(request)`: Handles HTTP GET requests to retrieve a list of cities from the database.
+
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AllCitySerializers
+    queryset = AllCity.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['^title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Handle HTTP GET requests to retrieve a list of cities from the database.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A Response object with a JSON-encoded representation of the response data.
+
+        Raises:
+            - N/A
+
+        """
+
+        country_id = request.GET.get('countryId', None)
+        if country_id:
+            queryset = self.filter_queryset(self.get_queryset().filter(country_id=country_id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)

@@ -8,7 +8,8 @@ from .views import (
     JobsListView, UsersCountView, UserView,
     JobsRevertView, DashboardView, JobSeekerCategoryView,
     TenderCategoryView, SectorView, UploadCountryView,
-    JobSubCategoryView, WorldCountryView, UploadCityView
+    JobSubCategoryView, WorldCountryView, UploadCityView,
+    WorldCityView
 )
 
 app_name = "superadmin"
@@ -72,4 +73,5 @@ urlpatterns = [
     path('/job-sub-category/<str:jobSubCategoryId>', JobSubCategoryView.as_view(), name="job_sub_category"),
     
     path('/world-country', WorldCountryView.as_view(), name="world_country"),
+    path('/world-city', WorldCityView.as_view(), name="world_city"),
 ]
