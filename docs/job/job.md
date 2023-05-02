@@ -285,8 +285,12 @@ From this API Modify Applications of any Jobs.
   {
     "params": {
       "applicationId": "${UUID}",
-      "action":"shortlisted" || "rejected" || "blacklisted"
+      "action":"shortlisted" || "rejected" || "blacklisted" || "planned_interviews"
     },
+    "body": {
+      "interview_at":"2023-06-08T09:26:36" // if action is planned_interviews
+      "reason":"black listing reason" // if action is blacklisted
+    }
   }
   ```
 

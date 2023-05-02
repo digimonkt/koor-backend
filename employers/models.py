@@ -28,6 +28,12 @@ class BlackList(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="blacklisted_user",
         related_name='%(app_label)s_%(class)s_blacklisted_user'
     )
+    reason = models.TextField(
+        verbose_name=_('Reason'),
+        null=True,
+        blank=True,
+        db_column="reason",
+    )
 
     def __str__(self):
         return str(self.blacklisted_user)

@@ -4,12 +4,14 @@ from django.db.models import Q
 from rest_framework import serializers
 
 from jobs.models import (
-    JobCategory, JobDetails
+    JobCategory, JobDetails,
+    JobSubCategory
 )
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory, Sector
+    JobSeekerCategory, Sector,
+    AllCountry
 )
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
@@ -85,7 +87,7 @@ class CitySerializers(serializers.ModelSerializer):
         else:
             try:
                 if Country.objects.get(title=country.title):
-                    if City.objects.filter(title=title, country=country).exists():
+                    if City.objects.filter(title__iexact=title, country=country).exists():
                         raise serializers.ValidationError({'title': title + ' in ' + country.title + ' already exist.'})
                     return data
             except Country.DoesNotExist:
@@ -105,6 +107,34 @@ class JobCategorySerializers(serializers.ModelSerializer):
         model = JobCategory
         fields = ['id', 'title']
 
+    def validate(self, data):
+        """
+        Validate the data before saving to the database.
+        
+        The validate method checks if the category field is blank and raises a validation error if it is.
+        It also checks if a job sub category with the same title and category already exists and raises a validation error if it
+        does.
+        Finally, it checks if the category exists in the database and raises a validation error if it does not.
+
+        Args:
+            data (dict): Dictionary of data to be validated.
+
+        Raises:
+            serializers.ValidationError: Raised if the category field is blank or if a job sub category with the same title and
+            category already exists or if the category does not exist in the database.
+
+        Returns:
+            data (dict): The validated data.
+        """
+        title = data.get("title")
+        if JobCategory.objects.filter(title__iexact=title, is_removed=False).exists():
+            raise serializers.ValidationError({'title': title + ' already exist.'})
+        return data
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
 
 class EducationLevelSerializers(serializers.ModelSerializer):
     """
@@ -118,6 +148,10 @@ class EducationLevelSerializers(serializers.ModelSerializer):
     class Meta:
         model = EducationLevel
         fields = ['id', 'title']
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class LanguageSerializers(serializers.ModelSerializer):
@@ -133,6 +167,10 @@ class LanguageSerializers(serializers.ModelSerializer):
         model = Language
         fields = ['id', 'title']
 
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
 
 class SkillSerializers(serializers.ModelSerializer):
     """
@@ -147,6 +185,10 @@ class SkillSerializers(serializers.ModelSerializer):
         model = Skill
         fields = ['id', 'title']
 
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
 
 class TagSerializers(serializers.ModelSerializer):
     """
@@ -160,6 +202,10 @@ class TagSerializers(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'title']
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class ChangePasswordSerializers(serializers.Serializer):
@@ -476,8 +522,12 @@ class JobSeekerCategorySerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError({'title': 'Sub category already exists'})
             else:
                 return data
-    
-    
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
 class TenderCategorySerializers(serializers.ModelSerializer):
     """
     Serializer class for the `TenderCategory` model.
@@ -490,7 +540,7 @@ class TenderCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = TenderCategory
         fields = ['id', 'title']
-    
+
     def validate(self, data):
         title = data.get("title")
         if TenderCategory.objects.filter(title=title).exists():
@@ -511,10 +561,120 @@ class SectorSerializers(serializers.ModelSerializer):
     class Meta:
         model = Sector
         fields = ['id', 'title']
-        
+
     def validate(self, data):
         title = data.get("title")
         if Sector.objects.filter(title=title).exists():
             raise serializers.ValidationError({'title': str(title) + ' already exists'})
         else:
             return data
+
+
+class GetJobSubCategorySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `JobSubCategory` model.
+
+    The `GetJobSubCategorySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `JobSubCategory` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'category'.
+    """
+    category = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobSubCategory
+        fields = ['id', 'title', 'category']
+
+    def get_category(self, obj):
+        return {"id": obj.category.id, "title": obj.category.title}
+
+
+class JobSubCategorySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `JobSubCategory` model.
+
+    The `JobSubCategorySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `JobSubCategory` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'category'.
+    """
+
+    class Meta:
+        model = JobSubCategory
+        fields = ['id', 'title', 'category']
+
+    def validate(self, data):
+        """
+        Validate the data before saving to the database.
+        
+        The validate method checks if the category field is blank and raises a validation error if it is.
+        It also checks if a job sub category with the same title and category already exists and raises a validation error if it
+        does.
+        Finally, it checks if the category exists in the database and raises a validation error if it does not.
+
+        Args:
+            data (dict): Dictionary of data to be validated.
+
+        Raises:
+            serializers.ValidationError: Raised if the category field is blank or if a job sub category with the same title and
+            category already exists or if the category does not exist in the database.
+
+        Returns:
+            data (dict): The validated data.
+        """
+        category = data.get("category")
+        title = data.get("title")
+        if category in ["", None]:
+            raise serializers.ValidationError({'category': 'category can not be blank'})
+        else:
+            try:
+                if JobCategory.objects.get(title=category.title):
+                    if JobSubCategory.objects.filter(title__iexact=title, category=category).exists():
+                        raise serializers.ValidationError(
+                            {'title': title + ' in ' + category.title + ' already exist.'})
+                    return data
+            except JobCategory.DoesNotExist:
+                raise serializers.ValidationError('Job category not available.', code='category')
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
+class AllCountrySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `AllCountry` model.
+
+    The `AllCountrySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `AllCountry` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'currency', 'phone_code', 'iso_code2', and 'iso_code3'.
+    """
+
+    class Meta:
+        model = AllCountry
+        fields = ['id', 'title', 'currency', 'phone_code', 'iso2', 'iso3']
+
+
+class AllCitySerializers(serializers.ModelSerializer):
+    """
+    Serializer for AllCity model that returns a serialized representation of each city, including its
+    country information. The 'country' field is a custom serializer method that returns the country information
+     as a dictionary with 'id' and 'title' keys.
+
+    Attributes:
+        - `country`: A custom `SerializerMethodField` that returns the serialized representation of the country
+                    foreign key field of AllCity model.
+
+    Meta:
+        - `model`: AllCity model for which the serializer is defined.
+        - `fields`: A list of fields to be included in the serialized representation of the AllCity model.
+                    It includes 'id', 'title', and 'country' fields.
+
+    """
+
+    country = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AllCountry
+        fields = ['id', 'title', 'country']
+
+    def get_country(self, obj):
+        return {"id": obj.country.id, "title": obj.country.title}

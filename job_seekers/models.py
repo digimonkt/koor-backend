@@ -312,6 +312,12 @@ class AppliedJob(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="job",
         related_name='%(app_label)s_%(class)s_job'
     )
+    interview_at = models.DateTimeField(
+        verbose_name=_('Interview Planned At'),
+        null=True,
+        blank=True,
+        db_column="interview_at"
+    )
     shortlisted_at = models.DateTimeField(
         verbose_name=_('Short Listed At'),
         null=True,
@@ -362,6 +368,7 @@ class AppliedJobAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel, mo
         verbose_name=_('Applied Job'),
         on_delete=models.CASCADE,
         db_column="applied_job",
+        null=True,
         related_name='%(app_label)s_%(class)s_applied_job'
     )
     attachment = models.OneToOneField(

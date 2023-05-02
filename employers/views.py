@@ -10,6 +10,7 @@ from rest_framework import (
 )
 
 from core.pagination import CustomPagination
+from core.emails import get_email_object
 
 from jobs.models import JobDetails, JobFilters
 from jobs.serializers import GetJobsSerializers
@@ -22,13 +23,16 @@ from users.models import User
 from tenders.models import TenderDetails
 from tenders.serializers import TendersSerializers
 
+from .models import BlackList
 from .serializers import (
     UpdateAboutSerializers,
     CreateJobsSerializers,
     UpdateJobSerializers,
     CreateTendersSerializers,
     UpdateTenderSerializers,
-    ActivitySerializers
+    ActivitySerializers,
+    BlacklistedUserSerializers,
+    ShareCountSerializers
 )
 
 
@@ -100,8 +104,8 @@ class JobsView(generics.ListAPIView):
     search_fields = [
         'title', 'description',
         'skill__title', 'highest_education__title',
-        'job_category__title', 'country__title',
-        'city__title'
+        'job_category__title', 'job_sub_category__title',
+        'country__title', 'city__title'
     ]
     pagination_class = CustomPagination
 
@@ -273,6 +277,10 @@ def my_callback(sender, **kwargs):
         Q(job_category__in=[(job_category_value) for job_category_value in job_instance.job_category.all()]) | Q(
             job_category=None)
     ).filter(
+        Q(job_sub_category__in=[(job_sub_category_value) for job_sub_category_value in
+                                job_instance.job_sub_category.all()]) | Q(
+            job_sub_category=None)
+    ).filter(
         Q(is_full_time=job_instance.is_full_time) | Q(is_full_time=None)
     ).filter(
         Q(is_part_time=job_instance.is_part_time) | Q(is_part_time=None)
@@ -293,6 +301,22 @@ def my_callback(sender, **kwargs):
             ) for job_filter in job_filter_data
         ]
     )
+    for job_filter in job_filter_data:
+        if job_filter.user.email:
+            context = dict()
+            if job_filter.user.name:
+                user_name = job_filter.user.name
+            else:
+                user_name = job_filter.user.email
+            context["yourname"] = user_name
+            context["notification_type"] = "advance filter"
+            context["job_instance"] = job_instance
+            get_email_object(
+                subject=f'Notification for advance filter job',
+                email_template_name='email-templates/send-notification.html',
+                context=context,
+                to_email=[job_filter.user.email, ]
+            )
     request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
 
 
@@ -701,6 +725,108 @@ class JobAnalysisView(generics.GenericAPIView):
                 data = {'order_counts': list(order_counts)}
                 return response.Response(
                     data=data,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class BlacklistedUserView(generics.ListAPIView):
+    """
+    View for retrieving a list of `BlackListedUser` objects.
+
+    This view is used to retrieve a list of `BlackListedUser` objects in a paginated format. The view requires the user
+    to be authenticated and have the role of '`employer`'. The view returns a serialized representation of the queryset
+    in JSON format.
+
+    Attributes:
+        - `serializer_class (class)`: The serializer class to be used for serializing the queryset, which is the
+            `BlacklistedUserSerializers` class.
+        - `permission_classes (list)`: A list of permission classes to be used for checking the user's permissions,
+            which includes only the `IsAuthenticated` permission class.
+        - `queryset (QuerySet)`: The queryset to be used for retrieving the `BlackListedUser` objects, which includes
+            all objects in the `BlackList` model.
+        - `pagination_class (class)`: The pagination class to be used for paginating the queryset, which is the
+            `CustomPagination` class.
+
+    Methods:
+        - `list(self, request)`: The method used to handle `GET` requests to retrieve the list of `BlackListedUser`
+            objects. If the user has the role of '`employer`', the method filters the queryset to include only the
+            `BlackListedUser` objects where the user is the current user and paginates the filtered queryset. If the
+            user does not have the role of '`employer`', the method returns an error message with a `401 unauthorized`
+            status.
+
+
+    """
+
+    serializer_class = BlacklistedUserSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = BlackList.objects.all()
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset().filter(user=request.user))
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True)
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class ShareCountView(generics.GenericAPIView):
+    """
+    The ShareCountView is a class-based view that returns the number of shares made by the authenticated user.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes that must be satisfied in order for the view to be
+            accessed. In this case, only authenticated users can access the view.
+        - `serializer_class (class)`: The serializer class that will be used to serialize and deserialize the data
+            returned by the view.
+
+    Methods:
+        - `get(self, request)`: Returns the number of shares made by the authenticated user. If the user is an
+            employer, the view will attempt to serialize the user data using the serializer class specified in
+            the serializer_class attribute and return the serialized data in the response. If the serialization
+            fails, a 400 bad request response will be returned with an error message. If the user is not an employer,
+            a 401 unauthorized response will be returned with a message indicating that the user does not have
+            permission to perform the action.
+
+    Usage:
+        Instantiate ShareCountView in urls.py to map the view to a URL and provide the required authentication
+        credentials for the user.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ShareCountSerializers
+
+    def get(self, request):
+
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                serializer = self.get_serializer(request.user)
+                return response.Response(
+                    data=serializer.data,
                     status=status.HTTP_200_OK
                 )
             except Exception as e:

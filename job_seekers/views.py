@@ -1,4 +1,5 @@
 import os
+from datetime import date
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -34,7 +35,7 @@ from .serializers import (
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
     UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
-    CategoriesSerializers, ModifyCategoriesSerializers
+    CategoriesSerializers, ModifyCategoriesSerializers, UpdateAppliedJobSerializers
 )
 
 
@@ -823,6 +824,80 @@ class JobsApplyView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, jobId):
+        """
+        Update an existing job application for a job seeker user.
+
+        Args:
+            - `request`: An HTTP request object.
+            - `jobId (int)`: The ID of the job application to update.
+
+        Returns:
+            A Response object with an appropriate HTTP status code and message.
+
+        Raises:
+            - `ValidationError`: If the request data is invalid.
+            - `Http404`: If the specified job or job application does not exist.
+            - `Exception`: If any other error occurs.
+
+        The function first checks if the user making the request is a job seeker. If not, it returns an
+        unauthorized response. Otherwise, it tries to update the specified job application with the given
+        data using an instance of the UpdateJobSerializers class. If the update is successful, it returns
+        a success response with a message indicating that the update was successful. If the job application
+        or job do not exist, it returns a 404 response with an appropriate error message. If the request data
+        is invalid or if any other error occurs, it returns a 400 or 404 response with an error message
+        containing details about the error.
+        """
+
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            serializer = UpdateAppliedJobSerializers(data=request.data)
+            try:
+                job_instace = JobDetails.objects.get(id=jobId)
+                try:
+                    applied_job = AppliedJob.objects.get(job=job_instace, user=request.user)
+                    if applied_job.shortlisted_at or applied_job.rejected_at or applied_job.created.date() < date.today():
+                        context['message'] = "You cannot update this applied job"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                    else:
+                        serializer.is_valid(raise_exception=True)
+                        if serializer.update(applied_job, serializer.validated_data):
+                            context['message'] = "Updated Successfully"
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_200_OK
+                            )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                except AppliedJob.DoesNotExist:
+                    return response.Response(
+                        data={"application": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
     def delete(self, request, jobId):
         """
         Deletes an AppliedJob object with the given job if the authenticated user is a job seeker and owns the
@@ -835,11 +910,16 @@ class JobsApplyView(generics.ListAPIView):
         """
         context = dict()
         if request.user.role == "job_seeker":
+            # print(timezone.now())
             try:
                 job_instace = JobDetails.objects.get(id=jobId)
                 try:
-                    AppliedJob.all_objects.get(job=job_instace, user=request.user).delete(soft=False)
-                    context['message'] = "Revoked applied job"
+                    applied_job = AppliedJob.all_objects.get(job=job_instace, user=request.user)
+                    if applied_job.shortlisted_at or applied_job.rejected_at or applied_job.created.date() < date.today():
+                        context['message'] = "You cannot revoke this applied job"
+                    else:
+                        applied_job.delete(soft=False)
+                        context['message'] = "Revoked applied job"
                     return response.Response(
                         data=context,
                         status=status.HTTP_200_OK
