@@ -1,5 +1,7 @@
+import io, csv, os, pathlib
 from datetime import datetime, date, timedelta
 
+from django.db.models import Q
 from django_filters import rest_framework as django_filters
 
 from rest_framework import (
@@ -11,7 +13,8 @@ from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
 
 from jobs.models import (
-    JobCategory, JobDetails
+    JobCategory, JobDetails,
+    JobSubCategory
 )
 from jobs.filters import JobDetailsFilter
 
@@ -21,7 +24,8 @@ from users.models import UserSession, User
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory, Sector
+    JobSeekerCategory, Sector,
+    AllCountry, AllCity
 )
 
 from tenders.models import TenderCategory
@@ -33,7 +37,9 @@ from .serializers import (
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
     DashboardCountSerializers, JobSeekerCategorySerializers,
-    TenderCategorySerializers, SectorSerializers
+    TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
+    AllCountrySerializers, GetJobSubCategorySerializers,
+    AllCitySerializers
 )
 
 
@@ -94,8 +100,8 @@ class CountryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Country.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Country.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Country.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -182,17 +188,17 @@ class CityView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = CitySerializers
-    queryset = City.objects.all()
+    queryset = City.objects.filter(country__is_removed=False)
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
 
     def list(self, request):
         country_id = request.GET.get('countryId', None)
-        queryset = City.objects.all()
         if country_id:
-            queryset = City.objects.filter(country_id=country_id)
-        queryset = self.filter_queryset(queryset)
+            queryset = self.filter_queryset(self.get_queryset().filter(country_id=country_id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -221,9 +227,9 @@ class CityView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if City.all_objects.filter(title=serializer.validated_data['title'],
+                if City.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                            country=serializer.validated_data['country'], is_removed=True).exists():
-                    City.all_objects.filter(title=serializer.validated_data['title'],
+                    City.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                             country=serializer.validated_data['country'], is_removed=True).update(
                         is_removed=False)
                 else:
@@ -347,8 +353,8 @@ class JobCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if JobCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    JobCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -412,6 +418,53 @@ class JobCategoryView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, jobCategoryId):
+        """
+        Update an `JobCategory` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `jobCategoryId (int)`: The ID of the `JobCategory` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `JobCategory.DoesNotExist`: If the JobCategory instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            job_category_instance = JobCategory.all_objects.get(id=jobCategoryId)
+            serializer = self.serializer_class(data=request.data, instance=job_category_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_category_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except JobCategory.DoesNotExist:
+            return response.Response(
+                data={"jobCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class EducationLevelView(generics.ListAPIView):
     """
@@ -471,8 +524,9 @@ class EducationLevelView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    EducationLevel.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                     is_removed=True).exists():
+                    EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -536,6 +590,53 @@ class EducationLevelView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, educationLevelId):
+        """
+        Update an `EducationLevel` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `educationLevelId (int)`: The ID of the `EducationLevel` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `EducationLevel.DoesNotExist`: If the EducationLevel instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            education_level_instance = EducationLevel.all_objects.get(id=educationLevelId)
+            serializer = self.serializer_class(data=request.data, instance=education_level_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(education_level_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except EducationLevel.DoesNotExist:
+            return response.Response(
+                data={"educationLevelId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class LanguageView(generics.ListAPIView):
     """
@@ -594,8 +695,8 @@ class LanguageView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Language.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Language.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Language.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -657,6 +758,54 @@ class LanguageView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, languageId):
+        """
+        Update a `Language` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `languageId (int)`: The ID of the `Language` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `Language.DoesNotExist`: If the Language instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+
+        """
+
+        context = dict()
+        try:
+            language_instance = Language.all_objects.get(id=languageId)
+            serializer = self.serializer_class(data=request.data, instance=language_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(language_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Language.DoesNotExist:
+            return response.Response(
+                data={"languageId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
 
 
@@ -721,8 +870,8 @@ class SkillView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Skill.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Skill.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Skill.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -786,6 +935,54 @@ class SkillView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, skillId):
+        """
+        Update a `Skill` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `skillId (int)`: The ID of the `Skill` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `Skill.DoesNotExist`: If the Skill instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+
+        """
+
+        context = dict()
+        try:
+            skill_instance = Skill.all_objects.get(id=skillId)
+            serializer = self.serializer_class(data=request.data, instance=skill_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(skill_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Skill.DoesNotExist:
+            return response.Response(
+                data={"skillId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 class TagView(generics.ListAPIView):
     """
@@ -844,8 +1041,8 @@ class TagView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Tag.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Tag.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Tag.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -907,6 +1104,54 @@ class TagView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, tagId):
+        """
+        Update a `Tag` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `tagId (int)`: The ID of the `Tag` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `Tag.DoesNotExist`: If the Tag instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+
+        """
+
+        context = dict()
+        try:
+            tag_instance = Tag.all_objects.get(id=tagId)
+            serializer = self.serializer_class(data=request.data, instance=tag_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(tag_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Tag.DoesNotExist:
+            return response.Response(
+                data={"tagId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
 
 
@@ -1251,7 +1496,29 @@ class CandidatesListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset().filter(role="job_seeker"))
+            queryset = self.filter_queryset(self.get_queryset().filter(Q(role="job_seeker") | Q(role="vendor")))
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'candidate.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Role", "Name", "Email", "Mobile Number"]
+                    )
+                    for counter, rows in enumerate(queryset):
+                        mobile_number = "None"
+                        if rows.country_code:
+                            mobile_number = str(rows.country_code) + str(rows.mobile_number)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.role), str(rows.name), str(rows.email), mobile_number
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1304,6 +1571,28 @@ class EmployerListView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'employers.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Name", "Email", "Mobile Number"]
+                    )
+                    for counter, rows in enumerate(queryset):
+                        mobile_number = "None"
+                        if rows.country_code:
+                            mobile_number = str(rows.country_code) + str(rows.mobile_number)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.name), str(rows.email), mobile_number
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1358,9 +1647,54 @@ class JobsListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
+        """
+        Retrieve a list of jobs with optional download capability for staff users.
+
+        This view returns a paginated list of jobs based on the queryset defined in `get_queryset()`. For staff users,
+        the view provides an option to download the job data as a CSV file. Non-staff users will receive an unauthorized
+        response.
+
+        Parameters:
+            - `request` : rest_framework.request.Request
+                The HTTP request object.
+
+        Returns:
+            - `Response` : rest_framework.response.Response
+                The HTTP response object containing the paginated job data or a download URL for staff users.
+
+        Raises:
+            - `PermissionDenied` : rest_framework.exceptions.PermissionDenied
+                If the user does not have staff status and attempts to download job data.
+
+        IOError : builtins.IOError
+            If an error occurs during file I/O while creating the CSV file for download.
+        """
+
         context = dict()
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'jobs.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Job ID", "Job Title", "Company", "Location"])
+                    for counter, rows in enumerate(queryset):
+                        location = "None"
+                        if rows.city:
+                            location = str(rows.city) + ", " + str(rows.country)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.job_id), str(rows.title),
+                                str(rows.user.name), location
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context=context)
@@ -1863,6 +2197,53 @@ class JobSeekerCategoryView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, jobSeekerCategoryId):
+        """
+        Update an `JobSeekerCategory` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `jobSeekerCategoryId (int)`: The ID of the `JobSeekerCategory` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `JobSeekerCategory.DoesNotExist`: If the JobSeekerCategory instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            job_seeker_category_instance = JobSeekerCategory.objects.get(id=jobSeekerCategoryId)
+            serializer = self.serializer_class(data=request.data, instance=job_seeker_category_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_seeker_category_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except JobSeekerCategory.DoesNotExist:
+            return response.Response(
+                data={"jobSeekerCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
 
 class TenderCategoryView(generics.ListAPIView):
     """
@@ -1889,7 +2270,7 @@ class TenderCategoryView(generics.ListAPIView):
     queryset = TenderCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination    
+    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
@@ -1921,8 +2302,9 @@ class TenderCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    TenderCategory.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                     is_removed=True).exists():
+                    TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2043,8 +2425,8 @@ class SectorView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Sector.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).exists():
-                    Sector.all_objects.filter(title=serializer.validated_data['title'], is_removed=True).update(
+                if Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2106,3 +2488,414 @@ class SectorView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+def create_directory():
+    """
+    Create a directory for storing CSV files in the 'media' directory with the current date as the subdirectory name.
+
+    Returns:
+    - `directory_url` : str
+        The URL of the created directory.
+
+    Raises:
+    - `OSError`:
+        If directory creation fails due to permission issues or other reasons.
+    """
+
+    directory_url = '{0}/{1}/{2}'.format('media', 'csv_file', date.today())
+    directory_url_path_check = pathlib.Path(directory_url)
+    if directory_url_path_check.exists():
+        directory_url = directory_url
+    else:
+        os.makedirs(directory_url)
+        directory_url = directory_url
+    return directory_url
+
+
+class UploadCountryView(generics.GenericAPIView):
+    """
+    API view for uploading country data from a CSV file.
+
+    - This view handles the HTTP POST request for uploading country data from a CSV file.
+    - The uploaded CSV file is read, parsed, and the data is saved to the AllCountry model in the database.
+    - The user must be authenticated and have staff permissions to access this view.
+
+    Attributes:
+        - `permission_classes (list)`: List of permission classes required to access this view.
+                Only authenticated users with staff permissions are allowed.
+    
+    Methods:
+        - `post(request)`: Handles the POST request for uploading country data.
+                Reads and parses the uploaded CSV file, and saves the data to the AllCountry model.
+                Returns a response with a success message and HTTP 201 status code if successful, or an error message
+                and HTTP 401 status code if the user is not authenticated or does not have staff permissions.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handles the POST request for uploading country data from a CSV file.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - `Response`: A response object containing a success message and HTTP 201 status code if the country data
+                        is uploaded successfully, or an error message and HTTP 401 status code if the user is not
+                        authenticated or does not have staff permissions.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            csv_file = request.FILES.get('csv_file', None)
+            if csv_file:
+                data_set = csv_file.read().decode('UTF-8')
+                io_string = io.StringIO(data_set)
+                get_data = csv.reader(io_string)
+                for row in get_data:
+                    if row[0].isdigit():
+                        if AllCountry.objects.filter(id=row[0]).exists():
+                            AllCountry.objects.filter(id=row[0]).update(
+                                title=row[1], iso3=row[2], iso2=row[3],
+                                phone_code=row[4], currency=row[5]
+                            )
+                        else:
+                            AllCountry.objects.create(
+                                id=row[0], title=row[1], iso3=row[2], iso2=row[3],
+                                phone_code=row[4], currency=row[5]
+                            )
+            context['message'] = "Countries added successfully"
+            return response.Response(
+                data=context,
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UploadCityView(generics.GenericAPIView):
+    """
+    API view for `uploading cities` data from a CSV file.
+
+    Attributes:
+        - `permission_classes (list)`: The list of permission classes that the view requires.
+
+    Methods:
+        - `post(request)`: Handles HTTP POST requests to upload cities data from a `CSV file`.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        """
+        Handle HTTP POST requests to `upload cities data from a CSV file`.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A Response object with a JSON-encoded representation of the response data.
+
+        Raises:
+            - N/A
+
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            csv_file = request.FILES.get('csv_file', None)
+            if csv_file:
+                data_set = csv_file.read().decode('UTF-8')
+                io_string = io.StringIO(data_set)
+                get_data = csv.reader(io_string)
+                for row in get_data:
+                    if row[0].isdigit():
+                        if AllCity.objects.filter(id=row[0]).exists():
+                            if AllCountry.objects.filter(id=row[2]).exists():
+                                country = AllCountry.objects.get(id=row[2])
+                                AllCity.objects.filter(id=row[0]).update(
+                                    title=row[1], country=country
+                                )
+                        else:
+                            if AllCountry.objects.filter(id=row[2]).exists():
+                                country = AllCountry.objects.get(id=row[2])
+                                AllCity.objects.create(
+                                    id=row[0], title=row[1], country=country
+                                )
+            context['message'] = "Cities added successfully"
+            return response.Response(
+                data=context,
+                status=status.HTTP_201_CREATED
+            )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class JobSubCategoryView(generics.ListAPIView):
+    """
+    A view for displaying a list of job sub categories.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (JobSubCategorySerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `JobSubCategory.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = GetJobSubCategorySerializers
+    queryset = JobSubCategory.objects.filter(category__is_removed=False).order_by("category")
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'category__title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        category_id = request.GET.get('categoryId', None)
+        if category_id:
+            queryset = self.filter_queryset(self.get_queryset().filter(category_id=category_id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle POST request to create a new job sub category.
+        The request must contain valid data for the job sub category to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a job sub category.
+
+        Returns:
+            - HTTP 201 CREATED with a message "JobSubCategory added successfully" if the job sub category is created
+            successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = JobSubCategorySerializers(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, jobSubCategoryId):
+        """
+        Deletes an JobSubCategory object with the given ID if the authenticated user is a job seeker and owns the
+        JobSubCategory.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the JobSubCategory to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                JobSubCategory.objects.get(id=jobSubCategoryId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except JobSubCategory.DoesNotExist:
+                return response.Response(
+                    data={"jobSubCategoryId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, jobSubCategoryId):
+        """
+        Update an `JobSubCategory` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `jobSubCategoryId (int)`: The ID of the `JobSubCategory` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `JobSubCategory.DoesNotExist`: If the JobSubCategory instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            job_sub_category_instance = JobSubCategory.all_objects.get(id=jobSubCategoryId)
+            serializer = JobSubCategorySerializers(data=request.data, instance=job_sub_category_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_sub_category_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except JobSubCategory.DoesNotExist:
+            return response.Response(
+                data={"jobSubCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class WorldCountryView(generics.ListAPIView):
+    """
+    A view that returns a list of all countries in the world.
+
+    This view supports searching for countries by title using the `title` query parameter.
+
+    Attributes:
+    - `permission_classes` : list of classes
+        - The list of permission classes that the view requires.
+        - In this case, any user is allowed to access the view.
+    - `serializer_class` : Serializer class
+        - The serializer class that will be used to serialize the country data returned by the view. In this 
+        case, the `AllCountrySerializers` serializer will be used.
+    - `queryset` : QuerySet
+        - The queryset of all countries that will be used by the view.
+        - In this case, the `AllCountry` model's all objects will be used.
+    - `filter_backends` : list of classes
+        - The list of filter backend classes that the view will use to filter
+        the queryset. In this case, the `SearchFilter` backend will be used.
+    - `search_fields` : list of strings
+        - The list of fields that will be used for searching countries by title.
+        - In this case, only the `title` field will be searched with the "^" prefix, which means that 
+        the search is case-insensitive and searches for the start of the field value.
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AllCountrySerializers
+    queryset = AllCountry.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['^title']
+
+
+class WorldCityView(generics.ListAPIView):
+    """
+    API view for retrieving a list of cities from the database.
+
+    Attributes:
+        - `permission_classes (list)`: The list of permission classes that the view requires.
+        - `serializer_class (class)`: The serializer class to use for the view.
+        - `queryset (QuerySet)`: The queryset to use for the view.
+        - `filter_backends (list)`: The list of filter backend classes to use for the view.
+        - `search_fields (list)`: The list of model fields to search against for the search filter.
+        - `pagination_class (class)`: The pagination class to use for the view.
+
+    Methods:
+        - `list(request)`: Handles HTTP GET requests to retrieve a list of cities from the database.
+
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AllCitySerializers
+    queryset = AllCity.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['^title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Handle HTTP GET requests to retrieve a list of cities from the database.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A Response object with a JSON-encoded representation of the response data.
+
+        Raises:
+            - N/A
+
+        """
+
+        country_id = request.GET.get('countryId', None)
+        if country_id:
+            queryset = self.filter_queryset(self.get_queryset().filter(country_id=country_id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)

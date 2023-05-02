@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from datetime import date
 
 from jobs.models import (
     JobDetails, JobAttachmentsItem, JobCategory,
-    JobsLanguageProficiency, JobFilters
+    JobsLanguageProficiency, JobFilters,
+    JobSubCategory, JobShare
 )
 
 from job_seekers.models import (
@@ -146,6 +148,34 @@ class JobCategorySerializer(serializers.ModelSerializer):
             'id',
             'title',
         )
+
+
+class JobSubCategorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the JobSubCategory model.
+
+    This serializer is used to serialize/deserialize JobSubCategory objects to/from JSON format. It defines
+    the fields that will be included in the serialized data and provides validation for deserialization.
+
+    Attributes:
+        Meta: A subclass of the serializer that specifies the model to be serialized and the fields
+            to be included in the serialized data.
+    """
+    category = serializers.SerializerMethodField()
+    class Meta:
+        model = JobSubCategory
+        fields = (
+            'id',
+            'title',
+            'category'
+        )
+    
+    def get_category(self, obj):
+        
+        if obj.category:
+            return {'id': obj.category.id, 'title': obj.category.title}
+        return None
+
 
 
 class AttachmentsSerializer(serializers.ModelSerializer):
@@ -338,6 +368,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         country: A SerializerMethodField for the country of the job.
         city: A SerializerMethodField for the city of the job.
         job_category: A SerializerMethodField for the job category or categories of the job.
+        job_sub_category: A SerializerMethodField for the job sub category or sub categories of the job.
         language: A SerializerMethodField for the language or languages required for the job.
         skill: A SerializerMethodField for the skill or skills required for the job.
         user: A SerializerMethodField for the user who posted the job.
@@ -350,6 +381,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     job_category = serializers.SerializerMethodField()
+    job_sub_category = serializers.SerializerMethodField()
     highest_education = serializers.SerializerMethodField()
     language = serializers.SerializerMethodField()
     skill = serializers.SerializerMethodField()
@@ -357,16 +389,18 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     applicant = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     is_applied = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
+    is_editable = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
-            'country', 'city', 'address', 'job_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'contact_phone', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'country', 'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
-            'is_applied', 'is_saved'
+            'is_applied', 'application', 'is_saved', 'is_editable'
 
         ]
 
@@ -428,10 +462,31 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = []
+        context = {}
         get_data = JobCategorySerializer(obj.job_category, many=True)
         if get_data.data:
-            context = get_data.data
+            context = get_data.data[0]
+        return context
+
+    def get_job_sub_category(self, obj):
+        """Get the serialized job sub category data for a JobDetails object.
+
+        This method uses the JobSubCategorySerializer to serialize the job sub categories associated with a JobDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobDetails object whose job sub category data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized job sub category data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        get_data = JobSubCategorySerializer(obj.job_sub_category, many=True)
+        if get_data.data:
+            context = get_data.data[0]
         return context
 
     def get_highest_education(self, obj):
@@ -536,6 +591,29 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
                 user=user
             ).exists()
         return is_applied_record
+    
+    def get_is_editable(self, obj):
+        is_editable_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            is_editable_record = AppliedJob.objects.filter(
+                job=obj,
+                user=user,
+                shortlisted_at = None,
+                rejected_at = None,
+                created__date__gte = date.today()
+            ).exists()
+        return is_editable_record
+    
+    def get_application(self, obj):
+        application_context = dict()
+        if 'user' in self.context:
+            user = self.context['user']
+            if AppliedJob.objects.filter(job=obj, user=user).exists():
+                application = AppliedJob.objects.get(job=obj, user=user)
+                application_context['id'] = application.id
+                application_context['created'] = application.created
+        return application_context
 
     def get_is_saved(self, obj):
         is_saved_record = False
@@ -605,8 +683,8 @@ class AppliedJobSerializers(serializers.ModelSerializer):
     class Meta:
         model = AppliedJob
         fields = [
-            'id', 'shortlisted_at', 'rejected_at', 'created', 'short_letter', 'user',
-            'education', 'language', 'skill', 'job'
+            'id', 'shortlisted_at', 'rejected_at', 'interview_at', 'created', 
+            'short_letter', 'user', 'education', 'language', 'skill', 'job'
         ]
 
     def get_user(self, obj):
@@ -801,9 +879,9 @@ class JobFiltersSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobFilters
         fields = [
-            'id', 'title', 'country', 'city', 'job_category',
+            'id', 'title', 'country', 'city', 'job_category', 'job_sub_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'duration'
+            'salary_min', 'salary_max', 'duration'
         ]
 
     def update(self, instance, validated_data):
@@ -827,7 +905,7 @@ class GetJobFiltersSerializers(serializers.ModelSerializer):
         - This serializer can be used to serialize JobFilters objects and convert them to JSON format for use in HTTP
             responses.
         - In addition to the standard fields specified in the Meta class, this serializer also includes
-            `SerializerMethodFields` for 'country', 'city', and 'job_category'.
+            `SerializerMethodFields` for 'country', 'city', and 'job_category' 'job_sub_category'.
         - These fields are generated by calling the corresponding methods on the serializer instance and returning
             their values.
         - The resulting serialized output will include the standard fields as well as the additional fields generated
@@ -837,11 +915,12 @@ class GetJobFiltersSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     job_category = serializers.SerializerMethodField()
+    job_sub_category = serializers.SerializerMethodField()
 
     class Meta:
         model = JobFilters
         fields = [
-            'id', 'title', 'country', 'city', 'job_category',
+            'id', 'title', 'country', 'city', 'job_category', 'job_sub_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
             'duration'
         ]
@@ -909,3 +988,39 @@ class GetJobFiltersSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+    def get_job_sub_category(self, obj):
+        """Get the serialized job sub category data for a JobFilters object.
+
+        This method uses the JobSubCategorySerializer to serialize the job sub categories associated with a JobFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A JobFilters object whose job sub category data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized job sub category data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = JobSubCategorySerializer(obj.job_sub_category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+
+class ShareCountSerializers(serializers.ModelSerializer):
+
+    total = serializers.SerializerMethodField()
+
+    class Meta:
+        model = JobShare
+        fields = [
+            'whatsapp', 'telegram', 'facebook', 'linked_in',
+            'mail', 'direct_link', 'total'
+        ]
+
+    def get_total(self, obj):
+        return obj.whatsapp + obj.telegram + obj.facebook + obj.linked_in + obj.mail + obj.direct_link

@@ -912,8 +912,11 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.description
+            except JobSeekerProfile.DoesNotExist:
+                pass  
         return None
 
     def get_education_record(self, obj):
@@ -977,7 +980,8 @@ class SocialLoginSerializers(serializers.ModelSerializer):
     display_image = serializers.CharField(
         style={"input_type": "text"},
         write_only=True,
-        allow_blank=False
+        allow_blank=False,
+        required=False
     )
     class Meta:
         model = User
@@ -1211,43 +1215,61 @@ class SearchUserSerializers(serializers.ModelSerializer):
     def get_description(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.description
+            except JobSeekerProfile.DoesNotExist:
+                pass            
         elif obj.role == 'vendor':
-            jobseeker_data = VendorProfile.objects.get(user=obj)
-            return jobseeker_data.description
+            try:
+                vendor_data = VendorProfile.objects.get(user=obj)
+                return vendor_data.description
+            except VendorProfile.DoesNotExist:
+                pass 
         return None    
     
     def get_highest_education(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            if jobseeker_data.highest_education:
-                return jobseeker_data.highest_education.title
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.highest_education:
+                    return jobseeker_data.highest_education.title
+            except JobSeekerProfile.DoesNotExist:
+                pass 
         return None
     
     def get_country(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            if jobseeker_data.country:
-                return jobseeker_data.country.title
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.country:
+                    return jobseeker_data.country.title
+            except JobSeekerProfile.DoesNotExist:
+                pass 
         return None
     
     def get_city(self, obj):
         context = {}
         if obj.role == 'job_seeker':
-            jobseeker_data = JobSeekerProfile.objects.get(user=obj)
-            if jobseeker_data.city:
-                return jobseeker_data.city.title
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.city:
+                    return jobseeker_data.city.title
+            except JobSeekerProfile.DoesNotExist:
+                pass 
         return None
     
     def get_skills(self, obj):
         context = []
         if obj.role == 'job_seeker':
-            skills_data = JobSeekerSkill.objects.filter(user=obj)
-            get_data = JobSeekerSkillSerializer(skills_data, many=True)
-            if get_data.data:
-                context = get_data.data
-            return context
+            try:
+                skills_data = JobSeekerSkill.objects.filter(user=obj)
+                get_data = JobSeekerSkillSerializer(skills_data, many=True)
+                if get_data.data:
+                    context = get_data.data
+                return context
+            except JobSeekerSkill.DoesNotExist:
+                pass 
         return None

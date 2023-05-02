@@ -119,19 +119,13 @@ class UserView(generics.GenericAPIView):
             # --------------------------------------------------------
             if user.email:
                 otp = unique_otp_generator()
-                full_url = self.request.build_absolute_uri()
-                path = self.request.path
-                Base_url = full_url.replace(path, "")
-                if "?" in Base_url:
-                    Base_url = Base_url.split("?")[0]
                 context["yourname"] = user.email
                 context["otp"] = otp
                 get_email_object(
                     subject=f'OTP for Verification',
                     email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
-                    to_email=[user.email, ],
-                    base_url=Base_url
+                    to_email=[user.email, ]
                 )
                 user.otp = otp
                 user.otp_created_at = datetime.now()
@@ -373,11 +367,6 @@ class SendOtpView(generics.GenericAPIView):
         response_context = dict()
         try:
             otp = unique_otp_generator()
-            full_url = self.request.build_absolute_uri()
-            path = self.request.path
-            Base_url = full_url.replace(path, "")
-            if "?" in Base_url:
-                Base_url = Base_url.split("?")[0]
             user_email = request.GET.get('email', None)
             try:
                 user_instance = User.objects.get(email__iexact=user_email)
@@ -387,8 +376,7 @@ class SendOtpView(generics.GenericAPIView):
                     subject=f'OTP for Verification',
                     email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
-                    to_email=[user_email, ],
-                    base_url=Base_url
+                    to_email=[user_email, ]
                 )
                 user_instance.otp = otp
                 user_instance.otp_created_at = datetime.now()
@@ -501,6 +489,21 @@ class ChangePasswordView(generics.GenericAPIView):
                 user=user_instance, notification_type='password_update',
                 created_by=user_instance
             )
+            if user_instance.email:
+                email_context = dict()
+                if user_instance.name:
+                    user_name = user_instance.name
+                else:
+                    user_name = user_instance.email
+                email_context["yourname"] = user_name
+                email_context["notification_type"] = "update password"
+                email_context["job_instance"] = "update password"
+                get_email_object(
+                    subject=f'Notification for update password',
+                    email_template_name='email-templates/send-notification.html',
+                    context=email_context,
+                    to_email=[user_instance.email, ]
+                )
             context['message'] = "Password updated successfully."
             return response.Response(
                 data=context,

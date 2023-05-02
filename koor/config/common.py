@@ -36,6 +36,7 @@ class Common(Configuration):
         "notification.apps.NotificationConfig",
         "vendors.apps.VendorsConfig",
         "tenders.apps.TendersConfig",
+        "chat.apps.ChatConfig",
     )
     
     CRONJOBS = [
@@ -115,6 +116,7 @@ class Common(Configuration):
     USE_L10N = False
     USE_TZ = False
     LOGIN_REDIRECT_URL = '/'
+    BASE_URL = config("BASE_URL")
 
     # Static files (CSS, JavaScript, Images)
     # https://docs.djangoproject.com/en/2.0/howto/static-files/

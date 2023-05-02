@@ -27,6 +27,31 @@ class JobCategory(SlugBaseModel, TimeStampedModel, models.Model):
         db_table = "JobCategory"
         ordering = ['title']
 
+
+class JobSubCategory(SlugBaseModel, TimeStampedModel, models.Model):
+    """
+    This table is used to store details about a Job Sub Category.
+
+    Columns: 
+    - `title`: A string representing the name of the tag. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    - `category`: the category associated with the JobCategory
+    """
+    category = models.ForeignKey(
+        JobCategory,
+        verbose_name=_('Category'),
+        on_delete=models.CASCADE,
+        db_column="category",
+        related_name='%(app_label)s_%(class)s_categories'
+    )
+    
+    class Meta:
+        verbose_name = "Job Sub Category"
+        verbose_name_plural = "Job Sub Categories"
+        db_table = "JobSubCategory"
+        ordering = ['title']
+
+
 class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This is a Django model for a Job object, with the following fields:
@@ -45,7 +70,8 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     - `is_part_time`: a Boolean indicating whether the job is part-time or not
     - `has_contract`: a Boolean indicating whether the job has a contract or not
     - `contact_email`: the contact email for the job
-    - `contact_phone`: the contact phone number for the job
+    - `cc1`: the cc1 for the job
+    - `cc2`: the cc2 for the job
     - `contact_whatsapp`: the contact Whatsapp number for the job
     - `highest_education`: the highest level of education required for the job
     - `language`: the language(s) required for the job
@@ -140,6 +166,12 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="job_category",
         related_name='%(app_label)s_%(class)s_job_category'
     )
+    job_sub_category = models.ManyToManyField(
+        to=JobSubCategory,
+        verbose_name=_('Job Sub Category'),
+        db_column="job_sub_category",
+        related_name='%(app_label)s_%(class)s_job_sub_category'
+    )
     is_full_time = models.BooleanField(
         verbose_name=_('Is Full-time'),
         null=True,
@@ -167,12 +199,17 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="contact_email",
     )
-    contact_phone = models.CharField(
-        verbose_name=_('Contact Phone'),
+    cc1 = models.EmailField(
+        verbose_name=_('CC Email 1'),
         null=True,
         blank=True,
-        max_length=15,
-        db_column="contact_phone",
+        db_column="cc1",
+    )
+    cc2 = models.EmailField(
+        verbose_name=_('CC Email 2'),
+        null=True,
+        blank=True,
+        db_column="cc2",
     )
     contact_whatsapp = models.CharField(
         verbose_name=_('Contact Whatsapp'),
@@ -314,12 +351,14 @@ class JobsLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, mode
         verbose_name=_('Written'),
         max_length=255,
         db_column="written",
+        default="fluent",
         choices=FLUENCY_CHOICE,
     )
     spoken = models.CharField(
         verbose_name=_('Spoken'),
         max_length=255,
         db_column="spoken",
+        default="fluent",
         choices=FLUENCY_CHOICE,
     )
 
@@ -396,6 +435,14 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="job_category",
         related_name='%(app_label)s_%(class)s_job_category'
     )
+    job_sub_category = models.ManyToManyField(
+        to=JobSubCategory,
+        null=True,
+        blank=True,
+        verbose_name=_('Job Sub Category'),
+        db_column="job_sub_category",
+        related_name='%(app_label)s_%(class)s_job_sub_category'
+    )
     is_full_time = models.BooleanField(
         verbose_name=_('Is Full-time'),
         null=True,
@@ -426,6 +473,21 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('Duration'),
         db_column="duration",
     )
+    salary_min = models.CharField(
+        verbose_name=_('Salary Min'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="salary_min",
+    )
+    salary_max = models.CharField(
+        verbose_name=_('Salary Max'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="salary_max",
+    )
+
 
     def __str__(self):
         return str(self.title)
@@ -434,4 +496,80 @@ class JobFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Job Filter"
         verbose_name_plural = "Job Filters"
         db_table = "JobFilters"
+        ordering = ['-created']
+
+
+class JobShare(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    A model representing job sharing details for a specific job.
+
+    This model inherits from `BaseModel`, `SoftDeleteModel`, and `TimeStampedModel`, and is a subclass of Django's
+    models.Model. It contains fields for various job sharing methods such as `WhatsApp`, `Telegram`, `Facebook`, and
+    `Mail`, along with a foreign key to the related `JobDetails` model.
+
+    Attributes:
+        - `job (ForeignKey)`: Foreign key to the related JobDetails model.
+        - `whatsapp (BigIntegerField)`: Number of shares via `WhatsApp`.
+        - `telegram (BigIntegerField)`: Number of shares via `Telegram`.
+        - `facebook (BigIntegerField)`: Number of shares via `Facebook`.
+        - `mail (BigIntegerField)`: Number of shares via `Mail`.
+        - `linked_in (BigIntegerField)`: Number of shares via `Linked In`.
+        - `direct_link (BigIntegerField)`: Number of shares via `Direct Link`.
+
+    Methods:
+        - `__str__()`: Returns the title of the related job as a string.
+
+    Meta:
+        - `verbose_name (str)`: Singular name for the model used in Django admin.
+        - `verbose_name_plural (str)`: Plural name for the model used in Django admin.
+        - `db_table (str)`: Custom database table name for the model.
+        - `ordering (list)`: Ordering of records in the model's default queryset.
+
+    """
+
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    whatsapp = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Whats App'),
+        db_column="whatsapp",
+    )
+    telegram = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Telegram'),
+        db_column="telegram",
+    )
+    facebook = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Facebook'),
+        db_column="facebook",
+    )    
+    linked_in = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Linked In'),
+        db_column="linked_in",
+    )
+    mail = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Mail'),
+        db_column="mail",
+    )
+    direct_link = models.BigIntegerField(
+        default=0,
+        verbose_name=_('Direct Link'),
+        db_column="direct_link",
+    )
+
+    def __str__(self):
+        return str(self.job.title)
+
+    class Meta:
+        verbose_name = "Job Share"
+        verbose_name_plural = "Job Shares"
+        db_table = "JobShare"
         ordering = ['-created']
