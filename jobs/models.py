@@ -351,12 +351,14 @@ class JobsLanguageProficiency(BaseModel, SoftDeleteModel, TimeStampedModel, mode
         verbose_name=_('Written'),
         max_length=255,
         db_column="written",
+        default="fluent",
         choices=FLUENCY_CHOICE,
     )
     spoken = models.CharField(
         verbose_name=_('Spoken'),
         max_length=255,
         db_column="spoken",
+        default="fluent",
         choices=FLUENCY_CHOICE,
     )
 

@@ -289,10 +289,10 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                             pass
                     except Language.DoesNotExist:
                         raise serializers.ValidationError('Language not exist.', code='language')
-                if 'written' not in language_data:
-                    raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
-                if 'spoken' not in language_data:
-                    raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
+                # if 'written' not in language_data:
+                #     raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
+                # if 'spoken' not in language_data:
+                #     raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
             return language
         else:
             raise serializers.ValidationError('This field is required.', code='language')
@@ -361,8 +361,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                 job_language_instance = JobsLanguageProficiency.objects.create(
                     job=job_instance,
                     language=language_instance,
-                    spoken=language_data['spoken'],
-                    written=language_data['written']
+                    # spoken=language_data['spoken'],
+                    # written=language_data['written']
                 )
                 job_language_instance.save()
         if attachments:
@@ -490,10 +490,10 @@ class UpdateJobSerializers(serializers.ModelSerializer):
                             pass
                     except Language.DoesNotExist:
                         raise serializers.ValidationError('Language not exist.', code='language')
-                if 'written' not in language_data:
-                    raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
-                if 'spoken' not in language_data:
-                    raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
+                # if 'written' not in language_data:
+                #     raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
+                # if 'spoken' not in language_data:
+                #     raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
             return language
         else:
             raise serializers.ValidationError({'language': 'Language can not be blank.'})
@@ -576,15 +576,15 @@ class UpdateJobSerializers(serializers.ModelSerializer):
                         job_language_instance = JobsLanguageProficiency.objects.get(id=language_data['id'])
                         job_language_instance.job = instance
                         job_language_instance.language = language_instance
-                        job_language_instance.spoken = language_data['spoken']
-                        job_language_instance.written = language_data['written']
+                        # job_language_instance.spoken = language_data['spoken']
+                        # job_language_instance.written = language_data['written']
                         job_language_instance.save()
                     else:
                         job_language_instance = JobsLanguageProficiency.objects.create(
                             job=instance,
                             language=language_instance,
-                            spoken=language_data['spoken'],
-                            written=language_data['written']
+                            # spoken=language_data['spoken'],
+                            # written=language_data['written']
                         )
                         job_language_instance.save()
         if attachments:
