@@ -980,7 +980,8 @@ class SocialLoginSerializers(serializers.ModelSerializer):
     display_image = serializers.CharField(
         style={"input_type": "text"},
         write_only=True,
-        allow_blank=False
+        allow_blank=False,
+        required=False
     )
     class Meta:
         model = User
