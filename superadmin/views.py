@@ -231,9 +231,9 @@ class CityView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if City.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                           country=serializer.validated_data['country'], is_removed=True).exists():
+                                           country__title=serializer.validated_data['country_name'], is_removed=True).exists():
                     City.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                            country=serializer.validated_data['country'], is_removed=True).update(
+                                            country__title=serializer.validated_data['country_name'], is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
