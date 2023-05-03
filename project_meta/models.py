@@ -5,6 +5,7 @@ from django.template.defaultfilters import slugify
 from core.models import (
     BaseModel, SlugBaseModel, upload_directory_path
 )
+from model_utils import models as misc_models
 
 
 class Media(BaseModel, models.Model):
@@ -186,7 +187,7 @@ class City(SlugBaseModel, models.Model):
         return super().save(*args, **kwargs)
 
 
-class JobSeekerCategory(BaseModel, models.Model):
+class JobSeekerCategory(BaseModel, misc_models.TimeStampedModel, models.Model):
     """
     A model class representing the categories for job seekers.
 
@@ -215,7 +216,7 @@ class JobSeekerCategory(BaseModel, models.Model):
         verbose_name = "JobSeekerCategory"
         verbose_name_plural = "Job Seeker Categories"
         db_table = "JobSeekerCategory"
-        ordering = ['title']
+        ordering = ['-created']
         """
         Metadata for the JobSeekerCategory model.
         - verbose_name (str): Human-readable name for the model in singular and plural form.
