@@ -39,6 +39,7 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('applied', "Applied"),
         ('password_update', "Password Updated"),
         ('shortlisted', "Shortlisted"),
+        ('planned_interviews', "Planned Interviews"),
         ('message', "Message"),
         ('advance_filter', "Advance Filter"),
         ('expired_save_job', "Expired Save Job"),

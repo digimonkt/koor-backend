@@ -39,7 +39,7 @@ from .serializers import (
     DashboardCountSerializers, JobSeekerCategorySerializers,
     TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
-    AllCitySerializers
+    AllCitySerializers, GetCitySerializers
 )
 
 
@@ -187,7 +187,7 @@ class CityView(generics.ListAPIView):
     """
 
     permission_classes = [permissions.AllowAny]
-    serializer_class = CitySerializers
+    serializer_class = GetCitySerializers
     queryset = City.objects.filter(country__is_removed=False)
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
@@ -223,7 +223,7 @@ class CityView(generics.ListAPIView):
             Exception: If an unexpected error occurs during the request handling.
         """
         context = dict()
-        serializer = self.serializer_class(data=request.data)
+        serializer = CitySerializers(data=request.data)
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
