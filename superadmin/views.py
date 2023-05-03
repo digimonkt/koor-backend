@@ -8,6 +8,7 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
@@ -100,8 +101,10 @@ class CountryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Country.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
-                    Country.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                if Country.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                              is_removed=True).exists():
+                    Country.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                               is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -353,8 +356,10 @@ class JobCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
-                    JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                if JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                  is_removed=True).exists():
+                    JobCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                   is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -526,7 +531,8 @@ class EducationLevelView(generics.ListAPIView):
                 serializer.is_valid(raise_exception=True)
                 if EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                      is_removed=True).exists():
-                    EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                    EducationLevel.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                      is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -695,8 +701,10 @@ class LanguageView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Language.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
-                    Language.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                if Language.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                               is_removed=True).exists():
+                    Language.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2104,16 +2112,27 @@ class JobSeekerCategoryView(generics.ListAPIView):
     queryset = JobSeekerCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
-    pagination_class = CustomPagination
 
     def list(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return response.Response(serializer.data)
+        count = queryset.count()
+        next = None
+        previous = None
+        paginator = LimitOffsetPagination()
+        limit = self.request.query_params.get('limit')
+        if limit:
+            queryset = paginator.paginate_queryset(queryset, request)
+            count = paginator.count
+            next = paginator.get_next_link()
+            previous = paginator.get_previous_link()
+        serializer = self.serializer_class(queryset, many=True)
+        return response.Response(
+            {'count': count,
+             "next": next,
+             "previous": previous,
+             "results": serializer.data
+             }
+        )
 
     def post(self, request):
         """
@@ -2243,7 +2262,7 @@ class JobSeekerCategoryView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
-            
+
 
 class TenderCategoryView(generics.ListAPIView):
     """
@@ -2304,7 +2323,8 @@ class TenderCategoryView(generics.ListAPIView):
                 serializer.is_valid(raise_exception=True)
                 if TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                      is_removed=True).exists():
-                    TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                    TenderCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                      is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2425,7 +2445,8 @@ class SectorView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                if Sector.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                             is_removed=True).exists():
                     Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
@@ -2704,8 +2725,10 @@ class JobSubCategoryView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
-                    JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                if JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                     is_removed=True).exists():
+                    JobSubCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                      is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -2841,7 +2864,7 @@ class WorldCountryView(generics.ListAPIView):
         - In this case, only the `title` field will be searched with the "^" prefix, which means that 
         the search is case-insensitive and searches for the start of the field value.
     """
-    
+
     permission_classes = [permissions.AllowAny]
     serializer_class = AllCountrySerializers
     queryset = AllCountry.objects.all()
@@ -2865,7 +2888,7 @@ class WorldCityView(generics.ListAPIView):
         - `list(request)`: Handles HTTP GET requests to retrieve a list of cities from the database.
 
     """
-    
+
     permission_classes = [permissions.AllowAny]
     serializer_class = AllCitySerializers
     queryset = AllCity.objects.all()
