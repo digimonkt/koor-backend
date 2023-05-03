@@ -56,10 +56,14 @@ class CitySerializers(serializers.ModelSerializer):
         - model (City): The model class that this serializer is based on.
         - fields (list): List of fields from the City model that should be included in the API representation.
     """
-
+    country_name = serializers.CharField(
+            style={"input_type": "text"},
+            write_only=True,
+            allow_blank=False
+        )
     class Meta:
         model = City
-        fields = ['id', 'title', 'country']
+        fields = ['id', 'title', 'country_name']
 
     def validate(self, data):
         """
@@ -80,18 +84,40 @@ class CitySerializers(serializers.ModelSerializer):
         Returns:
             data (dict): The validated data.
         """
-        country = data.get("country")
+        country_name = data.get("country_name")
         title = data.get("title")
-        if country in ["", None]:
-            raise serializers.ValidationError({'country': 'Country can not be blank'})
+        if country_name in ["", None]:
+            raise serializers.ValidationError({'country_name': 'Country name can not be blank'})
         else:
             try:
-                if Country.objects.get(title=country.title):
-                    if City.objects.filter(title__iexact=title, country=country).exists():
-                        raise serializers.ValidationError({'title': title + ' in ' + country.title + ' already exist.'})
-                    return data
+                country_instance = Country.objects.get(title=country_name)
+                if City.objects.filter(title__iexact=title, country=country_instance).exists():
+                    raise serializers.ValidationError({'title': title + ' in ' + country_instance + ' already exist.'})
+                return data
             except Country.DoesNotExist:
-                raise serializers.ValidationError('Country not available.', code='country')
+                raise serializers.ValidationError('Country not available.', code='country_name')
+
+    def save(self):
+        country_instance = Country.objects.get(title=self.validated_data['country_name'])
+        City.objects.create(title=self.validated_data['title'], country=country_instance)
+        return self
+
+class GetCitySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `City` model.
+
+    The `GetCitySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `City` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'country'.
+    """
+    country = serializers.SerializerMethodField()
+
+    class Meta:
+        model = City
+        fields = ['id', 'title', 'country']
+
+    def get_country(self, obj):
+        return {"id": obj.country.id, "title": obj.country.title}
 
 
 class JobCategorySerializers(serializers.ModelSerializer):
