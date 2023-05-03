@@ -180,38 +180,39 @@ class UserView(generics.GenericAPIView):
             Exception: If an error occurs while retrieving the user data.
         """
         context = dict()
-        if request.user and request.user.is_authenticated:
-            user_id = request.GET.get('userId', None)
-            try:
-                if not user_id:
+        user_id = request.GET.get('userId', None)
+        try:
+            if not user_id:
+                if request.user and request.user.is_authenticated:
                     user_id = request.user.id
-                user_data = User.objects.get(id=user_id)
-                if user_data.role == "job_seeker":
-                    get_data = JobSeekerDetailSerializers(user_data)
-                    context = get_data.data
-                elif user_data.role == "employer":
-                    get_data = EmployerDetailSerializers(user_data)
-                    context = get_data.data
-                elif user_data.role == "vendor":
-                    get_data = VendorDetailSerializers(user_data)
-                    context = get_data.data
+                else:
+                    context["detail"] = "Authentication credentials were not provided."
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+            user_data = User.objects.get(id=user_id)
+            if user_data.role == "job_seeker":
+                get_data = JobSeekerDetailSerializers(user_data)
+                context = get_data.data
+            elif user_data.role == "employer":
+                get_data = EmployerDetailSerializers(user_data)
+                context = get_data.data
+            elif user_data.role == "vendor":
+                get_data = VendorDetailSerializers(user_data)
+                context = get_data.data
 
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except Exception as e:
-                context["error"] = str(e)
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        else:
-            context["detail"] = "Authentication credentials were not provided."
             return response.Response(
                 data=context,
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_200_OK
             )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
 
 
 class CreateSessionView(generics.GenericAPIView):
