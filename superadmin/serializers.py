@@ -94,6 +94,24 @@ class CitySerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError('Country not available.', code='country')
 
 
+class GetCitySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `City` model.
+
+    The `GetCitySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `City` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'country'.
+    """
+    country = serializers.SerializerMethodField()
+
+    class Meta:
+        model = City
+        fields = ['id', 'title', 'country']
+
+    def get_country(self, obj):
+        return {"id": obj.country.id, "title": obj.country.title}
+
+
 class JobCategorySerializers(serializers.ModelSerializer):
     """
     Serializer class for the `JobCategory` model.
