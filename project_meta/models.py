@@ -187,45 +187,6 @@ class City(SlugBaseModel, models.Model):
         return super().save(*args, **kwargs)
 
 
-class JobSeekerCategory(BaseModel, misc_models.TimeStampedModel, models.Model):
-    """
-    A model class representing the categories for job seekers.
-
-    Attributes:
-        - title (str): The title of the category.
-        - category (ForeignKey): The parent category of this category.
-        - Meta (class): A subclass of Model which defines the metadata for the model.
-
-    """
-
-    title = models.TextField(
-        verbose_name=_('Title'),
-        db_column="title",
-    )
-    category = models.ForeignKey(
-        to='self',
-        verbose_name=_('Category'),
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        db_column="category",
-        related_name='%(app_label)s_%(class)s_categories'
-    )
-
-    class Meta:
-        verbose_name = "JobSeekerCategory"
-        verbose_name_plural = "Job Seeker Categories"
-        db_table = "JobSeekerCategory"
-        ordering = ['-created']
-        """
-        Metadata for the JobSeekerCategory model.
-        - verbose_name (str): Human-readable name for the model in singular and plural form.
-        - db_table (str): Database table name.
-        - ordering (list): Default ordering for the model.
-
-        """
-
-
 class Sector(SlugBaseModel, models.Model):
     """
     This table is used to store details about a sector.
