@@ -110,6 +110,12 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         db_column="city",
         related_name='%(app_label)s_%(class)s_city'
     )
+    exprience = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Exprience'),
+        db_column="exprience",
+    )
 
     def __str__(self):
         return str(self.user)

@@ -186,7 +186,8 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'job_notification',
             'highest_education',
             'country',
-            'city'
+            'city',
+            'exprience'
         )
     
     def get_highest_education(self, obj):
