@@ -15,11 +15,9 @@ from rest_framework import (
 
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobSubCategory, JobCategory
 
 from koor.config.common import Common
-
-from project_meta.models import JobSeekerCategory
 
 from user_profile.models import JobSeekerProfile
 
@@ -1334,7 +1332,7 @@ class CategoryView(generics.GenericAPIView):
 
         response_context = dict()
         if self.request.user.role == "job_seeker":
-            category_data = JobSeekerCategory.objects.filter(category=None)
+            category_data = JobCategory.objects.filter(is_removed=False)
             get_data = CategoriesSerializers(category_data, many=True, context={'user': request.user})
             return response.Response(
                 data=get_data.data,

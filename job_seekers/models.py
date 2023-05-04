@@ -7,11 +7,11 @@ from core.models import (
 
 from users.models import User, TimeStampedModel
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobSubCategory
 
 from project_meta.models import (
     Media, Language, Skill,
-    EducationLevel, JobSeekerCategory
+    EducationLevel
 )
 
 
@@ -501,7 +501,7 @@ class Categories(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         related_name='%(app_label)s_%(class)s_user'
     )
     category = models.ForeignKey(
-        JobSeekerCategory,
+        JobSubCategory,
         verbose_name=_('Category'),
         on_delete=models.CASCADE,
         db_column="category",
