@@ -736,7 +736,10 @@ class SearchView(generics.ListAPIView):
             - `results`: list of dicts, the serialized representations of the candidates matching the 
                 filter/search criteria
         """
-        queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        if role == 'job_seeker':
+            queryset = self.filter_queryset(self.get_queryset().filter(role=role).filter(job_seekers_jobpreferences_user__display_in_search=True))
+        else:
+            queryset = self.filter_queryset(self.get_queryset().filter(role=role))
         category = request.GET.getlist('category')
         if category:
             queryset = queryset.filter(job_seekers_categories_user__category__title__in=category).distinct()
