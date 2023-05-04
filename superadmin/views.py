@@ -2911,9 +2911,9 @@ class WorldCityView(generics.ListAPIView):
 
         """
 
-        country_id = request.GET.get('countryId', None)
-        if country_id:
-            queryset = self.filter_queryset(self.get_queryset().filter(country_id=country_id))
+        country_name = request.GET.get('countryName', None)
+        if country_name:
+            queryset = self.filter_queryset(self.get_queryset().filter(country__title__iexact=country_name))
         else:
             queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
