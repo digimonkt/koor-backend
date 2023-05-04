@@ -25,8 +25,7 @@ from users.models import UserSession, User
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory, Sector,
-    AllCountry, AllCity
+    Sector, AllCountry, AllCity
 )
 
 from tenders.models import TenderCategory
@@ -37,8 +36,8 @@ from .serializers import (
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
-    DashboardCountSerializers, JobSeekerCategorySerializers,
-    TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
+    DashboardCountSerializers, TenderCategorySerializers, 
+    SectorSerializers, JobSubCategorySerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers
 )
@@ -2083,184 +2082,6 @@ class DashboardView(generics.GenericAPIView):
             return response.Response(
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
-            )
-
-
-class JobSeekerCategoryView(generics.ListAPIView):
-    """
-    A view for displaying a list of job categories.
-
-    Attributes:
-        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
-            case, only authenticated users are allowed to access the view.
-
-        - serializer_class (JobSeekerCategorySerializers): The serializer class used for data validation and
-            serialization.
-
-        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
-            to retrieve all countries using `JobSeekerCategory.objects.all()`.
-
-        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
-            case, only `SearchFilter` is used.
-
-        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
-
-    """
-
-    permission_classes = [permissions.AllowAny]
-    serializer_class = JobSeekerCategorySerializers
-    queryset = JobSeekerCategory.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
-
-    def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True)
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
-
-    def post(self, request):
-        """
-        Handle POST request to create a new job seeker category.
-        The request must contain valid data for the job seeker category to be created.
-
-        Only users with `is_staff` attribute set to True are authorized to create a job seeker category.
-
-        Returns:
-            - HTTP 201 CREATED with a message "JobSeekerCategory added successfully" if the job seeker category is
-            created successfully.
-            - HTTP 400 BAD REQUEST with error message if data validation fails.
-            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
-            not authorized.
-
-        Raises:
-            Exception: If an unexpected error occurs during the request handling.
-        """
-        context = dict()
-        serializer = self.serializer_class(data=request.data)
-        try:
-            if self.request.user.is_staff:
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return response.Response(
-                    data=serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            context['message'] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    def delete(self, request, jobSeekerCategoryId):
-        """
-        Deletes an JobSeekerCategory object with the given ID if the authenticated user is a job seeker and owns the
-        JobSeekerCategory.
-        Args:
-            request: A DRF request object.
-            educationId: An integer representing the ID of the JobSeekerCategory to be deleted.
-        Returns:
-            A DRF response object with a success or error message and appropriate status code.
-        """
-        context = dict()
-        if self.request.user.is_staff:
-            try:
-                JobSeekerCategory.objects.get(id=jobSeekerCategoryId).delete()
-                context['message'] = "Deleted Successfully"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except JobSeekerCategory.DoesNotExist:
-                return response.Response(
-                    data={"jobSeekerCategoryId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
-            return response.Response(
-                data=context,
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-    def put(self, request, jobSeekerCategoryId):
-        """
-        Update an `JobSeekerCategory` instance with the provided data.
-
-        Args:
-            - `request (django.http.request.Request)`: The HTTP request object.
-            - `jobSeekerCategoryId (int)`: The ID of the `JobSeekerCategory` instance to update.
-
-        Returns:
-            - `django.http.response.Response`: An HTTP response object containing the updated data
-            and appropriate status code.
-
-        Raises:
-            - `serializers.ValidationError`: If the provided data is invalid.
-            - `JobSeekerCategory.DoesNotExist`: If the JobSeekerCategory instance with the given ID does not exist.
-            - `Exception`: If any other error occurs during the update process.
-        """
-
-        context = dict()
-        try:
-            job_seeker_category_instance = JobSeekerCategory.objects.get(id=jobSeekerCategoryId)
-            serializer = self.serializer_class(data=request.data, instance=job_seeker_category_instance, partial=True)
-            try:
-                serializer.is_valid(raise_exception=True)
-                if serializer.update(job_seeker_category_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
-                    return response.Response(
-                        data=context,
-                        status=status.HTTP_200_OK
-                    )
-            except serializers.ValidationError:
-                return response.Response(
-                    data=serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        except JobSeekerCategory.DoesNotExist:
-            return response.Response(
-                data={"jobSeekerCategoryId": "Does Not Exist"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            context["message"] = e
-            return response.Response(
-                data=context,
-                status=status.HTTP_404_NOT_FOUND
             )
 
 

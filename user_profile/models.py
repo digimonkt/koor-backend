@@ -8,8 +8,10 @@ from core.models import (
 from users.models import User, TimeStampedModel
 from project_meta.models import (
     EducationLevel, Media, Country,
-    City, JobSeekerCategory
+    City
 )
+
+from jobs.models import JobCategory, JobSubCategory
 
 
 class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -378,12 +380,20 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         related_name='%(app_label)s_%(class)s_city'
     )
     category = models.ManyToManyField(
-        to=JobSeekerCategory,
+        to=JobCategory,
         null=True,
         blank=True,
         verbose_name=_('Category'),
         db_column="category",
         related_name='%(app_label)s_%(class)s_category'
+    )
+    sub_category = models.ManyToManyField(
+        to=JobSubCategory,
+        null=True,
+        blank=True,
+        verbose_name=_('Sub Category'),
+        db_column="sub_category",
+        related_name='%(app_label)s_%(class)s_sub_category'
     )
     is_full_time = models.BooleanField(
         verbose_name=_('Is Full-time'),

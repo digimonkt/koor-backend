@@ -6,7 +6,7 @@ from .views import (
     TagView, ChangePasswordView, UserRightsView,
     PrivacyPolicyView, CandidatesListView, EmployerListView,
     JobsListView, UsersCountView, UserView,
-    JobsRevertView, DashboardView, JobSeekerCategoryView,
+    JobsRevertView, DashboardView, 
     TenderCategoryView, SectorView, UploadCountryView,
     JobSubCategoryView, WorldCountryView, UploadCityView,
     WorldCityView
@@ -56,9 +56,6 @@ urlpatterns = [
     path('/users-count', UsersCountView.as_view(), name="users_count"),
 
     path('/dashboard', DashboardView.as_view(), name="dashboard"),
-
-    path('/job-seeker-category', JobSeekerCategoryView.as_view(), name="job_seeker_category"),
-    path('/job-seeker-category/<str:jobSeekerCategoryId>', JobSeekerCategoryView.as_view(), name="job_seeker_category"),
 
     path('/tender-category', TenderCategoryView.as_view(), name="tender_category"),
     path('/tender-category/<str:tenderCategoryId>', TenderCategoryView.as_view(), name="tender_category"),

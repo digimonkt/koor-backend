@@ -3,9 +3,11 @@ from rest_framework import serializers
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, 
     Resume, JobSeekerLanguageProficiency, 
-    JobSeekerSkill, JobSeekerCategory,
+    JobSeekerSkill,
     JobPreferences
 )
+
+from jobs.models import JobSubCategory
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
     UserFilters, VendorProfile
@@ -1061,16 +1063,16 @@ class UserFiltersSerializers(serializers.ModelSerializer):
 
 class UserCategorySerializer(serializers.ModelSerializer):
     """
-    Serializer for the `JobSeekerCategory` model.
+    Serializer for the `JobSubCategory` model.
 
     Meta:
-        - `model (JobSeekerCategory)`: The model that the serializer is based on.
+        - `model (JobSubCategory)`: The model that the serializer is based on.
         - `fields (list)`: The fields to include in the serialized output.
 
     """
 
     class Meta:
-        model = JobSeekerCategory
+        model = JobSubCategory
         fields = ['id', 'title']
 
 
