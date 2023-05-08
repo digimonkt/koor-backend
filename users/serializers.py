@@ -187,7 +187,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'highest_education',
             'country',
             'city',
-            'exprience'
+            'experience'
         )
     
     def get_highest_education(self, obj):
