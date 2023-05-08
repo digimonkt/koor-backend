@@ -10,7 +10,7 @@ from jobs.models import (
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    Sector, AllCountry
+    Sector, AllCountry, Choice
 )
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
@@ -638,3 +638,21 @@ class AllCitySerializers(serializers.ModelSerializer):
 
     def get_country(self, obj):
         return {"id": obj.country.id, "title": obj.country.title}
+
+
+class ChoiceSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `Choice` model.
+
+    The `ChoiceSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `Choice` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = Choice
+        fields = ['id', 'title']
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
