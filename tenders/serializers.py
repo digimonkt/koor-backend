@@ -79,7 +79,7 @@ class TendersSerializers(serializers.ModelSerializer):
 
         """
 
-        context = {}
+        context = []
         get_data = TenderCategorySerializer(obj.tender_category, many=True)
         if get_data.data:
             context = get_data.data
