@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from .models import (
     City, Country, Language,
-    Skill, EducationLevel, Tag
+    Skill, EducationLevel, Tag,
+    Choice
 )
 
 
@@ -114,6 +115,24 @@ class TagSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Tag
+        fields = (
+            'id',
+            'title',
+        )
+
+class ChoiceSerializer(serializers.ModelSerializer):
+    """
+    ChoiceSerializer is a serializer class that serializes Choice model instances to JSON format. It uses the
+    ModelSerializer subclass from the Django REST Framework to automatically generate serializer fields for the Choice
+    model fields.
+
+    Attributes:
+        model (Model): The EducationLevel model that the serializer is based on.
+        fields (tuple): The fields to be serialized in the Choice model.
+
+    """
+    class Meta:
+        model = Choice
         fields = (
             'id',
             'title',

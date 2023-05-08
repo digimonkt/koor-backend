@@ -9,7 +9,7 @@ from .views import (
     JobsRevertView, DashboardView, 
     TenderCategoryView, SectorView, UploadCountryView,
     JobSubCategoryView, WorldCountryView, UploadCityView,
-    WorldCityView
+    WorldCityView, ChoiceView
 )
 
 app_name = "superadmin"
@@ -71,4 +71,7 @@ urlpatterns = [
     
     path('/world-country', WorldCountryView.as_view(), name="world_country"),
     path('/world-city', WorldCityView.as_view(), name="world_city"),
+        
+    path('/choice', ChoiceView.as_view(), name="choice"),
+    path('/choice/<str:choiceId>', ChoiceView.as_view(), name="choice"),
 ]
