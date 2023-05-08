@@ -87,7 +87,8 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     class Meta:
         model = EmployerProfile
         fields = ['organization_name', 'mobile_number', 'country_code', 'organization_type',
-                  'market_information_notification', 'other_notification', 'license_id', 'license']
+                  'market_information_notification', 'other_notification', 'license_id', 'license',
+                  'description', 'address', 'website', 'country',  'city']
 
     def validate_license_id(self, license_id):
         if license_id == '':

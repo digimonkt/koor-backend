@@ -64,7 +64,9 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
 
     SECTOR_CHOICE = (
+        ('government', "Government"),
         ('ngo', "NGO"),
+        ('business', "Business"),
         ('private', "Private"),
         ('public', "Public")
     )
@@ -276,7 +278,9 @@ class TenderFilter(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('business', "Business"),
     )
     SECTOR_CHOICE = (
+        ('government', "Government"),
         ('ngo', "NGO"),
+        ('business', "Business"),
         ('private', "Private"),
         ('public', "Public")
     )
