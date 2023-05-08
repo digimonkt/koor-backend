@@ -147,6 +147,8 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         ('government', "Government"),
         ('ngo', "NGO"),
         ('business', "Business"),
+        ('private', "Private"),
+        ('public', "Public")
     )
     user = models.ForeignKey(
         to=User,
@@ -160,6 +162,36 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         null=True,
         blank=True,
         db_column="description",
+    )
+    address = models.TextField(
+        verbose_name=_('Address'),
+        null=True,
+        blank=True,
+        db_column="address",
+    )
+    website = models.URLField(
+        verbose_name=_('Web Site'),
+        null=True,
+        blank=True,
+        db_column="website",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
     )
     organization_type = models.CharField(
         verbose_name=_('Organization Type'),
@@ -243,6 +275,8 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('government', "Government"),
         ('ngo', "NGO"),
         ('business', "Business"),
+        ('private', "Private"),
+        ('public', "Public")
     )
     user = models.OneToOneField(
         to=User,
