@@ -187,7 +187,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'highest_education',
             'country',
             'city',
-            'exprience'
+            'experience'
         )
     
     def get_highest_education(self, obj):
@@ -1054,7 +1054,7 @@ class UserFiltersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'country', 'city', 'category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'salary_min', 'salary_max', 'availability'
+            'salary_min', 'salary_max', 'availability', 'experience'
         ]
    
     def update(self, instance, validated_data):
@@ -1112,7 +1112,7 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'country', 'city', 'category',
             'is_full_time', 'is_part_time', 'has_contract',  'availability', 
-            'is_notification','salary_min','salary_max'
+            'is_notification','salary_min','salary_max', 'experience'
         ]
 
     def get_country(self, obj):
