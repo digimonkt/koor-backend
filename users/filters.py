@@ -25,7 +25,7 @@ class UsersFilter(filters.FilterSet):
 
     country = filters.CharFilter(field_name='user_profile_jobseekerprofile_user__country__title', lookup_expr='iexact')
     city = filters.CharFilter(field_name='user_profile_jobseekerprofile_user__city__title', lookup_expr='iexact')
-    experience = filters.CharFilter(field_name='user_profile_jobseekerprofile_user__experience', lookup_expr='iexact')
+    experience = filters.NumberFilter(field_name='user_profile_jobseekerprofile_user__experience', lookup_expr='gte')
     fullTime = filters.BooleanFilter(field_name='job_seekers_jobpreferences_user__is_full_time')
     partTime = filters.BooleanFilter(field_name='job_seekers_jobpreferences_user__is_part_time')
     contract = filters.BooleanFilter(field_name='job_seekers_jobpreferences_user__has_contract')
