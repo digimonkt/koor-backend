@@ -8,7 +8,7 @@ from core.models import (
 )
 from project_meta.models import (
     Country, City, Media,
-    Tag, Sector
+    Tag
 )
 from users.models import (
     TimeStampedModel, User
@@ -63,6 +63,11 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `ordering (list)`: A list representing the default sorting order for the model's objects.
     """
 
+    SECTOR_CHOICE = (
+        ('ngo', "NGO"),
+        ('private', "Private"),
+        ('public', "Public")
+    )
     TENDER_TYPE_CHOICE = (
         ('government', "Government"),
         ('ngo', "NGO"),
@@ -149,11 +154,11 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=25,
         choices=TENDER_TYPE_CHOICE,
     )
-    sector = models.ManyToManyField(
-        to=Sector,
+    sector = models.CharField(
         verbose_name=_('Sector'),
         db_column="sector",
-        related_name='%(app_label)s_%(class)s_sectors'
+        max_length=25,
+        choices=SECTOR_CHOICE,
     )
     deadline = models.DateField(
         verbose_name=_('Deadline'),
