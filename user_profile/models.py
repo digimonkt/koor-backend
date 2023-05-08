@@ -445,6 +445,12 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         null=True,
         db_column="salary_max",
     )
+    experience = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Experience'),
+        db_column="experience",
+    )
 
     def __str__(self):
         return str(self.title)
