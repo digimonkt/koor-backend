@@ -17,7 +17,7 @@ from project_meta.models import Media, EducationLevel
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, 
-    SkillSerializer
+    SkillSerializer, ChoiceSerializer
 )
 
 from employers.models import BlackList
@@ -558,6 +558,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     license_id_file = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
 
     class Meta:
         model = EmployerProfile
@@ -617,6 +618,25 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
         context = {}
         if obj.city:
             get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_organization_type(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.organization_type:
+            get_data = ChoiceSerializer(obj.organization_type)
             if get_data.data:
                 context = get_data.data
         return context
@@ -685,6 +705,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     """
     license_id_file = serializers.SerializerMethodField()
     registration_certificate = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
 
     class Meta:
         model = VendorProfile
@@ -699,6 +720,25 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             'jobs_experience',
         )
 
+    def get_organization_type(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.organization_type:
+            get_data = ChoiceSerializer(obj.organization_type)
+            if get_data.data:
+                context = get_data.data
+        return context
+    
     def get_license_id_file(self, obj):
         context = {}
         if obj.license_id_file:

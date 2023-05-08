@@ -8,7 +8,7 @@ from core.models import (
 )
 from project_meta.models import (
     Country, City, Media,
-    Tag
+    Tag, Choice
 )
 from users.models import (
     TimeStampedModel, User
@@ -50,7 +50,6 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `city (ForeignKey)`: A foreign key representing the city where the tender is located.
         - `tender_category (ManyToManyField)`: A many-to-many field representing the categories of the tender.
         - `tender_type (CharField)`: A character field representing the type of the tender.
-        - `sector (CharField)`: A character field representing the sector of the tender.
 
     Methods:
         - `__str__()`: Returns the string representation of the tender's title.
@@ -63,13 +62,6 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `ordering (list)`: A list representing the default sorting order for the model's objects.
     """
 
-    SECTOR_CHOICE = (
-        ('government', "Government"),
-        ('ngo', "NGO"),
-        ('business', "Business"),
-        ('private', "Private"),
-        ('public', "Public")
-    )
     TENDER_TYPE_CHOICE = (
         ('government', "Government"),
         ('ngo', "NGO"),
@@ -156,11 +148,11 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=25,
         choices=TENDER_TYPE_CHOICE,
     )
-    sector = models.CharField(
+    sector = models.ManyToManyField(
+        to=Choice,
         verbose_name=_('Sector'),
         db_column="sector",
-        max_length=25,
-        choices=SECTOR_CHOICE,
+        related_name='%(app_label)s_%(class)s_sectors'
     )
     deadline = models.DateField(
         verbose_name=_('Deadline'),
@@ -321,13 +313,11 @@ class TenderFilter(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=105,
         choices=TENDER_TYPE_CHOICE,
     )
-    sector = models.CharField(
+    sector = models.ManyToManyField(
+        to=Choice,
         verbose_name=_('Sector'),
         db_column="sector",
-        null=True,
-        blank=True,
-        max_length=105,
-        choices=SECTOR_CHOICE,
+        related_name='%(app_label)s_%(class)s_sector'
     )
     deadline = models.DateField(
         verbose_name=_('Deadline'),

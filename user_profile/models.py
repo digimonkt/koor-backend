@@ -8,7 +8,7 @@ from core.models import (
 from users.models import User, TimeStampedModel
 from project_meta.models import (
     EducationLevel, Media, Country,
-    City
+    City, Choice
 )
 
 from jobs.models import JobCategory, JobSubCategory
@@ -143,13 +143,6 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
     - `license_id`: A string representing the user's license ID.
     - `license_id_file`: A Media object representing the user's license ID file.
     """
-    ORGANIZATION_TYPE_CHOICE = (
-        ('government', "Government"),
-        ('ngo', "NGO"),
-        ('business', "Business"),
-        ('private', "Private"),
-        ('public', "Public")
-    )
     user = models.ForeignKey(
         to=User,
         verbose_name=_('User'),
@@ -193,11 +186,11 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         db_column="city",
         related_name='%(app_label)s_%(class)s_city'
     )
-    organization_type = models.CharField(
+    organization_type = models.ManyToManyField(
+        to=Choice,
         verbose_name=_('Organization Type'),
-        max_length=255,
         db_column="organization_type",
-        choices=ORGANIZATION_TYPE_CHOICE,
+        related_name='%(app_label)s_%(class)s_organization_types'
     )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
@@ -270,14 +263,6 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `db_table (str)`: The name of the database table to use for the model.
         - `ordering (list)`: A list of fields to use for ordering the model instances.
     """
-
-    ORGANIZATION_TYPE_CHOICE = (
-        ('government', "Government"),
-        ('ngo', "NGO"),
-        ('business', "Business"),
-        ('private', "Private"),
-        ('public', "Public")
-    )
     user = models.OneToOneField(
         to=User,
         verbose_name=_('User'),
@@ -291,11 +276,11 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="description",
     )
-    organization_type = models.CharField(
+    organization_type = models.ManyToManyField(
+        to=Choice,
         verbose_name=_('Organization Type'),
-        max_length=255,
         db_column="organization_type",
-        choices=ORGANIZATION_TYPE_CHOICE,
+        related_name='%(app_label)s_%(class)s_organization_types'
     )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
