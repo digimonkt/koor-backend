@@ -13,7 +13,7 @@ from users.serializers import UserSerializer
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer,
-    TagSerializer
+    TagSerializer, ChoiceSerializer
 )
 
 
@@ -58,6 +58,7 @@ class TendersSerializers(serializers.ModelSerializer):
     is_applied = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     vendor = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -126,6 +127,25 @@ class TendersSerializers(serializers.ModelSerializer):
 
     def get_vendor(self, obj):
         return 0
+
+    def get_sector(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.sector:
+            get_data = ChoiceSerializer(obj.sector, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
 
 
 class TenderAttachmentsSerializer(serializers.ModelSerializer):
@@ -236,6 +256,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     is_applied = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -402,6 +423,24 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+    def get_sector(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.sector:
+            get_data = ChoiceSerializer(obj.sector, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
 
 class TenderFiltersSerializers(serializers.ModelSerializer):
     """
