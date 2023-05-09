@@ -2832,7 +2832,7 @@ class ChoiceView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    def delete(self, request, choiceId):
+    def delete(self, request, sectorId):
         """
         Deletes an Choice object with the given ID if the authenticated user is a job seeker and owns the
         Choice.
@@ -2845,7 +2845,7 @@ class ChoiceView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                Choice.objects.get(id=choiceId).delete()
+                Choice.objects.get(id=sectorId).delete()
                 context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
@@ -2869,13 +2869,13 @@ class ChoiceView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-    def put(self, request, choiceId):
+    def put(self, request, sectorId):
         """
         Update a `Choice` instance with the provided data.
 
         Args:
             - `request (django.http.request.Request)`: The HTTP request object.
-            - `choiceId (int)`: The ID of the `Choice` instance to update.
+            - `sectorId (int)`: The ID of the `Choice` instance to update.
 
         Returns:
             - `django.http.response.Response`: An HTTP response object containing the updated data
@@ -2890,7 +2890,7 @@ class ChoiceView(generics.ListAPIView):
 
         context = dict()
         try:
-            choice_instance = Choice.all_objects.get(id=choiceId)
+            choice_instance = Choice.all_objects.get(id=sectorId)
             serializer = self.serializer_class(data=request.data, instance=choice_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
@@ -2907,7 +2907,7 @@ class ChoiceView(generics.ListAPIView):
                 )
         except Choice.DoesNotExist:
             return response.Response(
-                data={"choiceId": "Does Not Exist"},
+                data={"sectorId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
