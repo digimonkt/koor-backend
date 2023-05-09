@@ -638,7 +638,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
         if obj.organization_type:
             get_data = ChoiceSerializer(obj.organization_type, many=True)
             if get_data.data:
-                context = get_data.data
+                context = get_data.data[0]
         return context
 
 
@@ -736,7 +736,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
         if obj.organization_type:
             get_data = ChoiceSerializer(obj.organization_type, many=True)
             if get_data.data:
-                context = get_data.data
+                context = get_data.data[0]
         return context
     
     def get_license_id_file(self, obj):
