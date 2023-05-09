@@ -60,9 +60,6 @@ urlpatterns = [
     path('/tender-category', TenderCategoryView.as_view(), name="tender_category"),
     path('/tender-category/<str:tenderCategoryId>', TenderCategoryView.as_view(), name="tender_category"),
 
-    path('/sector', SectorView.as_view(), name="sector"),
-    path('/sector/<str:sectorId>', SectorView.as_view(), name="sector"),
-
     path('/upload-country', UploadCountryView.as_view(), name="upload_country"),
     path('/upload-city', UploadCityView.as_view(), name="upload_city"),
     
@@ -72,6 +69,6 @@ urlpatterns = [
     path('/world-country', WorldCountryView.as_view(), name="world_country"),
     path('/world-city', WorldCityView.as_view(), name="world_city"),
         
-    path('/choice', ChoiceView.as_view(), name="choice"),
-    path('/choice/<str:choiceId>', ChoiceView.as_view(), name="choice"),
+    path('/sector', ChoiceView.as_view(), name="sector"),
+    path('/sector/<str:sectorId>', ChoiceView.as_view(), name="sector"),
 ]
