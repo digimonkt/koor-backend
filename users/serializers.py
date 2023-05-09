@@ -636,7 +636,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
 
         context = {}
         if obj.organization_type:
-            get_data = ChoiceSerializer(obj.organization_type)
+            get_data = ChoiceSerializer(obj.organization_type, many=True)
             if get_data.data:
                 context = get_data.data
         return context
@@ -734,7 +734,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
 
         context = {}
         if obj.organization_type:
-            get_data = ChoiceSerializer(obj.organization_type)
+            get_data = ChoiceSerializer(obj.organization_type, many=True)
             if get_data.data:
                 context = get_data.data
         return context
