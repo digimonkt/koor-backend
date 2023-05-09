@@ -44,7 +44,7 @@ class TenderSearchView(generics.ListAPIView):
     filterset_class = TenderDetailsFilter
     search_fields = [
         'title', 'description',
-        'tag__title', 'tender_type', 'sector',
+        'tag__title', 'tender_type', 'sector__title',
         'tender_category__title', 'country__title',
         'city__title'
     ]
