@@ -134,6 +134,8 @@ class TenderSaveView(generics.ListAPIView):
                 order_by = 'tender__budget_amount'
             elif search_by == 'expiration':
                 order_by = 'tender__deadline'
+            elif search_by == 'created_at':
+                order_by = 'tender__created'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
                     return SavedTender.objects.filter(
