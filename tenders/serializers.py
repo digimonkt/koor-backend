@@ -13,7 +13,8 @@ from users.serializers import UserSerializer
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer,
-    TagSerializer, ChoiceSerializer
+    TagSerializer, ChoiceSerializer,
+    OpportunityTypeSerializer
 )
 
 
@@ -257,6 +258,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     is_saved = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     sector = serializers.SerializerMethodField()
+    tender_type = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -441,6 +443,15 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data[0]
         return context
+
+    def get_tender_type(self, obj):
+        context = {}
+        if obj.sector:
+            get_data = OpportunityTypeSerializer(obj.tender_type, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+
 
 class TenderFiltersSerializers(serializers.ModelSerializer):
     """
