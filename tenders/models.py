@@ -154,6 +154,8 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     start_date = models.DateField(
         verbose_name=_('Start Date'),
         db_column='start_date',
+        null=True,
+        blank=True
     )
     status = models.CharField(
         verbose_name=_('Status'),
