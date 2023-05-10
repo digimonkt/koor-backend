@@ -1138,7 +1138,7 @@ class UserFiltersSerializers(serializers.ModelSerializer):
     class Meta:
         model = UserFilters
         fields = [
-            'id', 'title', 'country', 'city', 'category',
+            'id', 'title', 'country', 'city', 'category', 'sub_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
             'salary_min', 'salary_max', 'availability', 'experience'
         ]
