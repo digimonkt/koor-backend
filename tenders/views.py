@@ -78,7 +78,7 @@ class TenderSearchView(generics.ListAPIView):
         if tag:
             queryset = queryset.filter(tag__title__in=tag).distinct()
         if sector:
-            queryset = queryset.filter(sector__in=sector).distinct()
+            queryset = queryset.filter(sector__title__in=sector).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
