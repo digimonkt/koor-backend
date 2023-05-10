@@ -39,7 +39,7 @@ class TenderSearchView(generics.ListAPIView):
 
     serializer_class = TendersSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = TenderDetails.objects.filter(deadline__gte=date.today())
+    queryset = TenderDetails.objects.filter(deadline__gte=date.today(), status='active')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = TenderDetailsFilter
     search_fields = [
