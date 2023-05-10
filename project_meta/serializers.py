@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import (
     City, Country, Language,
     Skill, EducationLevel, Tag,
-    Choice
+    Choice, OpportunityType
 )
 
 
@@ -133,6 +133,25 @@ class ChoiceSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Choice
+        fields = (
+            'id',
+            'title',
+        )
+
+
+class OpportunityTypeSerializer(serializers.ModelSerializer):
+    """
+    OpportunityTypeSerializer is a serializer class that serializes OpportunityType model instances to JSON format. It uses the
+    ModelSerializer subclass from the Django REST Framework to automatically generate serializer fields for the OpportunityType
+    model fields.
+
+    Attributes:
+        model (Model): The EducationLevel model that the serializer is based on.
+        fields (tuple): The fields to be serialized in the OpportunityType model.
+
+    """
+    class Meta:
+        model = OpportunityType
         fields = (
             'id',
             'title',

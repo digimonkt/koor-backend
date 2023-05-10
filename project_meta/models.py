@@ -187,22 +187,6 @@ class City(SlugBaseModel, models.Model):
         return super().save(*args, **kwargs)
 
 
-class Sector(SlugBaseModel, models.Model):
-    """
-    This table is used to store details about a sector.
-
-    Columns: 
-    - `title`: A string representing the name of the sector. 
-    - `slug`: A string representing the slug for the sector, used in URLs or filtering process.
-    """
-
-    class Meta:
-        verbose_name = "Sector"
-        verbose_name_plural = "Sectors"
-        db_table = "Sector"
-        ordering = ['title']
-
-
 class AllCountry(models.Model):
     """
     This is the docstring for the AllCountry model class.
@@ -307,4 +291,19 @@ class Choice(SlugBaseModel, models.Model):
         verbose_name = "Choice"
         verbose_name_plural = "Choices"
         db_table = "Choice"
+        ordering = ['title']
+
+class OpportunityType(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a opportunity type.
+
+    Columns: 
+    - `title`: A string representing the name of the opportunity type. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Opportunity Type"
+        verbose_name_plural = "Opportunity Types"
+        db_table = "OpportunityType"
         ordering = ['title']

@@ -10,7 +10,7 @@ from jobs.models import (
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    Sector, AllCountry, Choice
+    AllCountry, Choice, OpportunityType
 )
 from project_meta.serializers import (
     CitySerializer, CountrySerializer
@@ -509,27 +509,6 @@ class TenderCategorySerializers(serializers.ModelSerializer):
             return data
 
 
-class SectorSerializers(serializers.ModelSerializer):
-    """
-    Serializer class for the `Sector` model.
-
-    The `SectorSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
-    `Sector` model. It defines the fields that should be included in the serialized representation of the model,
-    including 'id', 'title'.
-    """
-
-    class Meta:
-        model = Sector
-        fields = ['id', 'title']
-
-    def validate(self, data):
-        title = data.get("title")
-        if Sector.objects.filter(title=title).exists():
-            raise serializers.ValidationError({'title': str(title) + ' already exists'})
-        else:
-            return data
-
-
 class GetJobSubCategorySerializers(serializers.ModelSerializer):
     """
     Serializer class for the `JobSubCategory` model.
@@ -651,6 +630,24 @@ class ChoiceSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Choice
+        fields = ['id', 'title']
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+
+
+class OpportunityTypeSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `OpportunityType` model.
+
+    The `OpportunityTypeSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `OpportunityType` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = OpportunityType
         fields = ['id', 'title']
 
     def update(self, instance, validated_data):

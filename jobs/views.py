@@ -123,6 +123,8 @@ class JobSearchView(generics.ListAPIView):
                 order_by = 'budget_amount'
             elif search_by == 'expiration':
                 order_by = 'deadline'
+            elif search_by == 'created_at':
+                order_by = 'created'
             if 'order_by' in self.request.GET:
                 if 'descending' in self.request.GET['order_by']:
                     return JobDetails.objects.filter(
