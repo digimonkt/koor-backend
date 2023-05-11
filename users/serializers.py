@@ -7,7 +7,7 @@ from job_seekers.models import (
     JobPreferences
 )
 
-from jobs.models import JobSubCategory
+from jobs.models import JobSubCategory, JobCategory
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
     UserFilters, VendorProfile
@@ -1159,6 +1159,20 @@ class UserCategorySerializer(serializers.ModelSerializer):
     """
 
     class Meta:
+        model = JobCategory
+        fields = ['id', 'title']
+
+class UserSubCategorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `JobSubCategory` model.
+
+    Meta:
+        - `model (JobSubCategory)`: The model that the serializer is based on.
+        - `fields (list)`: The fields to include in the serialized output.
+
+    """
+
+    class Meta:
         model = JobSubCategory
         fields = ['id', 'title']
 
@@ -1192,11 +1206,12 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
+    sub_category = serializers.SerializerMethodField()
 
     class Meta:
         model = UserFilters
         fields = [
-            'id', 'title', 'country', 'city', 'category',
+            'id', 'title', 'country', 'city', 'category', 'sub_category',
             'is_full_time', 'is_part_time', 'has_contract',  'availability', 
             'is_notification','salary_min','salary_max', 'experience'
         ]
@@ -1261,6 +1276,27 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
 
         context = []
         get_data = UserCategorySerializer(obj.category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_sub_category(self, obj):
+        """Get the serialized sub category data for a UserFilters object.
+
+        This method uses the UserSubCategorySerializer to serialize the categories associated with a UserFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A UserFilters object whose sub category data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized job category data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = UserSubCategorySerializer(obj.sub_category, many=True)
         if get_data.data:
             context = get_data.data
         return context
