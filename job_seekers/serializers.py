@@ -2,9 +2,9 @@ from rest_framework import serializers
 
 from core.emails import get_email_object
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobSubCategory, JobCategory
 from project_meta.models import (
-    Media, Language, JobSeekerCategory
+    Media, Language
 
 )
 from user_profile.models import JobSeekerProfile
@@ -66,7 +66,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         fields = ['gender', 'dob', 'employment_status', 'description',
                   'market_information_notification', 'job_notification',
                   'full_name', 'email', 'mobile_number', 'country_code',
-                  'highest_education', 'country', 'city'
+                  'highest_education', 'country', 'city', 'experience'
                   ]
 
     def validate_mobile_number(self, mobile_number):
@@ -710,17 +710,15 @@ class AdditionalParameterSerializers(serializers.ModelSerializer):
         return instance
 
 
+
 class SubCategorySerializer(serializers.ModelSerializer):
     """
         Serializer for the sub-categories of a `JobSeekerCategory` model.
-
         Attributes:
             - `status (SerializerMethodField)`: A field that indicates whether the user has selected the `sub-category`.
-
         Meta:
             - `model (JobSeekerCategory)`: The model that the serializer is based on.
             - `fields (list)`: The fields to include in the serialized output.
-
         Methods:
             - `get_status`: A method that checks whether the user has selected the sub-category.
     """
@@ -728,7 +726,7 @@ class SubCategorySerializer(serializers.ModelSerializer):
     status = serializers.SerializerMethodField()
 
     class Meta:
-        model = JobSeekerCategory
+        model = JobSubCategory
         fields = ['id', 'title', 'status']
 
     def get_status(self, obj):
@@ -739,17 +737,16 @@ class SubCategorySerializer(serializers.ModelSerializer):
                 status = True
         return status
 
-
 class CategoriesSerializers(serializers.ModelSerializer):
     """
-        Serializer for the `JobSeekerCategory` model that includes its `sub-categories`.
+        Serializer for the `JobSubCategory` model that includes its `sub-categories`.
 
         Attributes:
             - `sub_category (SerializerMethodField)`: A field that gets the `sub-categories` associated with the
                 `category`.
 
         Meta:
-            - `model (JobSeekerCategory)`: The model that the serializer is based on.
+            - `model (JobSubCategory)`: The model that the serializer is based on.
             - `fields (list)`: The fields to include in the serialized output.
 
         Methods:
@@ -759,14 +756,14 @@ class CategoriesSerializers(serializers.ModelSerializer):
     sub_category = serializers.SerializerMethodField()
 
     class Meta:
-        model = JobSeekerCategory
+        model = JobCategory
         fields = ['id', 'title', 'sub_category']
 
     def get_sub_category(self, obj):
         context = []
         if 'user' in self.context:
             user = self.context['user']
-            category_data = JobSeekerCategory.objects.filter(category=obj)
+            category_data = JobSubCategory.objects.filter(category=obj)
             get_data = SubCategorySerializer(category_data, many=True, context={'user': user})
             if get_data.data:
                 context = get_data.data
@@ -810,15 +807,15 @@ class ModifyCategoriesSerializers(serializers.ModelSerializer):
         if 'category' in self.validated_data:
             category_list = self.validated_data.pop('category')
         if category_list:
-            updated_categories = JobSeekerCategory.objects.filter(id__in=category_list)
+            updated_categories = JobSubCategory.objects.filter(id__in=category_list)
             existing_jobseeker_categories = Categories.objects.filter(user=user).values('category')
-            existing_categories = JobSeekerCategory.objects.filter(id__in=existing_jobseeker_categories)
+            existing_categories = JobSubCategory.objects.filter(id__in=existing_jobseeker_categories)
             updated_qs = updated_categories.difference(existing_categories)
             Categories.objects.bulk_create([
                 Categories(user=user, category=category) for category in updated_qs
             ])
             existing_jobseeker_categories = Categories.objects.filter(user=user).values('category')
-            existing_categories = JobSeekerCategory.objects.filter(id__in=existing_jobseeker_categories)
+            existing_categories = JobSubCategory.objects.filter(id__in=existing_jobseeker_categories)
             remove_jobseeker_categories = existing_categories.difference(updated_categories)
             for category in remove_jobseeker_categories:
                 Categories.all_objects.filter(category=category, user=user).delete()

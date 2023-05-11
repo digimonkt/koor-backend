@@ -187,61 +187,6 @@ class City(SlugBaseModel, models.Model):
         return super().save(*args, **kwargs)
 
 
-class JobSeekerCategory(BaseModel, misc_models.TimeStampedModel, models.Model):
-    """
-    A model class representing the categories for job seekers.
-
-    Attributes:
-        - title (str): The title of the category.
-        - category (ForeignKey): The parent category of this category.
-        - Meta (class): A subclass of Model which defines the metadata for the model.
-
-    """
-
-    title = models.TextField(
-        verbose_name=_('Title'),
-        db_column="title",
-    )
-    category = models.ForeignKey(
-        to='self',
-        verbose_name=_('Category'),
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        db_column="category",
-        related_name='%(app_label)s_%(class)s_categories'
-    )
-
-    class Meta:
-        verbose_name = "JobSeekerCategory"
-        verbose_name_plural = "Job Seeker Categories"
-        db_table = "JobSeekerCategory"
-        ordering = ['-created']
-        """
-        Metadata for the JobSeekerCategory model.
-        - verbose_name (str): Human-readable name for the model in singular and plural form.
-        - db_table (str): Database table name.
-        - ordering (list): Default ordering for the model.
-
-        """
-
-
-class Sector(SlugBaseModel, models.Model):
-    """
-    This table is used to store details about a sector.
-
-    Columns: 
-    - `title`: A string representing the name of the sector. 
-    - `slug`: A string representing the slug for the sector, used in URLs or filtering process.
-    """
-
-    class Meta:
-        verbose_name = "Sector"
-        verbose_name_plural = "Sectors"
-        db_table = "Sector"
-        ordering = ['title']
-
-
 class AllCountry(models.Model):
     """
     This is the docstring for the AllCountry model class.
@@ -330,4 +275,35 @@ class AllCity(models.Model):
         verbose_name = "All City"
         verbose_name_plural = "All Cities"
         db_table = "AllCity"
+        ordering = ['title']
+
+
+class Choice(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a choice.
+
+    Columns: 
+    - `title`: A string representing the name of the choice. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Choice"
+        verbose_name_plural = "Choices"
+        db_table = "Choice"
+        ordering = ['title']
+
+class OpportunityType(SlugBaseModel, models.Model):
+    """
+    This table is used to store details about a opportunity type.
+
+    Columns: 
+    - `title`: A string representing the name of the opportunity type. 
+    - `slug`: A string representing the slug for the tag, used in URLs or filtering process.
+    """
+
+    class Meta:
+        verbose_name = "Opportunity Type"
+        verbose_name_plural = "Opportunity Types"
+        db_table = "OpportunityType"
         ordering = ['title']

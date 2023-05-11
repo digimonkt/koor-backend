@@ -13,7 +13,8 @@ from users.serializers import UserSerializer
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer,
-    TagSerializer
+    TagSerializer, ChoiceSerializer,
+    OpportunityTypeSerializer
 )
 
 
@@ -58,6 +59,7 @@ class TendersSerializers(serializers.ModelSerializer):
     is_applied = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     vendor = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -79,7 +81,7 @@ class TendersSerializers(serializers.ModelSerializer):
 
         """
 
-        context = {}
+        context = []
         get_data = TenderCategorySerializer(obj.tender_category, many=True)
         if get_data.data:
             context = get_data.data
@@ -126,6 +128,25 @@ class TendersSerializers(serializers.ModelSerializer):
 
     def get_vendor(self, obj):
         return 0
+
+    def get_sector(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.sector:
+            get_data = ChoiceSerializer(obj.sector, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
 
 
 class TenderAttachmentsSerializer(serializers.ModelSerializer):
@@ -236,6 +257,8 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     is_applied = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+    tender_type = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -402,6 +425,33 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
 
+    def get_sector(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.sector:
+            get_data = ChoiceSerializer(obj.sector, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+
+    def get_tender_type(self, obj):
+        context = {}
+        if obj.sector:
+            get_data = OpportunityTypeSerializer(obj.tender_type, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+
 
 class TenderFiltersSerializers(serializers.ModelSerializer):
     """
@@ -458,6 +508,8 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
     city = serializers.SerializerMethodField()
     tender_category = serializers.SerializerMethodField()
     tag = serializers.SerializerMethodField()
+    opportunity_type = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderFilter
@@ -510,7 +562,6 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
                 context = get_data.data
         return context
 
-
     def get_tender_category(self, obj):
         """Get the serialized tender category data for a TenderDetails object.
 
@@ -550,6 +601,50 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
 
         context = []
         get_data = TagSerializer(obj.tag, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_opportunity_type(self, obj):
+        """
+        Get the serialized opportunity type data for a TenderDetails object.
+
+        This method uses the ChoiceSerializer to serialize the tender categories associated with a TenderDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A TenderDetails object whose opportunity type data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized opportunity type data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = OpportunityTypeSerializer(obj.opportunity_type, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_sector(self, obj):
+        """
+        Get the serialized sector data for a TenderDetails object.
+
+        This method uses the ChoiceSerializer to serialize the tender categories associated with a TenderDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A TenderDetails object whose sector data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized sector data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = ChoiceSerializer(obj.sector, many=True)
         if get_data.data:
             context = get_data.data
         return context

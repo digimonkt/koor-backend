@@ -15,11 +15,9 @@ from rest_framework import (
 
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails
+from jobs.models import JobDetails, JobSubCategory, JobCategory
 
 from koor.config.common import Common
-
-from project_meta.models import JobSeekerCategory
 
 from user_profile.models import JobSeekerProfile
 
@@ -961,28 +959,32 @@ class JobsApplyView(generics.ListAPIView):
             A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
+        order_by = None
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
                 order_by = 'job__budget_amount'
             elif search_by == 'expiration':
                 order_by = 'job__deadline'
-            if 'order_by' in self.request.GET:
-                if 'descending' in self.request.GET['order_by']:
-                    return AppliedJob.objects.filter(
-                        user=self.request.user,
-                        job__is_removed=False
-                    ).order_by("-" + str(order_by))
+            elif search_by == 'created_at':
+                order_by = 'job__created'
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return AppliedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return AppliedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by(str(order_by))
                 else:
                     return AppliedJob.objects.filter(
                         user=self.request.user,
                         job__is_removed=False
                     ).order_by(str(order_by))
-            else:
-                return AppliedJob.objects.filter(
-                    user=self.request.user,
-                    job__is_removed=False
-                ).order_by(str(order_by))
         return AppliedJob.objects.filter(
             user=self.request.user,
             job__is_removed=False
@@ -1167,28 +1169,32 @@ class JobsSaveView(generics.ListAPIView):
             A queryset of SavedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
+        order_by = None
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
                 order_by = 'job__budget_amount'
             elif search_by == 'expiration':
                 order_by = 'job__deadline'
-            if 'order_by' in self.request.GET:
-                if 'descending' in self.request.GET['order_by']:
-                    return SavedJob.objects.filter(
-                        user=self.request.user,
-                        job__is_removed=False
-                    ).order_by("-" + str(order_by))
+            elif search_by == 'created_at':
+                order_by = 'job__created'
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return SavedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return SavedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by(str(order_by))
                 else:
                     return SavedJob.objects.filter(
                         user=self.request.user,
                         job__is_removed=False
                     ).order_by(str(order_by))
-            else:
-                return SavedJob.objects.filter(
-                    user=self.request.user,
-                    job__is_removed=False
-                ).order_by(str(order_by))
         return SavedJob.objects.filter(
             user=self.request.user,
             job__is_removed=False
@@ -1334,7 +1340,7 @@ class CategoryView(generics.GenericAPIView):
 
         response_context = dict()
         if self.request.user.role == "job_seeker":
-            category_data = JobSeekerCategory.objects.filter(category=None)
+            category_data = JobCategory.objects.filter(is_removed=False)
             get_data = CategoriesSerializers(category_data, many=True, context={'user': request.user})
             return response.Response(
                 data=get_data.data,

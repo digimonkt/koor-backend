@@ -117,31 +117,35 @@ class JobSearchView(generics.ListAPIView):
             A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
+        order_by = None
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
                 order_by = 'budget_amount'
             elif search_by == 'expiration':
                 order_by = 'deadline'
-            if 'order_by' in self.request.GET:
-                if 'descending' in self.request.GET['order_by']:
-                    return JobDetails.objects.filter(
-                        deadline__gte=date.today(),
-                        is_removed=False,
-                        status="active"
-                    ).order_by("-" + str(order_by))
+            elif search_by == 'created_at':
+                order_by = 'created'
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return JobDetails.objects.filter(
+                            deadline__gte=date.today(),
+                            is_removed=False,
+                            status="active"
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return JobDetails.objects.filter(
+                            deadline__gte=date.today(),
+                            is_removed=False,
+                            status="active"
+                        ).order_by(str(order_by))
                 else:
                     return JobDetails.objects.filter(
                         deadline__gte=date.today(),
                         is_removed=False,
                         status="active"
                     ).order_by(str(order_by))
-            else:
-                return JobDetails.objects.filter(
-                    deadline__gte=date.today(),
-                    is_removed=False,
-                    status="active"
-                ).order_by(str(order_by))
         return JobDetails.objects.filter(
             deadline__gte=date.today(),
             is_removed=False,

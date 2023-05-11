@@ -87,7 +87,8 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     class Meta:
         model = EmployerProfile
         fields = ['organization_name', 'mobile_number', 'country_code', 'organization_type',
-                  'market_information_notification', 'other_notification', 'license_id', 'license']
+                  'market_information_notification', 'other_notification', 'license_id', 'license',
+                  'description', 'address', 'website', 'country',  'city']
 
     def validate_license_id(self, license_id):
         if license_id == '':
@@ -739,7 +740,8 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
-            'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'attachments_remove'
+            'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
+            'start_date', 'attachments_remove'
         ]
 
     def validate_tender_category(self, tender_category):

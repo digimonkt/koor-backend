@@ -25,8 +25,8 @@ from users.models import UserSession, User
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
-    JobSeekerCategory, Sector,
-    AllCountry, AllCity
+    AllCountry, AllCity,
+    Choice, OpportunityType
 )
 
 from tenders.models import TenderCategory
@@ -37,10 +37,11 @@ from .serializers import (
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
-    DashboardCountSerializers, JobSeekerCategorySerializers,
-    TenderCategorySerializers, SectorSerializers, JobSubCategorySerializers,
+    DashboardCountSerializers, TenderCategorySerializers, 
+    JobSubCategorySerializers, OpportunityTypeSerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
-    AllCitySerializers, GetCitySerializers
+    AllCitySerializers, GetCitySerializers,
+    ChoiceSerializers
 )
 
 
@@ -2086,184 +2087,6 @@ class DashboardView(generics.GenericAPIView):
             )
 
 
-class JobSeekerCategoryView(generics.ListAPIView):
-    """
-    A view for displaying a list of job categories.
-
-    Attributes:
-        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
-            case, only authenticated users are allowed to access the view.
-
-        - serializer_class (JobSeekerCategorySerializers): The serializer class used for data validation and
-            serialization.
-
-        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
-            to retrieve all countries using `JobSeekerCategory.objects.all()`.
-
-        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
-            case, only `SearchFilter` is used.
-
-        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
-
-    """
-
-    permission_classes = [permissions.AllowAny]
-    serializer_class = JobSeekerCategorySerializers
-    queryset = JobSeekerCategory.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
-
-    def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        count = queryset.count()
-        next = None
-        previous = None
-        paginator = LimitOffsetPagination()
-        limit = self.request.query_params.get('limit')
-        if limit:
-            queryset = paginator.paginate_queryset(queryset, request)
-            count = paginator.count
-            next = paginator.get_next_link()
-            previous = paginator.get_previous_link()
-        serializer = self.serializer_class(queryset, many=True)
-        return response.Response(
-            {'count': count,
-             "next": next,
-             "previous": previous,
-             "results": serializer.data
-             }
-        )
-
-    def post(self, request):
-        """
-        Handle POST request to create a new job seeker category.
-        The request must contain valid data for the job seeker category to be created.
-
-        Only users with `is_staff` attribute set to True are authorized to create a job seeker category.
-
-        Returns:
-            - HTTP 201 CREATED with a message "JobSeekerCategory added successfully" if the job seeker category is
-            created successfully.
-            - HTTP 400 BAD REQUEST with error message if data validation fails.
-            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
-            not authorized.
-
-        Raises:
-            Exception: If an unexpected error occurs during the request handling.
-        """
-        context = dict()
-        serializer = self.serializer_class(data=request.data)
-        try:
-            if self.request.user.is_staff:
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return response.Response(
-                    data=serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            context['message'] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    def delete(self, request, jobSeekerCategoryId):
-        """
-        Deletes an JobSeekerCategory object with the given ID if the authenticated user is a job seeker and owns the
-        JobSeekerCategory.
-        Args:
-            request: A DRF request object.
-            educationId: An integer representing the ID of the JobSeekerCategory to be deleted.
-        Returns:
-            A DRF response object with a success or error message and appropriate status code.
-        """
-        context = dict()
-        if self.request.user.is_staff:
-            try:
-                JobSeekerCategory.objects.get(id=jobSeekerCategoryId).delete()
-                context['message'] = "Deleted Successfully"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except JobSeekerCategory.DoesNotExist:
-                return response.Response(
-                    data={"jobSeekerCategoryId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
-            return response.Response(
-                data=context,
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-    def put(self, request, jobSeekerCategoryId):
-        """
-        Update an `JobSeekerCategory` instance with the provided data.
-
-        Args:
-            - `request (django.http.request.Request)`: The HTTP request object.
-            - `jobSeekerCategoryId (int)`: The ID of the `JobSeekerCategory` instance to update.
-
-        Returns:
-            - `django.http.response.Response`: An HTTP response object containing the updated data
-            and appropriate status code.
-
-        Raises:
-            - `serializers.ValidationError`: If the provided data is invalid.
-            - `JobSeekerCategory.DoesNotExist`: If the JobSeekerCategory instance with the given ID does not exist.
-            - `Exception`: If any other error occurs during the update process.
-        """
-
-        context = dict()
-        try:
-            job_seeker_category_instance = JobSeekerCategory.objects.get(id=jobSeekerCategoryId)
-            serializer = self.serializer_class(data=request.data, instance=job_seeker_category_instance, partial=True)
-            try:
-                serializer.is_valid(raise_exception=True)
-                if serializer.update(job_seeker_category_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
-                    return response.Response(
-                        data=context,
-                        status=status.HTTP_200_OK
-                    )
-            except serializers.ValidationError:
-                return response.Response(
-                    data=serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        except JobSeekerCategory.DoesNotExist:
-            return response.Response(
-                data={"jobSeekerCategoryId": "Does Not Exist"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            context["message"] = e
-            return response.Response(
-                data=context,
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-
 class TenderCategoryView(generics.ListAPIView):
     """
     A view for displaying a list of tender categories .
@@ -2372,129 +2195,6 @@ class TenderCategoryView(generics.ListAPIView):
             except TenderCategory.DoesNotExist:
                 return response.Response(
                     data={"tenderCategoryId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
-            return response.Response(
-                data=context,
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-
-class SectorView(generics.ListAPIView):
-    """
-    A view for displaying a list of sectors .
-
-    Attributes:
-        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
-            case, only authenticated users are allowed to access the view.
-
-        - serializer_class (SectorSerializers): The serializer class used for data validation and serialization.
-
-        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
-            to retrieve all countries using `Sector.objects.all()`.
-
-        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
-            case, only `SearchFilter` is used.
-
-        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
-
-    """
-
-    permission_classes = [permissions.AllowAny]
-    serializer_class = SectorSerializers
-    queryset = Sector.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
-    pagination_class = CustomPagination
-
-    def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return response.Response(serializer.data)
-
-    def post(self, request):
-        """
-        Handle POST request to create a new sector.
-        The request must contain valid data for the sector to be created.
-
-        Only users with `is_staff` attribute set to True are authorized to create a sector.
-
-        Returns:
-            - HTTP 201 CREATED with added sector data (id, title) if the sector is created successfully.
-            - HTTP 400 BAD REQUEST with error message if data validation fails.
-            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
-            not authorized.
-
-        Raises:
-            Exception: If an unexpected error occurs during the request handling.
-        """
-        context = dict()
-        serializer = self.serializer_class(data=request.data)
-        try:
-            if self.request.user.is_staff:
-                serializer.is_valid(raise_exception=True)
-                if Sector.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                             is_removed=True).exists():
-                    Sector.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
-                        is_removed=False)
-                else:
-                    serializer.save()
-                return response.Response(
-                    data=serializer.data,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            context['message'] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    def delete(self, request, sectorId):
-        """
-        Deletes an Sector object with the given ID if the authenticated user is a job seeker and owns the
-        Sector.
-        Args:
-            request: A DRF request object.
-            sectorId: An integer representing the ID of the Sector to be deleted.
-        Returns:
-            A DRF response object with a success or error message and appropriate status code.
-        """
-        context = dict()
-        if self.request.user.is_staff:
-            try:
-                Sector.objects.get(id=sectorId).delete()
-                context['message'] = "Deleted Successfully"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except Sector.DoesNotExist:
-                return response.Response(
-                    data={"sector": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
@@ -2911,9 +2611,9 @@ class WorldCityView(generics.ListAPIView):
 
         """
 
-        country_id = request.GET.get('countryId', None)
-        if country_id:
-            queryset = self.filter_queryset(self.get_queryset().filter(country_id=country_id))
+        country_name = request.GET.get('countryName', None)
+        if country_name:
+            queryset = self.filter_queryset(self.get_queryset().filter(country__title__iexact=country_name))
         else:
             queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -2922,3 +2622,345 @@ class WorldCityView(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
+
+
+class ChoiceView(generics.ListAPIView):
+    """
+    A view for displaying a list of choices .
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (ChoiceSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `Choice.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ChoiceSerializers
+    queryset = Choice.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle POST request to create a new choice.
+        The request must contain valid data for the choice to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a choice.
+
+        Returns:
+            - HTTP 201 CREATED with added choice data (id, title) if the choice is created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if Choice.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    Choice.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, sectorId):
+        """
+        Deletes an Choice object with the given ID if the authenticated user is a job seeker and owns the
+        Choice.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the Choice to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                Choice.objects.get(id=sectorId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Choice.DoesNotExist:
+                return response.Response(
+                    data={"choice": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, sectorId):
+        """
+        Update a `Choice` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `sectorId (int)`: The ID of the `Choice` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `Choice.DoesNotExist`: If the Choice instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+
+        """
+
+        context = dict()
+        try:
+            choice_instance = Choice.all_objects.get(id=sectorId)
+            serializer = self.serializer_class(data=request.data, instance=choice_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(choice_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except Choice.DoesNotExist:
+            return response.Response(
+                data={"sectorId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class OpportunityTypeView(generics.ListAPIView):
+    """
+    A view for displaying a list of opportunity types .
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (OpportunityTypeSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `OpportunityType.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = OpportunityTypeSerializers
+    queryset = OpportunityType.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle POST request to create a new opportunity type.
+        The request must contain valid data for the opportunity type to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a opportunity type.
+
+        Returns:
+            - HTTP 201 CREATED with added opportunity type data (id, title) if the opportunity type is created successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if OpportunityType.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                    OpportunityType.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, opportunityId):
+        """
+        Deletes an OpportunityType object with the given ID if the authenticated user is a job seeker and owns the
+        OpportunityType.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the OpportunityType to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                OpportunityType.objects.get(id=opportunityId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except OpportunityType.DoesNotExist:
+                return response.Response(
+                    data={"OpportunityType": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, opportunityId):
+        """
+        Update a `OpportunityType` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `opportunityId (int)`: The ID of the `OpportunityType` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `OpportunityType.DoesNotExist`: If the OpportunityType instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+
+        """
+
+        context = dict()
+        try:
+            opportunity_instance = OpportunityType.all_objects.get(id=opportunityId)
+            serializer = self.serializer_class(data=request.data, instance=opportunity_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(opportunity_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except OpportunityType.DoesNotExist:
+            return response.Response(
+                data={"opportunityId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )

@@ -39,12 +39,12 @@ class TenderSearchView(generics.ListAPIView):
 
     serializer_class = TendersSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = TenderDetails.objects.filter(deadline__gte=date.today())
+    queryset = TenderDetails.objects.filter(deadline__gte=date.today(), status='active')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = TenderDetailsFilter
     search_fields = [
         'title', 'description',
-        'tag__title', 'tender_type', 'sector',
+        'tag__title', 'tender_type__title', 'sector__title',
         'tender_category__title', 'country__title',
         'city__title'
     ]
@@ -73,12 +73,15 @@ class TenderSearchView(generics.ListAPIView):
         tenderCategory = request.GET.getlist('tenderCategory')
         tag = request.GET.getlist('tag')
         sector = request.GET.getlist('sector')
+        tender_type = request.GET.getlist('opportunityType')
         if tenderCategory:
             queryset = queryset.filter(tender_category__title__in=tenderCategory).distinct()
         if tag:
             queryset = queryset.filter(tag__title__in=tag).distinct()
         if sector:
-            queryset = queryset.filter(sector__in=sector).distinct()
+            queryset = queryset.filter(sector__title__in=sector).distinct()
+        if tender_type:
+            queryset = queryset.filter(tender_type__title__in=tender_type).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
