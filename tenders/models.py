@@ -258,14 +258,6 @@ class TenderFilter(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `db_table (str)`: The database table name for this model.
         - `ordering (list)`: The default ordering for this model.
     """
-
-    SECTOR_CHOICE = (
-        ('government', "Government"),
-        ('ngo', "NGO"),
-        ('business', "Business"),
-        ('private', "Private"),
-        ('public', "Public")
-    )
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -297,12 +289,16 @@ class TenderFilter(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     )
     opportunity_type = models.ManyToManyField(
         to=OpportunityType,
+        null=True,
+        blank=True,
         verbose_name=_('Opportunity Type'),
         db_column="opportunity_type",
         related_name='%(app_label)s_%(class)s_opportunity_types'
     )
     sector = models.ManyToManyField(
         to=Choice,
+        null=True,
+        blank=True,
         verbose_name=_('Sector'),
         db_column="sector",
         related_name='%(app_label)s_%(class)s_sector'
