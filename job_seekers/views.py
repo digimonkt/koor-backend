@@ -959,6 +959,7 @@ class JobsApplyView(generics.ListAPIView):
             A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
+        order_by = None
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
@@ -967,22 +968,23 @@ class JobsApplyView(generics.ListAPIView):
                 order_by = 'job__deadline'
             elif search_by == 'created_at':
                 order_by = 'job__created'
-            if 'order_by' in self.request.GET:
-                if 'descending' in self.request.GET['order_by']:
-                    return AppliedJob.objects.filter(
-                        user=self.request.user,
-                        job__is_removed=False
-                    ).order_by("-" + str(order_by))
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return AppliedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return AppliedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by(str(order_by))
                 else:
                     return AppliedJob.objects.filter(
                         user=self.request.user,
                         job__is_removed=False
                     ).order_by(str(order_by))
-            else:
-                return AppliedJob.objects.filter(
-                    user=self.request.user,
-                    job__is_removed=False
-                ).order_by(str(order_by))
         return AppliedJob.objects.filter(
             user=self.request.user,
             job__is_removed=False
@@ -1167,6 +1169,7 @@ class JobsSaveView(generics.ListAPIView):
             A queryset of SavedJob objects for the authenticated user, ordered by their creation date in descending
             order.
         """
+        order_by = None
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
@@ -1175,22 +1178,23 @@ class JobsSaveView(generics.ListAPIView):
                 order_by = 'job__deadline'
             elif search_by == 'created_at':
                 order_by = 'job__created'
-            if 'order_by' in self.request.GET:
-                if 'descending' in self.request.GET['order_by']:
-                    return SavedJob.objects.filter(
-                        user=self.request.user,
-                        job__is_removed=False
-                    ).order_by("-" + str(order_by))
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return SavedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return SavedJob.objects.filter(
+                            user=self.request.user,
+                            job__is_removed=False
+                        ).order_by(str(order_by))
                 else:
                     return SavedJob.objects.filter(
                         user=self.request.user,
                         job__is_removed=False
                     ).order_by(str(order_by))
-            else:
-                return SavedJob.objects.filter(
-                    user=self.request.user,
-                    job__is_removed=False
-                ).order_by(str(order_by))
         return SavedJob.objects.filter(
             user=self.request.user,
             job__is_removed=False
