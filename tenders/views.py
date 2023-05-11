@@ -73,12 +73,15 @@ class TenderSearchView(generics.ListAPIView):
         tenderCategory = request.GET.getlist('tenderCategory')
         tag = request.GET.getlist('tag')
         sector = request.GET.getlist('sector')
+        tender_type = request.GET.getlist('opportunityType')
         if tenderCategory:
             queryset = queryset.filter(tender_category__title__in=tenderCategory).distinct()
         if tag:
             queryset = queryset.filter(tag__title__in=tag).distinct()
         if sector:
             queryset = queryset.filter(sector__title__in=sector).distinct()
+        if tender_type:
+            queryset = queryset.filter(tender_type__title__in=tender_type).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context=context)
