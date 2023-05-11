@@ -507,7 +507,6 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     tender_category = serializers.SerializerMethodField()
-    tag = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderFilter
@@ -578,28 +577,6 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
 
         context = []
         get_data = TenderCategorySerializer(obj.tender_category, many=True)
-        if get_data.data:
-            context = get_data.data
-        return context
-
-    def get_tag(self, obj):
-        """
-        Get the serialized tag data for a TenderDetails object.
-
-        This method uses the TagSerializer to serialize the tender categories associated with a TenderDetails
-        object. If the serializer returns data, it is assigned to a dictionary and returned.
-
-        Args:
-            obj: A TenderDetails object whose tag data will be serialized.
-
-        Returns:
-            A dictionary containing the serialized tag data, or an empty dictionary if the
-            serializer did not return any data.
-
-        """
-
-        context = []
-        get_data = TagSerializer(obj.tag, many=True)
         if get_data.data:
             context = get_data.data
         return context
