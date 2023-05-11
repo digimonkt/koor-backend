@@ -8,8 +8,10 @@ from core.models import (
 from users.models import User, TimeStampedModel
 from project_meta.models import (
     EducationLevel, Media, Country,
-    City, JobSeekerCategory
+    City, Choice
 )
+
+from jobs.models import JobCategory, JobSubCategory
 
 
 class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -108,6 +110,12 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         db_column="city",
         related_name='%(app_label)s_%(class)s_city'
     )
+    experience = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Experience'),
+        db_column="experience",
+    )
 
     def __str__(self):
         return str(self.user)
@@ -135,11 +143,6 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
     - `license_id`: A string representing the user's license ID.
     - `license_id_file`: A Media object representing the user's license ID file.
     """
-    ORGANIZATION_TYPE_CHOICE = (
-        ('government', "Government"),
-        ('ngo', "NGO"),
-        ('business', "Business"),
-    )
     user = models.ForeignKey(
         to=User,
         verbose_name=_('User'),
@@ -153,11 +156,41 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         blank=True,
         db_column="description",
     )
-    organization_type = models.CharField(
+    address = models.TextField(
+        verbose_name=_('Address'),
+        null=True,
+        blank=True,
+        db_column="address",
+    )
+    website = models.URLField(
+        verbose_name=_('Web Site'),
+        null=True,
+        blank=True,
+        db_column="website",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
+    )
+    organization_type = models.ManyToManyField(
+        to=Choice,
         verbose_name=_('Organization Type'),
-        max_length=255,
         db_column="organization_type",
-        choices=ORGANIZATION_TYPE_CHOICE,
+        related_name='%(app_label)s_%(class)s_organization_types'
     )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
@@ -230,12 +263,6 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `db_table (str)`: The name of the database table to use for the model.
         - `ordering (list)`: A list of fields to use for ordering the model instances.
     """
-
-    ORGANIZATION_TYPE_CHOICE = (
-        ('government', "Government"),
-        ('ngo', "NGO"),
-        ('business', "Business"),
-    )
     user = models.OneToOneField(
         to=User,
         verbose_name=_('User'),
@@ -249,11 +276,11 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="description",
     )
-    organization_type = models.CharField(
+    organization_type = models.ManyToManyField(
+        to=Choice,
         verbose_name=_('Organization Type'),
-        max_length=255,
         db_column="organization_type",
-        choices=ORGANIZATION_TYPE_CHOICE,
+        related_name='%(app_label)s_%(class)s_organization_types'
     )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
@@ -378,12 +405,20 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         related_name='%(app_label)s_%(class)s_city'
     )
     category = models.ManyToManyField(
-        to=JobSeekerCategory,
+        to=JobCategory,
         null=True,
         blank=True,
         verbose_name=_('Category'),
         db_column="category",
         related_name='%(app_label)s_%(class)s_category'
+    )
+    sub_category = models.ManyToManyField(
+        to=JobSubCategory,
+        null=True,
+        blank=True,
+        verbose_name=_('Sub Category'),
+        db_column="sub_category",
+        related_name='%(app_label)s_%(class)s_sub_category'
     )
     is_full_time = models.BooleanField(
         verbose_name=_('Is Full-time'),
@@ -428,6 +463,12 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         null=True,
         db_column="salary_max",
+    )
+    experience = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Experience'),
+        db_column="experience",
     )
 
     def __str__(self):

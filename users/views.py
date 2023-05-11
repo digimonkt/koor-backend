@@ -30,6 +30,8 @@ from user_profile.models import (
     UserFilters
 )
 
+from jobs.models import JobSubCategory
+
 from notification.models import Notification
 
 from superadmin.models import GooglePlaceApi
@@ -736,10 +738,22 @@ class SearchView(generics.ListAPIView):
             - `results`: list of dicts, the serialized representations of the candidates matching the 
                 filter/search criteria
         """
-        queryset = self.filter_queryset(self.get_queryset().filter(role=role))
-        category = request.GET.getlist('category')
-        if category:
-            queryset = queryset.filter(job_seekers_categories_user__category__title__in=category).distinct()
+        if role == 'job_seeker':
+            queryset = self.filter_queryset(self.get_queryset().filter(role=role).filter(job_seekers_jobpreferences_user__display_in_search=True))
+        else:
+            queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        
+        job_category = request.GET.getlist('jobCategory')
+        job_sub_category = request.GET.getlist('jobSubCategory')
+        if job_sub_category:
+            queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category).distinct()
+        else:
+            if job_category:
+                job_sub_category_data = JobSubCategory.objects.filter(category_id__in=job_category)
+                job_sub_category = []
+                for sub_category in job_sub_category_data:
+                    job_sub_category.append(sub_category.title)
+                queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

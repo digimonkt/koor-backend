@@ -1,6 +1,6 @@
 from django.contrib import admin
 from project_meta.models import (
-    EducationLevel, Skill, JobSeekerCategory,
+    EducationLevel, Skill,
     AllCountry, AllCity
 )
 from .models import SMTPSetting, Content, GooglePlaceApi
@@ -10,6 +10,5 @@ admin.site.register(Skill)
 admin.site.register(SMTPSetting)
 admin.site.register(Content)
 admin.site.register(GooglePlaceApi)
-admin.site.register(JobSeekerCategory)
 admin.site.register(AllCountry)
 admin.site.register(AllCity)

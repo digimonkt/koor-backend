@@ -6,10 +6,10 @@ from .views import (
     TagView, ChangePasswordView, UserRightsView,
     PrivacyPolicyView, CandidatesListView, EmployerListView,
     JobsListView, UsersCountView, UserView,
-    JobsRevertView, DashboardView, JobSeekerCategoryView,
-    TenderCategoryView, SectorView, UploadCountryView,
+    JobsRevertView, DashboardView, 
+    TenderCategoryView, UploadCountryView,
     JobSubCategoryView, WorldCountryView, UploadCityView,
-    WorldCityView
+    WorldCityView, ChoiceView, OpportunityTypeView
 )
 
 app_name = "superadmin"
@@ -57,14 +57,8 @@ urlpatterns = [
 
     path('/dashboard', DashboardView.as_view(), name="dashboard"),
 
-    path('/job-seeker-category', JobSeekerCategoryView.as_view(), name="job_seeker_category"),
-    path('/job-seeker-category/<str:jobSeekerCategoryId>', JobSeekerCategoryView.as_view(), name="job_seeker_category"),
-
     path('/tender-category', TenderCategoryView.as_view(), name="tender_category"),
     path('/tender-category/<str:tenderCategoryId>', TenderCategoryView.as_view(), name="tender_category"),
-
-    path('/sector', SectorView.as_view(), name="sector"),
-    path('/sector/<str:sectorId>', SectorView.as_view(), name="sector"),
 
     path('/upload-country', UploadCountryView.as_view(), name="upload_country"),
     path('/upload-city', UploadCityView.as_view(), name="upload_city"),
@@ -74,4 +68,10 @@ urlpatterns = [
     
     path('/world-country', WorldCountryView.as_view(), name="world_country"),
     path('/world-city', WorldCityView.as_view(), name="world_city"),
+        
+    path('/sector', ChoiceView.as_view(), name="sector"),
+    path('/sector/<str:sectorId>', ChoiceView.as_view(), name="sector"),
+            
+    path('/opportunity-type', OpportunityTypeView.as_view(), name="opportunity_type"),
+    path('/opportunity-type/<str:opportunityId>', OpportunityTypeView.as_view(), name="opportunity_type"),
 ]

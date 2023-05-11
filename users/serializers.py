@@ -3,9 +3,11 @@ from rest_framework import serializers
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, 
     Resume, JobSeekerLanguageProficiency, 
-    JobSeekerSkill, JobSeekerCategory,
+    JobSeekerSkill,
     JobPreferences
 )
+
+from jobs.models import JobSubCategory, JobCategory
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
     UserFilters, VendorProfile
@@ -15,7 +17,7 @@ from project_meta.models import Media, EducationLevel
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, 
-    SkillSerializer
+    SkillSerializer, ChoiceSerializer
 )
 
 from employers.models import BlackList
@@ -184,7 +186,8 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'job_notification',
             'highest_education',
             'country',
-            'city'
+            'city',
+            'experience'
         )
     
     def get_highest_education(self, obj):
@@ -553,6 +556,9 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
     fields (tuple): The fields from the model that will be serialized.
     """
     license_id_file = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
 
     class Meta:
         model = EmployerProfile
@@ -561,6 +567,11 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'organization_type',
             'license_id',
             'license_id_file',
+            'description',
+            'address',
+            'website',
+            'country',
+            'city',
         )
 
     def get_license_id_file(self, obj):
@@ -572,6 +583,64 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             context['type'] = obj.license_id_file.media_type
             return context
         return None
+    
+    def get_country(self, obj):
+        """
+        Retrieves the serialized data for the country related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the country data for.
+
+        Returns:
+            A dictionary containing the serialized country data.
+
+        """
+
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """
+        Retrieves the serialized data for the city related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the city data for.
+
+        Returns:
+            A dictionary containing the serialized city data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_organization_type(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.organization_type:
+            get_data = ChoiceSerializer(obj.organization_type, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+
 
 
 class EmployerDetailSerializers(serializers.ModelSerializer):
@@ -636,6 +705,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     """
     license_id_file = serializers.SerializerMethodField()
     registration_certificate = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
 
     class Meta:
         model = VendorProfile
@@ -650,6 +720,25 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             'jobs_experience',
         )
 
+    def get_organization_type(self, obj):
+        """
+        Retrieves the serialized data for the organization type related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the organization type data for.
+
+        Returns:
+            A dictionary containing the serialized organization type data.
+
+        """
+
+        context = {}
+        if obj.organization_type:
+            get_data = ChoiceSerializer(obj.organization_type, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+    
     def get_license_id_file(self, obj):
         context = {}
         if obj.license_id_file:
@@ -1049,9 +1138,9 @@ class UserFiltersSerializers(serializers.ModelSerializer):
     class Meta:
         model = UserFilters
         fields = [
-            'id', 'title', 'country', 'city', 'category',
+            'id', 'title', 'country', 'city', 'category', 'sub_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'salary_min', 'salary_max', 'availability'
+            'salary_min', 'salary_max', 'availability', 'experience'
         ]
    
     def update(self, instance, validated_data):
@@ -1061,16 +1150,30 @@ class UserFiltersSerializers(serializers.ModelSerializer):
 
 class UserCategorySerializer(serializers.ModelSerializer):
     """
-    Serializer for the `JobSeekerCategory` model.
+    Serializer for the `JobSubCategory` model.
 
     Meta:
-        - `model (JobSeekerCategory)`: The model that the serializer is based on.
+        - `model (JobSubCategory)`: The model that the serializer is based on.
         - `fields (list)`: The fields to include in the serialized output.
 
     """
 
     class Meta:
-        model = JobSeekerCategory
+        model = JobCategory
+        fields = ['id', 'title']
+
+class UserSubCategorySerializer(serializers.ModelSerializer):
+    """
+    Serializer for the `JobSubCategory` model.
+
+    Meta:
+        - `model (JobSubCategory)`: The model that the serializer is based on.
+        - `fields (list)`: The fields to include in the serialized output.
+
+    """
+
+    class Meta:
+        model = JobSubCategory
         fields = ['id', 'title']
 
 
@@ -1103,13 +1206,14 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
+    sub_category = serializers.SerializerMethodField()
 
     class Meta:
         model = UserFilters
         fields = [
-            'id', 'title', 'country', 'city', 'category',
+            'id', 'title', 'country', 'city', 'category', 'sub_category',
             'is_full_time', 'is_part_time', 'has_contract',  'availability', 
-            'is_notification','salary_min','salary_max'
+            'is_notification','salary_min','salary_max', 'experience'
         ]
 
     def get_country(self, obj):
@@ -1172,6 +1276,27 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
 
         context = []
         get_data = UserCategorySerializer(obj.category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_sub_category(self, obj):
+        """Get the serialized sub category data for a UserFilters object.
+
+        This method uses the UserSubCategorySerializer to serialize the categories associated with a UserFilters
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A UserFilters object whose sub category data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized job category data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = []
+        get_data = UserSubCategorySerializer(obj.sub_category, many=True)
         if get_data.data:
             context = get_data.data
         return context
