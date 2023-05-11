@@ -23,4 +23,4 @@ class TenderDetailsFilter(filters.FilterSet):
 
     class Meta:
         model = TenderDetails
-        fields = ['country', 'city', 'opportunityType', 'deadline', 'budget']
+        fields = ['country', 'city', 'deadline', 'budget']
