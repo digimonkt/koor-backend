@@ -727,10 +727,10 @@ class TenderListSerializers(serializers.ModelSerializer):
 
     def get_tag(self, obj):
 
-        context = []
+        context = {}
         get_data = TagSerializer(obj.tag, many=True)
         if get_data.data:
-            context = get_data.data
+            context = get_data.data[0]
         return context
 
     def get_tender_category(self, obj):

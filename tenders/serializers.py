@@ -350,10 +350,10 @@ class TendersDetailSerializers(serializers.ModelSerializer):
 
         """
 
-        context = []
+        context = {}
         get_data = TagSerializer(obj.tag, many=True)
         if get_data.data:
-            context = get_data.data
+            context = get_data.data[0]
         return context
 
     def get_user(self, obj):
