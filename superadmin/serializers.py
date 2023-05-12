@@ -13,10 +13,13 @@ from project_meta.models import (
     AllCountry, Choice, OpportunityType
 )
 from project_meta.serializers import (
-    CitySerializer, CountrySerializer
+    CitySerializer, CountrySerializer,
+    TagSerializer, ChoiceSerializer,
+    OpportunityTypeSerializer
 )
 
-from tenders.models import TenderCategory
+from tenders.models import TenderCategory, TenderDetails
+from tenders.serializers import TenderCategorySerializer
 
 from users.backends import MobileOrEmailBackend as cb
 from users.models import User, UserSession
@@ -653,3 +656,108 @@ class OpportunityTypeSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+class TenderListSerializers(serializers.ModelSerializer):
+    """
+    `TenderListSerializers` class is a Django REST Framework serializer used for serializing TenderDetails model data
+    into JSON format with selected fields.
+
+    Attributes:
+        - `country (serializers.SerializerMethodField)`: SerializerMethodField used for serializing country field of
+            `TenderDetails` model
+        - `city (serializers.SerializerMethodField)`: SerializerMethodField used for serializing city field of
+            `TenderDetails` model
+        - `Meta (class): Class used for defining metadata options for the serializer
+            - `model (class)`: Model class to be serialized
+            - `fields (list)`: List of fields to be included in the serialized output
+
+    Example usage:
+        To serialize TenderDetails model data into JSON format with selected fields:
+        - `serializer` = `TenderListSerializers`(queryset, many=True)
+        - `serialized_data` = `serializer.data`
+    """
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    tag = serializers.SerializerMethodField()
+    tender_category = serializers.SerializerMethodField()
+    tender_type = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TenderDetails
+        fields = ['id', 'tender_id', 'title', 'tag', 'tender_category', 'tender_type', 'sector', 'city', 'country', 'status', 'user']
+
+    def get_country(self, obj):
+        """
+        Retrieves the serialized data for the country related to a TenderDetails object.
+
+        Args:
+            obj: The TenderDetails object to retrieve the country data for.
+
+        Returns:
+            A dictionary containing the serialized country data.
+
+        """
+
+        context = {}
+        get_data = CountrySerializer(obj.country)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """
+        Retrieves the serialized data for the city related to a TenderDetails object.
+
+        Args:
+            obj: The TenderDetails object to retrieve the city data for.
+
+        Returns:
+            A dictionary containing the serialized city data.
+
+        """
+
+        context = {}
+        get_data = CitySerializer(obj.city)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tag(self, obj):
+
+        context = []
+        get_data = TagSerializer(obj.tag, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tender_category(self, obj):
+
+        context = []
+        get_data = TenderCategorySerializer(obj.tender_category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tender_type(self, obj):
+
+        context = {}
+        if obj.sector:
+            get_data = OpportunityTypeSerializer(obj.tender_type, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+
+    def get_sector(self, obj):
+
+        context = {}
+        if obj.sector:
+            get_data = ChoiceSerializer(obj.sector, many=True)
+            if get_data.data:
+                context = get_data.data[0]
+        return context
+
+    def get_user(self, obj):
+        return obj.user.name

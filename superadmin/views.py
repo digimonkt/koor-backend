@@ -29,7 +29,8 @@ from project_meta.models import (
     Choice, OpportunityType
 )
 
-from tenders.models import TenderCategory
+from tenders.models import TenderCategory, TenderDetails
+from tenders.filters import TenderDetailsFilter
 
 from .models import Content
 from .serializers import (
@@ -41,7 +42,7 @@ from .serializers import (
     JobSubCategorySerializers, OpportunityTypeSerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers,
-    ChoiceSerializers
+    ChoiceSerializers, TenderListSerializers
 )
 
 
@@ -2963,4 +2964,286 @@ class OpportunityTypeView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class TenderListView(generics.ListAPIView):
+    """
+    API view for listing tenders by name.
+
+    This view requires the user to be authenticated, and `only allows staff` users to perform the listing.
+    `Non-staff` users receive a `401 Unauthorized` response.
+
+    Attributes:
+        - `permission_classes (list)`: A list of permission classes required to access this view.
+                In this case, it contains a single `IsAuthenticated` class.
+        - `serializer_class`: The serializer class used to convert model instances to JSON.
+                In this case, it is `TenderListSerializers`.
+        - `queryset`: The queryset used to fetch the data from the database.
+                In this case, it is `TenderDetails.objects.all()`, which returns all tenders in the database.
+        - `filter_backends`: A list of filter backends used to filter the queryset.
+                In this case, it contains a single SearchFilter backend.
+        - `search_fields`: A list of model fields that can be used for text search.
+                In this case, it contains the `'title'` field.
+
+    Methods:
+        - `list(request)`: The main method of this view, which returns a list of tenders filtered by title.
+
+    Returns:
+        - A Response object with a list of tenders, or an error message if the user is not authorized.
+    """
+
+    serializer_class = TenderListSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = TenderDetails.objects.all().order_by('-created')
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = TenderDetailsFilter
+    search_fields = [
+        'title', 'description',
+        'tag__title', 'tender_type__title', 'sector__title',
+        'tender_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Retrieve a list of tenders with optional download capability for staff users.
+
+        This view returns a paginated list of tenders based on the queryset defined in `get_queryset()`. For staff users,
+        the view provides an option to download the tender data as a CSV file. Non-staff users will receive an unauthorized
+        response.
+
+        Parameters:
+            - `request` : rest_framework.request.Request
+                The HTTP request object.
+
+        Returns:
+            - `Response` : rest_framework.response.Response
+                The HTTP response object containing the paginated tender data or a download URL for staff users.
+
+        Raises:
+            - `PermissionDenied` : rest_framework.exceptions.PermissionDenied
+                If the user does not have staff status and attempts to download tender data.
+
+        IOError : builtins.IOError
+            If an error occurs during file I/O while creating the CSV file for download.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset())
+            tenderCategory = request.GET.getlist('tenderCategory')
+            tag = request.GET.getlist('tag')
+            sector = request.GET.getlist('sector')
+            tender_type = request.GET.getlist('opportunityType')
+            if tenderCategory:
+                queryset = queryset.filter(tender_category__title__in=tenderCategory).distinct()
+            if tag:
+                queryset = queryset.filter(tag__title__in=tag).distinct()
+            if sector:
+                queryset = queryset.filter(sector__title__in=sector).distinct()
+            if tender_type:
+                queryset = queryset.filter(tender_type__title__in=tender_type).distinct()
+            action = request.GET.get('action', None)
+            if action == 'download':
+                directory_path = create_directory()
+                file_name = '{0}/{1}'.format(directory_path, 'tenders.csv')
+                with open(file_name, mode='w') as data_file:
+                    file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                    file_writer.writerow(
+                        ["Number", "Tender ID", "Tender Title", "Company", 
+                         "Tag", "Tender Category", "Tender Type", "Sector", 
+                         "Location"])
+                    for counter, rows in enumerate(queryset):
+                        location = "None"
+                        tag = "None"
+                        tender_category = "None"
+                        tender_type = "None"
+                        sector = "None"
+                        if rows.city:
+                            location = str(rows.city) + ", " + str(rows.country)                        
+                        if rows.tag:
+                            for data in rows.tag.all():
+                                if tag != "None":
+                                    tag = tag + ", " + str(data.title)
+                                else:
+                                    tag = str(data.title)                       
+                        if rows.tender_category:
+                            for data in rows.tender_category.all():
+                                if tender_category != "None":
+                                    tender_category = tender_category + ", " + str(data.title)
+                                else:
+                                    tender_category = str(data.title)                       
+                        if rows.tender_type:
+                            for data in rows.tender_type.all():
+                                if tender_type != "None":
+                                    tender_type = tender_type + ", " + str(data.title)
+                                else:
+                                    tender_type = str(data.title)
+                        if rows.sector:
+                            for data in rows.sector.all():
+                                if sector != "None":
+                                    sector = sector + ", " + str(data.title)
+                                else:
+                                    sector = str(data.title)
+                        file_writer.writerow(
+                            [
+                                str(counter + 1), str(rows.job_id), str(rows.title),
+                                str(rows.user.name), tag, tender_category, tender_type,
+                                sector, location
+                            ]
+                        )
+                return response.Response(
+                    data={"url": "/" + file_name},
+                    status=status.HTTP_200_OK
+                )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def delete(self, request, tenderId):
+        """
+        Deletes a TenderDetails object with the given ID if the authenticated user is a admin.
+        Args:
+            request: A DRF request object.
+            tenderId: An integer representing the ID of the TenderDetails to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                TenderDetails.objects.get(id=tenderId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tenderId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def patch(self, request, tenderId):
+        """
+        View function for `updating the status` of a tender instance.
+
+        Args:
+            - `request`: Request object containing metadata about the current request.
+            - `tenderId`: Integer representing the ID of the tender instance to be updated.
+
+        Returns:
+            Response object containing data about the updated tender instance, along with an HTTP status code.
+
+        Raises:
+            - `Http404`: If the tender instance with the given `tenderId does not exist`.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                tender_instance = TenderDetails.objects.get(id=tenderId)
+                if tender_instance.status == "inactive":
+                    tender_instance.status = "active"
+                    context['message'] = "This tender is active"
+                else:
+                    tender_instance.status = "inactive"
+                    context['message'] = "This tender is inactive"
+                tender_instance.save()
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tenderId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class TenderRevertView(generics.GenericAPIView):
+    """
+    The `TenderRevertView` class is a generic view that allows staff users to restore a removed tender by sending a PATCH
+    request to the API with the tenderId as a parameter.
+
+    Parameters:
+        - `request`: The HTTP request object
+        - `tenderId`: The ID of the tender to be restored
+
+    Returns:
+        - A response object with a success or error message and an HTTP status code.
+
+    Raises:
+        - `tenderDetails.DoesNotExist`: If the tender with the given tenderId does not exist in the database.
+        - `Exception`: If an unexpected error occurs.
+
+    Permissions:
+        - The user must be authenticated and have staff status to perform this action.
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, tenderId):
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                TenderDetails.all_objects.get(id=tenderId, is_removed=True)
+                TenderDetails.all_objects.filter(id=tenderId, is_removed=True).update(is_removed=False)
+                context['message'] = "Job restored successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tenderId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
