@@ -9,7 +9,8 @@ from .views import (
     JobsRevertView, DashboardView, 
     TenderCategoryView, UploadCountryView,
     JobSubCategoryView, WorldCountryView, UploadCityView,
-    WorldCityView, ChoiceView, OpportunityTypeView
+    WorldCityView, ChoiceView, OpportunityTypeView,
+    TenderListView, TenderRevertView
 )
 
 app_name = "superadmin"
@@ -51,7 +52,7 @@ urlpatterns = [
 
     path('/jobs', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
-    path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_rrevert"),
+    path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_revert"),
 
     path('/users-count', UsersCountView.as_view(), name="users_count"),
 
@@ -74,4 +75,8 @@ urlpatterns = [
             
     path('/opportunity-type', OpportunityTypeView.as_view(), name="opportunity_type"),
     path('/opportunity-type/<str:opportunityId>', OpportunityTypeView.as_view(), name="opportunity_type"),
+    
+    path('/tender', TenderListView.as_view(), name="tender_list"),
+    path('/tender/<str:tenderId>', TenderListView.as_view(), name="tender_list"),
+    path('/tender/<str:tenderId>/revert', TenderRevertView.as_view(), name="tender_revert"),
 ]
