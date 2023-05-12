@@ -766,12 +766,16 @@ class BlacklistedUserView(generics.ListAPIView):
             user does not have the role of '`employer`', the method returns an error message with a `401 unauthorized`
             status.
 
-
     """
 
     serializer_class = BlacklistedUserSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = BlackList.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'blacklisted_user__email', 'blacklisted_user__name',
+        'blacklisted_user__role', 'blacklisted_user__mobile_number'
+    ]
     pagination_class = CustomPagination
 
     def list(self, request):
