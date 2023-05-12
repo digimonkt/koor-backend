@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='tenderdetails',
-            name='sector',
-            field=models.CharField(choices=[('government', 'Government'), ('ngo', 'NGO'), ('business', 'Business'), ('private', 'Private'), ('public', 'Public')], db_column='sector', max_length=25, verbose_name='Sector'),
-        ),
-        migrations.AlterField(
-            model_name='tenderfilter',
-            name='sector',
-            field=models.CharField(blank=True, choices=[('government', 'Government'), ('ngo', 'NGO'), ('business', 'Business'), ('private', 'Private'), ('public', 'Public')], db_column='sector', max_length=105, null=True, verbose_name='Sector'),
-        ),
+        # migrations.AlterField(
+        #     model_name='tenderdetails',
+        #     name='sector',
+        #     field=models.CharField(choices=[('government', 'Government'), ('ngo', 'NGO'), ('business', 'Business'), ('private', 'Private'), ('public', 'Public')], db_column='sector', max_length=25, verbose_name='Sector'),
+        # ),
+        # migrations.AlterField(
+        #     model_name='tenderfilter',
+        #     name='sector',
+        #     field=models.CharField(blank=True, choices=[('government', 'Government'), ('ngo', 'NGO'), ('business', 'Business'), ('private', 'Private'), ('public', 'Public')], db_column='sector', max_length=105, null=True, verbose_name='Sector'),
+        # ),
     ]

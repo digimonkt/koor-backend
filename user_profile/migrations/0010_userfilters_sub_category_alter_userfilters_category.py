@@ -11,14 +11,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='userfilters',
-            name='sub_category',
-            field=models.ManyToManyField(blank=True, db_column='sub_category', null=True, related_name='%(app_label)s_%(class)s_sub_category', to='jobs.jobsubcategory', verbose_name='Sub Category'),
-        ),
-        migrations.AlterField(
-            model_name='userfilters',
-            name='category',
-            field=models.ManyToManyField(blank=True, db_column='category', null=True, related_name='%(app_label)s_%(class)s_category', to='jobs.jobcategory', verbose_name='Category'),
-        ),
+        # migrations.AddField(
+        #     model_name='userfilters',
+        #     name='sub_category',
+        #     field=models.ManyToManyField(blank=True, db_column='sub_category', null=True, related_name='%(app_label)s_%(class)s_sub_category', to='jobs.jobsubcategory', verbose_name='Sub Category'),
+        # ),
+        # migrations.AlterField(
+        #     model_name='userfilters',
+        #     name='category',
+        #     field=models.ManyToManyField(blank=True, db_column='category', null=True, related_name='%(app_label)s_%(class)s_category', to='jobs.jobcategory', verbose_name='Category'),
+        # ),
     ]

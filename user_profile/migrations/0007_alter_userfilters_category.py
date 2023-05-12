@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userfilters',
             name='category',
-            field=models.ManyToManyField(blank=True, db_column='category', null=True, related_name='%(app_label)s_%(class)s_category', to='project_meta.jobseekercategory', verbose_name='Category'),
+            field=models.ManyToManyField(blank=True, db_column='category', null=True, related_name='%(app_label)s_%(class)s_category', to='jobs.jobcategory', verbose_name='Category'),
         ),
     ]

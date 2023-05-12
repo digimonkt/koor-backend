@@ -11,13 +11,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='tenderdetails',
-            name='sector',
-        ),
+        # migrations.RemoveField(
+        #     model_name='tenderdetails',
+        #     name='sector',
+        # ),
         migrations.AddField(
             model_name='tenderdetails',
             name='sector',
-            field=models.ManyToManyField(db_column='sector', related_name='%(app_label)s_%(class)s_sectors', to='project_meta.sector', verbose_name='Sector'),
+            field=models.ManyToManyField(db_column='sector', related_name='%(app_label)s_%(class)s_sectors', to='project_meta.choice', verbose_name='Sector'),
         ),
     ]
