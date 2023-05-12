@@ -866,7 +866,7 @@ class ActiveJobsView(generics.ListAPIView):
 
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.all()
+    queryset = JobDetails.objects.filter(status='active')
     filter_backends = [filters.SearchFilter]
     search_fields = [
         'title', 'description',
