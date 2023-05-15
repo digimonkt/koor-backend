@@ -1,6 +1,4 @@
 from django.db import models
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
 from core.models import (
@@ -99,7 +97,7 @@ class ConversationUser(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         db_column="user",
         related_name='%(app_label)s_%(class)s_user'
     )
-    conversation = models.OneToOneField(
+    conversation = models.ForeignKey(
         Conversation,
         verbose_name=_('Conversation'),
         on_delete=models.CASCADE,
@@ -172,9 +170,7 @@ class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     attachment = models.OneToOneField(
         Media,
         verbose_name=_('Attachment'),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         db_column="attachment",
         related_name='%(app_label)s_%(class)s_attachment'
     )
@@ -194,31 +190,3 @@ class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Chat Messages"
         db_table = "ChatMessage"
         ordering = ['-created']
-
-
-@receiver(post_save, sender=ChatMessage)
-def update_last_message(sender, instance, created, **kwargs):
-    """
-    Signal handler to update the last message of a conversation when a new ChatMessage instance is created.
-
-    Args:
-        sender (Type[ChatMessage]): The model class that sent the signal (ChatMessage).
-        instance (ChatMessage): The instance of the ChatMessage that was saved.
-        created (bool): A boolean indicating whether the instance was just created or updated.
-        **kwargs: Additional keyword arguments that may be passed by the signal.
-
-    Returns:
-        None
-
-    Side Effects:
-        Updates the last_message field of the conversation associated with the saved ChatMessage instance.
-
-    """
-    
-    if created:
-        print(instance.conversation, "test data")
-        conversation = instance.conversation
-        print(conversation , "conversation")
-        conversation.last_message = instance
-        print("last message")
-        conversation.save()

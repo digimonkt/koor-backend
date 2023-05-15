@@ -11,7 +11,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class Common(Configuration):
     INSTALLED_APPS = (
-        'daphne',
         'django.contrib.admin',
         'django.contrib.auth',
         'django.contrib.contenttypes',
@@ -67,14 +66,6 @@ class Common(Configuration):
     ROOT_URLCONF = 'koor.urls'
     SECRET_KEY = config('DJANGO_SECRET_KEY')
     WSGI_APPLICATION = 'koor.wsgi.application'
-    ASGI_APPLICATION = "koor.asgi.application"
-
-    # Channel Layer for Chat function
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels.layers.InMemoryChannelLayer"
-        }
-    }
 
     # Email
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
