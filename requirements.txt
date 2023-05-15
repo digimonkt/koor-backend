@@ -45,3 +45,7 @@ django-crontab==0.7.1
 
 # Docx File
 python-docx==0.8.11
+
+# chat function
+daphne==4.0.0
+channels==4.0.0
