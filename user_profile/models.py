@@ -282,6 +282,12 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="organization_type",
         related_name='%(app_label)s_%(class)s_organization_types'
     )
+    website = models.URLField(
+        verbose_name=_('Web Site'),
+        null=True,
+        blank=True,
+        db_column="website",
+    )
     market_information_notification = models.BooleanField(
         verbose_name=_('Market Information Notification'),
         db_column="market_information_notification",
@@ -335,6 +341,30 @@ class VendorProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         verbose_name=_('Jobs Experience'),
         db_column="jobs_experience",
+    )
+    address = models.TextField(
+        verbose_name=_('Address'),
+        null=True,
+        blank=True,
+        db_column="address",
+    )
+    country = models.ForeignKey(
+        Country,
+        verbose_name=_('Country'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="country",
+        related_name='%(app_label)s_%(class)s_country'
+    )
+    city = models.ForeignKey(
+        City,
+        verbose_name=_('City'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="city",
+        related_name='%(app_label)s_%(class)s_city'
     )
 
     def __str__(self):
