@@ -39,6 +39,7 @@ class CountrySerializers(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ['id', 'title', 'currency_code', 'country_code', 'iso_code2', 'iso_code3']
+        read_only_fields = ['id']    
 
 
 class CitySerializers(serializers.ModelSerializer):
@@ -66,6 +67,7 @@ class CitySerializers(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'title', 'country_name']
+        read_only_fields = ['id'] 
 
     def validate(self, data):
         """
@@ -117,6 +119,7 @@ class GetCitySerializers(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'title', 'country']
+        read_only_fields = ['id'] 
 
     def get_country(self, obj):
         return {"id": obj.country.id, "title": obj.country.title}
@@ -134,6 +137,7 @@ class JobCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobCategory
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def validate(self, data):
         """
@@ -176,6 +180,7 @@ class EducationLevelSerializers(serializers.ModelSerializer):
     class Meta:
         model = EducationLevel
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -194,6 +199,7 @@ class LanguageSerializers(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -212,6 +218,7 @@ class SkillSerializers(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -230,6 +237,7 @@ class TagSerializers(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -312,6 +320,7 @@ class CandidatesSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active']
+        read_only_fields = ['id'] 
 
 
 class JobListSerializers(serializers.ModelSerializer):
@@ -340,6 +349,7 @@ class JobListSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobDetails
         fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status', 'user']
+        read_only_fields = ['id'] 
 
     def get_country(self, obj):
         """
@@ -503,6 +513,7 @@ class TenderCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = TenderCategory
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def validate(self, data):
         title = data.get("title")
@@ -525,6 +536,7 @@ class GetJobSubCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSubCategory
         fields = ['id', 'title', 'category']
+        read_only_fields = ['id'] 
 
     def get_category(self, obj):
         return {"id": obj.category.id, "title": obj.category.title}
@@ -542,6 +554,7 @@ class JobSubCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSubCategory
         fields = ['id', 'title', 'category']
+        read_only_fields = ['id'] 
 
     def validate(self, data):
         """
@@ -593,6 +606,7 @@ class AllCountrySerializers(serializers.ModelSerializer):
     class Meta:
         model = AllCountry
         fields = ['id', 'title', 'currency', 'phone_code', 'iso2', 'iso3']
+        read_only_fields = ['id'] 
 
 
 class AllCitySerializers(serializers.ModelSerializer):
@@ -617,6 +631,7 @@ class AllCitySerializers(serializers.ModelSerializer):
     class Meta:
         model = AllCountry
         fields = ['id', 'title', 'country']
+        read_only_fields = ['id'] 
 
     def get_country(self, obj):
         return {"id": obj.country.id, "title": obj.country.title}
@@ -634,6 +649,7 @@ class ChoiceSerializers(serializers.ModelSerializer):
     class Meta:
         model = Choice
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -652,6 +668,7 @@ class OpportunityTypeSerializers(serializers.ModelSerializer):
     class Meta:
         model = OpportunityType
         fields = ['id', 'title']
+        read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -687,7 +704,11 @@ class TenderListSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = TenderDetails
-        fields = ['id', 'tender_id', 'title', 'tag', 'tender_category', 'tender_type', 'sector', 'city', 'country', 'status', 'user']
+        fields = [
+            'id', 'tender_id', 'title', 'tag', 'tender_category', 
+            'tender_type', 'sector', 'city', 'country', 'status', 'user'
+            ]
+        read_only_fields = ['id'] 
 
     def get_country(self, obj):
         """
