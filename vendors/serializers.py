@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from project_meta.models import Media
 from tenders.models import TenderDetails
+
+from users.models import User
 from user_profile.models import VendorProfile
 
 from tenders.serializers import (
@@ -44,14 +46,31 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
+    certificate = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+    mobile_number = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    country_code = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
 
     class Meta:
         model = VendorProfile
         fields = [
             'organization_name', 'organization_type', 'license_id',
-            'license', 'registration_number', 'registration_certificate',
+            'license', 'registration_number', 'certificate',
             'market_information_notification', 'other_notification',
-            'operating_years', 'jobs_experience'
+            'operating_years', 'jobs_experience', 'description',
+            'website', 'mobile_number', 'country_code', 'address',
+            'country', 'city',
         ]
 
     def validate_license_id(self, license_id):
@@ -92,6 +111,18 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         else:
             return registration_number
 
+    def validate_mobile_number(self, mobile_number):
+        if mobile_number != '':
+            if mobile_number.isdigit():
+                if len(mobile_number) > 13:
+                    raise serializers.ValidationError('This is an invalid mobile number.', code='mobile_number')
+                else:
+                    return mobile_number
+            else:
+                raise serializers.ValidationError('Mobile number must contain only numbers', code='mobile_number')
+        else:
+            raise serializers.ValidationError('Mobile number can not be blank', code='mobile_number')
+
     def update(self, instance, validated_data):
         """
         Updates the fields of a `VendorProfile` instance.
@@ -113,6 +144,10 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         if 'organization_name' in validated_data:
             instance.user.name = validated_data['organization_name']
             instance.user.save()
+        if 'mobile_number' in validated_data:
+            instance.user.mobile_number = validated_data['mobile_number']
+            instance.user.country_code = validated_data['country_code']
+            instance.user.save()
         if 'license' in validated_data:
             # Get media type from upload license file
             content_type = str(validated_data['license'].content_type).split("/")
@@ -121,23 +156,24 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(title=validated_data['license'].name, file_path=validated_data['license'],
+            media_instance = Media(title=validated_data['license'].name, 
+                                   file_path=validated_data['license'],
                                    media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.license_id_file = media_instance
             instance.save()
-        if 'registration_certificate' in validated_data:
+        if 'certificate' in validated_data:
             # Get media type from upload license file
-            content_type = str(validated_data['registration_certificate'].content_type).split("/")
+            content_type = str(validated_data['certificate'].content_type).split("/")
             if content_type[0] not in ["video", "image"]:
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
             media_instance = Media(
-                title=validated_data['registration_certificate'].name,
-                file_path=validated_data['registration_certificate'],
+                title=validated_data['certificate'].name,
+                file_path=validated_data['certificate'],
                 media_type=media_type
             )
             media_instance.save()

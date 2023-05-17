@@ -5,7 +5,7 @@ from .views import (
     TendersView, JobsStatusView,
     TendersStatusView, ActivityView,
     JobAnalysisView, BlacklistedUserView,
-    ShareCountView
+    ShareCountView, ActiveJobsView
 )
 
 app_name = "employers"
@@ -27,4 +27,6 @@ urlpatterns = [
     path('/tenders/<str:tendersId>/status', TendersStatusView.as_view(), name="Tenders_status"),
     
     path('/blacklisted-user', BlacklistedUserView.as_view(), name="blacklisted_user"), 
+    
+    path('/active-jobs/<str:employerId>', ActiveJobsView.as_view(), name="active_jobs"), 
 ]

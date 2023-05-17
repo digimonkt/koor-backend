@@ -283,7 +283,7 @@ class RecentApplicationsView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['job__title', 'user__email', 'user__name']
     pagination_class = CustomPagination
 
     def list(self, request):

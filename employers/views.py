@@ -766,12 +766,16 @@ class BlacklistedUserView(generics.ListAPIView):
             user does not have the role of '`employer`', the method returns an error message with a `401 unauthorized`
             status.
 
-
     """
 
     serializer_class = BlacklistedUserSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = BlackList.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'blacklisted_user__email', 'blacklisted_user__name',
+        'blacklisted_user__role', 'blacklisted_user__mobile_number'
+    ]
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -841,3 +845,45 @@ class ShareCountView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class ActiveJobsView(generics.ListAPIView):
+    """
+    View to retrieve a list of active jobs posted by a specific employer.
+
+    Methods:
+    list(request, employerId):
+        Returns a paginated list of jobs posted by the employer with the given `employerId`.
+
+    Attributes:
+    serializer_class: `GetJobsSerializers` Serializer class to use for converting queryset to JSON.
+    permission_classes: `list of permissions` List of permission classes to apply to the view.
+    queryset: `QuerySet` QuerySet representing all jobs in the database.
+    filter_backends: `list of filter backends` List of filter backends to apply to the view.
+    search_fields: `list of str` List of fields to search for in the filter_backends.
+    pagination_class: `CustomPagination` Pagination class to use for paginating the queryset.
+    """
+
+    serializer_class = GetJobsSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = JobDetails.objects.filter(status='active')
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title', 'description',
+        'skill__title', 'highest_education__title',
+        'job_category__title', 'job_sub_category__title',
+        'country__title', 'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request, employerId):
+        context = dict()
+        user_instance = User.objects.get(id=employerId)
+        print(user_instance, 'user_instance')
+        queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"user": user_instance})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"user": user_instance})
+        return response.Response(serializer.data)

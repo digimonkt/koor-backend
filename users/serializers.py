@@ -706,6 +706,8 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     license_id_file = serializers.SerializerMethodField()
     registration_certificate = serializers.SerializerMethodField()
     organization_type = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
 
     class Meta:
         model = VendorProfile
@@ -718,6 +720,13 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             'registration_certificate',
             'operating_years',
             'jobs_experience',
+            'website',
+            'market_information_notification',
+            'other_notification',
+            'address',
+            'country',
+            'city'
+            
         )
 
     def get_organization_type(self, obj):
@@ -758,6 +767,44 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             context['type'] = obj.registration_certificate.media_type
             return context
         return None
+    
+    def get_country(self, obj):
+        """
+        Retrieves the serialized data for the country related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the country data for.
+
+        Returns:
+            A dictionary containing the serialized country data.
+
+        """
+
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """
+        Retrieves the serialized data for the city related to a JobDetails object.
+
+        Args:
+            obj: The JobDetails object to retrieve the city data for.
+
+        Returns:
+            A dictionary containing the serialized city data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
 
 
 class VendorDetailSerializers(serializers.ModelSerializer):
