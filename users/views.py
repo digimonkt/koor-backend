@@ -610,7 +610,6 @@ class SocialLoginView(generics.GenericAPIView):
                 elif user.role == "employer":
                     EmployerProfile.objects.create(user=user)
                 elif user.role == "vendor":
-                    print("test")
                     VendorProfile.objects.create(user=user)
             if user.role != serializer.validated_data['role']:
                 context["message"] = "Email registered with wrong role."
