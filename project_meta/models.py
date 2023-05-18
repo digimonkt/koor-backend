@@ -307,3 +307,4 @@ class OpportunityType(SlugBaseModel, models.Model):
         verbose_name_plural = "Opportunity Types"
         db_table = "OpportunityType"
         ordering = ['title']
+

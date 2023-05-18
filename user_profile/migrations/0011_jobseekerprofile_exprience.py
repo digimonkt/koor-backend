@@ -10,9 +10,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='jobseekerprofile',
-            name='exprience',
-            field=models.BigIntegerField(blank=True, db_column='exprience', null=True, verbose_name='Exprience'),
-        ),
+        # migrations.AddField(
+        #     model_name='jobseekerprofile',
+        #     name='exprience',
+        #     field=models.BigIntegerField(blank=True, db_column='exprience', null=True, verbose_name='Exprience'),
+        # ),
     ]

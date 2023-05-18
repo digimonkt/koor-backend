@@ -10,13 +10,13 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='jobseekerprofile',
-            name='exprience',
-        ),
-        migrations.AddField(
-            model_name='jobseekerprofile',
-            name='experience',
-            field=models.BigIntegerField(blank=True, db_column='experience', null=True, verbose_name='Experience'),
-        ),
+        # migrations.RemoveField(
+        #     model_name='jobseekerprofile',
+        #     name='exprience',
+        # ),
+        # migrations.AddField(
+        #     model_name='jobseekerprofile',
+        #     name='experience',
+        #     field=models.BigIntegerField(blank=True, db_column='experience', null=True, verbose_name='Experience'),
+        # ),
     ]

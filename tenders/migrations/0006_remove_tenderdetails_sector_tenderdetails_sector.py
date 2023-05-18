@@ -10,14 +10,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='tenderdetails',
-            name='sector',
-        ),
-        migrations.AddField(
-            model_name='tenderdetails',
-            name='sector',
-            field=models.CharField(choices=[('ngo', 'NGO'), ('private', 'Private'), ('public', 'Public')], db_column='sector', default='ngo', max_length=25, verbose_name='Sector'),
-            preserve_default=False,
-        ),
+        # migrations.RemoveField(
+        #     model_name='tenderdetails',
+        #     name='sector',
+        # ),
+        # migrations.AddField(
+        #     model_name='tenderdetails',
+        #     name='sector',
+        #     field=models.CharField(choices=[('ngo', 'NGO'), ('private', 'Private'), ('public', 'Public')], db_column='sector', default='ngo', max_length=25, verbose_name='Sector'),
+        #     preserve_default=False,
+        # ),
     ]
