@@ -96,15 +96,15 @@ class CitySerializers(serializers.ModelSerializer):
             try:
                 country_instance = Country.objects.get(title=country_name)
                 if City.objects.filter(title__iexact=title, country=country_instance).exists():
-                    raise serializers.ValidationError({'title': title + ' in ' + country_instance + ' already exist.'})
+                    raise serializers.ValidationError({'title': title + ' in ' + str(country_instance.title) + ' already exist.'})
                 return data
             except Country.DoesNotExist:
                 raise serializers.ValidationError('Country not available.', code='country_name')
 
     def save(self):
         country_instance = Country.objects.get(title=self.validated_data['country_name'])
-        City.objects.create(title=self.validated_data['title'], country=country_instance)
-        return self
+        city_instance = City.objects.create(title=self.validated_data['title'], country=country_instance)
+        return city_instance
 
 class GetCitySerializers(serializers.ModelSerializer):
     """

@@ -241,9 +241,11 @@ class CityView(generics.ListAPIView):
                     City.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                             country__title=serializer.validated_data['country_name'], is_removed=True).update(
                         is_removed=False)
+                    city = City.objects.get(title__iexact=serializer.validated_data['title'],
+                                            country__title=serializer.validated_data['country_name'], is_removed=False)
                 else:
-                    serializer.save()
-                context["data"] = serializer.data
+                    city = serializer.save()
+                context["data"] = {'id': str(city.id), 'title': str(city.title), 'country': str(city.country.id)}
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
