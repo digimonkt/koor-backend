@@ -9,7 +9,7 @@ from jobs.models import (
 )
 from project_meta.models import (
     Country, City, EducationLevel,
-    Language, Skill, Tag,
+    Language, Skill, Tag, Media,
     AllCountry, Choice, OpportunityType
 )
 from project_meta.serializers import (
@@ -24,7 +24,7 @@ from tenders.serializers import TenderCategorySerializer
 from users.backends import MobileOrEmailBackend as cb
 from users.models import User, UserSession
 
-from .models import Content
+from .models import Content, ResourcesContent
 
 
 class CountrySerializers(serializers.ModelSerializer):
@@ -786,3 +786,87 @@ class TenderListSerializers(serializers.ModelSerializer):
 
     def get_user(self, obj):
         return obj.user.name
+
+
+class CreateResourcesSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `ResourcesContent` model.
+
+    The `CreateResourcesSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `ResourcesContent` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title', 'category'.
+    """
+    attachment_file = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+    class Meta:
+        model = ResourcesContent
+        fields = ['id', 'title', 'description', 'attachment_file']
+        read_only_fields = ['id'] 
+    
+    def save(self):
+        attachment_file = None
+        if 'attachment_file' in self.validated_data:
+            attachment_file = self.validated_data.pop('attachment_file')
+        resource_instance = super().save()
+        if attachment_file:
+            content_type = str(attachment_file.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=attachment_file.name, file_path=attachment_file, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            resource_instance.attachment = media_instance
+            resource_instance.save()
+        return resource_instance
+
+    def update(self, instance, validated_data):
+        attachment_file = None
+        if 'attachment_file' in self.validated_data:
+            attachment_file = self.validated_data.pop('attachment_file')
+        super().update(instance, validated_data)
+        if attachment_file:
+            content_type = str(attachment_file.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=attachment_file.name, file_path=attachment_file, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.attachment = media_instance
+            instance.save()
+        return instance
+
+class ResourcesSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the ResourcesContent model.
+
+    This serializer is used to serialize/deserialize ResourcesContent objects to/from JSON format. It defines
+    the fields that will be included in the serialized data and provides validation for deserialization.
+
+    Attributes:
+        Meta: A subclass of the serializer that specifies the model to be serialized and the fields
+            to be included in the serialized data.
+    """
+    attachment = serializers.SerializerMethodField()
+    class Meta:
+        model = ResourcesContent
+        fields = (
+            'id', 'title', 'description', 'attachment'
+        )
+    
+    def get_attachment(self, obj):
+        if obj.attachment:
+            return {'id': obj.attachment.id, 
+                    'title': obj.attachment.title, 
+                    'type':obj.attachment.media_type,
+                    'path': obj.attachment.file_path.url
+            }
+        return None
