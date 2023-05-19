@@ -521,6 +521,10 @@ class TenderCategorySerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'title': str(title) + ' already exists'})
         else:
             return data
+    
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
 
 
 class GetJobSubCategorySerializers(serializers.ModelSerializer):
