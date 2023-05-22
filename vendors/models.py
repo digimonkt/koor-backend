@@ -51,7 +51,7 @@ class SavedTender(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ordering = ['-created']
 
 
-class AppliedTender(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+class AppliedTender(BaseModel, TimeStampedModel, models.Model):
     """
     Model representing an applied tender.
 
