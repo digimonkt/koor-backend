@@ -112,3 +112,51 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
         verbose_name_plural = "Resources"
         db_table = "Resources"
         ordering = ['-created']
+    
+
+class SocialUrl(BaseModel, SoftDeleteModel, models.Model):
+    """
+    Model representing a social URL.
+
+    Fields:
+        - platform (CharField): The platform of the social URL. Choices are predefined by PLATFORM_CHOICE.
+        - url (URLField): The URL associated with the social platform.
+
+    Methods:
+        - __str__(): Returns a string representation of the platform.
+
+    Meta:
+        - verbose_name (str): Singular name for the model.
+        - verbose_name_plural (str): Plural name for the model.
+        - db_table (str): Name of the database table.
+        - ordering (list): Default ordering for querysets.
+    """
+    
+    PLATFORM_CHOICE = (
+        ('iso_app', "ISO Application"),
+        ('android_app', "Android Application"),
+        ('facebook', "Facebook"),
+        ('instagram', "Instagram"),
+        ('linkedin', "Linkedin"),
+        ('youtube', "Youtube"),
+        ('twitter', "Twitter"),
+    )
+    platform = models.CharField(
+        verbose_name=_('Platform'),
+        max_length=255,
+        db_column="platform",
+        choices=PLATFORM_CHOICE,
+    )
+    url = models.URLField(
+        verbose_name=_('Url'),
+        db_column="url",
+    )
+
+    def __str__(self):
+        return str(self.platform)
+
+    class Meta:
+        verbose_name = "Social Url"
+        verbose_name_plural = "Social Urls"
+        db_table = "SocialUrl"
+        ordering = ['platform']

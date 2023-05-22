@@ -24,7 +24,9 @@ from tenders.serializers import TenderCategorySerializer
 from users.backends import MobileOrEmailBackend as cb
 from users.models import User, UserSession
 
-from .models import Content, ResourcesContent
+from .models import (
+    Content, ResourcesContent, SocialUrl
+)
 
 
 class CountrySerializers(serializers.ModelSerializer):
@@ -105,6 +107,7 @@ class CitySerializers(serializers.ModelSerializer):
         country_instance = Country.objects.get(title=self.validated_data['country_name'])
         city_instance = City.objects.create(title=self.validated_data['title'], country=country_instance)
         return city_instance
+
 
 class GetCitySerializers(serializers.ModelSerializer):
     """
@@ -844,6 +847,7 @@ class CreateResourcesSerializers(serializers.ModelSerializer):
             instance.save()
         return instance
 
+
 class ResourcesSerializers(serializers.ModelSerializer):
     """
     Serializer for the ResourcesContent model.
@@ -870,3 +874,23 @@ class ResourcesSerializers(serializers.ModelSerializer):
                     'path': obj.attachment.file_path.url
             }
         return None
+
+
+class SocialUrlSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for SocialUrl model.
+
+    Serializes the SocialUrl model into JSON format with the specified fields.
+
+    Attributes:
+        - model (class): The model class to be serialized (SocialUrl).
+        - fields (tuple): The fields to be included in the serialized output (id, platform, url).
+
+    """
+
+    class Meta:
+        model = SocialUrl
+        fields = (
+            'id', 'platform', 'url'
+        )
+        read_only_fields = ['id'] 

@@ -32,7 +32,9 @@ from project_meta.models import (
 from tenders.models import TenderCategory, TenderDetails
 from tenders.filters import TenderDetailsFilter
 
-from .models import Content, ResourcesContent
+from .models import (
+    Content, ResourcesContent, SocialUrl
+)
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
@@ -43,7 +45,7 @@ from .serializers import (
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers,
     ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
-    CreateResourcesSerializers
+    CreateResourcesSerializers, SocialUrlSerializers
 )
 
 
@@ -3467,6 +3469,194 @@ class ResourcesView(generics.ListAPIView):
         except ResourcesContent.DoesNotExist:
             return response.Response(
                 data={"resourcesId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class LinksView(generics.ListAPIView):
+    """
+    API view for retrieving a list of social URLs.
+
+    - Permissions: Allow any user to access this view.
+    - Serializer: SocialUrlSerializers
+    - Queryset: All SocialUrl objects.
+    - Filter backends: SearchFilter
+    - Search fields: ['platform']
+    - Pagination class: CustomPagination
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = SocialUrlSerializers
+    queryset = SocialUrl.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['platform']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Retrieve a paginated list of objects.
+
+        Args:
+            - request: The HTTP request object.
+
+        Returns:
+            Response object containing serialized data of the paginated list.
+        """
+    
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handles the HTTP POST request to create or update a social URL.
+
+        Args:
+            - request: The HTTP request object containing the data.
+
+        Returns:
+            - A response with the created or updated social URL data if successful.
+            - Otherwise, returns an error response with the appropriate status code.
+
+        Raises:
+            - serializers.ValidationError: If the serializer data is invalid.
+
+        Notes:
+            This function requires the user to be a staff member. If the user is not a staff member,
+            an unauthorized error response will be returned.
+        """
+
+        context = dict()
+        serializer = self.get_serializer(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if SocialUrl.all_objects.filter(platform=serializer.validated_data['platform'],
+                                                  is_removed=True).exists():
+                    SocialUrl.all_objects.filter(platform=serializer.validated_data['platform'],
+                                                 is_removed=True).update(is_removed=False)
+                    social_url_instance = SocialUrl.all_objects.get(
+                        platform=serializer.validated_data['platform'], is_removed=False
+                    )
+                    serializer.update(social_url_instance, serializer.validated_data)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, linkId):
+        """
+        Deletes a SocialUrl object with the specified linkId.
+
+        Args:
+            request: The HTTP request object.
+            linkId (int): The ID of the SocialUrl object to be deleted.
+
+        Returns:
+            A Response object with appropriate status and data:
+                - If the user is a staff member and the SocialUrl object exists, returns HTTP 200 OK
+                with a success message in the data field.
+                - If the user is a staff member and the SocialUrl object does not exist, returns HTTP 
+                404 NOT FOUND
+                with an error message in the data field.
+                - If any other exception occurs, returns HTTP 404 NOT FOUND with the exception message 
+                in the data field.
+                - If the user is not a staff member, returns HTTP 401 UNAUTHORIZED with an error message 
+                in the data field.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                SocialUrl.objects.get(id=linkId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except SocialUrl.DoesNotExist:
+                return response.Response(
+                    data={"linkId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, linkId):
+        """
+        Handle HTTP PUT request to update a social URL instance.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - linkId (int): The ID of the social URL instance to update.
+
+        Returns:
+            - Response: HTTP response indicating the result of the update.
+
+        Raises:
+            - serializers.ValidationError: If the serializer is invalid.
+        """
+
+        context = dict()
+        try:
+            social_url_instance = SocialUrl.all_objects.get(id=linkId)
+            serializer = self.get_serializer(data=request.data, instance=social_url_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(social_url_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except SocialUrl.DoesNotExist:
+            return response.Response(
+                data={"linkId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
