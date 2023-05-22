@@ -108,6 +108,7 @@ class CountryView(generics.ListAPIView):
         """
 
         context = dict()
+        country_instance = None
         serializer = self.serializer_class(data=request.data)
         try:
             if self.request.user.is_staff:
@@ -117,9 +118,13 @@ class CountryView(generics.ListAPIView):
                     Country.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                is_removed=True).update(
                         is_removed=False)
+                    country_instance = Country.all_objects.get(title__iexact=serializer.validated_data['title'], is_removed=False)
+                    
                 else:
                     serializer.save()
                 context["data"] = serializer.data
+                if country_instance:
+                    context["data"]['id'] = str(country_instance.id)
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
