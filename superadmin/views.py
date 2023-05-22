@@ -33,7 +33,8 @@ from tenders.models import TenderCategory, TenderDetails
 from tenders.filters import TenderDetailsFilter
 
 from .models import (
-    Content, ResourcesContent, SocialUrl
+    Content, ResourcesContent, SocialUrl,
+    AboutUs
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -45,7 +46,8 @@ from .serializers import (
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers,
     ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
-    CreateResourcesSerializers, SocialUrlSerializers
+    CreateResourcesSerializers, SocialUrlSerializers,
+    AboutUsSerializers, UpdateAboutUsSerializers
 )
 
 
@@ -2268,7 +2270,6 @@ class TenderCategoryView(generics.ListAPIView):
             )
 
 
-
 def create_directory():
     """
     Create a directory for storing CSV files in the 'media' directory with the current date as the subdirectory name.
@@ -3664,4 +3665,68 @@ class LinksView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class AboutUsView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AboutUsSerializers
+
+    def get(self, request):
+
+        response_context = dict()
+        try:
+            about_us_instance = AboutUs.objects.get(title="About Our Company")
+            get_data = self.serializer_class(about_us_instance)
+            response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except AboutUs.DoesNotExist:
+            return response.Response(
+                data={"description": None},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def patch(self, request):
+
+        context = dict()
+        if self.request.user.is_staff:
+
+            if AboutUs.objects.filter(title="About Our Company").exists():
+                instance = AboutUs.objects.get(title="About Our Company")
+            else:
+                if AboutUs.all_objects.filter(title="About Our Company", is_removed=True).exists():
+                    instance = AboutUs.all_objects.get(title="About Our Company", is_removed=True)
+                    instance.is_removed = False
+                else:
+                    instance = AboutUs.objects.create(title="About Our Company")
+                instance.save()
+            serializer = UpdateAboutUsSerializers(data=request.data, instance=instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
