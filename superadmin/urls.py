@@ -11,7 +11,7 @@ from .views import (
     JobSubCategoryView, WorldCountryView, UploadCityView,
     WorldCityView, ChoiceView, OpportunityTypeView,
     TenderListView, TenderRevertView, ResourcesView,
-    LinksView
+    LinksView, AboutUsView
 )
 
 app_name = "superadmin"
@@ -86,4 +86,6 @@ urlpatterns = [
         
     path('/links', LinksView.as_view(), name="links"),
     path('/links/<str:linkId>', LinksView.as_view(), name="links"),
+    
+    path('/about-us', AboutUsView.as_view(), name="about_us"),
 ]
