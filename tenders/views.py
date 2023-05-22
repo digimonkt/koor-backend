@@ -1,3 +1,4 @@
+from django.db.models import Value, F, Case, When, IntegerField, Q
 from datetime import date
 
 from django_filters import rest_framework as django_filters
@@ -310,5 +311,126 @@ class TenderFilterView(generics.GenericAPIView):
             context["message"] = e
             return response.Response(
                 data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class TenderSuggestionView(generics.ListAPIView):
+    """
+    API view for suggesting tenders based on matching criteria.
+
+    This view provides a list of suggested tenders based on matching criteria, including the budget amount, tags,
+    tender category, tender type, and sector.
+
+    Attributes:
+        - serializer_class (class): The serializer class for the TenderDetails model.
+        - permission_classes (list): A list of permission classes to determine access to the view.
+        - queryset (QuerySet): The initial queryset for retrieving TenderDetails objects.
+        - filter_backends (list): A list of filter backends to apply for filtering the queryset.
+        - filterset_class (class): The filter class to use for filtering the queryset.
+        - search_fields (list): A list of fields to search for matching keywords.
+        - pagination_class (class): The pagination class for paginating the results.
+
+    Methods:
+        list(request, tenderId): Retrieves the suggested tenders based on the given tenderId.
+
+    Raises:
+        TenderDetails.DoesNotExist: If the specified tenderId does not exist.
+    """
+
+    serializer_class = TendersSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = TenderDetails.objects.filter(deadline__gte=date.today(), status='active')
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = TenderDetailsFilter
+    search_fields = [
+        'title', 'description',
+        'tag__title', 'tender_type__title', 'sector__title',
+        'tender_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request, tenderId):
+        """
+        Retrieves a list of suggested tenders based on the given tenderId.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - tenderId (int): The ID of the tender to retrieve suggestions for.
+
+        Returns:
+            Response: The HTTP response object containing the suggested tenders.
+
+        Raises:
+            TenderDetails.DoesNotExist: If the specified tenderId does not exist.
+        """
+        
+        context = dict()
+        if request.user:
+            context = {"user": request.user}
+        queryset = self.filter_queryset(self.get_queryset())
+        try:
+            tender_instance = TenderDetails.objects.get(id=tenderId)
+            annotated_tender_details = TenderDetails.objects.filter(~Q(id=tender_instance.id)).annotate(
+                matches=Value(0)
+            ).annotate(
+                matches=Case(
+                    When(
+                        budget_amount=tender_instance.budget_amount,
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        tag__in=tender_instance.tag.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        tender_category__in=tender_instance.tender_category.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        tender_type__in=tender_instance.tender_type.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            ).annotate(
+                matches=Case(
+                    When(
+                        sector__in=tender_instance.sector.all(),
+                        then=F('matches') + 1
+                    ),
+                    default=F('matches'),
+                    output_field=IntegerField()
+                )
+            )
+            tender = annotated_tender_details.filter(matches=4).order_by('-matches').distinct('matches')
+            if tender.count() == 0:
+                tender = annotated_tender_details.order_by('-matches').distinct('matches')
+            page = self.paginate_queryset(tender)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(tender, many=True, context=context)
+            return response.Response(serializer.data)
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"job": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
