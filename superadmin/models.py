@@ -160,3 +160,46 @@ class SocialUrl(BaseModel, SoftDeleteModel, models.Model):
         verbose_name_plural = "Social Urls"
         db_table = "SocialUrl"
         ordering = ['platform']
+
+
+class AboutUs(SlugBaseModel, SoftDeleteModel, models.Model):
+    """
+    Model representing the 'About Us' section.
+
+    Inherits from SlugBaseModel, SoftDeleteModel, and models.Model.
+
+    Fields:
+    - description (TextField): The description of the 'About Us' section.
+    - image (OneToOneField[Media]): The image associated with the 'About Us' section.
+
+    Meta:
+    - verbose_name: The singular name of the model ('About Us').
+    - verbose_name_plural: The plural name of the model ('About Us').
+    - db_table: The database table name for the model ('AboutUs').
+
+    Methods:
+    - __str__(): Returns the string representation of the model instance (the title).
+
+    """
+    
+    description = models.TextField(
+        verbose_name=_('Description'),
+        db_column="description",
+    )
+    image = models.OneToOneField(
+        Media,
+        verbose_name=_('Image'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="image",
+        related_name='%(app_label)s_%(class)s_image'
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "About Us"
+        verbose_name_plural = "About Us"
+        db_table = "AboutUs"
