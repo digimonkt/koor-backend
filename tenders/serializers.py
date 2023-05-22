@@ -648,3 +648,62 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class TendersSuggestionSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the `TenderDetails` model.
+            
+    """
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = TenderDetails
+        fields = [
+            'id', 'title', 'budget_amount', 'budget_currency', 'country', 'city',
+            'created'
+        ] 
+    
+    def get_country(self, obj):
+        """Get the serialized country data for a TenderDetails object.
+
+        This method uses the CountrySerializer to serialize the country associated with a TenderDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A TenderDetails object whose country data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized country data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """Get the serialized city data for a TenderDetails object.
+
+        This method uses the CitySerializer to serialize the city associated with a TenderDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A TenderDetails object whose city data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized city data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
