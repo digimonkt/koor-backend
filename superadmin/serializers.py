@@ -25,7 +25,8 @@ from users.backends import MobileOrEmailBackend as cb
 from users.models import User, UserSession
 
 from .models import (
-    Content, ResourcesContent, SocialUrl
+    Content, ResourcesContent, SocialUrl,
+    AboutUs
 )
 
 
@@ -894,3 +895,130 @@ class SocialUrlSerializers(serializers.ModelSerializer):
             'id', 'platform', 'url'
         )
         read_only_fields = ['id'] 
+
+
+class AboutUsSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the AboutUs model.
+
+    Serializes the 'id', 'description', and 'image' fields of the AboutUs model.
+    The 'image' field is serialized using a custom SerializerMethodField that
+    retrieves additional information about the image if it exists.
+
+    Methods:
+    - get_image(obj): Retrieves additional information about the image if it exists.
+
+    Attributes:
+    - model: The AboutUs model used for serialization.
+    - fields: The fields to be serialized from the AboutUs model.
+
+    """
+    
+    image = serializers.SerializerMethodField()
+    class Meta:
+        model = AboutUs
+        fields = ['id', 'description', 'image']
+    
+    def get_image(self, obj):
+        """
+        Retrieves additional information about the image if it exists.
+
+        Parameters:
+        - obj: The AboutUs model instance.
+
+        Returns:
+        - context: A dictionary containing information about the image.
+                   - 'title': The title of the image.
+                   - 'path': The path or URL of the image file.
+                   - 'type': The media type of the image.
+        
+        """
+        
+        context = {}
+        if obj.image:
+            context['title'] = obj.image.title
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
+        return None
+        
+
+class UpdateAboutUsSerializers(serializers.ModelSerializer):
+    """
+    Serializer for updating About Us data.
+
+    Fields:
+    - description: A string representing the description of About Us.
+    - image_file: A file field representing the image file for About Us.
+
+    Methods:
+    - validate_image_file: Validates the image file and ensures it is not blank and has a valid format.
+    - update: Updates the instance of AboutUs model with the validated data, including saving the image file as media.
+
+    """
+    
+    image_file = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+    class Meta:
+        model = AboutUs
+        fields = ['description', 'image_file']
+        
+    
+    def validate_image_file(self, image_file):
+        """
+        Validates the image file and ensures it is not blank and has a valid format.
+
+        Parameters:
+        - image_file: The image file to be validated.
+
+        Returns:
+        - The validated image file if it passes the validation.
+
+        Raises:
+        - serializers.ValidationError: If the image file is blank or has an invalid format.
+
+        """
+        
+        if image_file in ["", None]:
+            raise serializers.ValidationError('Image file can not be blank.', code='image_file')
+        content_type = str(image_file.content_type).split("/")
+        if content_type[0] == "image":
+            return image_file
+        else:
+            raise serializers.ValidationError('Invalid image file.', code='image_file')
+
+    def update(self, instance, validated_data):
+        """
+        Updates the instance of AboutUs model with the validated data, including saving the image file as media.
+
+        Parameters:
+        - instance: The instance of AboutUs model to be updated.
+        - validated_data: The validated data for updating the instance.
+
+        Returns:
+        - The updated instance of AboutUs model.
+
+        """
+        
+        super().update(instance, validated_data)
+        if 'image_file' in validated_data:
+            # Get media type from upload license file
+            content_type = str(validated_data['image_file'].content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=validated_data['image_file'].name,
+                                   file_path=validated_data['image_file'], media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.image = media_instance
+            instance.save()
+        return instance
