@@ -5,6 +5,10 @@ from core.models import (
     BaseModel, SlugBaseModel,  SoftDeleteModel, upload_directory_path
 )
 
+from users.models import (
+    TimeStampedModel, User
+)
+from project_meta.models import Media
 
 class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
     smtp_host = models.CharField(
@@ -58,7 +62,6 @@ class Content(SlugBaseModel, SoftDeleteModel, models.Model):
         db_table = "Content"
 
 
-
 class GooglePlaceApi(SoftDeleteModel, models.Model):
     api_key = models.CharField(
         verbose_name=_('API Key'),
@@ -76,3 +79,36 @@ class GooglePlaceApi(SoftDeleteModel, models.Model):
     
     class Meta:
         verbose_name_plural = "Google Place Api"
+
+    
+class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    This is a Django model for a Job Attachment object, associated with a specific Job item, with the following fields:
+
+    - `job`: the job associated with the attachment
+    - `attachment`: the attachment uploaded for the job
+    """
+    description = models.TextField(
+        verbose_name=_('Description'),
+        null=True,
+        blank=True,
+        db_column="description",
+    )
+    attachment = models.OneToOneField(
+        Media,
+        verbose_name=_('Attachment'),
+        on_delete=models.SET_NULL,
+        db_column="attachment",
+        null=True,
+        blank=True,
+        related_name='%(app_label)s_%(class)s_attachment'
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Resource"
+        verbose_name_plural = "Resources"
+        db_table = "Resources"
+        ordering = ['-created']
