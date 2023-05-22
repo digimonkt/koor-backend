@@ -15,7 +15,8 @@ from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
     TendersSerializers, TendersDetailSerializers,
     TenderFiltersSerializers,
-    GetTenderFilterSerializers
+    GetTenderFilterSerializers,
+    TendersSuggestionSerializers
 )
 
 
@@ -338,7 +339,7 @@ class TenderSuggestionView(generics.ListAPIView):
         TenderDetails.DoesNotExist: If the specified tenderId does not exist.
     """
 
-    serializer_class = TendersSerializers
+    serializer_class = TendersSuggestionSerializers
     permission_classes = [permissions.AllowAny]
     queryset = TenderDetails.objects.filter(deadline__gte=date.today(), status='active')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
