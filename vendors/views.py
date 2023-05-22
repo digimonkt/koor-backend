@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from datetime import date
 
 from rest_framework import (
     generics, response, status,
@@ -11,12 +12,11 @@ from user_profile.models import VendorProfile
 
 from tenders.models import TenderDetails
 
-from .models import SavedTender
+from .models import SavedTender, AppliedTender
 from .serializers import (
-    UpdateAboutSerializers,
-    SavedTenderSerializers,
-    GetSavedTenderSerializers
-
+    UpdateAboutSerializers, SavedTenderSerializers,
+    GetSavedTenderSerializers, GetAppliedTenderSerializers,
+    AppliedTenderSerializers, UpdateAppliedTenderSerializers
 )
 
 
@@ -270,3 +270,298 @@ class TenderSaveView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class TenderApplyView(generics.ListAPIView):
+    """
+    A view for retrieving a list of applied tender.
+
+    This view supports HTTP GET requests and returns a list of applied tender for the authenticated user.
+    The applied tender are serialized using the `GetAppliedTenderSerializers` class.
+
+    This view requires the user to be authenticated, and uses the `IsAuthenticated` permission class.
+    The view supports searching the applied tender by job title, using the `SearchFilter` filter backend.
+
+    Attributes:
+        - `serializer_class`: The serializer class to use for serializing the applied tender.
+        - `permission_classes`: A list of permission classes that the user must pass in order to access this view.
+        - `queryset`: The base queryset for the view. This attribute is not used in this view, since the queryset
+            is dynamically generated in the `get_queryset` method.
+        - `filter_backends`: A list of filter backends to use for filtering the applied tender.
+        - `search_fields`: The fields to search for when filtering the applied tender.
+    """
+
+    serializer_class = GetAppliedTenderSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Returns a paginated list of serialized applied tender for the authenticated user.
+
+        This method returns a paginated list of applied tender for the authenticated user. The applied tender are
+        serialized using the `GetAppliedTenderSerializers` class.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A HTTP response object containing a paginated list of serialized applied tender.
+
+        The response includes the following fields:
+            - `count (int)`: The total number of applied tender for the authenticated user.
+            - `next (str)`: The URL for the next page of results, or null if there are no more pages.
+            - `previous (str)`: The URL for the previous page of results, or null if this is the first page.
+            - `results (list)`: A list of serialized applied tender for the authenticated user.
+
+        """
+
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"request": request})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return response.Response(serializer.data)
+
+    def post(self, request, tenderId):
+        """
+        Creates a new application for a tender posting by a vendor.
+
+        Args:
+            request: The HTTP request object.
+            tenderId (int): The ID of the tender posting to apply for.
+
+        Returns:
+            A response object with the following keys:
+            - "message" (str): A message indicating the success or failure of the request.
+
+            - If the request is successful, the response will have a status code of 200 (HTTP_200_OK).
+            - If the user does not have permission to perform this action, the response will have a status
+            code of 401 (HTTP_401_UNAUTHORIZED).
+            - If the specified tender posting does not exist, the response will have a status code of 404
+            (HTTP_404_NOT_FOUND).
+            - If there is an error while processing the request, the response will have a status code of 404
+            (HTTP_404_NOT_FOUND) and a message describing the error.
+        """
+
+        context = dict()
+        if request.user.role == "vendor":
+            try:
+                tender_instace = TenderDetails.objects.get(id=tenderId)
+                try:
+                    if AppliedTender.objects.get(tender=tender_instace, user=request.user):
+                        context["message"] = "You are already applied"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except AppliedTender.DoesNotExist:
+                    serializer = AppliedTenderSerializers(data=request.data)
+                    try:
+                        serializer.is_valid(raise_exception=True)
+                        serializer.save(user=request.user, tender_instace=tender_instace)
+                        context["message"] = "Applied Successfully"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                    except serializers.ValidationError:
+                        return response.Response(
+                            data=str(serializer.errors),
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, tenderId):
+        """
+        Update an existing tender application for a vendor user.
+
+        Args:
+            - `request`: An HTTP request object.
+            - `tenderId (int)`: The ID of the tender application to update.
+
+        Returns:
+            A Response object with an appropriate HTTP status code and message.
+
+        Raises:
+            - `ValidationError`: If the request data is invalid.
+            - `Http404`: If the specified tender or tender application does not exist.
+            - `Exception`: If any other error occurs.
+
+        The function first checks if the user making the request is a vendor. If not, it returns an
+        unauthorized response. Otherwise, it tries to update the specified tender application with the given
+        data using an instance of the UpdateTenderSerializers class. If the update is successful, it returns
+        a success response with a message indicating that the update was successful. If the tender application
+        or tender do not exist, it returns a 404 response with an appropriate error message. If the request data
+        is invalid or if any other error occurs, it returns a 400 or 404 response with an error message
+        containing details about the error.
+        """
+
+        context = dict()
+        if self.request.user.role == "vendor":
+            serializer = UpdateAppliedTenderSerializers(data=request.data)
+            try:
+                tender_instace = TenderDetails.objects.get(id=tenderId)
+                try:
+                    applied_tender = AppliedTender.objects.get(tender=tender_instace, user=request.user)
+                    if applied_tender.shortlisted_at or applied_tender.rejected_at or applied_tender.created.date() < date.today():
+                        context['message'] = "You cannot update this applied tender"
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                    else:
+                        serializer.is_valid(raise_exception=True)
+                        if serializer.update(applied_tender, serializer.validated_data):
+                            context['message'] = "Updated Successfully"
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_200_OK
+                            )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                except AppliedTender.DoesNotExist:
+                    return response.Response(
+                        data={"application": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def delete(self, request, tenderId):
+        """
+        Deletes an AppliedTender object with the given tender if the authenticated user is a vendor and owns the
+        AppliedTender.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the AppliedTender to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if request.user.role == "vendor":
+            try:
+                tender_instace = TenderDetails.objects.get(id=tenderId)
+                try:
+                    applied_tender = AppliedTender.objects.get(tender=tender_instace, user=request.user)
+                    if applied_tender.shortlisted_at or applied_tender.rejected_at or applied_tender.created.date() < date.today():
+                        context['message'] = "You cannot revoke this applied tender"
+                    else:
+                        applied_tender.delete()
+                        context['message'] = "Revoked applied tender"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                except AppliedTender.DoesNotExist:
+                    return response.Response(
+                        data={"AppliedTender": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                except Exception as e:
+                    context["message"] = e
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        Returns the queryset of applied tender for the authenticated user.
+
+        This method returns a queryset of AppliedTender objects for the authenticated user, ordered by their creation date
+        in descending order.
+
+        Args:
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            A queryset of AppliedTender objects for the authenticated user, ordered by their creation date in descending
+            order.
+        """
+        order_by = None
+        if 'search_by' in self.request.GET:
+            search_by = self.request.GET['search_by']
+            if search_by == 'salary':
+                order_by = 'tender__budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'tender__deadline'
+            elif search_by == 'created_at':
+                order_by = 'tender__created'
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return AppliedTender.objects.filter(
+                            user=self.request.user,
+                            tender__is_removed=False
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return AppliedTender.objects.filter(
+                            user=self.request.user,
+                            tender__is_removed=False
+                        ).order_by(str(order_by))
+                else:
+                    return AppliedTender.objects.filter(
+                        user=self.request.user,
+                        tender__is_removed=False
+                    ).order_by(str(order_by))
+        return AppliedTender.objects.filter(
+            user=self.request.user,
+            tender__is_removed=False
+        )

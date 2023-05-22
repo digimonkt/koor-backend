@@ -5,7 +5,7 @@ from project_meta.models import (
 )
 from .models import (
     SMTPSetting, Content, GooglePlaceApi,
-    ResourcesContent, SocialUrl
+    ResourcesContent, SocialUrl, AboutUs
 )
 
 admin.site.register(EducationLevel)
@@ -18,3 +18,4 @@ admin.site.register(AllCity)
 admin.site.register(Media)
 admin.site.register(ResourcesContent)
 admin.site.register(SocialUrl)
+admin.site.register(AboutUs)

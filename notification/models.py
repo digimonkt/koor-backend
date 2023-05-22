@@ -13,6 +13,8 @@ from job_seekers.models import AppliedJob
 
 from jobs.models import JobFilters, JobDetails
 
+from vendors.models import AppliedTender
+
 
 class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -37,6 +39,7 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
 
     NOTIFICATION_TYPE_CHOICE = (
         ('applied', "Applied"),
+        ('applied_tender', "Applied Tender"),
         ('password_update', "Password Updated"),
         ('shortlisted', "Shortlisted"),
         ('planned_interviews', "Planned Interviews"),
@@ -65,6 +68,15 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="application",
         related_name='%(app_label)s_%(class)s_applications'
+    )
+    tender_application = models.ForeignKey(
+        AppliedTender,
+        verbose_name=_('Tender Application'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="tender_application",
+        related_name='%(app_label)s_%(class)s_tender_application'
     )
     job = models.ForeignKey(
         JobDetails,

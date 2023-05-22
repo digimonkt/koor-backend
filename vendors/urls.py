@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import (
-    UpdateAboutView, TenderSaveView
+    UpdateAboutView, TenderSaveView, TenderApplyView
 )
 
 app_name = "vendors"
@@ -12,5 +12,8 @@ urlpatterns = [
     
     path('/tender/save', TenderSaveView.as_view(), name="tender_save"),
     path('/tender/save/<str:tenderId>', TenderSaveView.as_view(), name="tender_save"),
+    
+    path('/tender/apply', TenderApplyView.as_view(), name="tender_apply"),
+    path('/tender/apply/<str:tenderId>', TenderApplyView.as_view(), name="tender_apply"),
 
 ]
