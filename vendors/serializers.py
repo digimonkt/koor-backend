@@ -5,7 +5,7 @@ from tenders.models import TenderDetails
 
 from users.models import User
 from user_profile.models import VendorProfile
-from users.serializers import UserSerializer
+from users.serializers import UserSerializer, ApplicantDetailSerializers
 
 from tenders.serializers import (
     TendersDetailSerializers
@@ -679,7 +679,7 @@ class GetAppliedTenderApplicationSerializers(serializers.ModelSerializer):
 
         context = {}
         if obj.user:
-            get_data = UserSerializer(obj.user)
+            get_data = ApplicantDetailSerializers(obj.user)
             if get_data.data:
                 context = get_data.data
         return context
