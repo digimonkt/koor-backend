@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from datetime import date
 
 from tenders.models import (
     TenderDetails, TenderCategory,
@@ -109,11 +110,11 @@ class TendersSerializers(serializers.ModelSerializer):
         is_applied_record = False
         if 'user' in self.context:
             user = self.context['user']
-            # if user.is_authenticated:
-            #     is_applied_record = AppliedJob.objects.filter(
-            #         tender=obj,
-            #         user=user
-            #     ).exists()
+            if user.is_authenticated:
+                is_applied_record = AppliedTender.objects.filter(
+                    tender=obj,
+                    user=user
+                ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
@@ -259,6 +260,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     attachments = serializers.SerializerMethodField()
     sector = serializers.SerializerMethodField()
     tender_type = serializers.SerializerMethodField()
+    is_editable = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -266,7 +268,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'tender_id', 'budget_currency', 'budget_amount', 'description',
             'country', 'city', 'tag', 'tender_category', 'tender_type', 'sector', 'deadline',
             'start_date', 'status', 'user', 'attachments', 'created', 'vendor',
-            'is_applied', 'is_saved'
+            'is_applied', 'is_saved', 'is_editable'
 
         ]
 
@@ -450,6 +452,19 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data[0]
         return context
+
+    def get_is_editable(self, obj):
+        is_editable_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            is_editable_record = AppliedTender.objects.filter(
+                tender=obj,
+                user=user,
+                shortlisted_at = None,
+                rejected_at = None,
+                created__date__gte = date.today()
+            ).exists()
+        return is_editable_record
 
 
 class TenderFiltersSerializers(serializers.ModelSerializer):
