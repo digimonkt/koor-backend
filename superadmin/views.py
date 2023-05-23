@@ -82,7 +82,6 @@ class CountryView(generics.ListAPIView):
             queryset = self.filter_queryset(self.get_queryset())
         else:
             queryset = self.filter_queryset(self.get_queryset().filter(~Q(project_meta_city_country=None)))
-        
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -344,7 +343,10 @@ class JobCategoryView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset())
+        else:
+            queryset = self.filter_queryset(self.get_queryset().filter(~Q(jobs_jobsubcategory_categories=None)))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
