@@ -19,7 +19,7 @@ from tenders.serializers import (
     TendersSuggestionSerializers
 )
 
-from vendors.serializers import GetAppliedTenderSerializers
+from vendors.serializers import GetAppliedTenderApplicationSerializers
 from vendors.models import AppliedTender
 
 
@@ -459,7 +459,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
         - Exception: If an error occurs during the retrieval process.
     """
 
-    serializer_class = GetAppliedTenderSerializers
+    serializer_class = GetAppliedTenderApplicationSerializers
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, applicationId):
