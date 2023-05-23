@@ -1065,3 +1065,79 @@ class FaqCategorySerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+class FAQSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the FAQ model.
+
+    Attributes:
+        category (SerializerMethodField): A method field used to serialize the category information.
+
+    Meta:
+        model (FAQ): The model associated with the serializer.
+        fields (list): The list of fields to include in the serialized representation.
+        read_only_fields (list): The list of fields that should be read-only.
+
+    Methods:
+        get_category(obj): Custom method to serialize the category information.
+
+    """
+    
+    category = serializers.SerializerMethodField()
+    class Meta:
+        model = FAQ
+        fields = ['id', 'question', 'answer', 'category', 'role', 'status']
+        read_only_fields = ['id'] 
+        
+    def get_category(self, obj):
+        """
+        Retrieve and serialize the category information.
+
+        Args:
+            obj: The FAQ object being serialized.
+
+        Returns:
+            dict or None: A dictionary containing the category information (id and title),
+            or None if no category is associated with the FAQ.
+
+        """
+        
+        context = {}
+        if obj.category:
+            context['id'] = obj.category.id
+            context['title'] = obj.category.title
+            return context
+        return None
+ 
+
+class CreateFAQSerializers(serializers.ModelSerializer):
+        """
+    Serializer for creating or updating a Frequently Asked Question (FAQ).
+
+    Attributes:
+        Meta:
+            model (FAQ): The model associated with the serializer.
+            fields (list): The fields to include in the serialized data.
+            read_only_fields (list): The fields that should be read-only.
+
+    Methods:
+        validate(data): Validates the data before creating or updating an FAQ.
+        update(instance, validated_data): Updates an existing FAQ instance with the validated data.
+    """
+
+    class Meta:
+        model = FAQ
+        fields = ['id', 'question', 'answer', 'category', 'role', 'status']
+        read_only_fields = ['id'] 
+
+    def validate(self, data):
+
+        question = data.get("question")
+        if FAQ.objects.filter(question__iexact=question, is_removed=False).exists():
+            raise serializers.ValidationError({'question': question + ' already exist.'})
+        return data
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
