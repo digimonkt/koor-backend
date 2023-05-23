@@ -1,6 +1,7 @@
 import os
 from datetime import date
 
+from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
@@ -1340,7 +1341,9 @@ class CategoryView(generics.GenericAPIView):
 
         response_context = dict()
         if self.request.user.role == "job_seeker":
-            category_data = JobCategory.objects.filter(is_removed=False)
+            category_data = JobCategory.objects.filter(is_removed=False).annotate(
+                has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id')))
+                ).filter(has_subcategory=True)
             get_data = CategoriesSerializers(category_data, many=True, context={'user': request.user})
             return response.Response(
                 data=get_data.data,
