@@ -48,7 +48,8 @@ from .serializers import (
     AllCitySerializers, GetCitySerializers,
     ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
     CreateResourcesSerializers, SocialUrlSerializers,
-    AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers
+    AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
+    FAQSerializers, CreateFAQSerializers
 )
 
 
@@ -3901,6 +3902,223 @@ class FaqCategoryView(generics.ListAPIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         except FaqCategory.DoesNotExist:
+            return response.Response(
+                data={"faqCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class FaqView(generics.ListAPIView):
+    """
+    A view for displaying a list of frequently asked questions (FAQs).
+
+    Attributes:
+        - permission_classes ([permissions.AllowAny]): List of permission classes that the view requires. In this
+            case, the view allows access to any user, authenticated or not.
+
+        - serializer_class (FAQSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the FAQs. By default, it is set
+            to retrieve all FAQs using `FAQ.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+        - pagination_class (CustomPagination): The pagination class used for paginating the results.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = FAQSerializers
+    queryset = FAQ.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request, role, faqCategoryId):
+        """
+        Retrieve a paginated list of FAQ questions based on the provided role and FAQ category ID.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - role (str): The role associated with the FAQ questions to retrieve.
+            - faqCategoryId (int): The ID of the FAQ category to filter the questions.
+
+        Returns:
+            - Response: A paginated response containing the serialized FAQ question data.
+
+        Raises:
+            N/A
+
+        """
+    
+        queryset = self.filter_queryset(self.get_queryset().filter(role=role, category_id=faqCategoryId))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle the HTTP POST request to create a new FAQ.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            Response: A response object indicating the status and data.
+
+        Raises:
+            ValidationError: If the data provided in the request is not valid.
+
+        Permissions:
+            - Staff members: Allowed to create or update an FAQ.
+            - Non-staff members: Unauthorized to perform the action.
+
+        Logic:
+            - If the user is a staff member:
+                - Validate the serializer data.
+                - If an FAQ with the same question (case-insensitive) and is_removed=True exists:
+                    - Set is_removed=False for the existing FAQ.
+                    - Get the updated FAQ instance.
+                    - Update the serializer data with the updated FAQ instance.
+                - Otherwise, save the serializer data with the current user.
+                - Return a response with the serialized data and HTTP status 201 (Created).
+            - If the user is not a staff member:
+                - Return an unauthorized response with an appropriate message.
+            - If a ValidationError occurs during data validation:
+                - Return a response with the validation errors and HTTP status 400 (Bad Request).
+            - If any other exception occurs:
+                - Return a response with the exception message and HTTP status 400 (Bad Request).
+        """
+
+        context = dict()
+        serializer = CreateFAQSerializers(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if FAQ.all_objects.filter(question__iexact=serializer.validated_data['question'],
+                                                  is_removed=True).exists():
+                    FAQ.all_objects.filter(question__iexact=serializer.validated_data['question'],
+                                                   is_removed=True).update(
+                        is_removed=False)
+                    faq_instance = FAQ.all_objects.get(question__iexact=serializer.validated_data['question'],
+                                                       is_removed=False)
+                    serializer.update(faq_instance, serializer.validated_data)
+                else:
+                    serializer.save(user=request.user)
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, faqId):
+        """
+        Deletes a FAQ object with the specified ID.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            faqId (int): The ID of the FAQ object to be deleted.
+
+        Returns:
+            Response: The HTTP response indicating the result of the delete operation.
+
+        Raises:
+            FAQ.DoesNotExist: If the FAQ object with the given ID does not exist.
+            Exception: If an unexpected exception occurs during the delete operation.
+
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                FAQ.objects.get(id=faqId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except FAQ.DoesNotExist:
+                return response.Response(
+                    data={"faqId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, faqId):
+        """
+        Handle the HTTP PUT request to update a FAQ instance.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            faqId (int): The ID of the FAQ instance to be updated.
+
+        Returns:
+            Response: An HTTP response indicating the result of the update.
+
+        Raises:
+            serializers.ValidationError: If the provided data is invalid.
+            FAQ.DoesNotExist: If the FAQ instance with the given ID does not exist.
+
+        """
+
+        context = dict()
+        try:
+            faq_instance = FAQ.all_objects.get(id=faqId)
+            serializer = CreateFAQSerializers(data=request.data, instance=faq_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(faq_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except FAQ.DoesNotExist:
             return response.Response(
                 data={"faqCategoryId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND

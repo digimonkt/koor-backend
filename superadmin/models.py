@@ -276,7 +276,7 @@ class FAQ(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     status = models.BooleanField(
         verbose_name=_('Status'),
         db_column="status",
-        default=False
+        default=True
     )
     role = models.CharField(
         verbose_name=_('Role'),
