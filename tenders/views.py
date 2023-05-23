@@ -19,6 +19,9 @@ from tenders.serializers import (
     TendersSuggestionSerializers
 )
 
+from vendors.serializers import GetAppliedTenderSerializers
+from vendors.models import AppliedTender
+
 
 class TenderSearchView(generics.ListAPIView):
     """
@@ -434,4 +437,45 @@ class TenderSuggestionView(generics.ListAPIView):
             return response.Response(
                 data={"job": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ApplicationsDetailView(generics.GenericAPIView):
+    """
+    A view for retrieving the details of a specific application for a tender.
+
+    Attributes:
+        - serializer_class (GetAppliedTenderSerializers): The serializer class used for data serialization.
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires.
+            In this case, only authenticated users are allowed to access the view.
+
+    Methods:
+        - get(request, applicationId): Retrieves the details of the specified application for a tender.
+
+    Returns:
+        - response.Response: A response object containing the application details or an error message.
+
+    Raises:
+        - Exception: If an error occurs during the retrieval process.
+    """
+
+    serializer_class = GetAppliedTenderSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, applicationId):
+        context = dict()
+        try:
+            if applicationId:
+                application_data = AppliedTender.objects.get(id=applicationId)
+                get_data = self.serializer_class(application_data)
+                context = get_data.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
             )

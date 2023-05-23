@@ -489,17 +489,7 @@ class GetAppliedTenderSerializers(serializers.ModelSerializer):
 
         If the tender posting does not exist, an empty dictionary will be returned.
         """
-        return_context = dict()
-        try:
-            if 'request' in self.context:
-                user = self.context['request'].user
-                get_data = TendersDetailSerializers(obj.tender, context={"user": user})
-                if get_data.data:
-                    return_context = get_data.data
-        except TenderDetails.DoesNotExist:
-            pass
-        finally:
-            return return_context
+        return {'id': obj.tender.id, 'title': obj.tender.title}
 
 
 class UpdateAppliedTenderSerializers(serializers.ModelSerializer):
