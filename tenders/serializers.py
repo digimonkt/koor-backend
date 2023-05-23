@@ -261,6 +261,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     sector = serializers.SerializerMethodField()
     tender_type = serializers.SerializerMethodField()
     is_editable = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -268,7 +269,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'tender_id', 'budget_currency', 'budget_amount', 'description',
             'country', 'city', 'tag', 'tender_category', 'tender_type', 'sector', 'deadline',
             'start_date', 'status', 'user', 'attachments', 'created', 'vendor',
-            'is_applied', 'is_saved', 'is_editable'
+            'is_applied', 'is_saved', 'is_editable', 'application'
 
         ]
 
@@ -465,6 +466,16 @@ class TendersDetailSerializers(serializers.ModelSerializer):
                 created__date__gte = date.today()
             ).exists()
         return is_editable_record
+
+    def get_application(self, obj):
+        application_context = dict()
+        if 'user' in self.context:
+            user = self.context['user']
+            if AppliedTender.objects.filter(tender=obj, user=user).exists():
+                application = AppliedTender.objects.get(tender=obj, user=user)
+                application_context['id'] = application.id
+                application_context['created'] = application.created
+        return application_context
 
 
 class TenderFiltersSerializers(serializers.ModelSerializer):
