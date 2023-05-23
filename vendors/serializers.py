@@ -577,10 +577,10 @@ class UpdateAppliedTenderSerializers(serializers.ModelSerializer):
         if 'attachments_remove' in self.validated_data:
             attachments_remove = self.validated_data.pop('attachments_remove')
 
-        applied_job_instance = super().update(instance, validated_data)
+        applied_tender_instance = super().update(instance, validated_data)
         if attachments_remove:
             for remove in attachments_remove:
-                AppliedTenderAttachmentsItem.objects.filter(id=remove).update(applied_job=None)
+                AppliedTenderAttachmentsItem.objects.filter(id=remove).update(applied_tender=None)
 
         if attachments:
             for attachment in attachments:
@@ -593,7 +593,7 @@ class UpdateAppliedTenderSerializers(serializers.ModelSerializer):
                 media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
                 media_instance.save()
                 # save media instance into license id file into employer profile table.
-                attachments_instance = AppliedTenderAttachmentsItem.objects.create(applied_job=applied_job_instance,
+                attachments_instance = AppliedTenderAttachmentsItem.objects.create(applied_tender=applied_tender_instance,
                                                                                 attachment=media_instance)
                 attachments_instance.save()
 
