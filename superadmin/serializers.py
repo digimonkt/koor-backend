@@ -1112,7 +1112,7 @@ class FAQSerializers(serializers.ModelSerializer):
  
 
 class CreateFAQSerializers(serializers.ModelSerializer):
-        """
+    """
     Serializer for creating or updating a Frequently Asked Question (FAQ).
 
     Attributes:
