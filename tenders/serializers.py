@@ -6,7 +6,7 @@ from tenders.models import (
 )
 
 from vendors.models import (
-    SavedTender
+    SavedTender, AppliedTender
 )
 
 from users.serializers import UserSerializer
@@ -379,17 +379,16 @@ class TendersDetailSerializers(serializers.ModelSerializer):
         return context
 
     def get_vendor(self, obj):
-        # return AppliedJob.objects.filter(tender=obj).count()
-        return 0
+        return AppliedTender.objects.filter(tender=obj).count()
 
     def get_is_applied(self, obj):
         is_applied_record = False
-        # if 'user' in self.context:
-        #     user = self.context['user']
-        #     is_applied_record = AppliedJob.objects.filter(
-        #         tender=obj,
-        #         user=user
-        #     ).exists()
+        if 'user' in self.context:
+            user = self.context['user']
+            is_applied_record = AppliedTender.objects.filter(
+                tender=obj,
+                user=user
+            ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
