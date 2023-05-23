@@ -26,7 +26,7 @@ from users.models import User, UserSession
 
 from .models import (
     Content, ResourcesContent, SocialUrl,
-    AboutUs
+    AboutUs, FaqCategory, FAQ
 )
 
 
@@ -1021,4 +1021,47 @@ class UpdateAboutUsSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             instance.image = media_instance
             instance.save()
+        return instance
+
+
+class FaqCategorySerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the `FaqCategory` model.
+
+    The `FaqCategorySerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+    `FaqCategory` model. It defines the fields that should be included in the serialized representation of the model,
+    including 'id', 'title'.
+    """
+
+    class Meta:
+        model = FaqCategory
+        fields = ['id', 'title']
+        read_only_fields = ['id'] 
+
+    def validate(self, data):
+        """
+        Validate the data before saving to the database.
+        
+        The validate method checks if the category field is blank and raises a validation error if it is.
+        It also checks if a job sub category with the same title and category already exists and raises a validation error if it
+        does.
+        Finally, it checks if the category exists in the database and raises a validation error if it does not.
+
+        Args:
+            data (dict): Dictionary of data to be validated.
+
+        Raises:
+            serializers.ValidationError: Raised if the category field is blank or if a job sub category with the same title and
+            category already exists or if the category does not exist in the database.
+
+        Returns:
+            data (dict): The validated data.
+        """
+        title = data.get("title")
+        if FaqCategory.objects.filter(title__iexact=title, is_removed=False).exists():
+            raise serializers.ValidationError({'title': title + ' already exist.'})
+        return data
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
         return instance
