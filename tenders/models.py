@@ -109,6 +109,12 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="description",
     )
+    address = models.TextField(
+        verbose_name=_('Address'),
+        null=True,
+        blank=True,
+        db_column="address",
+    )
     country = models.ForeignKey(
         Country,
         verbose_name=_('Country'),

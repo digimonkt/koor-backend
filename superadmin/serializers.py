@@ -2,6 +2,7 @@ from datetime import date
 
 from django.db.models import Q
 from rest_framework import serializers
+from django.template.defaultfilters import slugify
 
 from jobs.models import (
     JobCategory, JobDetails,
@@ -168,7 +169,9 @@ class JobCategorySerializers(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        job_category_instance = super().update(instance, validated_data)
+        instance.slug = slugify(job_category_instance.title)
+        instance.save()
         return instance
 
 
@@ -187,7 +190,9 @@ class EducationLevelSerializers(serializers.ModelSerializer):
         read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        education_instance = super().update(instance, validated_data)
+        instance.slug = slugify(education_instance.title)
+        instance.save()
         return instance
 
 
@@ -206,7 +211,9 @@ class LanguageSerializers(serializers.ModelSerializer):
         read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        language_instance = super().update(instance, validated_data)
+        instance.slug = slugify(language_instance.title)
+        instance.save()
         return instance
 
 
@@ -225,7 +232,9 @@ class SkillSerializers(serializers.ModelSerializer):
         read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        skill_instance = super().update(instance, validated_data)
+        instance.slug = slugify(skill_instance.title)
+        instance.save()
         return instance
 
 
@@ -244,7 +253,9 @@ class TagSerializers(serializers.ModelSerializer):
         read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        tag_instance = super().update(instance, validated_data)
+        instance.slug = slugify(tag_instance.title)
+        instance.save()
         return instance
 
 
@@ -308,7 +319,9 @@ class ContentSerializers(serializers.ModelSerializer):
         fields = ['description']
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        content_instance = super().update(instance, validated_data)
+        instance.slug = slugify(content_instance.title)
+        instance.save()
         return instance
 
 
@@ -527,7 +540,9 @@ class TenderCategorySerializers(serializers.ModelSerializer):
             return data
     
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        tender_category_instance = super().update(instance, validated_data)
+        instance.slug = slugify(tender_category_instance.title)
+        instance.save()
         return instance
 
 
@@ -598,7 +613,9 @@ class JobSubCategorySerializers(serializers.ModelSerializer):
                 raise serializers.ValidationError('Job category not available.', code='category')
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        job_sub_category_instance = super().update(instance, validated_data)
+        instance.slug = slugify(job_sub_category_instance.title)
+        instance.save()
         return instance
 
 
@@ -660,7 +677,9 @@ class ChoiceSerializers(serializers.ModelSerializer):
         read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        choice_instance = super().update(instance, validated_data)
+        instance.slug = slugify(choice_instance.title)
+        instance.save()
         return instance
 
 
@@ -679,7 +698,9 @@ class OpportunityTypeSerializers(serializers.ModelSerializer):
         read_only_fields = ['id'] 
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        opportunity_instance = super().update(instance, validated_data)
+        instance.slug = slugify(opportunity_instance.title)
+        instance.save()
         return instance
 
 
@@ -714,7 +735,7 @@ class TenderListSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'id', 'tender_id', 'title', 'tag', 'tender_category', 
-            'tender_type', 'sector', 'city', 'country', 'status', 'user'
+            'tender_type', 'sector', 'city', 'country', 'status', 'user', 'address'
             ]
         read_only_fields = ['id'] 
 
@@ -1063,7 +1084,9 @@ class FaqCategorySerializers(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
-        super().update(instance, validated_data)
+        faq_category_instance = super().update(instance, validated_data)
+        instance.slug = slugify(faq_category_instance.title)
+        instance.save()
         return instance
 
 
