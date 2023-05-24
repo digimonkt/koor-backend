@@ -732,3 +732,49 @@ class TendersSuggestionSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data
         return context
+
+
+class AppliedTenderSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the AppliedTender model.
+    """
+
+    user = serializers.SerializerMethodField()
+    tender = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedTender
+        fields = [
+            'id', 'shortlisted_at', 'rejected_at', 'created', 
+            'short_letter', 'user', 'tender'
+        ]
+
+    def get_user(self, obj):
+        """
+        Returns the serialized representation of the user related to the applied tender.
+
+        Parameters:
+            - obj: AppliedTender instance
+
+        Returns:
+            - Serialized representation of the user related to the applied tender.
+        """
+
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tender(self, obj):
+        """
+        Returns a dictionary with the ID and title of the tender related to the applied tender.
+
+        Parameters:
+            - obj: AppliedTender instance
+
+        Returns:
+            - Dictionary with the ID and title of the tender related to the applied tender.
+        """
+        
+        return {"id": obj.tender.id, "title": obj.tender.title}

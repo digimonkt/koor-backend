@@ -14,9 +14,9 @@ from tenders.models import TenderDetails, TenderFilter
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
     TendersSerializers, TendersDetailSerializers,
-    TenderFiltersSerializers,
+    TenderFiltersSerializers, AppliedTenderSerializers,
     GetTenderFilterSerializers,
-    TendersSuggestionSerializers
+    TendersSuggestionSerializers,
 )
 
 from vendors.serializers import GetAppliedTenderApplicationSerializers
@@ -435,7 +435,7 @@ class TenderSuggestionView(generics.ListAPIView):
             return response.Response(serializer.data)
         except TenderDetails.DoesNotExist:
             return response.Response(
-                data={"job": "Does Not Exist"},
+                data={"tender": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -478,4 +478,85 @@ class ApplicationsDetailView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class TenderApplicationsView(generics.ListAPIView):
+    """
+    A view class that returns a list of AppliedTender instances.
+
+    Attributes:
+            - `serializer_class`: A serializer class used to serialize the AppliedTender instances.
+            - `permission_classes`: A list of permission classes that a user must pass in order to access the view.
+            - `queryset`: A QuerySet instance representing the list of AppliedTender instances. The queryset is not
+                defined in the class, but it can be defined dynamically in the dispatch method.
+            - `filter_backends`: A list of filter backend classes used to filter the queryset.
+            - `search_fields`: A list of fields on which the search filtering is applied.
+            - `pagination_class`: A pagination class that is used to paginate the result set.
+
+    """
+    serializer_class = AppliedTenderSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request, tenderId):
+        """
+        Retrieve a list of tender applications for the specified tender.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            tenderId (int): The ID of the tender.
+
+        Returns:
+            A response containing the serialized data of tender applications.
+
+        Raises:
+            NotFound (HTTP 404): If the specified tender does not exist.
+            Exception: If an unexpected error occurs.
+
+        Permissions:
+            - User must be authenticated.
+            - User role must be "employer".
+        """
+        
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                tender_instance = TenderDetails.objects.get(id=tenderId, user=request.user)
+                filters = Q(tender=tender_instance)
+                filter_list = self.request.GET.getlist('filter')
+                for filter_data in filter_list:
+                    if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
+                    if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
+                queryset = self.filter_queryset(AppliedTender.objects.filter(filters))
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True, context={"request": request})
+                    serialized_response = self.get_paginated_response(serializer.data)
+                    serialized_response.data['rejected_count'] = AppliedTender.objects.filter(tender=tender_instance).filter(
+                        ~Q(rejected_at=None)).count()
+                    serialized_response.data['shortlisted_count'] = AppliedTender.objects.filter(tender=tender_instance).filter(
+                        ~Q(shortlisted_at=None)).count()
+                    return response.Response(data=serialized_response.data, status=status.HTTP_200_OK)
+                serializer = self.get_serializer(queryset, many=True, context={"request": request})
+                return response.Response(serializer.data)
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
