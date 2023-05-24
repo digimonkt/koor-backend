@@ -1,8 +1,9 @@
 """
 File in which we have the middleware for Django for Authenticating API requests
 """
-import jwt
+import jwt, asyncio, inspect
 from decouple import config
+from asgiref.sync import async_to_sync
 
 from django.contrib.auth import get_user_model
 from django.utils.deprecation import MiddlewareMixin
@@ -14,6 +15,7 @@ from users.models import UserSession
 # Get JWT secret key
 SECRET_KEY = config("DJANGO_SECRET_KEY")
 
+   
 
 class JWTMiddleware(MiddlewareMixin):
     """
@@ -39,6 +41,10 @@ class JWTMiddleware(MiddlewareMixin):
             session_id=session_id
         )
         return str(refresh.access_token)
+
+
+    async def async_function(self, response_data):
+        return await response_data
 
     @classmethod
     def decode_token(self, token):
@@ -94,6 +100,8 @@ class JWTMiddleware(MiddlewareMixin):
                             request.META['HTTP_AUTHORIZATION'] = f'Bearer {new_access_token}'
                             request.META[self.access_token_lookup] = new_access_token
                             response = self.get_response(request)
+                            if inspect.iscoroutine(response):
+                                response = async_to_sync(self.async_function)(response)
                             if session.user.is_verified:
                                 response.headers.setdefault(self.access_token_lookup, new_access_token)
                             else:
