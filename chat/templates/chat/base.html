@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chat |</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{% static 'css/chat.css' %}"
+    />
+    <!-- favicons -->
+    {% block extra_style %}{% endblock extra_style %}
+  </head>
+  <body style="overflow:hidden;">
+    <div id="frame">
+      {% include 'chat/sidebar.html' %}
+      {% block chat_content %}{% endblock chat_content %}
+    </div>
+    {% block extra_js %}{% endblock extra_js %}
+    <!-- Sidebar Conversation List -->
+    <script src="{% static 'js/chat.js' %}"></script>
+    <script>
+      const notificationToneFile = "{% static 'audio/message-notification.mp3' %}";
+      conversationList.addEventListener("wheel", async () => {
+        if (conversationList.scrollHeight === 0 && conversationData != null) {
+          if (conversationData.next) {
+            await loadPreviousConversation(conversationData.next, true);
+          }
+          conversationData = null;
+        }
+      });
+
+      searchInput.addEventListener("blur", async (event) => {
+        var query = searchInput.value;
+        conversationList.innerHTML = "";
+        try {
+          await loadPreviousConversation(
+            previousConversationAPIUrl + `?search=${query}`
+          );
+        } catch (error) {
+          console.error(error);
+        }
+      });
+      loadPreviousConversation();
+      
+      const chatActivityWebSocket = new WebSocket(
+        `ws://${window.location.host}/ws/chat_activity/`
+      );
+
+      const setupChatActivityWebSocket = () => {
+        chatActivityWebSocket.onmessage = (event) => {
+          data = JSON.parse(event.data);
+          switch (data.type) {
+            case "change_status":
+              updateActiveStatus(data);
+              break;
+            case "update_conversation":
+              updateConversationList(data);
+              break;
+          }
+        };
+      };
+
+      setupChatActivityWebSocket();
+    </script>
+  </body>
+</html>
