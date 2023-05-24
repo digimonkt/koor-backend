@@ -128,7 +128,7 @@ class TendersSerializers(serializers.ModelSerializer):
         return is_saved_record
 
     def get_vendor(self, obj):
-        return 0
+        return AppliedTender.objects.filter(tender=obj).count()
 
     def get_sector(self, obj):
         """
