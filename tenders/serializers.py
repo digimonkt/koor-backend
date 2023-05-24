@@ -67,7 +67,7 @@ class TendersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
             'created', 'deadline', 'is_applied', 'is_saved', 'user', 'vendor',
-            'status'
+            'status', 'address'
         ]
 
     def get_tender_category(self, obj):
@@ -269,7 +269,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'tender_id', 'budget_currency', 'budget_amount', 'description',
             'country', 'city', 'tag', 'tender_category', 'tender_type', 'sector', 'deadline',
             'start_date', 'status', 'user', 'attachments', 'created', 'vendor',
-            'is_applied', 'is_saved', 'is_editable', 'application'
+            'is_applied', 'is_saved', 'is_editable', 'application', 'address'
 
         ]
 
@@ -687,7 +687,7 @@ class TendersSuggestionSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'id', 'title', 'budget_amount', 'budget_currency', 'country', 'city',
-            'created'
+            'created', 'address'
         ] 
     
     def get_country(self, obj):

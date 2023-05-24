@@ -735,7 +735,7 @@ class TenderListSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'id', 'tender_id', 'title', 'tag', 'tender_category', 
-            'tender_type', 'sector', 'city', 'country', 'status', 'user'
+            'tender_type', 'sector', 'city', 'country', 'status', 'user', 'address'
             ]
         read_only_fields = ['id'] 
 

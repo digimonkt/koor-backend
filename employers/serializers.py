@@ -653,7 +653,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
             'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
-            'start_date'
+            'start_date', 'address'
         ]
 
     def validate_tender_category(self, tender_category):
@@ -741,7 +741,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
             'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
-            'start_date', 'attachments_remove'
+            'start_date', 'attachments_remove', 'address'
         ]
 
     def validate_tender_category(self, tender_category):
