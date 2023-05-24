@@ -813,7 +813,8 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = AppliedJob
-        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'created', 'attachments', 'job', 'user']
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'interview_at',  
+                  'short_letter', 'created', 'attachments', 'job', 'user']
 
     def get_attachments(self, obj):
         """Get the serialized attachment data for a AppliedJob object.

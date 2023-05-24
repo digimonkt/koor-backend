@@ -10,7 +10,9 @@ from .views import (
     TenderCategoryView, UploadCountryView,
     JobSubCategoryView, WorldCountryView, UploadCityView,
     WorldCityView, ChoiceView, OpportunityTypeView,
-    TenderListView, TenderRevertView
+    TenderListView, TenderRevertView, ResourcesView,
+    LinksView, AboutUsView, FaqCategoryView,
+    FaqView
 )
 
 app_name = "superadmin"
@@ -79,4 +81,20 @@ urlpatterns = [
     path('/tender', TenderListView.as_view(), name="tender_list"),
     path('/tender/<str:tenderId>', TenderListView.as_view(), name="tender_list"),
     path('/tender/<str:tenderId>/revert', TenderRevertView.as_view(), name="tender_revert"),
+    
+    path('/resources', ResourcesView.as_view(), name="resources"),
+    path('/resources/<str:resourcesId>', ResourcesView.as_view(), name="resources"),
+        
+    path('/links', LinksView.as_view(), name="links"),
+    path('/links/<str:linkId>', LinksView.as_view(), name="links"),
+    
+    path('/about-us', AboutUsView.as_view(), name="about_us"),
+    
+    path('/faq-category', FaqCategoryView.as_view(), name="faq_category"),
+    path('/faq-category/<str:faqCategoryId>', FaqCategoryView.as_view(), name="faq_category"),
+        
+    path('/faq', FaqView.as_view(), name="faq"),
+    path('/faq/<str:faqId>', FaqView.as_view(), name="faq"),
+    path('/<str:role>/faq/<str:faqCategoryId>', FaqView.as_view(), name="faq"),
+    
 ]

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from datetime import date
 
 from tenders.models import (
     TenderDetails, TenderCategory,
@@ -6,7 +7,7 @@ from tenders.models import (
 )
 
 from vendors.models import (
-    SavedTender
+    SavedTender, AppliedTender
 )
 
 from users.serializers import UserSerializer
@@ -66,7 +67,7 @@ class TendersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
             'created', 'deadline', 'is_applied', 'is_saved', 'user', 'vendor',
-            'status'
+            'status', 'address'
         ]
 
     def get_tender_category(self, obj):
@@ -109,11 +110,11 @@ class TendersSerializers(serializers.ModelSerializer):
         is_applied_record = False
         if 'user' in self.context:
             user = self.context['user']
-            # if user.is_authenticated:
-            #     is_applied_record = AppliedJob.objects.filter(
-            #         tender=obj,
-            #         user=user
-            #     ).exists()
+            if user.is_authenticated:
+                is_applied_record = AppliedTender.objects.filter(
+                    tender=obj,
+                    user=user
+                ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
@@ -127,7 +128,7 @@ class TendersSerializers(serializers.ModelSerializer):
         return is_saved_record
 
     def get_vendor(self, obj):
-        return 0
+        return AppliedTender.objects.filter(tender=obj).count()
 
     def get_sector(self, obj):
         """
@@ -259,6 +260,8 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     attachments = serializers.SerializerMethodField()
     sector = serializers.SerializerMethodField()
     tender_type = serializers.SerializerMethodField()
+    is_editable = serializers.SerializerMethodField()
+    application = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -266,7 +269,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'tender_id', 'budget_currency', 'budget_amount', 'description',
             'country', 'city', 'tag', 'tender_category', 'tender_type', 'sector', 'deadline',
             'start_date', 'status', 'user', 'attachments', 'created', 'vendor',
-            'is_applied', 'is_saved'
+            'is_applied', 'is_saved', 'is_editable', 'application', 'address'
 
         ]
 
@@ -379,17 +382,16 @@ class TendersDetailSerializers(serializers.ModelSerializer):
         return context
 
     def get_vendor(self, obj):
-        # return AppliedJob.objects.filter(tender=obj).count()
-        return 0
+        return AppliedTender.objects.filter(tender=obj).count()
 
     def get_is_applied(self, obj):
         is_applied_record = False
-        # if 'user' in self.context:
-        #     user = self.context['user']
-        #     is_applied_record = AppliedJob.objects.filter(
-        #         tender=obj,
-        #         user=user
-        #     ).exists()
+        if 'user' in self.context:
+            user = self.context['user']
+            is_applied_record = AppliedTender.objects.filter(
+                tender=obj,
+                user=user
+            ).exists()
         return is_applied_record
 
     def get_is_saved(self, obj):
@@ -451,6 +453,29 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             if get_data.data:
                 context = get_data.data[0]
         return context
+
+    def get_is_editable(self, obj):
+        is_editable_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            is_editable_record = AppliedTender.objects.filter(
+                tender=obj,
+                user=user,
+                shortlisted_at = None,
+                rejected_at = None,
+                created__date__gte = date.today()
+            ).exists()
+        return is_editable_record
+
+    def get_application(self, obj):
+        application_context = dict()
+        if 'user' in self.context:
+            user = self.context['user']
+            if AppliedTender.objects.filter(tender=obj, user=user).exists():
+                application = AppliedTender.objects.get(tender=obj, user=user)
+                application_context['id'] = application.id
+                application_context['created'] = application.created
+        return application_context
 
 
 class TenderFiltersSerializers(serializers.ModelSerializer):
@@ -648,3 +673,108 @@ class GetTenderFilterSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class TendersSuggestionSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the `TenderDetails` model.
+            
+    """
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = TenderDetails
+        fields = [
+            'id', 'title', 'budget_amount', 'budget_currency', 'country', 'city',
+            'created', 'address'
+        ] 
+    
+    def get_country(self, obj):
+        """Get the serialized country data for a TenderDetails object.
+
+        This method uses the CountrySerializer to serialize the country associated with a TenderDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A TenderDetails object whose country data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized country data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+        context = {}
+        if obj.country:
+            get_data = CountrySerializer(obj.country)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+    def get_city(self, obj):
+        """Get the serialized city data for a TenderDetails object.
+
+        This method uses the CitySerializer to serialize the city associated with a TenderDetails
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A TenderDetails object whose city data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized city data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.city:
+            get_data = CitySerializer(obj.city)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+
+class AppliedTenderSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the AppliedTender model.
+    """
+
+    user = serializers.SerializerMethodField()
+    tender = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedTender
+        fields = [
+            'id', 'shortlisted_at', 'rejected_at', 'created', 
+            'short_letter', 'user', 'tender'
+        ]
+
+    def get_user(self, obj):
+        """
+        Returns the serialized representation of the user related to the applied tender.
+
+        Parameters:
+            - obj: AppliedTender instance
+
+        Returns:
+            - Serialized representation of the user related to the applied tender.
+        """
+
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tender(self, obj):
+        """
+        Returns a dictionary with the ID and title of the tender related to the applied tender.
+
+        Parameters:
+            - obj: AppliedTender instance
+
+        Returns:
+            - Dictionary with the ID and title of the tender related to the applied tender.
+        """
+        
+        return {"id": obj.tender.id, "title": obj.tender.title}

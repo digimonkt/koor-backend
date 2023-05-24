@@ -1,5 +1,6 @@
 import io, csv, os, pathlib
 from datetime import datetime, date, timedelta
+from django.db.models import Exists, OuterRef
 
 from django.db.models import Q
 from django_filters import rest_framework as django_filters
@@ -32,7 +33,10 @@ from project_meta.models import (
 from tenders.models import TenderCategory, TenderDetails
 from tenders.filters import TenderDetailsFilter
 
-from .models import Content
+from .models import (
+    Content, ResourcesContent, SocialUrl,
+    AboutUs, FaqCategory, FAQ
+)
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
@@ -42,7 +46,10 @@ from .serializers import (
     JobSubCategorySerializers, OpportunityTypeSerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers,
-    ChoiceSerializers, TenderListSerializers
+    ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
+    CreateResourcesSerializers, SocialUrlSerializers,
+    AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
+    FAQSerializers, CreateFAQSerializers
 )
 
 
@@ -77,7 +84,6 @@ class CountryView(generics.ListAPIView):
             queryset = self.filter_queryset(self.get_queryset())
         else:
             queryset = self.filter_queryset(self.get_queryset().filter(~Q(project_meta_city_country=None)))
-        
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -103,6 +109,7 @@ class CountryView(generics.ListAPIView):
         """
 
         context = dict()
+        country_instance = None
         serializer = self.serializer_class(data=request.data)
         try:
             if self.request.user.is_staff:
@@ -112,9 +119,13 @@ class CountryView(generics.ListAPIView):
                     Country.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                is_removed=True).update(
                         is_removed=False)
+                    country_instance = Country.all_objects.get(title__iexact=serializer.validated_data['title'], is_removed=False)
+                    
                 else:
                     serializer.save()
                 context["data"] = serializer.data
+                if country_instance:
+                    context["data"]['id'] = str(country_instance.id)
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -241,9 +252,11 @@ class CityView(generics.ListAPIView):
                     City.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                             country__title=serializer.validated_data['country_name'], is_removed=True).update(
                         is_removed=False)
+                    city = City.objects.get(title__iexact=serializer.validated_data['title'],
+                                            country__title=serializer.validated_data['country_name'], is_removed=False)
                 else:
-                    serializer.save()
-                context["data"] = serializer.data
+                    city = serializer.save()
+                context["data"] = {'id': str(city.id), 'title': str(city.title), 'country': str(city.country.id)}
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -326,13 +339,16 @@ class JobCategoryView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = JobCategorySerializers
-    queryset = JobCategory.objects.all()
+    queryset = JobCategory.objects.annotate(has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id'))))
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset())
+        else:
+            queryset = self.filter_queryset(self.get_queryset().filter(has_subcategory=True))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -2215,6 +2231,53 @@ class TenderCategoryView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+    def put(self, request, tenderCategoryId):
+        """
+        Update an `TenderCategory` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `tenderCategoryId (int)`: The ID of the `TenderCategory` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `TenderCategory.DoesNotExist`: If the TenderCategory instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            tender_category_instance = TenderCategory.all_objects.get(id=tenderCategoryId)
+            serializer = self.serializer_class(data=request.data, instance=tender_category_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(tender_category_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except TenderCategory.DoesNotExist:
+            return response.Response(
+                data={"tenderCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
 
 def create_directory():
     """
@@ -3250,4 +3313,819 @@ class TenderRevertView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class ResourcesView(generics.ListAPIView):
+    """
+    A view for displaying a list of resources.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (ResourcesSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `ResourcesContent.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = ResourcesSerializers
+    queryset = ResourcesContent.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle POST request to create a new resource.
+        The request must contain valid data for the resource to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a resource.
+
+        Returns:
+            - HTTP 201 CREATED with a message "Resources added successfully" if the resource is created
+            successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = CreateResourcesSerializers(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if ResourcesContent.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                  is_removed=True).exists():
+                    ResourcesContent.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                   is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, resourcesId):
+        """
+        Deletes an Resources object with the given ID if the authenticated user is a staff and owns the
+        ResourcesContent.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the Resources to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                ResourcesContent.objects.get(id=resourcesId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except ResourcesContent.DoesNotExist:
+                return response.Response(
+                    data={"resourcesId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, resourcesId):
+        """
+        Update an `ResourcesContent` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `resourcesId (int)`: The ID of the `ResourcesContent` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `ResourcesContent.DoesNotExist`: If the ResourcesContent instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            resource_instance = ResourcesContent.all_objects.get(id=resourcesId)
+            serializer = CreateResourcesSerializers(data=request.data, instance=resource_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(resource_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except ResourcesContent.DoesNotExist:
+            return response.Response(
+                data={"resourcesId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class LinksView(generics.ListAPIView):
+    """
+    API view for retrieving a list of social URLs.
+
+    - Permissions: Allow any user to access this view.
+    - Serializer: SocialUrlSerializers
+    - Queryset: All SocialUrl objects.
+    - Filter backends: SearchFilter
+    - Search fields: ['platform']
+    - Pagination class: CustomPagination
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = SocialUrlSerializers
+    queryset = SocialUrl.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['platform']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Retrieve a paginated list of objects.
+
+        Args:
+            - request: The HTTP request object.
+
+        Returns:
+            Response object containing serialized data of the paginated list.
+        """
+    
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handles the HTTP POST request to create or update a social URL.
+
+        Args:
+            - request: The HTTP request object containing the data.
+
+        Returns:
+            - A response with the created or updated social URL data if successful.
+            - Otherwise, returns an error response with the appropriate status code.
+
+        Raises:
+            - serializers.ValidationError: If the serializer data is invalid.
+
+        Notes:
+            This function requires the user to be a staff member. If the user is not a staff member,
+            an unauthorized error response will be returned.
+        """
+
+        context = dict()
+        serializer = self.get_serializer(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if SocialUrl.all_objects.filter(platform=serializer.validated_data['platform'],
+                                                  is_removed=True).exists():
+                    SocialUrl.all_objects.filter(platform=serializer.validated_data['platform'],
+                                                 is_removed=True).update(is_removed=False)
+                    social_url_instance = SocialUrl.all_objects.get(
+                        platform=serializer.validated_data['platform'], is_removed=False
+                    )
+                    serializer.update(social_url_instance, serializer.validated_data)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, linkId):
+        """
+        Deletes a SocialUrl object with the specified linkId.
+
+        Args:
+            request: The HTTP request object.
+            linkId (int): The ID of the SocialUrl object to be deleted.
+
+        Returns:
+            A Response object with appropriate status and data:
+                - If the user is a staff member and the SocialUrl object exists, returns HTTP 200 OK
+                with a success message in the data field.
+                - If the user is a staff member and the SocialUrl object does not exist, returns HTTP 
+                404 NOT FOUND
+                with an error message in the data field.
+                - If any other exception occurs, returns HTTP 404 NOT FOUND with the exception message 
+                in the data field.
+                - If the user is not a staff member, returns HTTP 401 UNAUTHORIZED with an error message 
+                in the data field.
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                SocialUrl.objects.get(id=linkId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except SocialUrl.DoesNotExist:
+                return response.Response(
+                    data={"linkId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, linkId):
+        """
+        Handle HTTP PUT request to update a social URL instance.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - linkId (int): The ID of the social URL instance to update.
+
+        Returns:
+            - Response: HTTP response indicating the result of the update.
+
+        Raises:
+            - serializers.ValidationError: If the serializer is invalid.
+        """
+
+        context = dict()
+        try:
+            social_url_instance = SocialUrl.all_objects.get(id=linkId)
+            serializer = self.get_serializer(data=request.data, instance=social_url_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(social_url_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except SocialUrl.DoesNotExist:
+            return response.Response(
+                data={"linkId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class AboutUsView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AboutUsSerializers
+
+    def get(self, request):
+
+        response_context = dict()
+        try:
+            about_us_instance = AboutUs.objects.get(title="About Our Company")
+            get_data = self.serializer_class(about_us_instance)
+            response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except AboutUs.DoesNotExist:
+            return response.Response(
+                data={"description": None},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def patch(self, request):
+
+        context = dict()
+        if self.request.user.is_staff:
+
+            if AboutUs.objects.filter(title="About Our Company").exists():
+                instance = AboutUs.objects.get(title="About Our Company")
+            else:
+                if AboutUs.all_objects.filter(title="About Our Company", is_removed=True).exists():
+                    instance = AboutUs.all_objects.get(title="About Our Company", is_removed=True)
+                    instance.is_removed = False
+                else:
+                    instance = AboutUs.objects.create(title="About Our Company")
+                instance.save()
+            serializer = UpdateAboutUsSerializers(data=request.data, instance=instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class FaqCategoryView(generics.ListAPIView):
+    """
+    A view for displaying a list of FAQ categories.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (FaqCategorySerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `FaqCategory.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = FaqCategorySerializers
+    queryset = FaqCategory.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle POST request to create a new FAQ category.
+        The request must contain valid data for the FAQ category to be created.
+
+        Only users with `is_staff` attribute set to True are authorized to create a FAQ category.
+
+        Returns:
+            - HTTP 201 CREATED with a message "FaqCategory added successfully" if the FAQ category is created
+            successfully.
+            - HTTP 400 BAD REQUEST with error message if data validation fails.
+            - HTTP 401 UNAUTHORIZED with a message "You do not have permission to perform this action." if the user is
+            not authorized.
+
+        Raises:
+            Exception: If an unexpected error occurs during the request handling.
+        """
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if FaqCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                  is_removed=True).exists():
+                    FaqCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                   is_removed=True).update(
+                        is_removed=False)
+                else:
+                    serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, faqCategoryId):
+        """
+        Deletes an FaqCategory object with the given ID if the authenticated user is a staff and owns the
+        FaqCategory.
+        Args:
+            request: A DRF request object.
+            educationId: An integer representing the ID of the FaqCategory to be deleted.
+        Returns:
+            A DRF response object with a success or error message and appropriate status code.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                FaqCategory.objects.get(id=faqCategoryId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except FaqCategory.DoesNotExist:
+                return response.Response(
+                    data={"faqCategoryId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, faqCategoryId):
+        """
+        Update an `FaqCategory` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `faqCategoryId (int)`: The ID of the `FaqCategory` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `FaqCategory.DoesNotExist`: If the FaqCategory instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            faq_category_instance = FaqCategory.all_objects.get(id=faqCategoryId)
+            serializer = self.serializer_class(data=request.data, instance=faq_category_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(faq_category_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except FaqCategory.DoesNotExist:
+            return response.Response(
+                data={"faqCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class FaqView(generics.ListAPIView):
+    """
+    A view for displaying a list of frequently asked questions (FAQs).
+
+    Attributes:
+        - permission_classes ([permissions.AllowAny]): List of permission classes that the view requires. In this
+            case, the view allows access to any user, authenticated or not.
+
+        - serializer_class (FAQSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the FAQs. By default, it is set
+            to retrieve all FAQs using `FAQ.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+        - pagination_class (CustomPagination): The pagination class used for paginating the results.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = FAQSerializers
+    queryset = FAQ.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request, role, faqCategoryId):
+        """
+        Retrieve a paginated list of FAQ questions based on the provided role and FAQ category ID.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - role (str): The role associated with the FAQ questions to retrieve.
+            - faqCategoryId (int): The ID of the FAQ category to filter the questions.
+
+        Returns:
+            - Response: A paginated response containing the serialized FAQ question data.
+
+        Raises:
+            N/A
+
+        """
+    
+        queryset = self.filter_queryset(self.get_queryset().filter(role=role, category_id=faqCategoryId))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handle the HTTP POST request to create a new FAQ.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            Response: A response object indicating the status and data.
+
+        Raises:
+            ValidationError: If the data provided in the request is not valid.
+
+        Permissions:
+            - Staff members: Allowed to create or update an FAQ.
+            - Non-staff members: Unauthorized to perform the action.
+
+        Logic:
+            - If the user is a staff member:
+                - Validate the serializer data.
+                - If an FAQ with the same question (case-insensitive) and is_removed=True exists:
+                    - Set is_removed=False for the existing FAQ.
+                    - Get the updated FAQ instance.
+                    - Update the serializer data with the updated FAQ instance.
+                - Otherwise, save the serializer data with the current user.
+                - Return a response with the serialized data and HTTP status 201 (Created).
+            - If the user is not a staff member:
+                - Return an unauthorized response with an appropriate message.
+            - If a ValidationError occurs during data validation:
+                - Return a response with the validation errors and HTTP status 400 (Bad Request).
+            - If any other exception occurs:
+                - Return a response with the exception message and HTTP status 400 (Bad Request).
+        """
+
+        context = dict()
+        serializer = CreateFAQSerializers(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                if FAQ.all_objects.filter(question__iexact=serializer.validated_data['question'],
+                                                  is_removed=True).exists():
+                    FAQ.all_objects.filter(question__iexact=serializer.validated_data['question'],
+                                                   is_removed=True).update(
+                        is_removed=False)
+                    faq_instance = FAQ.all_objects.get(question__iexact=serializer.validated_data['question'],
+                                                       is_removed=False)
+                    serializer.update(faq_instance, serializer.validated_data)
+                else:
+                    serializer.save(user=request.user)
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, faqId):
+        """
+        Deletes a FAQ object with the specified ID.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            faqId (int): The ID of the FAQ object to be deleted.
+
+        Returns:
+            Response: The HTTP response indicating the result of the delete operation.
+
+        Raises:
+            FAQ.DoesNotExist: If the FAQ object with the given ID does not exist.
+            Exception: If an unexpected exception occurs during the delete operation.
+
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                FAQ.objects.get(id=faqId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except FAQ.DoesNotExist:
+                return response.Response(
+                    data={"faqId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, faqId):
+        """
+        Handle the HTTP PUT request to update a FAQ instance.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            faqId (int): The ID of the FAQ instance to be updated.
+
+        Returns:
+            Response: An HTTP response indicating the result of the update.
+
+        Raises:
+            serializers.ValidationError: If the provided data is invalid.
+            FAQ.DoesNotExist: If the FAQ instance with the given ID does not exist.
+
+        """
+
+        context = dict()
+        try:
+            faq_instance = FAQ.all_objects.get(id=faqId)
+            serializer = CreateFAQSerializers(data=request.data, instance=faq_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(faq_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except FAQ.DoesNotExist:
+            return response.Response(
+                data={"faqCategoryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
