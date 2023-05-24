@@ -612,10 +612,10 @@ class SocialLoginView(generics.GenericAPIView):
                 elif user.role == "vendor":
                     VendorProfile.objects.create(user=user)
             if user.role != serializer.validated_data['role']:
-                context["message"] = "Email registered with wrong role."
+                context["message"] = "Email already registered with another role."
+                context["role"] = user.role
                 return response.Response(
                     data=context,
-                    headers={"x-access": token.access_token, "x-refresh": token},
                     status=status.HTTP_404_NOT_FOUND
                 )
             user_session = create_user_session(request, user)
