@@ -16,4 +16,6 @@ urlpatterns = [
     path('tenders', include('tenders.urls')),
 
     path('admin', include('superadmin.urls')),
+    
+    path('chat', include('chat.urls')),
 ]
