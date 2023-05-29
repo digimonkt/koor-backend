@@ -565,6 +565,8 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
         fields = (
             'description',
             'organization_type',
+            'market_information_notification',
+            'other_notification',
             'license_id',
             'license_id_file',
             'description',
