@@ -86,22 +86,28 @@ class ChatConsumer(BaseConsumer):
             self.conversation_id = self.scope['query_string'].decode().split('conversation_id=')[1]
         elif 'user_id' in chat_url:
             user_id = self.scope['query_string'].decode().split('user_id=')[1]
-            conversation = Conversation.objects.create()
             user_instance = User.objects.get(id=user_id)
-            print(user_instance, 'user_instance')
-            print(self.scope["user"], 'self.scope["user"]')
-            conversation.chat_user.add(self.scope["user"], user_instance)
-            conversation.save()
-            self.conversation_id = conversation.id
+            user_list = [self.scope["user"], user_instance]
+            if Conversation.objects.filter(chat_user__in=user_list).exists():
+                conversations = Conversation.objects.filter(chat_user__in=user_list)
+                for conversation in conversations:
+                    self.conversation_id = conversation.id
+                    self.conversation = conversation
+            else:
+                conversation = Conversation.objects.create()
+                conversation.chat_user.add(self.scope["user"], user_instance)
+                conversation.save()
+                self.conversation_id = conversation.id
+                self.conversation = conversation
         # self.conversation = self.get_conversation(self.conversation_id)
         # Assuming you have a list of ModelB instances you want to filter by
 
-        # model_b_list = [model_b1, model_b2]
+        # user_list = [model_b1, model_b2]
 
         # # Retrieve instances of ModelA that are related to the specified ModelB instances
-        # model_a_queryset = ModelA.objects.filter(m2m_field__in=model_b_list)
+        # model_a_queryset = ModelA.objects.filter(chat_user__in=user_list)
 
-        # self.conversation_group_name = f'chat_{self.conversation.id}'
+        self.conversation_group_name = f'chat_{self.conversation.id}'
         # if self.scope["user"] == AnonymousUser():
         #     self.authenticate()
         user = self.scope["user"]
