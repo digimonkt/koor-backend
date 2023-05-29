@@ -18,6 +18,7 @@ urlpatterns = [
     path('/filter/<str:filterId>', TenderFilterView.as_view(), name="tender_filter"),
     
     path('/applications-detail/<str:applicationId>', ApplicationsDetailView.as_view(), name="applications_detail"),
+    path('/applications-detail/<str:applicationId>/<str:action>', ApplicationsDetailView.as_view(), name="applications_detail"),
     
     path('/<str:tenderId>', TenderDetailView.as_view(), name="tender_detail"),
     path('/<str:tenderId>/applications', TenderApplicationsView.as_view(), name="tender_applications"),
