@@ -43,6 +43,7 @@ class BaseConsumer(JsonWebsocketConsumer):
                 access_token = token.replace('Bearer ', '')
                 validated_token = self.decode_token(access_token)
                 get_session = self.get_session(validated_token)
+                print(get_session, 'get_session')
                 if get_session.user.is_verified:
                     self.scope["user"] = get_session.user
                 else:
@@ -56,16 +57,18 @@ class BaseConsumer(JsonWebsocketConsumer):
             )
 
     def get_user(self):
-        return User.objects.get(id='c05dc8d0-f96f-4e37-9fc6-742f3c809c61')
-        # return self.scope["user"]
+        # return User.objects.get(id='c05dc8d0-f96f-4e37-9fc6-742f3c809c61')
+        return self.scope["user"]
 
     def get_user_instance(self, **kwargs):
-        return User.objects.get(id='c05dc8d0-f96f-4e37-9fc6-742f3c809c61')
-        # return get_user_model().objects.get(**kwargs)
+        # return User.objects.get(id='c05dc8d0-f96f-4e37-9fc6-742f3c809c61')
+        return get_user_model().objects.get(**kwargs)
 
     def get_conversation(self, conversation_id):
         conversation, created = Conversation.objects.get_or_create(id=conversation_id)
         if created:
+            chat_user = self.get_user_instance(agent_id=conversation_id)
+            self.add_participants(conversation, chat_user)
             # add the user to the conversation
             pass
         return conversation
@@ -74,11 +77,33 @@ class BaseConsumer(JsonWebsocketConsumer):
 class ChatConsumer(BaseConsumer):
 
     def connect(self):
-        self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
-        self.conversation = self.get_conversation(self.conversation_id)
-        self.conversation_group_name = f'chat_{self.conversation.id}'
+        # self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
         if self.scope["user"] == AnonymousUser():
             self.authenticate()
+        user = self.scope["user"]
+        chat_url = self.scope['query_string'].decode()
+        if 'conversation_id' in chat_url:
+            self.conversation_id = self.scope['query_string'].decode().split('conversation_id=')[1]
+        elif 'user_id' in chat_url:
+            user_id = self.scope['query_string'].decode().split('user_id=')[1]
+            conversation = Conversation.objects.create()
+            user_instance = User.objects.get(id=user_id)
+            print(user_instance, 'user_instance')
+            print(self.scope["user"], 'self.scope["user"]')
+            conversation.chat_user.add(self.scope["user"], user_instance)
+            conversation.save()
+            self.conversation_id = conversation.id
+        # self.conversation = self.get_conversation(self.conversation_id)
+        # Assuming you have a list of ModelB instances you want to filter by
+
+        # model_b_list = [model_b1, model_b2]
+
+        # # Retrieve instances of ModelA that are related to the specified ModelB instances
+        # model_a_queryset = ModelA.objects.filter(m2m_field__in=model_b_list)
+
+        # self.conversation_group_name = f'chat_{self.conversation.id}'
+        # if self.scope["user"] == AnonymousUser():
+        #     self.authenticate()
         user = self.scope["user"]
         # if user.is_anonymous:
         #     pass

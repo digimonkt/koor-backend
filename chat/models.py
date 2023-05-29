@@ -15,36 +15,13 @@ from users.models import (
 
 
 class Conversation(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
-    """
-    The Conversation model represents a conversation between two or more users.
 
-    Attributes:
-        - last_message (ForeignKey): A foreign key that references the last message in the conversation. This field
-            is nullable, meaning that it can be empty, and is set to null when the last message is deleted.
-
-    Meta:
-        - verbose_name (str): A human-readable name for the model used in the Django admin interface.
-        - verbose_name_plural (str): A human-readable plural name for the model used in the Django admin interface.
-        - db_table (str): The name of the database table that stores the model's data.
-        - ordering (list): A list of field names used to order the Conversation objects in ascending or descending
-            order of creation time. In this case, the Conversation objects will be ordered in descending order of creation time.
-
-    Inheritance:
-        The Conversation model inherits from the following four models:
-
-        - BaseModel: Provides fields like id, created_at, updated_at.
-        - SoftDeleteModel: Provides a field named is_deleted, which is a flag indicating whether the object
-            has been soft-deleted.
-        - TimeStampedModel: Provides fields named created and modified, which are set to the date and time the
-            object was created and last modified, respectively.
-        - models.Model: The base class for Django models.
-
-    Usage:
-        The Conversation model can be used to store information about conversations between users in a chat
-        application. You can retrieve and manipulate the data using the Django ORM or the Django admin interface.
-
-    """
-
+    chat_user = models.ManyToManyField(
+        User,
+        verbose_name=_('User'),
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
     last_message = models.ForeignKey(
         to="chat.ChatMessage",
         verbose_name=_("Last Message"),
@@ -58,59 +35,6 @@ class Conversation(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Conversation"
         verbose_name_plural = "Conversations"
         db_table = "Conversation"
-        ordering = ['-created']
-
-
-class ConversationUser(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
-    """
-    The ConversationUser model represents the relationship between a user and a conversation in a chat application.
-
-    Attributes:
-        - user (ForeignKey): A foreign key that references the user who is a participant in the conversation.
-        - conversation (ForeignKey): A foreign key that references the conversation in which the user is participating.
-
-    Meta:
-        - verbose_name (str): A human-readable name for the model used in the Django admin interface.
-        - verbose_name_plural (str): A human-readable plural name for the model used in the Django admin interface.
-        - db_table (str): The name of the database table that stores the model's data.
-        - ordering (list): A list of field names used to order the ConversationUser objects in ascending or
-            descending order of creation time. In this case, the ConversationUser objects will be ordered in
-            descending order of creation time.
-
-    Inheritance:
-        The ConversationUser model inherits from the following four models:
-        - BaseModel: Provides fields like id, created_at, updated_at.
-        - SoftDeleteModel: Provides a field named is_deleted, which is a flag indicating whether the object has
-            been soft-deleted.
-        - TimeStampedModel: Provides fields named created and modified, which are set to the date and time the object
-            was created and last modified, respectively.
-        - models.Model: The base class for Django models.
-
-    Usage:
-        The ConversationUser model can be used to represent the relationship between a user and a conversation in a
-        chat application. You can retrieve and manipulate the data using the Django ORM or the Django admin interface.
-
-    """
-
-    user = models.ForeignKey(
-        User,
-        verbose_name=_('User'),
-        on_delete=models.CASCADE,
-        db_column="user",
-        related_name='%(app_label)s_%(class)s_user'
-    )
-    conversation = models.OneToOneField(
-        Conversation,
-        verbose_name=_('Conversation'),
-        on_delete=models.CASCADE,
-        db_column="conversation",
-        related_name='%(app_label)s_%(class)s_conversations'
-    )
-
-    class Meta:
-        verbose_name = "Conversation User"
-        verbose_name_plural = "Conversation Users"
-        db_table = "ConversationUser"
         ordering = ['-created']
 
 
