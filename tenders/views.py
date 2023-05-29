@@ -560,3 +560,70 @@ class TenderApplicationsView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class RecentApplicationsView(generics.ListAPIView):
+    """
+    A view class that returns a list of AppliedTender instances.
+
+    Attributes:
+            - `serializer_class`: A serializer class used to serialize the AppliedTender instances.
+            - `permission_classes`: A list of permission classes that a user must pass in order to access the view.
+            - `queryset`: A QuerySet instance representing the list of AppliedTender instances. The queryset is not
+                defined in the class, but it can be defined dynamically in the dispatch method.
+            - `filter_backends`: A list of filter backend classes used to filter the queryset.
+            - `search_fields`: A list of fields on which the search filtering is applied.
+            - `pagination_class`: A pagination class that is used to paginate the result set.
+
+    """
+    serializer_class = AppliedTenderSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['tender__title', 'user__email', 'user__name']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                queryset = self.filter_queryset(self.get_queryset())
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True, context={"request": request})
+                    return self.get_paginated_response(serializer.data)
+                serializer = self.get_serializer(queryset, many=True, context={"request": request})
+                return response.Response(serializer.data)
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `AppliedTender instances`. It filters the queryset based on the `employer jobs`
+        provided in the `request query parameters`.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of AppliedTender instances.
+
+        """
+        tender_data = TenderDetails.objects.filter(user=self.request.user.id)
+        return AppliedTender.objects.filter(tender__in=tender_data)
+
