@@ -724,3 +724,43 @@ class VendorSectorSerializers(serializers.ModelSerializer):
             for remove in sector_remove:
                 VendorSector.objects.filter(id=remove).delete()
         return sector_add
+
+
+class VendorTagSerializers(serializers.ModelSerializer):
+    """
+    Serializes and validates the 'VendorTag' model with the specified fields.
+
+    Attributes:
+        tag_add (List): A list of tags to add.
+        tag_remove (List): A list of tags to remove.
+
+    Meta:
+        model (class): The model class to be serialized.
+        fields (list): The fields to be included in the serialization.
+
+    Methods:
+        validate(self, data): Validates the input data and performs tag removal if necessary.
+    """
+
+    tag_add = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+    tag_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = VendorTag
+        fields = ['id', 'tag_remove', 'tag_add']
+
+    def validate(self, data):
+        tag_add = data.get("tag_add")
+        tag_remove = data.get("tag_remove")
+        if tag_remove:
+            for remove in tag_remove:
+                VendorTag.objects.filter(id=remove).delete()
+        return tag_add
