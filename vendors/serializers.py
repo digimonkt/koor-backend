@@ -17,7 +17,7 @@ from notification.models import Notification
 
 from .models import (
     SavedTender, AppliedTenderAttachmentsItem, AppliedTender,
-    VendorSector
+    VendorSector, VendorTag
 )
 
 
