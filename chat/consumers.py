@@ -88,8 +88,8 @@ class ChatConsumer(BaseConsumer):
             user_id = self.scope['query_string'].decode().split('user_id=')[1]
             user_instance = User.objects.get(id=user_id)
             user_list = [self.scope["user"], user_instance]
-            if Conversation.objects.filter(chat_user__in=user_list).exists():
-                conversations = Conversation.objects.filter(chat_user__in=user_list)
+            if Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).exists():
+                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance)
                 for conversation in conversations:
                     self.conversation_id = conversation.id
                     self.conversation = conversation
@@ -193,3 +193,34 @@ class ChatConsumer(BaseConsumer):
         #     chat_message.message_attachment = media
         #     chat_message.save()
         return chat_message
+
+
+class ChatActivityConsumer(BaseConsumer):
+    def connect(self):
+        self.chat_group_name = 'chat_activity'
+        if self.scope["user"] == AnonymousUser():
+            self.authenticate()
+        user = self.scope["user"]
+        if user == AnonymousUser():
+            self.close()
+        else:
+            async_to_sync(self.channel_layer.group_add)(
+                self.chat_group_name,
+                self.channel_name
+            )
+            self.accept()
+    
+    def disconnect(self, close_code):
+        self.channel_layer.group_discard(
+            self.chat_group_name,
+            self.channel_name
+        )
+
+    def change_status(self, event):
+        user_instance = self.get_user_instance(id=event["user_id"])
+        user_instance.online_status = event["status"]
+        user_instance.save()
+        self.send_json(content=event)
+
+    def update_conversation(self, event):
+        self.send_json(content=event)
