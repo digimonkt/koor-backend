@@ -8,6 +8,7 @@ from rest_framework import (
     response, permissions, filters
 )
 
+from core.emails import get_email_object
 from core.pagination import CustomPagination
 
 from tenders.models import TenderDetails, TenderFilter
@@ -21,6 +22,9 @@ from tenders.serializers import (
 
 from vendors.serializers import GetAppliedTenderApplicationSerializers
 from vendors.models import AppliedTender
+
+from notification.models import Notification
+from employers.models import BlackList
 
 
 class TenderSearchView(generics.ListAPIView):
