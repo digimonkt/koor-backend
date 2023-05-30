@@ -29,18 +29,17 @@ class ChatView(View):
         # return redirect('chat:chat_room', room_name="str(conversation.id)")
         return redirect('chat:chat_room', room_name=str("e9dfd38e-d61d-4b8e-93c9-0c197e2b17ee"))
 
-
+# -----------------------------------
 class ConversationListView(generics.ListAPIView):
-    queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    pagination_class = LinkPagination
-    renderer_classes = [renderers.JSONRenderer, ]
-    authentication_classes = [authentication.SessionAuthentication, JWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+    queryset = Conversation.objects.all()
+    pagination_class = CustomPagination
 
     def list(self, request, *args, **kwargs):
+        context = dict()
         queryset = self.get_queryset()
         filtered_queryset = self.filter_queryset(queryset)
-
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -48,6 +47,9 @@ class ConversationListView(generics.ListAPIView):
 
         serializer = self.get_serializer(filtered_queryset, many=True)
         return response.Response(serializer.data)
+
+# -----------------------------------
+
 
 
 class ChatRoomView(DetailView):

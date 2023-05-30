@@ -3,7 +3,10 @@ from rest_framework import serializers
 # from core.serializers import MediaSerializer, Media
 from .models import ChatMessage, Conversation
 
+from users.serializers import UserSerializer
+
 from project_meta.models import Media
+
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
@@ -59,19 +62,18 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 class ConversationSerializer(serializers.ModelSerializer):
     # chat_user = ConversationParticipantSerializer()
-    # members = ConversationParticipantSerializer(many=True, read_only=True)
+    chat_user = UserSerializer(many=True, read_only=True)
     last_message = ChatMessageSerializer()
-    unread_counts = serializers.SerializerMethodField()
 
     class Meta:
         model = Conversation
         fields = [
-            'id', 'last_message', 'unread_counts',
+            'id', 'last_message', 'chat_user',
         ]
 
-    def get_unread_counts(self, obj):
-        # user = self.context["request"].user
-        return 0
+    # def get_unread_counts(self, obj):
+    #     # user = self.context["request"].user
+    #     return 0
 
 # class ChatMetaSerializer(serializers.ModelSerializer):
 #     unread_counts = serializers.SerializerMethodField()
