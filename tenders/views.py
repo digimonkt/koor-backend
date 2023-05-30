@@ -498,7 +498,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             application_status.shortlisted_at = datetime.now()
                             application_status.save()
                             Notification.objects.create(
-                                user=application_status.user, application=application_status,
+                                user=application_status.user, tender_application=application_status,
                                 notification_type='shortlisted', created_by=request.user
                             )
                             if application_status.user.email:
