@@ -28,6 +28,7 @@ class ChatView(View):
         # return redirect('chat:chat_room', room_name="str(conversation.id)")
         return redirect('chat:chat_room', room_name=str("e9dfd38e-d61d-4b8e-93c9-0c197e2b17ee"))
 
+
 # -----------------------------------
 class ConversationListView(generics.ListAPIView):
     serializer_class = ConversationSerializer
@@ -47,8 +48,8 @@ class ConversationListView(generics.ListAPIView):
         serializer = self.get_serializer(filtered_queryset, many=True)
         return response.Response(serializer.data)
 
-# -----------------------------------
 
+# -----------------------------------
 
 
 class ChatRoomView(DetailView):
@@ -100,7 +101,6 @@ class ChatHistory(generics.ListAPIView):
 
 
 class Attachment(generics.GenericAPIView):
-
     serializer_class = UploadAttachmentSerializers
     permission_classes = [permissions.AllowAny]
 
@@ -121,4 +121,3 @@ class Attachment(generics.GenericAPIView):
                 data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
-   

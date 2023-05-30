@@ -4,6 +4,7 @@ import jwt
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 
 from koor.config.common import Common
@@ -75,6 +76,12 @@ class BaseConsumer(JsonWebsocketConsumer):
 
 class ChatConsumer(BaseConsumer):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.conversation_group_name = None
+        self.conversation = None
+        self.conversation_id = None
+
     def connect(self):
         # self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
         if self.scope["user"] == AnonymousUser():
@@ -87,8 +94,13 @@ class ChatConsumer(BaseConsumer):
             user_id = self.scope['query_string'].decode().split('user_id=')[1]
             user_instance = User.objects.get(id=user_id)
             user_list = [self.scope["user"], user_instance]
+            if Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
+                    is_removed=True).exists():
+                Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
+                    is_removed=True).update(is_removed=False)
             if Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).exists():
-                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance)
+                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
+                    chat_user=user_instance)
                 for conversation in conversations:
                     self.conversation_id = conversation.id
                     self.conversation = conversation
@@ -193,6 +205,10 @@ class ChatConsumer(BaseConsumer):
 
 
 class ChatActivityConsumer(BaseConsumer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.chat_group_name = None
+
     def connect(self):
         # self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
         self.chat_group_name = 'chat_activity'
@@ -207,7 +223,8 @@ class ChatActivityConsumer(BaseConsumer):
         #     user_instance = User.objects.get(id=user_id)
         #     user_list = [self.scope["user"], user_instance]
         #     if Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).exists():
-        #         conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance)
+        #         conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
+        #         chat_user=user_instance)
         #         for conversation in conversations:
         #             self.conversation_id = conversation.id
         #             self.conversation = conversation

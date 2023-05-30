@@ -15,6 +15,20 @@ from users.models import (
 
 
 class Conversation(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Represents a conversation between multiple users.
+
+    Attributes:
+        - `chat_user (ManyToManyField)`: A many-to-many relationship field that represents the users participating in
+            the conversation.
+        - `last_message (ForeignKey)`: A foreign key field that refers to the last message sent in the conversation.
+
+    Meta:
+        - `verbose_name (str)`: The human-readable name for a single instance of the model.
+        - `verbose_name_plural (str)`: The human-readable name for the model in plural form.
+        - `db_table (str)`: The name of the database table associated with the model.
+        - `ordering (list)`: The default ordering for querysets of this model.
+    """
 
     chat_user = models.ManyToManyField(
         User,

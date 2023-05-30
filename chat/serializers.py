@@ -6,7 +6,6 @@ from employers.models import BlackList
 from project_meta.models import Media
 
 
-
 class ChatMessageSerializer(serializers.ModelSerializer):
     # message_attachment = MediaSerializer()
     # chat_user = serializers.SerializerMethodField()
@@ -49,7 +48,6 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
 
 class ChatUserSerializer(serializers.ModelSerializer):
-
     image = serializers.SerializerMethodField()
     is_blacklisted = serializers.SerializerMethodField()
 
@@ -82,6 +80,7 @@ class ChatUserSerializer(serializers.ModelSerializer):
         ).exists()
         return is_blacklisted_record
 
+
 class ConversationSerializer(serializers.ModelSerializer):
     # chat_user = ConversationParticipantSerializer()
     chat_user = ChatUserSerializer(many=True, read_only=True)
@@ -97,6 +96,7 @@ class ConversationSerializer(serializers.ModelSerializer):
     #     # user = self.context["request"].user
     #     return 0
 
+
 # class ChatMetaSerializer(serializers.ModelSerializer):
 #     unread_counts = serializers.SerializerMethodField()
 #     class Meta:
@@ -109,7 +109,6 @@ class ConversationSerializer(serializers.ModelSerializer):
 
 
 class UploadAttachmentSerializers(serializers.ModelSerializer):
-
     attachment = serializers.FileField(
         style={"input_type": "file"},
         write_only=True,
@@ -124,13 +123,14 @@ class UploadAttachmentSerializers(serializers.ModelSerializer):
         media_instance = None
         if 'attachment' in self.validated_data:
             # Get media type from upload license file
-            content_type = str(validated_data['attachment'].content_type).split("/")
+            content_type = str(self.validated_data['attachment'].content_type).split("/")
             if content_type[0] not in ["video", "image"]:
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(title=validated_data['attachment'].name, file_path=validated_data['attachment'],
+            media_instance = Media(title=self.validated_data['attachment'].name,
+                                   file_path=self.validated_data['attachment'],
                                    media_type=media_type)
             media_instance.save()
         return media_instance
