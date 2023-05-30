@@ -9,7 +9,7 @@ from django.contrib.auth.models import AnonymousUser
 from koor.config.common import Common
 from users.models import UserSession, User
 from .models import Conversation, ChatMessage
-from .serializers import ChatMessageSerializer
+from .serializers import ChatMessageSerializer, ConversationSerializer
 
 # Get JWT secret key
 SECRET_KEY = settings.SECRET_KEY
@@ -43,7 +43,6 @@ class BaseConsumer(JsonWebsocketConsumer):
                 access_token = token.replace('Bearer ', '')
                 validated_token = self.decode_token(access_token)
                 get_session = self.get_session(validated_token)
-                print(get_session, 'get_session')
                 if get_session.user.is_verified:
                     self.scope["user"] = get_session.user
                 else:
@@ -145,9 +144,6 @@ class ChatConsumer(BaseConsumer):
         # else:
         # Create the chat message object
         chat_message = self.create_chat_message(content)
-        print(chat_message, "chat message")
-
-        print("ChatMessageSerializer", ChatMessageSerializer(chat_message).data)
         # chat_message = ChatMessage.objects.get(id=chat_message)
         # if chat_message:
         #     chat_message.mark_as_read(self.get_user())
@@ -173,7 +169,8 @@ class ChatConsumer(BaseConsumer):
             "chat_activity",
             {
                 "type": "update_conversation",
-                "content": event["content"],
+                # "content": event["content"],
+                "content": ConversationSerializer(Conversation.objects.all(), many=True).data,
                 "sender_channel_name": self.channel_name,
             }
         )
@@ -197,18 +194,50 @@ class ChatConsumer(BaseConsumer):
 
 class ChatActivityConsumer(BaseConsumer):
     def connect(self):
+        # self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
         self.chat_group_name = 'chat_activity'
         if self.scope["user"] == AnonymousUser():
             self.authenticate()
         user = self.scope["user"]
-        if user == AnonymousUser():
-            self.close()
-        else:
-            async_to_sync(self.channel_layer.group_add)(
-                self.chat_group_name,
-                self.channel_name
-            )
-            self.accept()
+        # chat_url = self.scope['query_string'].decode()
+        # if 'conversation_id' in chat_url:
+        #     self.conversation_id = self.scope['query_string'].decode().split('conversation_id=')[1]
+        # elif 'user_id' in chat_url:
+        #     user_id = self.scope['query_string'].decode().split('user_id=')[1]
+        #     user_instance = User.objects.get(id=user_id)
+        #     user_list = [self.scope["user"], user_instance]
+        #     if Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).exists():
+        #         conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance)
+        #         for conversation in conversations:
+        #             self.conversation_id = conversation.id
+        #             self.conversation = conversation
+        #     else:
+        #         conversation = Conversation.objects.create()
+        #         conversation.chat_user.add(self.scope["user"], user_instance)
+        #         conversation.save()
+        #         self.conversation_id = conversation.id
+        #         self.conversation = conversation
+        # self.conversation = self.get_conversation(self.conversation_id)
+        # Assuming you have a list of ModelB instances you want to filter by
+
+        # user_list = [model_b1, model_b2]
+
+        # # Retrieve instances of ModelA that are related to the specified ModelB instances
+        # model_a_queryset = ModelA.objects.filter(chat_user__in=user_list)
+
+        # self.conversation_group_name = f'chat_{self.conversation.id}'
+        # if self.scope["user"] == AnonymousUser():
+        #     self.authenticate()
+        user = self.scope["user"]
+        # if user.is_anonymous:
+        #     pass
+        #     # self.close()
+        # else:
+        async_to_sync(self.channel_layer.group_add)(
+            self.chat_group_name,
+            self.channel_name
+        )
+        self.accept()
     
     def disconnect(self, close_code):
         self.channel_layer.group_discard(

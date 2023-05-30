@@ -35,7 +35,7 @@ class Conversation(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name = "Conversation"
         verbose_name_plural = "Conversations"
         db_table = "Conversation"
-        ordering = ['-created']
+        ordering = ['-modified']
 
 
 class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -140,9 +140,6 @@ def update_last_message(sender, instance, created, **kwargs):
     """
     
     if created:
-        print(instance.conversation, "test data")
         conversation = instance.conversation
-        print(conversation , "conversation")
         conversation.last_message = instance
-        print("last message")
         conversation.save()

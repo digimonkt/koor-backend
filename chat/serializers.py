@@ -2,9 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 # from core.serializers import MediaSerializer, Media
 from .models import ChatMessage, Conversation
-
-from users.serializers import UserSerializer
-
+from employers.models import BlackList
 from project_meta.models import Media
 
 
@@ -42,27 +40,51 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     def get_conversation(self, obj):
         conversation = dict()
-        print("I am here")
-
         conversation['id'] = str(obj.conversation.id)
-        conversation['last_message'] = str(obj.conversation.last_message.id)
+        conversation['last_message'] = str(obj.conversation.last_message.message)
         return conversation
 
     # def get_chat_user(self, obj):
     #     return ConversationParticipantSerializer(obj.conversation.chat_user).data
 
 
-# class ConversationParticipantSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = get_user_model()
-#         fields = [
-#             'id',
-#             'agent_id', 'online_status', 'full_name',
-#         ]
+class ChatUserSerializer(serializers.ModelSerializer):
+
+    image = serializers.SerializerMethodField()
+    is_blacklisted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'id',
+            'name',
+            'image',
+            'is_blacklisted'
+        )
+
+    def get_image(self, obj):
+        context = {}
+        if obj.image:
+            context['id'] = str(obj.image.id)
+            context['title'] = obj.image.title
+            if obj.image.title == "profile image":
+                context['path'] = str(obj.image.file_path)
+            else:
+                context['path'] = obj.image.file_path.url
+            context['type'] = obj.image.media_type
+            return context
+        return None
+
+    def get_is_blacklisted(self, obj):
+        is_blacklisted_record = False
+        is_blacklisted_record = BlackList.objects.filter(
+            blacklisted_user=obj
+        ).exists()
+        return is_blacklisted_record
 
 class ConversationSerializer(serializers.ModelSerializer):
     # chat_user = ConversationParticipantSerializer()
-    chat_user = UserSerializer(many=True, read_only=True)
+    chat_user = ChatUserSerializer(many=True, read_only=True)
     last_message = ChatMessageSerializer()
 
     class Meta:

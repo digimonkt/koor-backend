@@ -24,7 +24,6 @@ class ChatView(View):
     template_name = 'chat/base.html'
 
     def get(self, request, *args, **kwargs):
-        print(request)
         # conversation = request.user.conversation_participants.last()
         # return redirect('chat:chat_room', room_name="str(conversation.id)")
         return redirect('chat:chat_room', room_name=str("e9dfd38e-d61d-4b8e-93c9-0c197e2b17ee"))
@@ -63,7 +62,6 @@ class ChatRoomView(DetailView):
         if queryset is None:
             queryset = self.get_queryset()
         queryset = queryset.filter(id=self.kwargs['room_name'])
-        print(queryset, "queryset_value")
         obj = queryset.get()
         return obj
 
@@ -89,7 +87,6 @@ class ChatHistory(generics.ListAPIView):
         # try:
         #     conversation = Conversation.objects.get(id=agent_id)
         #     chat_messages = qs.filter(conversation=conversation)
-        #     print(chat_messages, "messages")
         #     # conversation.mark_messages_as_read(request.user)
 
         # except Conversation.DoesNotExist:
@@ -114,7 +111,6 @@ class Attachment(generics.GenericAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            print(serializer.data)         
             response_context["message"] = "User Created Successfully"
             return response.Response(
                 data=response_context,
