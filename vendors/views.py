@@ -12,11 +12,14 @@ from user_profile.models import VendorProfile
 
 from tenders.models import TenderDetails
 
-from .models import SavedTender, AppliedTender
+from .models import (
+    SavedTender, AppliedTender, VendorSector
+)
 from .serializers import (
     UpdateAboutSerializers, SavedTenderSerializers,
     GetSavedTenderSerializers, GetAppliedTenderSerializers,
-    AppliedTenderSerializers, UpdateAppliedTenderSerializers
+    AppliedTenderSerializers, UpdateAppliedTenderSerializers,
+    VendorSectorSerializers
 )
 
 
@@ -565,3 +568,76 @@ class TenderApplyView(generics.ListAPIView):
             user=self.request.user,
             tender__is_removed=False
         )
+
+
+class SectorView(generics.GenericAPIView):
+    """
+    A class-based view for handling vendor sectors.
+
+    This class extends the `generics.GenericAPIView` class and provides functionality for managing vendor sectors.
+    It requires authentication for accessing its endpoints and uses the `VendorSectorSerializers` serializer class.
+
+    Attributes:
+        permission_classes (list): A list of permission classes applied to this view. Requires authentication.
+        serializer_class (class): The serializer class used for validating and deserializing input data.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = VendorSectorSerializers
+
+    def post(self, request):
+        """
+        Handles the POST request to add sectors for a vendor.
+
+        Parameters:
+        - request (HttpRequest): The HTTP request object containing the user and data.
+
+        Returns:
+        - Response: The API response indicating the success or failure of the sector addition.
+
+        Raises:
+        - ValidationError: If the data in the request is not valid.
+
+        Description:
+        - This function is used to add sectors for a vendor. It expects the user to have the "vendor" role.
+        - It validates the data received in the request against the serializer class.
+        - If the data is valid, it checks if the vendor already has a sector with the given sector_id.
+        - If not, it creates a new VendorSector object for each sector_id and associates it with the vendor.
+        - Finally, it returns a response indicating the success or failure of the sector addition.
+        - If the user does not have the "vendor" role, an unauthorized response is returned.
+        """
+
+        context = dict()
+        if request.user.role == "vendor":
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                for data in serializer.validated_data:
+                    try:
+                        if VendorSector.objects.get(sector_id=data, user=request.user):
+                            pass
+                    except VendorSector.DoesNotExist:
+                        VendorSector.objects.create(sector_id=data, user=request.user)
+                context["message"] = "Sector added."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            except Exception as e:
+                context['message'] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
