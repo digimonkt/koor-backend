@@ -36,10 +36,12 @@ class ConversationListView(generics.ListAPIView):
     queryset = Conversation.objects.all()
     pagination_class = CustomPagination
 
-    def list(self, request, *args, **kwargs):
+    def list(self, request):
+        
+    # def list(self, request, *args, **kwargs):
         context = dict()
-        queryset = self.get_queryset()
-        filtered_queryset = self.filter_queryset(queryset)
+        print(self.request.user, "self.request")
+        filtered_queryset = self.filter_queryset(self.get_queryset().filter(chat_user=self.request.user))
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

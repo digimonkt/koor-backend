@@ -122,15 +122,15 @@ class ChatConsumer(BaseConsumer):
         # if self.scope["user"] == AnonymousUser():
         #     self.authenticate()
         user = self.scope["user"]
-        # if user.is_anonymous:
+        if user.is_anonymous:
         #     pass
-        #     # self.close()
-        # else:
-        async_to_sync(self.channel_layer.group_add)(
-            self.conversation_group_name,
-            self.channel_name
-        )
-        self.accept()
+            self.close()
+        else:
+            async_to_sync(self.channel_layer.group_add)(
+                self.conversation_group_name,
+                self.channel_name
+            )
+            self.accept()
 
     def disconnect(self, close_code):
         self.channel_layer.group_discard(
@@ -182,7 +182,7 @@ class ChatConsumer(BaseConsumer):
             {
                 "type": "update_conversation",
                 # "content": event["content"],
-                "content": ConversationSerializer(Conversation.objects.all(), many=True).data,
+                "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]), many=True).data,
                 "sender_channel_name": self.channel_name,
             }
         )
