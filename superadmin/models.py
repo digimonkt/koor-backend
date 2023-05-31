@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
+from django.contrib.postgres.fields import ArrayField
 
 from core.models import (
     BaseModel, SlugBaseModel,  SoftDeleteModel, upload_directory_path
@@ -88,11 +89,13 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
     - `job`: the job associated with the attachment
     - `attachment`: the attachment uploaded for the job
     """
-    description = models.TextField(
-        verbose_name=_('Description'),
-        null=True,
-        blank=True,
-        db_column="description",
+    description = ArrayField(
+        models.TextField(
+            verbose_name=_('Description'),
+            null=True,
+            blank=True,
+            db_column="description",
+        )
     )
     attachment = models.OneToOneField(
         Media,
