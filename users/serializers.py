@@ -823,8 +823,6 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     organization_type = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
-    sector = serializers.SerializerMethodField()
-    tag = serializers.SerializerMethodField()
 
     class Meta:
         model = VendorProfile
@@ -842,9 +840,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             'other_notification',
             'address',
             'country',
-            'city',
-            'sector',
-            'tag'
+            'city'
         )
 
     def get_organization_type(self, obj):
@@ -924,42 +920,6 @@ class VendorProfileSerializer(serializers.ModelSerializer):
                 context = get_data.data
         return context
 
-    def get_sector(self, obj):
-        """
-        Retrieves the sector data associated with the given object's user.
-
-        Parameters:
-            obj: An object containing user information.
-
-        Returns:
-            A list of sector data retrieved from the VendorSector model associated with the user.
-        """
-        
-        context = []
-        sector_data = VendorSector.objects.filter(user=obj.user)
-        get_data = VendorSectorSerializer(sector_data, many=True)
-        if get_data.data:
-            context = get_data.data
-        return context
-
-    def get_tag(self, obj):
-        """
-        Retrieves the tag data associated with the given object's user.
-
-        Parameters:
-            obj: An object containing user information.
-
-        Returns:
-            A list of tag data retrieved from the VendorTag model associated with the user.
-        """
-        
-        context = []
-        tag_data = VendorTag.objects.filter(user=obj.user)
-        get_data = VendorTagSerializer(tag_data, many=True)
-        if get_data.data:
-            context = get_data.data
-        return context
-
 
 class VendorDetailSerializers(serializers.ModelSerializer):
     """
@@ -980,12 +940,14 @@ class VendorDetailSerializers(serializers.ModelSerializer):
 
     profile = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+    tag = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
-            'name', 'image', 'role', 'profile'
+            'name', 'image', 'role', 'profile', 'sector', 'tag'
         ]
         
     def get_image(self, obj):
@@ -1010,6 +972,42 @@ class VendorDetailSerializers(serializers.ModelSerializer):
             pass
         finally:
             return context
+
+    def get_sector(self, obj):
+        """
+        Retrieves the sector data associated with the given object's user.
+
+        Parameters:
+            obj: An object containing user information.
+
+        Returns:
+            A list of sector data retrieved from the VendorSector model associated with the user.
+        """
+        
+        context = []
+        sector_data = VendorSector.objects.filter(user=obj)
+        get_data = VendorSectorSerializer(sector_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tag(self, obj):
+        """
+        Retrieves the tag data associated with the given object's user.
+
+        Parameters:
+            obj: An object containing user information.
+
+        Returns:
+            A list of tag data retrieved from the VendorTag model associated with the user.
+        """
+        
+        context = []
+        tag_data = VendorTag.objects.filter(user=obj)
+        get_data = VendorTagSerializer(tag_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
 
 
 class UpdateImageSerializers(serializers.ModelSerializer):
