@@ -17,13 +17,16 @@ from project_meta.models import Media, EducationLevel
 
 from project_meta.serializers import (
     CitySerializer, CountrySerializer, 
-    SkillSerializer, ChoiceSerializer
+    SkillSerializer, ChoiceSerializer,
+    TagSerializer
 )
 
 from employers.models import BlackList
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
+
+from vendors.models import VendorSector, VendorTag
 
 
 class CreateUserSerializers(serializers.ModelSerializer):
@@ -565,6 +568,8 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
         fields = (
             'description',
             'organization_type',
+            'market_information_notification',
+            'other_notification',
             'license_id',
             'license_id_file',
             'description',
@@ -691,6 +696,116 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
             return context
 
 
+class VendorSectorSerializer(serializers.ModelSerializer):
+    """
+    Serializer for VendorSector model, used to serialize and deserialize data.
+
+    Attributes:
+        sector (SerializerMethodField): Field representing the sector.
+
+    Meta:
+        model (VendorSector): Model class associated with the serializer.
+        fields (tuple): Fields to include in the serialized representation.
+            - id: VendorSector ID
+            - sector: Serialized representation of the sector
+
+    Methods:
+        get_sector(obj): Method to retrieve the serialized data for the sector field.
+
+    Example usage:
+        serializer = VendorSectorSerializer(data=data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            serialized_data = serializer.data
+        else:
+            errors = serializer.errors
+    """
+
+    sector = serializers.SerializerMethodField()
+    class Meta:
+        model = VendorSector
+        fields = (
+            'id',
+            'sector'
+        )
+        
+    def get_sector(self, obj):
+        """
+        Retrieve the serialized data for the sector field.
+
+        Args:
+            obj: The VendorSector instance to serialize.
+
+        Returns:
+            dict: Serialized representation of the sector.
+
+        Example:
+            serializer = VendorSectorSerializer()
+            sector_data = serializer.get_sector(vendor_sector_instance)
+        """
+        
+        context = {}
+        get_data = ChoiceSerializer(obj.sector)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+
+class VendorTagSerializer(serializers.ModelSerializer):
+    """
+    Serializer for VendorTag model, used to serialize and deserialize data.
+
+    Attributes:
+        tag (SerializerMethodField): Field representing the tag.
+
+    Meta:
+        model (VendorTag): Model class associated with the serializer.
+        fields (tuple): Fields to include in the serialized representation.
+            - id: VendorTag ID
+            - tag: Serialized representation of the tag
+
+    Methods:
+        get_tag(obj): Method to retrieve the serialized data for the tag field.
+
+    Example usage:
+        serializer = VendorTagSerializer(data=data)
+        if serializer.is_valid():
+            instance = serializer.save()
+            serialized_data = serializer.data
+        else:
+            errors = serializer.errors
+    """
+
+    tag = serializers.SerializerMethodField()
+    class Meta:
+        model = VendorTag
+        fields = (
+            'id',
+            'tag'
+        )
+        
+    def get_tag(self, obj):
+        """
+        Retrieve the serialized data for the tag field.
+
+        Args:
+            obj: The VendorTag instance to serialize.
+
+        Returns:
+            dict: Serialized representation of the tag.
+
+        Example:
+            serializer = VendorTagSerializer()
+            tag_data = serializer.get_tag(vendor_tag_instance)
+        """
+        
+        context = {}
+        get_data = TagSerializer(obj.tag)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+
 class VendorProfileSerializer(serializers.ModelSerializer):
     """
     VendorProfileSerializer is a serializer class that serializes and deserializes the VendorProfile model into JSON
@@ -726,7 +841,6 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             'address',
             'country',
             'city'
-            
         )
 
     def get_organization_type(self, obj):
@@ -826,10 +940,15 @@ class VendorDetailSerializers(serializers.ModelSerializer):
 
     profile = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+    tag = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
+        fields = [
+            'id', 'email', 'mobile_number', 'country_code', 
+            'name', 'image', 'role', 'profile', 'sector', 'tag'
+        ]
         
     def get_image(self, obj):
         context = dict()
@@ -853,6 +972,42 @@ class VendorDetailSerializers(serializers.ModelSerializer):
             pass
         finally:
             return context
+
+    def get_sector(self, obj):
+        """
+        Retrieves the sector data associated with the given object's user.
+
+        Parameters:
+            obj: An object containing user information.
+
+        Returns:
+            A list of sector data retrieved from the VendorSector model associated with the user.
+        """
+        
+        context = []
+        sector_data = VendorSector.objects.filter(user=obj)
+        get_data = VendorSectorSerializer(sector_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tag(self, obj):
+        """
+        Retrieves the tag data associated with the given object's user.
+
+        Parameters:
+            obj: An object containing user information.
+
+        Returns:
+            A list of tag data retrieved from the VendorTag model associated with the user.
+        """
+        
+        context = []
+        tag_data = VendorTag.objects.filter(user=obj)
+        get_data = VendorTagSerializer(tag_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
 
 
 class UpdateImageSerializers(serializers.ModelSerializer):
