@@ -37,10 +37,7 @@ class ConversationListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
-        
-    # def list(self, request, *args, **kwargs):
         context = dict()
-        print(self.request.user, "self.request")
         filtered_queryset = self.filter_queryset(self.get_queryset().filter(chat_user=self.request.user))
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
@@ -70,15 +67,13 @@ class ChatRoomView(DetailView):
 
 
 class ChatHistory(generics.ListAPIView):
-    queryset = ChatMessage.objects.all()
     serializer_class = ChatMessageSerializer
+    permission_classes = [permissions.AllowAny]
+    queryset = None
     pagination_class = CustomPagination
-    renderer_classes = [renderers.JSONRenderer, ]
-    authentication_classes = [authentication.SessionAuthentication, JWTAuthentication]
 
-    def list(self, request, agent_id):
-        conversation = Conversation.objects.get(id=agent_id)
-        queryset = self.filter_queryset(self.get_queryset().filter(conversation=conversation))
+    def list(self, request, conversationId):
+        queryset = self.filter_queryset(self.get_queryset(request, conversationId))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -86,20 +81,13 @@ class ChatHistory(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
 
-        # qs = self.get_queryset()
-        # try:
-        #     conversation = Conversation.objects.get(id=agent_id)
-        #     chat_messages = qs.filter(conversation=conversation)
-        #     # conversation.mark_messages_as_read(request.user)
-
-        # except Conversation.DoesNotExist:
-        #     chat_messages = ChatMessage.objects.none()
-        # # Initialize pagination object with request
-        # paginator = self.pagination_class()
-        # paginated_messages = paginator.paginate_queryset(chat_messages, request)
-
-        # data = self.serializer_class(paginated_messages, many=True).data
-        # return paginator.get_paginated_response(data)
+    def get_queryset(self, request, conversationId, **kwargs):
+        conversation = Conversation.objects.get(id=conversationId)
+        message_id = self.request.GET.get('messageId', None)
+        if not message_id:
+            return ChatMessage.objects.filter(conversation=conversation).order_by('-created')[:10]
+        current_object = ChatMessage.objects.get(id=message_id)
+        return ChatMessage.objects.filter(conversation=conversation).filter(created__lt=current_object.created).order_by('-created')[:10]
 
 
 class Attachment(generics.GenericAPIView):
@@ -113,9 +101,8 @@ class Attachment(generics.GenericAPIView):
         try:
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            response_context["message"] = "User Created Successfully"
             return response.Response(
-                data=response_context,
+                data=serializer.data,
                 status=status.HTTP_201_CREATED
             )
         except serializers.ValidationError:

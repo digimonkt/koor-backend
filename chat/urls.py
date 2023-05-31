@@ -14,7 +14,7 @@ urlpatterns = [
     path("/conversations/", ConversationListView.as_view(), name="conversation_list"),
     path("/<str:room_name>", ChatRoomView.as_view(), name="chat_room"),
     # path("<str:agent_id>/attachment/", AttachmentChatMessage.as_view(), name="chat_attachment"),
-    path("/<str:agent_id>/history/", ChatHistory.as_view(), name="chat_history"),
+    path("/<str:conversationId>/history/", ChatHistory.as_view(), name="chat_history"),
     
     path("/attachment", Attachment.as_view(), name="attachment"),
     # path("<str:agent_id>/unreads/", ChatUnreadMessagesView.as_view(), name="chat_unread"),

@@ -22,7 +22,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             'is_seen',
             'is_edited',
             'id',
-
+            'created'
         ]
 
     def get_user(self, obj):
