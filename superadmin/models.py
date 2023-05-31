@@ -95,7 +95,9 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
             null=True,
             blank=True,
             db_column="description",
-        )
+        ),
+        blank=True,
+        null=True
     )
     attachment = models.OneToOneField(
         Media,
