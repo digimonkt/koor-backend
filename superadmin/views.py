@@ -4129,3 +4129,28 @@ class FaqView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class ResourcesDetailView(generics.GenericAPIView):
+
+    serializer_class = ResourcesSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, resourcesId):
+        response_context = dict()
+        context = dict()
+        try:
+            if resourcesId:
+                resources_data = ResourcesContent.objects.get(id=resourcesId)
+                get_data = self.serializer_class(resources_data)
+                response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            response_context["message"] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
