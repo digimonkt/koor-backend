@@ -91,9 +91,9 @@ class JobSearchView(generics.ListAPIView):
 
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
-        if jobCategory:
-            queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         jobSubCategory = request.GET.getlist('jobSubCategory')
+        if jobCategory  and jobSubCategory in ["", None]:
+            queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         if jobSubCategory:
             queryset = queryset.filter(job_sub_category__title__in=jobSubCategory).distinct()
         page = self.paginate_queryset(queryset)
