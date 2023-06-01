@@ -11,6 +11,7 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     # chat_user = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     conversation = serializers.SerializerMethodField()
+    attachment = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
@@ -42,6 +43,14 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         conversation['id'] = str(obj.conversation.id)
         conversation['last_message'] = str(obj.conversation.last_message.message)
         return conversation
+
+    def get_attachment(self, obj):
+        attachment = dict()
+        attachment['id'] = str(obj.attachment.id)
+        attachment['title'] = obj.attachment.title
+        attachment['type'] = obj.attachment.media_type
+        attachment['url'] = str(obj.attachment.file_path.url)
+        return attachment
 
     # def get_chat_user(self, obj):
     #     return ConversationParticipantSerializer(obj.conversation.chat_user).data
@@ -133,4 +142,9 @@ class UploadAttachmentSerializers(serializers.ModelSerializer):
                                    file_path=self.validated_data['attachment'],
                                    media_type=media_type)
             media_instance.save()
-        return media_instance
+        return {
+            'id':str(media_instance.id),
+            'title':media_instance.title,
+            'media_type':media_instance.media_type,
+            'path':media_instance.file_path.url
+        }

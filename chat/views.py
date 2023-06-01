@@ -100,9 +100,9 @@ class Attachment(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            get_url = serializer.save()
             return response.Response(
-                data=serializer.data,
+                data=get_url,
                 status=status.HTTP_201_CREATED
             )
         except serializers.ValidationError:

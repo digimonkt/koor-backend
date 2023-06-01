@@ -126,6 +126,13 @@ class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         default=False,
         db_column="is_edited",
     )
+    content_type = models.CharField(
+        verbose_name=_("Content Type"),
+        db_column="content_type",
+        max_length=255,
+        editable=False,
+        default="text",
+    )  
 
     class Meta:
         verbose_name = "Chat Message"

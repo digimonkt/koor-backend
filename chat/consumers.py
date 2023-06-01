@@ -9,6 +9,7 @@ from django.contrib.auth.models import AnonymousUser
 
 from koor.config.common import Common
 from users.models import UserSession, User
+from project_meta.models import Media
 from .models import Conversation, ChatMessage
 from .serializers import ChatMessageSerializer, ConversationSerializer
 
@@ -194,13 +195,13 @@ class ChatConsumer(BaseConsumer):
             user=self.get_user(),
             conversation=self.conversation,
             message=content.get("message", ""),
-            # content_type=content_type,
+            content_type=content_type,
         )
-        # if content_type != "text":
-        #     media_id = int(content.get("message_attachment").get("id"))
-        #     media = Media.objects.get(id=media_id)
-        #     chat_message.message_attachment = media
-        #     chat_message.save()
+        if content_type != "text":
+            media_id = content.get("message_attachment").get("id")
+            media = Media.objects.get(id=media_id)
+            chat_message.attachment = media
+            chat_message.save()
         return chat_message
 
 
