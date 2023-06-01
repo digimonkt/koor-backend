@@ -12,7 +12,7 @@ from .views import (
     WorldCityView, ChoiceView, OpportunityTypeView,
     TenderListView, TenderRevertView, ResourcesView,
     LinksView, AboutUsView, FaqCategoryView,
-    FaqView
+    FaqView, ResourcesDetailView
 )
 
 app_name = "superadmin"
@@ -84,6 +84,7 @@ urlpatterns = [
     
     path('/resources', ResourcesView.as_view(), name="resources"),
     path('/resources/<str:resourcesId>', ResourcesView.as_view(), name="resources"),
+    path('/resources/<str:resourcesId>/detail', ResourcesDetailView.as_view(), name="resources_detail"),
         
     path('/links', LinksView.as_view(), name="links"),
     path('/links/<str:linkId>', LinksView.as_view(), name="links"),
