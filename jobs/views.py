@@ -18,7 +18,7 @@ from core.pagination import CustomPagination
 
 from jobs.models import (
     JobDetails, JobFilters, JobShare,
-    JobCategory
+    JobCategory, JobSubCategory
 )
 
 from job_seekers.models import AppliedJob
@@ -871,17 +871,45 @@ class JobCategoryView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         
-        all_categories = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')
-        for category in all_categories:
-            print(category.title, category.category_count)
+        all_jobs = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')[:5]
+        
+        # job_sub_category_data = JobSubCategory.objects.filter(category_id__title__in=job_category)
+        # job_sub_category = []
+        # for sub_category in job_sub_category_data:
+        #     job_sub_category.append(sub_category.title)
+        # queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category, job_seekers_categories_user__is_removed=False).distinct()
+        
+        all_talents = JobSubCategory.objects.annotate(category_count=Count('job_seekers_categories_categories', distinct=True, filter=Q(job_seekers_categories_categories__is_removed=False))).order_by('-category_count')[:5]
+        # all_talents = JobCategory.objects.annotate(category_count=Count('all_talents', distinct=True, filter=Q(job_seekers_categories_user__category__is_removed=False))).order_by('-category_count')[:5]
+        print(all_talents)
+        
+        most_used_categories = JobCategory.objects.annotate(category_count=Count('jobsubcategory_categories__categories')).order_by('-category_count')
 
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True, context=context)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True, context=context)
-        return response.Response(serializer.data)
+        for category in most_used_categories:
+            print(category.title, category.category_count)
+        # all_jobs = JobCategory.objects.annotate(category_count=Count('all_talents__category', distinct=True, filter=Q(all_talents__category__is_removed=False))).order_by('-category_count')[:5]
+        print(all_jobs, 'all_talents__category')
+        jobs = []
+        talents = []
+        for category in all_jobs:
+            jobs.append({"title": category.title, "count": category.category_count})
+        for category in all_talents:
+            talents.append({"title": category.title, "count": category.category_count})
+        context['jobs'] = jobs
+        context['talents'] = talents
+        
+        return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+
+        # queryset = self.filter_queryset(self.get_queryset())
+        # page = self.paginate_queryset(queryset)
+        # if page is not None:
+        #     serializer = self.get_serializer(page, many=True, context=context)
+        #     return self.get_paginated_response(serializer.data)
+        # serializer = self.get_serializer(queryset, many=True, context=context)
+        # return response.Response(serializer.data)
 
     # def get_queryset(self, **kwargs):
     #     """

@@ -31,11 +31,13 @@ class UsersFilter(filters.FilterSet):
     contract = filters.BooleanFilter(field_name='job_seekers_jobpreferences_user__has_contract')
     availability = filters.BooleanFilter(field_name='job_seekers_jobpreferences_user__is_available')
     salary = filters.RangeFilter(field_name='job_seekers_jobpreferences_user__expected_salary', lookup_expr='iexact')
-    yearsInMarket = filters.NumberFilter(field_name='user_profile_vendorprofile_users__operating_years', lookup_expr='gte')
+    vendor_country = filters.CharFilter(field_name='user_profile_vendorprofile_users__country__title', lookup_expr='iexact')
+    vendor_city = filters.CharFilter(field_name='user_profile_vendorprofile_users__city__title', lookup_expr='iexact')
+    years_in_market = filters.NumberFilter(field_name='user_profile_vendorprofile_users__operating_years', lookup_expr='gte')
     class Meta:
         model = User
         fields = [
             'country', 'city', 'experience', 'fullTime', 
             'partTime', 'contract', 'availability', 'salary', 
-            'yearsInMarket'
+            'vendor_country', 'vendor_city', 'years_in_market'
         ]
