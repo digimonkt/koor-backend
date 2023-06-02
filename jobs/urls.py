@@ -3,7 +3,7 @@ from django.urls import path
 from .views import (
     JobSearchView, JobDetailView, JobApplicationsView,
     RecentApplicationsView, ApplicationsDetailView, JobSuggestionView,
-    JobFilterView, JobShareView
+    JobFilterView, JobShareView, JobCategoryView
 )
 
 app_name = "jobs"
@@ -16,6 +16,8 @@ urlpatterns = [
     
     path('/filter', JobFilterView.as_view(), name="job_filter"),
     path('/filter/<str:filterId>', JobFilterView.as_view(), name="job_filter"),
+            
+    path('/job-categories', JobCategoryView.as_view(), name="job_category"),
     
     path('/applications-detail/<str:applicationId>', ApplicationsDetailView.as_view(), name="applications_detail"),
     path('/applications-detail/<str:applicationId>/<str:action>', ApplicationsDetailView.as_view(), name="applications_detail"),
@@ -26,4 +28,5 @@ urlpatterns = [
     
     path('/<str:jobId>/share', JobShareView.as_view(), name="job_share"),
     path('/<str:jobId>/share/<str:platform>', JobShareView.as_view(), name="job_share"),
+
 ]
