@@ -118,7 +118,6 @@ class UserView(generics.GenericAPIView):
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
             user.save()
-            # --------------------------------------------------------
             if user.email:
                 otp = unique_otp_generator()
                 context["yourname"] = user.email
@@ -141,7 +140,6 @@ class UserView(generics.GenericAPIView):
             else:
                 user.is_verified = True
                 user.save()
-            # --------------------------------------------------------
             if user.role == "job_seeker":
                 JobSeekerProfile.objects.create(user=user)
             elif user.role == "employer":
@@ -744,23 +742,35 @@ class SearchView(generics.ListAPIView):
             queryset = self.filter_queryset(self.get_queryset().filter(role=role).filter(job_seekers_jobpreferences_user__display_in_search=True))
         else:
             queryset = self.filter_queryset(self.get_queryset().filter(role=role))
-        
         job_category = request.GET.getlist('jobCategory')
         job_sub_category = request.GET.getlist('jobSubCategory')
+        organization_type = request.GET.getlist('organizationType')
+        sector = request.GET.getlist('sector')
+        tag = request.GET.getlist('tag')
+        if tag:
+            queryset = queryset.filter(vendors_vendortag_user__tag__title__in=tag, vendors_vendortag_user__is_removed=False).distinct()
+        if sector:
+            queryset = queryset.filter(vendors_vendorsector_user__sector__title__in=sector, vendors_vendorsector_user__sector__is_removed=False).distinct()
+        if organization_type:
+            queryset = queryset.filter(user_profile_vendorprofile_users__organization_type__title__in=organization_type, user_profile_vendorprofile_users__is_removed=False).distinct()
         if job_sub_category:
-            queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category).distinct()
+            queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category, job_seekers_categories_user__is_removed=False).distinct()
         else:
             if job_category:
-                job_sub_category_data = JobSubCategory.objects.filter(category_id__in=job_category)
+                job_sub_category_data = JobSubCategory.objects.filter(category_id__title__in=job_category)
                 job_sub_category = []
                 for sub_category in job_sub_category_data:
                     job_sub_category.append(sub_category.title)
-                queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category).distinct()
+                queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category, job_seekers_categories_user__is_removed=False).distinct()
         page = self.paginate_queryset(queryset)
+        if role == "job_seeker":
+            get_serializer = JobSeekerDetailSerializers
+        elif role == "vendor":
+            get_serializer = VendorDetailSerializers
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = get_serializer(queryset, many=True)
         return response.Response(serializer.data)
 
 
