@@ -1342,7 +1342,8 @@ class UserFiltersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'country', 'city', 'category', 'sub_category',
             'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
-            'salary_min', 'salary_max', 'availability', 'experience'
+            'salary_min', 'salary_max', 'availability', 'experience', 
+            'organization_type', 'sector', 'tag', 'years_in_market'
         ]
    
     def update(self, instance, validated_data):
@@ -1600,3 +1601,4 @@ class SearchUserSerializers(serializers.ModelSerializer):
             except JobSeekerSkill.DoesNotExist:
                 pass 
         return None
+
