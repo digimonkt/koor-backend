@@ -1,4 +1,8 @@
-from django.db.models import Value, F, Case, When, IntegerField, Q
+from django.db.models import (
+    Value, F, Case, When, IntegerField, Q,
+    Count
+)
+
 
 from rest_framework import (
     generics, response, status,
@@ -12,10 +16,15 @@ from django_filters import rest_framework as django_filters
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails, JobFilters, JobShare
+from jobs.models import (
+    JobDetails, JobFilters, JobShare,
+    JobCategory
+)
 
 from job_seekers.models import AppliedJob
-from jobs.serializers import GetAppliedJobsSerializers
+from jobs.serializers import (
+    GetAppliedJobsSerializers, JobCategorySerializer
+)
 
 from notification.models import Notification
 
@@ -92,7 +101,8 @@ class JobSearchView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         jobSubCategory = request.GET.getlist('jobSubCategory')
-        if jobCategory  and jobSubCategory in ["", None]:
+        print(jobSubCategory)
+        if jobCategory  and jobSubCategory in ["", None, []]:
             queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         if jobSubCategory:
             queryset = queryset.filter(job_sub_category__title__in=jobSubCategory).distinct()
@@ -845,3 +855,79 @@ class JobShareView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class JobCategoryView(generics.ListAPIView):
+
+    serializer_class = JobCategorySerializer
+    permission_classes = [permissions.AllowAny]
+    queryset = JobCategory.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        context = dict()
+        
+        all_categories = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')
+        for category in all_categories:
+            print(category.title, category.category_count)
+
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context=context)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context=context)
+        return response.Response(serializer.data)
+
+    # def get_queryset(self, **kwargs):
+    #     """
+    #     Returns the queryset of applied jobs for the authenticated user.
+
+    #     This method returns a queryset of AppliedJob objects for the authenticated user, ordered by their creation date
+    #     in descending order.
+
+    #     Args:
+    #         **kwargs: Additional keyword arguments.
+
+    #     Returns:
+    #         A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
+    #         order.
+    #     """
+    #     order_by = None
+    #     if 'search_by' in self.request.GET:
+    #         search_by = self.request.GET['search_by']
+    #         if search_by == 'salary':
+    #             order_by = 'budget_amount'
+    #         elif search_by == 'expiration':
+    #             order_by = 'deadline'
+    #         elif search_by == 'created_at':
+    #             order_by = 'created'
+    #         if order_by:
+    #             if 'order_by' in self.request.GET:
+    #                 if 'descending' in self.request.GET['order_by']:
+    #                     return JobDetails.objects.filter(
+    #                         deadline__gte=date.today(),
+    #                         is_removed=False,
+    #                         status="active"
+    #                     ).order_by("-" + str(order_by))
+    #                 else:
+    #                     return JobDetails.objects.filter(
+    #                         deadline__gte=date.today(),
+    #                         is_removed=False,
+    #                         status="active"
+    #                     ).order_by(str(order_by))
+    #             else:
+    #                 return JobDetails.objects.filter(
+    #                     deadline__gte=date.today(),
+    #                     is_removed=False,
+    #                     status="active"
+    #                 ).order_by(str(order_by))
+    #     return JobDetails.objects.filter(
+    #         deadline__gte=date.today(),
+    #         is_removed=False,
+    #         status="active"
+    #     )
