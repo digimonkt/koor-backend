@@ -858,39 +858,15 @@ class JobShareView(generics.GenericAPIView):
 
 
 class JobCategoryView(generics.ListAPIView):
-
-    serializer_class = JobCategorySerializer
     permission_classes = [permissions.AllowAny]
-    queryset = JobCategory.objects.all()
-    filter_backends = [filters.SearchFilter]
-    search_fields = [
-        'title'
-    ]
-    pagination_class = CustomPagination
+    queryset = None
 
     def list(self, request):
         context = dict()
-        
-        all_jobs = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')[:5]
-        
-        # job_sub_category_data = JobSubCategory.objects.filter(category_id__title__in=job_category)
-        # job_sub_category = []
-        # for sub_category in job_sub_category_data:
-        #     job_sub_category.append(sub_category.title)
-        # queryset = queryset.filter(job_seekers_categories_user__category__title__in=job_sub_category, job_seekers_categories_user__is_removed=False).distinct()
-        
-        all_talents = JobSubCategory.objects.annotate(category_count=Count('job_seekers_categories_categories', distinct=True, filter=Q(job_seekers_categories_categories__is_removed=False))).order_by('-category_count')[:5]
-        # all_talents = JobCategory.objects.annotate(category_count=Count('all_talents', distinct=True, filter=Q(job_seekers_categories_user__category__is_removed=False))).order_by('-category_count')[:5]
-        print(all_talents)
-        
-        most_used_categories = JobCategory.objects.annotate(category_count=Count('jobsubcategory_categories__categories')).order_by('-category_count')
-
-        for category in most_used_categories:
-            print(category.title, category.category_count)
-        # all_jobs = JobCategory.objects.annotate(category_count=Count('all_talents__category', distinct=True, filter=Q(all_talents__category__is_removed=False))).order_by('-category_count')[:5]
-        print(all_jobs, 'all_talents__category')
         jobs = []
         talents = []
+        all_jobs = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')[:5]
+        all_talents = JobCategory.objects.annotate(category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')).order_by('-category_count')[:5]
         for category in all_jobs:
             jobs.append({"title": category.title, "count": category.category_count})
         for category in all_talents:
@@ -902,60 +878,3 @@ class JobCategoryView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_200_OK
             )
-
-        # queryset = self.filter_queryset(self.get_queryset())
-        # page = self.paginate_queryset(queryset)
-        # if page is not None:
-        #     serializer = self.get_serializer(page, many=True, context=context)
-        #     return self.get_paginated_response(serializer.data)
-        # serializer = self.get_serializer(queryset, many=True, context=context)
-        # return response.Response(serializer.data)
-
-    # def get_queryset(self, **kwargs):
-    #     """
-    #     Returns the queryset of applied jobs for the authenticated user.
-
-    #     This method returns a queryset of AppliedJob objects for the authenticated user, ordered by their creation date
-    #     in descending order.
-
-    #     Args:
-    #         **kwargs: Additional keyword arguments.
-
-    #     Returns:
-    #         A queryset of AppliedJob objects for the authenticated user, ordered by their creation date in descending
-    #         order.
-    #     """
-    #     order_by = None
-    #     if 'search_by' in self.request.GET:
-    #         search_by = self.request.GET['search_by']
-    #         if search_by == 'salary':
-    #             order_by = 'budget_amount'
-    #         elif search_by == 'expiration':
-    #             order_by = 'deadline'
-    #         elif search_by == 'created_at':
-    #             order_by = 'created'
-    #         if order_by:
-    #             if 'order_by' in self.request.GET:
-    #                 if 'descending' in self.request.GET['order_by']:
-    #                     return JobDetails.objects.filter(
-    #                         deadline__gte=date.today(),
-    #                         is_removed=False,
-    #                         status="active"
-    #                     ).order_by("-" + str(order_by))
-    #                 else:
-    #                     return JobDetails.objects.filter(
-    #                         deadline__gte=date.today(),
-    #                         is_removed=False,
-    #                         status="active"
-    #                     ).order_by(str(order_by))
-    #             else:
-    #                 return JobDetails.objects.filter(
-    #                     deadline__gte=date.today(),
-    #                     is_removed=False,
-    #                     status="active"
-    #                 ).order_by(str(order_by))
-    #     return JobDetails.objects.filter(
-    #         deadline__gte=date.today(),
-    #         is_removed=False,
-    #         status="active"
-    #     )
