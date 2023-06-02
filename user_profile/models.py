@@ -8,7 +8,7 @@ from core.models import (
 from users.models import User, TimeStampedModel
 from project_meta.models import (
     EducationLevel, Media, Country,
-    City, Choice
+    City, Choice, Tag
 )
 
 from jobs.models import JobCategory, JobSubCategory
@@ -499,6 +499,36 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         verbose_name=_('Experience'),
         db_column="experience",
+    )
+    organization_type = models.ManyToManyField(
+        to=Choice,
+        null=True,
+        blank=True,
+        verbose_name=_('Organization Type'),
+        db_column="organization_type",
+        related_name='%(app_label)s_%(class)s_organization_types'
+    )
+    sector = models.ManyToManyField(
+        to=Choice,
+        null=True,
+        blank=True,
+        verbose_name=_('Sector'),
+        db_column="sector",
+        related_name='%(app_label)s_%(class)s_sector'
+    )
+    tag = models.ManyToManyField(
+        to=Tag,
+        verbose_name=_('Tag'),
+        null=True,
+        blank=True,
+        db_column="tag",
+        related_name='%(app_label)s_%(class)s_tag'
+    )
+    years_in_market = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Years in Market'),
+        db_column="years_in_market",
     )
 
     def __str__(self):

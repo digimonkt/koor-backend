@@ -1,4 +1,8 @@
-from django.db.models import Value, F, Case, When, IntegerField, Q
+from django.db.models import (
+    Value, F, Case, When, IntegerField, Q,
+    Count
+)
+
 
 from rest_framework import (
     generics, response, status,
@@ -12,10 +16,15 @@ from django_filters import rest_framework as django_filters
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails, JobFilters, JobShare
+from jobs.models import (
+    JobDetails, JobFilters, JobShare,
+    JobCategory, JobSubCategory
+)
 
 from job_seekers.models import AppliedJob
-from jobs.serializers import GetAppliedJobsSerializers
+from jobs.serializers import (
+    GetAppliedJobsSerializers, JobCategorySerializer
+)
 
 from notification.models import Notification
 
@@ -92,7 +101,8 @@ class JobSearchView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         jobSubCategory = request.GET.getlist('jobSubCategory')
-        if jobCategory  and jobSubCategory in ["", None]:
+        print(jobSubCategory)
+        if jobCategory  and jobSubCategory in ["", None, []]:
             queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         if jobSubCategory:
             queryset = queryset.filter(job_sub_category__title__in=jobSubCategory).distinct()
@@ -844,4 +854,27 @@ class JobShareView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class JobCategoryView(generics.ListAPIView):
+    permission_classes = [permissions.AllowAny]
+    queryset = None
+
+    def list(self, request):
+        context = dict()
+        jobs = []
+        talents = []
+        all_jobs = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')[:5]
+        all_talents = JobCategory.objects.annotate(category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')).order_by('-category_count')[:5]
+        for category in all_jobs:
+            jobs.append({"title": category.title, "count": category.category_count})
+        for category in all_talents:
+            talents.append({"title": category.title, "count": category.category_count})
+        context['jobs'] = jobs
+        context['talents'] = talents
+        
+        return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
             )
