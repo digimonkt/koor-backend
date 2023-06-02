@@ -858,23 +858,79 @@ class JobShareView(generics.GenericAPIView):
 
 
 class JobCategoryView(generics.ListAPIView):
+    """
+    A view for retrieving the top job categories along with their counts of associated jobs and talents.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes applied to the view.
+        - `queryset`: The queryset for the view. (Note: It is set to None in this case.)
+
+    Methods:
+        - `list(self, request)`: Handles the GET request and returns the response with the top job categories,
+          along with the counts of associated jobs and talents.
+
+    Returns:
+        A response with a JSON payload containing the following structure:
+        {
+            "jobs": [
+                {
+                    "title": <job_category_title>,
+                    "count": <job_category_count>
+                },
+                ...
+            ],
+            "talents": [
+                {
+                    "title": <talent_category_title>,
+                    "count": <talent_category_count>
+                },
+                ...
+            ]
+        }
+    """
+
     permission_classes = [permissions.AllowAny]
     queryset = None
 
     def list(self, request):
+        """
+        Handles the GET request and returns the response with the top job categories,
+        along with the counts of associated jobs and talents.
+
+        Returns:
+        A response with a JSON payload containing the top job categories and their counts of associated jobs and talents.
+        """
         context = dict()
         jobs = []
         talents = []
-        all_jobs = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')[:5]
-        all_talents = JobCategory.objects.annotate(category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')).order_by('-category_count')[:5]
+
+        # Retrieve the top job categories and their counts of associated jobs
+        all_jobs = JobCategory.objects.annotate(
+            category_count=Count(
+                'jobs_jobdetails_job_category',
+                distinct=True,
+                filter=Q(jobs_jobdetails_job_category__is_removed=False)
+            )
+        ).order_by('-category_count')[:5]
+
+        # Retrieve the top job categories and their counts of associated talents
+        all_talents = JobCategory.objects.annotate(
+            category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
+        ).order_by('-category_count')[:5]
+
+        # Prepare the jobs list with title and count information
         for category in all_jobs:
             jobs.append({"title": category.title, "count": category.category_count})
+
+        # Prepare the talents list with title and count information
         for category in all_talents:
             talents.append({"title": category.title, "count": category.category_count})
+
+        # Populate the context dictionary with jobs and talents information
         context['jobs'] = jobs
         context['talents'] = talents
         
         return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
-            )
+            data=context,
+            status=status.HTTP_200_OK
+        )
