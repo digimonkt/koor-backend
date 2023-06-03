@@ -935,7 +935,6 @@ class JobCategoryView(generics.ListAPIView):
             status=status.HTTP_200_OK
         )
 
-
 class PopularJobCategoryView(generics.ListAPIView):
     """
     A view for retrieving the popular job categories along with their counts.
