@@ -20,6 +20,9 @@ from jobs.models import (
     JobDetails, JobFilters, JobShare,
     JobCategory, JobSubCategory
 )
+from tenders.models import (
+    TenderCategory
+)
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import (
@@ -922,6 +925,7 @@ class JobCategoryView(generics.ListAPIView):
         context = dict()
         jobs = []
         talents = []
+        tenders = []
 
         # Retrieve the top job categories and their counts of associated jobs
         all_jobs = JobCategory.objects.annotate(
@@ -937,17 +941,31 @@ class JobCategoryView(generics.ListAPIView):
             category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
         ).order_by('-category_count')[:5]
 
+        # Retrieve the top tenders categories and their counts of associated tender
+        all_tenders = TenderCategory.objects.annotate(
+            category_count=Count(
+                'tenders_tenderdetails_tender_category',
+                distinct=True,
+                filter=Q(tenders_tenderdetails_tender_category__is_removed=False)
+            )
+        ).order_by('-category_count')[:5]
+
         # Prepare the jobs list with title and count information
         for category in all_jobs:
-            jobs.append({"title": category.title, "count": category.category_count})
+            jobs.append({"id": category.id, "title": category.title, "count": category.category_count})
 
         # Prepare the talents list with title and count information
         for category in all_talents:
-            talents.append({"title": category.title, "count": category.category_count})
+            talents.append({"id": category.id, "title": category.title, "count": category.category_count})
+            
+        # Prepare the tenders list with title and count information
+        for category in all_tenders:
+            tenders.append({"id": category.id, "title": category.title, "count": category.category_count})
 
         # Populate the context dictionary with jobs and talents information
         context['jobs'] = jobs
         context['talents'] = talents
+        context['tenders'] = tenders
         
         return response.Response(
             data=context,
@@ -992,12 +1010,18 @@ class PopularJobCategoryView(generics.ListAPIView):
         job_categories = []
 
         # Retrieve the popular job categories and their counts
-        most_used_categories = JobDetails.objects.values('job_category__title').annotate(
+        most_used_categories = JobDetails.objects.values('job_category__id', 'job_category__title').annotate(
             category_count=Count('job_category')).order_by('-category_count')
 
         # Prepare the job categories list with title and count information
         for category in most_used_categories:
-            job_categories.append({"title": category['job_category__title'], "count": category['category_count']})
+            job_categories.append(
+                {
+                    "id": category['job_category__id'],
+                    "title": category['job_category__title'],
+                    "count": category['category_count']
+                }
+            )
 
         return response.Response(
             data=job_categories,
