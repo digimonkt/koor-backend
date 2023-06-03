@@ -934,3 +934,55 @@ class JobCategoryView(generics.ListAPIView):
             data=context,
             status=status.HTTP_200_OK
         )
+
+
+class PopularJobCategoryView(generics.ListAPIView):
+    """
+    A view for retrieving the popular job categories along with their counts.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes applied to the view.
+        - `queryset`: The queryset for the view. (Note: It is set to None in this case.)
+
+    Methods:
+        - `list(self, request)`: Handles the GET request and returns the response with the popular job categories
+          and their counts.
+
+    Returns:
+        A response with a JSON payload containing the following structure:
+        {
+            "job_categories": [
+                {
+                    "title": <job_category_title>,
+                    "count": <job_category_count>
+                },
+                ...
+            ]
+        }
+    """
+
+    permission_classes = [permissions.AllowAny]
+    queryset = None
+
+    def list(self, request):
+        """
+        Handles the GET request and returns the response with the popular job categories and their counts.
+
+        Returns:
+        A response with a JSON payload containing the popular job categories and their counts.
+        """
+        job_categories = []
+
+        # Retrieve the popular job categories and their counts
+        most_used_categories = JobDetails.objects.values('job_category__title').annotate(
+            category_count=Count('job_category')).order_by('-category_count')
+
+        # Prepare the job categories list with title and count information
+        for category in most_used_categories:
+            job_categories.append({"title": category['job_category__title'], "count": category['category_count']})
+
+        return response.Response(
+            data=job_categories,
+            status=status.HTTP_200_OK
+        )
+        
