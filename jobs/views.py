@@ -20,6 +20,9 @@ from jobs.models import (
     JobDetails, JobFilters, JobShare,
     JobCategory, JobSubCategory
 )
+from tenders.models import (
+    TenderCategory
+)
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import (
@@ -97,11 +100,30 @@ class JobSearchView(generics.ListAPIView):
         context = dict()
         if request.user.is_authenticated:
             context = {"user": request.user}
-
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         jobSubCategory = request.GET.getlist('jobSubCategory')
-        print(jobSubCategory)
+        fullTime = request.GET.get('fullTime')
+        partTime = request.GET.get('partTime')
+        contract = request.GET.get('contract')
+        job_type = None
+        if fullTime:
+            if job_type:
+                job_type = job_type | Q(is_full_time=True)
+            else:
+                job_type = Q(is_full_time=True)
+        if partTime:
+            if job_type:
+                job_type = job_type | Q(is_part_time=True)
+            else:
+                job_type = Q(is_part_time=True)
+        if contract:
+            if job_type:
+                job_type = job_type | Q(has_contract=True)
+            else:
+                job_type = Q(has_contract=True)
+        if job_type:
+            queryset = queryset.filter(job_type)
         if jobCategory  and jobSubCategory in ["", None, []]:
             queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         if jobSubCategory:
@@ -858,23 +880,151 @@ class JobShareView(generics.GenericAPIView):
 
 
 class JobCategoryView(generics.ListAPIView):
+    """
+    A view for retrieving the top job categories along with their counts of associated jobs and talents.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes applied to the view.
+        - `queryset`: The queryset for the view. (Note: It is set to None in this case.)
+
+    Methods:
+        - `list(self, request)`: Handles the GET request and returns the response with the top job categories,
+          along with the counts of associated jobs and talents.
+
+    Returns:
+        A response with a JSON payload containing the following structure:
+        {
+            "jobs": [
+                {
+                    "title": <job_category_title>,
+                    "count": <job_category_count>
+                },
+                ...
+            ],
+            "talents": [
+                {
+                    "title": <talent_category_title>,
+                    "count": <talent_category_count>
+                },
+                ...
+            ]
+        }
+    """
+
     permission_classes = [permissions.AllowAny]
     queryset = None
 
     def list(self, request):
+        """
+        Handles the GET request and returns the response with the top job categories,
+        along with the counts of associated jobs and talents.
+
+        Returns:
+        A response with a JSON payload containing the top job categories and their counts of associated jobs and talents.
+        """
         context = dict()
         jobs = []
         talents = []
-        all_jobs = JobCategory.objects.annotate(category_count=Count('jobs_jobdetails_job_category', distinct=True, filter=Q(jobs_jobdetails_job_category__is_removed=False))).order_by('-category_count')[:5]
-        all_talents = JobCategory.objects.annotate(category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')).order_by('-category_count')[:5]
+        tenders = []
+
+        # Retrieve the top job categories and their counts of associated jobs
+        all_jobs = JobCategory.objects.annotate(
+            category_count=Count(
+                'jobs_jobdetails_job_category',
+                distinct=True,
+                filter=Q(jobs_jobdetails_job_category__is_removed=False)
+            )
+        ).order_by('-category_count')[:5]
+
+        # Retrieve the top job categories and their counts of associated talents
+        all_talents = JobCategory.objects.annotate(
+            category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
+        ).order_by('-category_count')[:5]
+
+        # Retrieve the top tenders categories and their counts of associated tender
+        all_tenders = TenderCategory.objects.annotate(
+            category_count=Count(
+                'tenders_tenderdetails_tender_category',
+                distinct=True,
+                filter=Q(tenders_tenderdetails_tender_category__is_removed=False)
+            )
+        ).order_by('-category_count')[:5]
+
+        # Prepare the jobs list with title and count information
         for category in all_jobs:
-            jobs.append({"title": category.title, "count": category.category_count})
+            jobs.append({"id": category.id, "title": category.title, "count": category.category_count})
+
+        # Prepare the talents list with title and count information
         for category in all_talents:
-            talents.append({"title": category.title, "count": category.category_count})
+            talents.append({"id": category.id, "title": category.title, "count": category.category_count})
+            
+        # Prepare the tenders list with title and count information
+        for category in all_tenders:
+            tenders.append({"id": category.id, "title": category.title, "count": category.category_count})
+
+        # Populate the context dictionary with jobs and talents information
         context['jobs'] = jobs
         context['talents'] = talents
+        context['tenders'] = tenders
         
         return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
+            data=context,
+            status=status.HTTP_200_OK
+        )
+
+class PopularJobCategoryView(generics.ListAPIView):
+    """
+    A view for retrieving the popular job categories along with their counts.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes applied to the view.
+        - `queryset`: The queryset for the view. (Note: It is set to None in this case.)
+
+    Methods:
+        - `list(self, request)`: Handles the GET request and returns the response with the popular job categories
+          and their counts.
+
+    Returns:
+        A response with a JSON payload containing the following structure:
+        {
+            "job_categories": [
+                {
+                    "title": <job_category_title>,
+                    "count": <job_category_count>
+                },
+                ...
+            ]
+        }
+    """
+
+    permission_classes = [permissions.AllowAny]
+    queryset = None
+
+    def list(self, request):
+        """
+        Handles the GET request and returns the response with the popular job categories and their counts.
+
+        Returns:
+        A response with a JSON payload containing the popular job categories and their counts.
+        """
+        job_categories = []
+
+        # Retrieve the popular job categories and their counts
+        most_used_categories = JobDetails.objects.values('job_category__id', 'job_category__title').annotate(
+            category_count=Count('job_category')).order_by('-category_count')
+
+        # Prepare the job categories list with title and count information
+        for category in most_used_categories:
+            job_categories.append(
+                {
+                    "id": category['job_category__id'],
+                    "title": category['job_category__title'],
+                    "count": category['category_count']
+                }
             )
+
+        return response.Response(
+            data=job_categories,
+            status=status.HTTP_200_OK
+        )
+        
