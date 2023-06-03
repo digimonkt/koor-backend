@@ -97,11 +97,30 @@ class JobSearchView(generics.ListAPIView):
         context = dict()
         if request.user.is_authenticated:
             context = {"user": request.user}
-
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
         jobSubCategory = request.GET.getlist('jobSubCategory')
-        print(jobSubCategory)
+        fullTime = request.GET.get('fullTime')
+        partTime = request.GET.get('partTime')
+        contract = request.GET.get('contract')
+        job_type = None
+        if fullTime:
+            if job_type:
+                job_type = job_type | Q(is_full_time=True)
+            else:
+                job_type = Q(is_full_time=True)
+        if partTime:
+            if job_type:
+                job_type = job_type | Q(is_part_time=True)
+            else:
+                job_type = Q(is_part_time=True)
+        if contract:
+            if job_type:
+                job_type = job_type | Q(has_contract=True)
+            else:
+                job_type = Q(has_contract=True)
+        if job_type:
+            queryset = queryset.filter(job_type)
         if jobCategory  and jobSubCategory in ["", None, []]:
             queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         if jobSubCategory:

@@ -1,3 +1,6 @@
+from django.db.models import (
+    Q
+)
 import json, jwt
 import requests
 from datetime import datetime, date
@@ -747,6 +750,27 @@ class SearchView(generics.ListAPIView):
         organization_type = request.GET.getlist('organizationType')
         sector = request.GET.getlist('sector')
         tag = request.GET.getlist('tag')
+        fullTime = request.GET.get('fullTime')
+        partTime = request.GET.get('partTime')
+        contract = request.GET.get('contract')
+        job_type = None
+        if fullTime:
+            if job_type:
+                job_type = job_type | Q(job_seekers_jobpreferences_user__is_full_time=True)
+            else:
+                job_type = Q(job_seekers_jobpreferences_user__is_full_time=True)
+        if partTime:
+            if job_type:
+                job_type = job_type | Q(job_seekers_jobpreferences_user__is_part_time=True)
+            else:
+                job_type = Q(job_seekers_jobpreferences_user__is_part_time=True)
+        if contract:
+            if job_type:
+                job_type = job_type | Q(job_seekers_jobpreferences_user__has_contract=True)
+            else:
+                job_type = Q(job_seekers_jobpreferences_user__has_contract=True)
+        if job_type:
+            queryset = queryset.filter(job_type)
         if tag:
             queryset = queryset.filter(vendors_vendortag_user__tag__title__in=tag, vendors_vendortag_user__is_removed=False).distinct()
         if sector:
