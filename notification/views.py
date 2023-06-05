@@ -3,7 +3,8 @@ from django.shortcuts import HttpResponse
 from datetime import date
 
 from rest_framework import (
-    generics, response, permissions, filters
+    generics, response, status,
+    permissions, filters
 )
 
 from core.emails import get_email_object
@@ -13,6 +14,7 @@ from job_seekers.models import SavedJob
 
 from notification.models import Notification
 from notification.serializers import GetNotificationSerializers
+from users.models import User
 
 
 class NotificationView(generics.ListAPIView):
@@ -109,3 +111,73 @@ def ExpiredSavedJobs():
             job__deadline__lte=date.today(), notified=False
         ).update(notified=True)
     return HttpResponse("done")
+
+
+class NotificationSettingsView(generics.GenericAPIView):
+    """
+    A view for updating the notification settings of a user.
+
+    This view handles the PUT request for toggling the email or notification settings
+    of the authenticated user. It updates the corresponding settings in the User model
+    and returns a response with the updated settings and a status code.
+
+    Attributes:
+        permission_classes (list): A list of permission classes to apply to the view.
+
+    Methods:
+        put(request, notificationType): Handles the PUT request for updating the notification settings.
+    
+    Example usage:
+        PUT /notification-settings/email
+        PUT /notification-settings/notification
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, notificationType):
+        """
+        Handle the PUT request for updating the notification settings.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            notificationType (str): The type of notification settings to update ('email' or 'notification').
+
+        Returns:
+            Response: A response object containing the updated settings and a status code.
+
+        Raises:
+            Exception: If any error occurs during the update process.
+        """
+        context = dict()
+        try:
+            user = self.request.user
+            user_instance = User.objects.get(id=request.user.id)
+
+            if notificationType == 'email':
+                if user_instance.get_email == True:
+                    user_instance.get_email = False
+                    context['message'] = "Mail settings are inactive"
+                else:
+                    user_instance.get_email = True
+                    context['message'] = "Mail settings are active"
+
+            if notificationType == 'notification':
+                if user_instance.get_notification == True:
+                    user_instance.get_notification = False
+                    context['message'] = "Notification settings are inactive"
+                else:
+                    user_instance.get_notification = True
+                    context['message'] = "Notification settings are active"
+
+            user_instance.save()
+
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
