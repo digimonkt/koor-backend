@@ -1,4 +1,5 @@
-from django.contrib.auth import get_user_model
+from users.models import User
+from django.db.models import Q
 from rest_framework import serializers
 # from core.serializers import MediaSerializer, Media
 from .models import ChatMessage, Conversation
@@ -46,10 +47,11 @@ class ChatMessageSerializer(serializers.ModelSerializer):
 
     def get_attachment(self, obj):
         attachment = dict()
-        attachment['id'] = str(obj.attachment.id)
-        attachment['title'] = obj.attachment.title
-        attachment['type'] = obj.attachment.media_type
-        attachment['url'] = str(obj.attachment.file_path.url)
+        if obj.attachment:
+            attachment['id'] = str(obj.attachment.id)
+            attachment['title'] = obj.attachment.title
+            attachment['type'] = obj.attachment.media_type
+            attachment['url'] = str(obj.attachment.file_path.url)
         return attachment
 
     # def get_chat_user(self, obj):
@@ -61,10 +63,11 @@ class ChatUserSerializer(serializers.ModelSerializer):
     is_blacklisted = serializers.SerializerMethodField()
 
     class Meta:
-        model = get_user_model()
+        model = User
         fields = (
             'id',
             'name',
+            'email',
             'image',
             'is_blacklisted'
         )
@@ -91,8 +94,7 @@ class ChatUserSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-    # chat_user = ConversationParticipantSerializer()
-    chat_user = ChatUserSerializer(many=True, read_only=True)
+    chat_user = serializers.SerializerMethodField()
     last_message = ChatMessageSerializer()
 
     class Meta:
@@ -100,6 +102,16 @@ class ConversationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'last_message', 'chat_user',
         ]
+        
+    def get_chat_user(self, obj):
+        context = []
+        if 'user' in self.context:
+            user = self.context['user']
+            user_data = obj.chat_user.filter(~Q(id=user.id))
+            get_data = ChatUserSerializer(user_data, many=True)
+            if get_data.data:
+                context = get_data.data
+        return context
 
     # def get_unread_counts(self, obj):
     #     # user = self.context["request"].user
