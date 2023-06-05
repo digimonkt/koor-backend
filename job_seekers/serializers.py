@@ -351,26 +351,27 @@ class AppliedJobSerializers(serializers.ModelSerializer):
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         applied_job_instance = super().save(user=user, job=job_instace)
-        Notification.objects.create(
-            user=job_instace.user, application=applied_job_instance,
-            notification_type='applied', created_by=user
-        )
-        if job_instace.user.email:
-            email_context = dict()
-            if job_instace.user.name:
-                user_name = job_instace.user.name
-            else:
-                user_name = job_instace.user.email
-            email_context["yourname"] = user_name
-            email_context["notification_type"] = "applied job"
-            email_context["job_instance"] = job_instace
-            if job_instace.user.get_email:
-                get_email_object(
-                    subject=f'Notification for applied job',
-                    email_template_name='email-templates/send-notification.html',
-                    context=email_context,
-                    to_email=[job_instace.user.email, ]
-                )
+        if job_instace.user.get_notification:
+            Notification.objects.create(
+                user=job_instace.user, application=applied_job_instance,
+                notification_type='applied', created_by=user
+            )
+            if job_instace.user.email:
+                email_context = dict()
+                if job_instace.user.name:
+                    user_name = job_instace.user.name
+                else:
+                    user_name = job_instace.user.email
+                email_context["yourname"] = user_name
+                email_context["notification_type"] = "applied job"
+                email_context["job_instance"] = job_instace
+                if job_instace.user.get_email:
+                    get_email_object(
+                        subject=f'Notification for applied job',
+                        email_template_name='email-templates/send-notification.html',
+                        context=email_context,
+                        to_email=[job_instace.user.email, ]
+                    )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
