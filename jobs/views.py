@@ -256,7 +256,7 @@ class JobApplicationsView(generics.ListAPIView):
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
-                    if filter_data == "planned_interviews": filters = filters & Q(interview_at=None)
+                    if filter_data == "planned_interviews": filters = filters & ~Q(interview_at=None)
                     if filter_data == "blacklisted": filters = filters & Q(user__in=blacklisted_user_list)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
