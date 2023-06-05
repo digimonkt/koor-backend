@@ -41,10 +41,10 @@ class ConversationListView(generics.ListAPIView):
         filtered_queryset = self.filter_queryset(self.get_queryset().filter(chat_user=self.request.user))
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = self.get_serializer(page, many=True, context={'user': self.request.user})
             return self.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(filtered_queryset, many=True)
+        serializer = self.get_serializer(filtered_queryset, many=True, context={'user': self.request.user})
         return response.Response(serializer.data)
 
 
