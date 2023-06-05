@@ -79,31 +79,33 @@ def ExpiredSavedJobs():
     """
 
     saved_job_data = SavedJob.objects.filter(job__deadline__lte=date.today(), notified=False)
-    Notification.objects.bulk_create(
-        [
-            Notification(
-                user=saved_job.user,
-                job=saved_job.job,
-                notification_type='expired_save_job',
-            ) for saved_job in saved_job_data
-        ]
-    )
-    if saved_job.user.email:
-        email_context = dict()
-        if saved_job.user.name:
-            user_name = saved_job.user.name
-        else:
-            user_name = saved_job.user.email
-        email_context["yourname"] = user_name
-        email_context["notification_type"] = "expired save job"
-        email_context["job_instance"] = saved_job.job
-        get_email_object(
-            subject=f'Notification for expired save job',
-            email_template_name='email-templates/send-notification.html',
-            context=email_context,
-            to_email=[job_filter.user.email, ]
+    if saved_job.user.get_notification:
+        Notification.objects.bulk_create(
+            [
+                Notification(
+                    user=saved_job.user,
+                    job=saved_job.job,
+                    notification_type='expired_save_job',
+                ) for saved_job in saved_job_data
+            ]
         )
-    saved_job_data = SavedJob.objects.filter(
-        job__deadline__lte=date.today(), notified=False
-    ).update(notified=True)
+        if saved_job.user.email:
+            email_context = dict()
+            if saved_job.user.name:
+                user_name = saved_job.user.name
+            else:
+                user_name = saved_job.user.email
+            email_context["yourname"] = user_name
+            email_context["notification_type"] = "expired save job"
+            email_context["job_instance"] = saved_job.job
+            if job_filter.user.get_email:
+                get_email_object(
+                    subject=f'Notification for expired save job',
+                    email_template_name='email-templates/send-notification.html',
+                    context=email_context,
+                    to_email=[job_filter.user.email, ]
+                )
+        saved_job_data = SavedJob.objects.filter(
+            job__deadline__lte=date.today(), notified=False
+        ).update(notified=True)
     return HttpResponse("done")

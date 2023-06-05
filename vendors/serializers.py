@@ -396,25 +396,27 @@ class AppliedTenderSerializers(serializers.ModelSerializer):
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         applied_tender_instance = super().save(user=user, tender=tender_instace)
-        Notification.objects.create(
-            user=tender_instace.user, tender_application=applied_tender_instance,
-            notification_type='applied_tender', created_by=user
-        )
-        if tender_instace.user.email:
-            email_context = dict()
-            if tender_instace.user.name:
-                user_name = tender_instace.user.name
-            else:
-                user_name = tender_instace.user.email
-            email_context["yourname"] = user_name
-            email_context["notification_type"] = "applied tender"
-            email_context["tender_instance"] = tender_instace
-            get_email_object(
-                subject=f'Notification for applied tender',
-                email_template_name='email-templates/send-notification.html',
-                context=email_context,
-                to_email=[tender_instace.user.email, ]
+        if tender_instace.user.get_notification:
+            Notification.objects.create(
+                user=tender_instace.user, tender_application=applied_tender_instance,
+                notification_type='applied_tender', created_by=user
             )
+            if tender_instace.user.email:
+                email_context = dict()
+                if tender_instace.user.name:
+                    user_name = tender_instace.user.name
+                else:
+                    user_name = tender_instace.user.email
+                email_context["yourname"] = user_name
+                email_context["notification_type"] = "applied tender"
+                email_context["tender_instance"] = tender_instace
+                if tender_instace.user.get_email:
+                    get_email_object(
+                        subject=f'Notification for applied tender',
+                        email_template_name='email-templates/send-notification.html',
+                        context=email_context,
+                        to_email=[tender_instace.user.email, ]
+                    )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")

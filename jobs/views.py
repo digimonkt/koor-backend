@@ -409,25 +409,27 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         else:
                             application_status.shortlisted_at = datetime.now()
                             application_status.save()
-                            Notification.objects.create(
-                                user=application_status.user, application=application_status,
-                                notification_type='shortlisted', created_by=request.user
-                            )
-                            if application_status.user.email:
-                                email_context = dict()
-                                if application_status.user.name:
-                                    user_name = application_status.user.name
-                                else:
-                                    user_name = application_status.user.email
-                                email_context["yourname"] = user_name
-                                email_context["notification_type"] = "shortlisted jobs"
-                                email_context["job_instance"] = application_status.job
-                                get_email_object(
-                                    subject=f'Notification for shortlisted job',
-                                    email_template_name='email-templates/send-notification.html',
-                                    context=email_context,
-                                    to_email=[application_status.user.email, ]
+                            if application_status.user.get_notification:
+                                Notification.objects.create(
+                                    user=application_status.user, application=application_status,
+                                    notification_type='shortlisted', created_by=request.user
                                 )
+                                if application_status.user.email:
+                                    email_context = dict()
+                                    if application_status.user.name:
+                                        user_name = application_status.user.name
+                                    else:
+                                        user_name = application_status.user.email
+                                    email_context["yourname"] = user_name
+                                    email_context["notification_type"] = "shortlisted jobs"
+                                    email_context["job_instance"] = application_status.job
+                                    if application_status.user.get_email:
+                                        get_email_object(
+                                            subject=f'Notification for shortlisted job',
+                                            email_template_name='email-templates/send-notification.html',
+                                            context=email_context,
+                                            to_email=[application_status.user.email, ]
+                                        )
                     elif action == "rejected":
                         if application_status.rejected_at:
                             message = "Already "
@@ -460,25 +462,27 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                         application_status.shortlisted_at = datetime.now()
                                     application_status.interview_at = request.data['interview_at']
                                     application_status.save()
-                                    Notification.objects.create(
-                                        user=application_status.user, application=application_status,
-                                        notification_type='planned_interviews', created_by=request.user
-                                    )
-                                    if application_status.user.email:
-                                        email_context = dict()
-                                        if application_status.user.name:
-                                            user_name = application_status.user.name
-                                        else:
-                                            user_name = application_status.user.email
-                                        email_context["yourname"] = user_name
-                                        email_context["notification_type"] = "interview planned"
-                                        email_context["job_instance"] = application_status.job
-                                        get_email_object(
-                                            subject=f'Notification for interview planned',
-                                            email_template_name='email-templates/send-notification.html',
-                                            context=email_context,
-                                            to_email=[application_status.user.email, ]
+                                    if application_status.user.get_notification:
+                                        Notification.objects.create(
+                                            user=application_status.user, application=application_status,
+                                            notification_type='planned_interviews', created_by=request.user
                                         )
+                                        if application_status.user.email:
+                                            email_context = dict()
+                                            if application_status.user.name:
+                                                user_name = application_status.user.name
+                                            else:
+                                                user_name = application_status.user.email
+                                            email_context["yourname"] = user_name
+                                            email_context["notification_type"] = "interview planned"
+                                            email_context["job_instance"] = application_status.job
+                                            if application_status.user.get_email:
+                                                get_email_object(
+                                                    subject=f'Notification for interview planned',
+                                                    email_template_name='email-templates/send-notification.html',
+                                                    context=email_context,
+                                                    to_email=[application_status.user.email, ]
+                                                )
                             else:
                                 return response.Response(
                                     data={"interview_at": "This field is requeired."},
