@@ -409,12 +409,13 @@ class AppliedTenderSerializers(serializers.ModelSerializer):
             email_context["yourname"] = user_name
             email_context["notification_type"] = "applied tender"
             email_context["tender_instance"] = tender_instace
-            get_email_object(
-                subject=f'Notification for applied tender',
-                email_template_name='email-templates/send-notification.html',
-                context=email_context,
-                to_email=[tender_instace.user.email, ]
-            )
+            if tender_instace.user.get_email:
+                get_email_object(
+                    subject=f'Notification for applied tender',
+                    email_template_name='email-templates/send-notification.html',
+                    context=email_context,
+                    to_email=[tender_instace.user.email, ]
+                )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")

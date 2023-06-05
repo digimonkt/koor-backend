@@ -364,12 +364,13 @@ class AppliedJobSerializers(serializers.ModelSerializer):
             email_context["yourname"] = user_name
             email_context["notification_type"] = "applied job"
             email_context["job_instance"] = job_instace
-            get_email_object(
-                subject=f'Notification for applied job',
-                email_template_name='email-templates/send-notification.html',
-                context=email_context,
-                to_email=[job_instace.user.email, ]
-            )
+            if job_instace.user.get_email:
+                get_email_object(
+                    subject=f'Notification for applied job',
+                    email_template_name='email-templates/send-notification.html',
+                    context=email_context,
+                    to_email=[job_instace.user.email, ]
+                )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
