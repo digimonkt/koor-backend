@@ -21,6 +21,7 @@ from jobs.models import (
 from jobs.filters import JobDetailsFilter
 
 from users.filters import UsersFilter
+from user_profile.models import EmployerProfile
 from users.models import UserSession, User
 
 from project_meta.models import (
@@ -1635,6 +1636,51 @@ class EmployerListView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+    def put(self, request, employerId, action):
+        """
+        Updates the verification status of an employer profile.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            employerId (int): The ID of the employer profile.
+            action (str): The action to perform ('verify' or 'unverify').
+
+        Returns:
+            Response: The response object containing the updated context and status.
+
+        Raises:
+            NotFound: If the employer profile with the specified ID doesn't exist.
+            BadRequest: If any other exception occurs during the process.
+        """
+        if not self.request.user.is_staff:
+            context = {'message': "You do not have permission to perform this action."}
+            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            employer_instance = EmployerProfile.objects.get(user_id=employerId)
+        except EmployerProfile.DoesNotExist:
+            return response.Response(data={"employerId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+
+        context = {'message': ''}
+        if action == 'verify':
+            if employer_instance.is_verified:
+                context['message'] = "Employer is already verified"
+            else:
+                employer_instance.is_verified = True
+                employer_instance.save()
+                context['message'] = "Employer verified."
+        elif action == 'unverify':
+            if not employer_instance.is_verified:
+                context['message'] = "Employer is not verified"
+            else:
+                employer_instance.is_verified = False
+                employer_instance.save()
+                context['message'] = "Employer unverified."
+        else:
+            context['message'] = "Invalid action"
+
+        return response.Response(data=context, status=status.HTTP_200_OK)
 
 
 class JobsListView(generics.ListAPIView):
