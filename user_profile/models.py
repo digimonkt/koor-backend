@@ -218,9 +218,16 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         db_column="license_id_file",
         related_name='%(app_label)s_%(class)s_license_files'
     )
+    is_verified = models.BooleanField(
+        verbose_name=_('Is Verified'),
+        null=True,
+        blank=True,
+        default=False,
+        db_column="is_verified",
+    )
 
     def __str__(self):
-        return str(self.user) + "(" + str(self.organization_type) + ")"
+        return str(self.user) + "(" + str(self.user.email) + ")"
 
     class Meta:
         verbose_name = "Employer Profile"
