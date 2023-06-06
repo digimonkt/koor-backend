@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from datetime import date
+from django.db.models import Q
 
 from jobs.models import (
     JobDetails, JobAttachmentsItem, JobCategory,
@@ -268,6 +269,10 @@ class GetJobsSerializers(serializers.ModelSerializer):
     applicant = serializers.SerializerMethodField()
     is_applied = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
+    is_shortlisted = serializers.SerializerMethodField()
+    is_rejected = serializers.SerializerMethodField()
+    is_saved = serializers.SerializerMethodField()
+    interview_at = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -275,7 +280,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
             'has_contract', 'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date',
-            'created', 'is_applied', 'is_saved', 'user'
+            'created', 'is_applied', 'is_saved', 'is_shortlisted', 'is_rejected', 'interview_at', 'user'
         ]
 
     def get_country(self, obj):
@@ -333,6 +338,20 @@ class GetJobsSerializers(serializers.ModelSerializer):
         return context
 
     def get_is_applied(self, obj):
+        """
+        Determines whether the current user has applied for a specific job.
+
+        This method checks if the user associated with the current request is authenticated and if they 
+        have applied for the given job.
+
+        Args:
+            obj: The JobDetails object to check if the user has applied for.
+
+        Returns:
+            bool: True if the user has applied for the job, False otherwise.
+
+        """
+        
         is_applied_record = False
         if 'user' in self.context:
             user = self.context['user']
@@ -342,8 +361,106 @@ class GetJobsSerializers(serializers.ModelSerializer):
                     user=user
                 ).exists()
         return is_applied_record
+    
+    def get_is_shortlisted(self, obj):
+        """
+        Determines if the current user has shortlisted the given job.
+
+        This method checks if the user is authenticated and then queries the `AppliedJob` model to determine 
+        if the user has shortlisted the specified job. It returns a boolean value indicating whether the
+        job has been shortlisted by the user or not.
+
+        Args:
+            self: The current instance of the GetJobsSerializers class.
+            obj: The JobDetails object to check if it has been shortlisted.
+
+        Returns:
+            A boolean value indicating whether the job has been shortlisted by the user or not.
+            - True: If the job has been shortlisted by the user.
+            - False: If the job has not been shortlisted by the user or the user is not authenticated.
+        """
+        
+        is_shortlisted_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if user.is_authenticated:
+                is_shortlisted_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).filter(~Q(shortlisted_at=None)).exists()
+        return is_shortlisted_record
+    
+    def get_is_rejected(self, obj):
+        """
+        Retrieves the rejection status for a job as it relates to the authenticated user.
+
+        Args:
+            self: The instance of the GetJobsSerializers class.
+            obj: The JobDetails object to check for rejection status.
+
+        Returns:
+            A boolean value indicating whether the job has been rejected by the authenticated user.
+
+        """
+        
+        is_rejected_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if user.is_authenticated:
+                is_rejected_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).filter(~Q(rejected_at=None)).exists()
+        return is_rejected_record    
+    
+    def get_interview_at(self, obj):
+        """
+        Retrieves the interview date and time for a specific job object.
+
+        This function checks if the 'user' key is present in the context, indicating that a user is authenticated.
+        If the user is authenticated, it queries the 'AppliedJob' model to find the applied job record that matches the
+        provided 'obj' (job) and the authenticated user. It filters the records to exclude those where 'interview_at' is None.
+        If a matching record is found, the interview date and time is retrieved from the first record in the filtered queryset.
+
+        Args:
+            self: The instance of the serializer.
+            obj: The job object to retrieve the interview date and time for.
+
+        Returns:
+            interview_at_record (datetime or None): The interview date and time for the job object,
+            or None if no interview is scheduled.
+
+        """
+    
+        interview_at = None
+        if 'user' in self.context:
+            user = self.context['user']
+            if user.is_authenticated:
+                interview_at_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).filter(~Q(interview_at=None))
+                if interview_at_record:
+                    interview_at = interview_at_record[0].interview_at
+        return interview_at
 
     def get_is_saved(self, obj):
+        """
+        Retrieves the status of whether the job is saved by the authenticated user.
+
+        This method checks if the user is authenticated by accessing the 'user' key in the context.
+        If the user is authenticated, it queries the SavedJob model to check if a record exists
+        where the job matches the provided 'obj' and the user matches the authenticated user.
+        The method returns a boolean value indicating whether the job is saved or not.
+
+        Args:
+            obj: The JobDetails object to check if it is saved.
+
+        Returns:
+            A boolean value indicating whether the job is saved or not.
+            Returns True if the job is saved by the authenticated user, False otherwise.
+        """
+    
         is_saved_record = False
         if 'user' in self.context:
             if self.context['user'].is_authenticated:
@@ -354,6 +471,20 @@ class GetJobsSerializers(serializers.ModelSerializer):
         return is_saved_record
 
     def get_applicant(self, obj):
+        """
+        Retrieves the count of applicants for a given job object.
+
+        This method queries the `AppliedJob` model to count the number of applicants
+        for the specified job object.
+
+        Args:
+            obj: The JobDetails object to retrieve the count of applicants for.
+
+        Returns:
+            An integer representing the count of applicants for the job object.
+
+        """
+    
         return AppliedJob.objects.filter(job=obj).count()
 
 
@@ -392,15 +523,20 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     application = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     is_editable = serializers.SerializerMethodField()
+    is_rejected = serializers.SerializerMethodField()
+    is_shortlisted = serializers.SerializerMethodField()
+    interview_at = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
         fields = [
             'id', 'title', 'description', 'budget_currency', 'budget_amount', 'budget_pay_period',
-            'country', 'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
-            'is_applied', 'application', 'is_saved', 'is_editable'
+            'country', 'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 
+            'is_part_time', 'has_contract', 'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 
+            'highest_education', 'language', 'skill', 'duration', 'experience', 'status', 
+            'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
+            'is_applied', 'application', 'is_saved', 'is_editable', 'is_rejected', 
+            'is_shortlisted', 'interview_at'
 
         ]
 
@@ -647,6 +783,88 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+    
+    def get_is_shortlisted(self, obj):
+        """
+        Determines if the current user has shortlisted the given job.
+
+        This method checks if the user is authenticated and then queries the `AppliedJob` model to determine 
+        if the user has shortlisted the specified job. It returns a boolean value indicating whether the
+        job has been shortlisted by the user or not.
+
+        Args:
+            self: The current instance of the GetJobsSerializers class.
+            obj: The JobDetails object to check if it has been shortlisted.
+
+        Returns:
+            A boolean value indicating whether the job has been shortlisted by the user or not.
+            - True: If the job has been shortlisted by the user.
+            - False: If the job has not been shortlisted by the user or the user is not authenticated.
+        """
+        
+        is_shortlisted_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if user.is_authenticated:
+                is_shortlisted_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).filter(~Q(shortlisted_at=None)).exists()
+        return is_shortlisted_record
+    
+    def get_is_rejected(self, obj):
+        """
+        Retrieves the rejection status for a job as it relates to the authenticated user.
+
+        Args:
+            self: The instance of the GetJobsSerializers class.
+            obj: The JobDetails object to check for rejection status.
+
+        Returns:
+            A boolean value indicating whether the job has been rejected by the authenticated user.
+
+        """
+        
+        is_rejected_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if user.is_authenticated:
+                is_rejected_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).filter(~Q(rejected_at=None)).exists()
+        return is_rejected_record    
+    
+    def get_interview_at(self, obj):
+        """
+        Retrieves the interview date and time for a specific job object.
+
+        This function checks if the 'user' key is present in the context, indicating that a user is authenticated.
+        If the user is authenticated, it queries the 'AppliedJob' model to find the applied job record that matches the
+        provided 'obj' (job) and the authenticated user. It filters the records to exclude those where 'interview_at' is None.
+        If a matching record is found, the interview date and time is retrieved from the first record in the filtered queryset.
+
+        Args:
+            self: The instance of the serializer.
+            obj: The job object to retrieve the interview date and time for.
+
+        Returns:
+            interview_at_record (datetime or None): The interview date and time for the job object,
+            or None if no interview is scheduled.
+
+        """
+    
+        interview_at = None
+        if 'user' in self.context:
+            user = self.context['user']
+            if user.is_authenticated:
+                interview_at_record = AppliedJob.objects.filter(
+                    job=obj,
+                    user=user
+                ).filter(~Q(interview_at=None))
+                if interview_at_record:
+                    interview_at = interview_at_record[0].interview_at
+        return interview_at
 
 
 class AppliedJobSerializers(serializers.ModelSerializer):
