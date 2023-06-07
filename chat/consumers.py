@@ -216,8 +216,8 @@ class ChatConsumer(BaseConsumer):
             "chat_activity",
             {
                 "type": "update_conversation",
-                "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]),
-                                                  many=True).data,
+                "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]).filter(~Q(last_message=None)),
+                                                  many=True, context={'user': self.scope["user"]}).data,
                 "sender_channel_name": self.channel_name,
             }
         )
