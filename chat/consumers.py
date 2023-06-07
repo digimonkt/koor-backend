@@ -16,39 +16,45 @@ from .serializers import ChatMessageSerializer, ConversationSerializer
 # Get JWT secret key
 SECRET_KEY = settings.SECRET_KEY
 
-
 class BaseConsumer(JsonWebsocketConsumer):
+    """
+    Base consumer class for handling websocket connections.
+    """
 
-    def decode_token(self, token):
-        # If the token expired this raise jwt.ExpiredSignatureError
-        payload = jwt.decode(jwt=token, key=SECRET_KEY, algorithms=['HS256', ])
-        return payload
-
-    def get_session(self, payload):
-        '''
-        Get the session for the given token.
-        '''
+    def get_session(self, session_id):
+        """
+        Get the user session for the given session ID.
+        
+        Args:
+            session_id (str): ID of the user session.
+        
+        Returns:
+            UserSession or None: UserSession object if found, None otherwise.
+        """
         try:
-            session_id = payload[Common.SIMPLE_JWT.get('USER_ID_CLAIM', 'user_id')]
             session = UserSession.objects.get(id=session_id)
             return session
         except UserSession.DoesNotExist:
             return None
 
-    # TODO: DIY
     def authenticate(self):
+        """
+        Authenticate the websocket connection and set the authenticated user in the scope.
+        """
         logger = logging.getLogger(__name__)
-        headers = dict(self.scope["headers"])
         try:
-            if b"authorization" in headers:
-                token = headers[b"authorization"].decode("utf-8")
-                access_token = token.replace('Bearer ', '')
-                validated_token = self.decode_token(access_token)
-                get_session = self.get_session(validated_token)
-                if get_session.user.is_verified:
-                    self.scope["user"] = get_session.user
-                else:
-                    self.scope['user'] = AnonymousUser()
+            session_id = None
+            chat_url = self.scope['query_string'].decode()
+            print(chat_url, 'chat url')
+            if 'sid=' in chat_url:
+                session_id = chat_url.split('sid=')[1].split('&')[0]
+            elif '&sid=' in chat_url:
+                session_id = chat_url.split('&sid=')[1].split('&')[0]
+            get_session = self.get_session(session_id)
+            if get_session and get_session.user.is_verified:
+                self.scope["user"] = get_session.user
+            else:
+                self.scope['user'] = AnonymousUser()
         except Exception as e:
             logger.error(
                 str(e),
@@ -58,14 +64,36 @@ class BaseConsumer(JsonWebsocketConsumer):
             )
 
     def get_user(self):
-        # return User.objects.get(id='c05dc8d0-f96f-4e37-9fc6-742f3c809c61')
+        """
+        Get the authenticated user from the scope.
+        
+        Returns:
+            User: Authenticated user.
+        """
         return self.scope["user"]
 
     def get_user_instance(self, **kwargs):
-        # return User.objects.get(id='c05dc8d0-f96f-4e37-9fc6-742f3c809c61')
+        """
+        Get a user instance based on the provided filter criteria.
+        
+        Args:
+            kwargs (dict): Filter criteria for the user instance.
+        
+        Returns:
+            User: User instance matching the filter criteria.
+        """
         return get_user_model().objects.get(**kwargs)
 
     def get_conversation(self, conversation_id):
+        """
+        Get or create a conversation based on the provided conversation ID.
+        
+        Args:
+            conversation_id (str): ID of the conversation.
+        
+        Returns:
+            Conversation: Conversation object.
+        """
         conversation, created = Conversation.objects.get_or_create(id=conversation_id)
         if created:
             chat_user = self.get_user_instance(agent_id=conversation_id)
@@ -74,8 +102,10 @@ class BaseConsumer(JsonWebsocketConsumer):
             pass
         return conversation
 
-
 class ChatConsumer(BaseConsumer):
+    """
+    Websocket consumer for handling chat functionality.
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
@@ -84,47 +114,48 @@ class ChatConsumer(BaseConsumer):
         self.conversation_id = None
 
     def connect(self):
-        # self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
-        if self.scope["user"] == AnonymousUser():
+        """
+        Connects the consumer to the WebSocket.
+        """
+        if self.scope["user"].is_anonymous:
             self.authenticate()
-        user = self.scope["user"]
+
         chat_url = self.scope['query_string'].decode()
-        if 'conversation_id' in chat_url:
-            self.conversation_id = self.scope['query_string'].decode().split('conversation_id=')[1]
-        elif 'user_id' in chat_url:
-            user_id = self.scope['query_string'].decode().split('user_id=')[1]
+        if 'conversation_id=' in chat_url:
+            self.conversation_id = chat_url.split('conversation_id=')[1].split('&')[0]
+        elif '&conversation_id=' in chat_url:
+            self.conversation_id = chat_url.split('&conversation_id=')[1].split('&')[0]
+
+        user_id = None
+        if 'user_id=' in chat_url:
+            user_id = chat_url.split('user_id=')[1].split('&')[0]
+        elif '&user_id=' in chat_url:
+            user_id = chat_url.split('&user_id=')[1].split('&')[0]
+
+        if user_id:
             user_instance = User.objects.get(id=user_id)
             user_list = [self.scope["user"], user_instance]
+
             if Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
                     is_removed=True).exists():
                 Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
                     is_removed=True).update(is_removed=False)
-            if Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).exists():
-                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
-                    chat_user=user_instance)
-                for conversation in conversations:
-                    self.conversation_id = conversation.id
-                    self.conversation = conversation
+
+            conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance)
+            if conversations.exists():
+                self.conversation_id = conversations.first().id
+                self.conversation = conversations.first()
             else:
                 conversation = Conversation.objects.create()
                 conversation.chat_user.add(self.scope["user"], user_instance)
                 conversation.save()
                 self.conversation_id = conversation.id
                 self.conversation = conversation
-        # self.conversation = self.get_conversation(self.conversation_id)
-        # Assuming you have a list of ModelB instances you want to filter by
 
-        # user_list = [model_b1, model_b2]
+        self.conversation_group_name = f'chat_{self.conversation_id}'
 
-        # # Retrieve instances of ModelA that are related to the specified ModelB instances
-        # model_a_queryset = ModelA.objects.filter(chat_user__in=user_list)
-
-        self.conversation_group_name = f'chat_{self.conversation.id}'
-        # if self.scope["user"] == AnonymousUser():
-        #     self.authenticate()
         user = self.scope["user"]
         if user.is_anonymous:
-        #     pass
             self.close()
         else:
             async_to_sync(self.channel_layer.group_add)(
@@ -134,35 +165,22 @@ class ChatConsumer(BaseConsumer):
             self.accept()
 
     def disconnect(self, close_code):
+        """
+        Disconnects the consumer from the WebSocket.
+        """
         self.channel_layer.group_discard(
             self.conversation_group_name,
             self.channel_name
         )
 
     def receive_json(self, content):
+        """
+        Handles incoming JSON data from the WebSocket.
+        """
         event_type = content.get('event_type', 'receive_message')
-        # if event_type == 'delete_message':
-        #         messages = ChatMessage.objects.filter(id__in=content.get('id'))
-        #         messages.delete()
 
-        #         # Delete message
-        #         async_to_sync(self.channel_layer.group_send)(
-        #             self.conversation_group_name, 
-        #             {
-        #                 "type": "delete.message", 
-        #                 "sender_channel_name": self.channel_name,
-        #                 **content
-        #             }
-        #         )
-        # else:
-        # Create the chat message object
         chat_message = self.create_chat_message(content)
-        # chat_message = ChatMessage.objects.get(id=chat_message)
-        # if chat_message:
-        #     chat_message.mark_as_read(self.get_user())
-        #     chat_message.save()
 
-        # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
             self.conversation_group_name,
             {
@@ -173,101 +191,96 @@ class ChatConsumer(BaseConsumer):
         )
 
     def chat_message(self, event):
-        # Exclude the sender from receiving the message
-        message = "event['message']"
-        # Send message to WebSocket
-        # if self.channel_name != event["sender_channel_name"]:
-        self.send_json(content=event["content"])
+        """
+        Sends the chat message to the WebSocket.
+        """
+        message = event["content"]
+
+        self.send_json(content=message)
+
         async_to_sync(self.channel_layer.group_send)(
             "chat_activity",
             {
                 "type": "update_conversation",
-                # "content": event["content"],
-                "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]), many=True).data,
+                "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]),
+                                                  many=True).data,
                 "sender_channel_name": self.channel_name,
             }
         )
 
     def create_chat_message(self, content):
+        """
+        Creates a new chat message object.
+        """
         content_type = content.get("content_type", "text")
-        # TODO: Implement the participant filter
         chat_message = ChatMessage.objects.create(
             user=self.get_user(),
             conversation=self.conversation,
             message=content.get("message", ""),
             content_type=content_type,
         )
+
         if content_type != "text":
             media_id = content.get("message_attachment").get("id")
             media = Media.objects.get(id=media_id)
             chat_message.attachment = media
             chat_message.save()
+
         return chat_message
 
 
 class ChatActivityConsumer(BaseConsumer):
+    """
+    This class represents a consumer for chat activity.
+
+    Attributes:
+        chat_group_name (str): The name of the chat group.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(args, kwargs)
         self.chat_group_name = None
 
     def connect(self):
-        # self.conversation_id = self.scope['url_route']['kwargs']['conversation_id']
+        """
+        Connects the consumer to the chat group and performs authentication if necessary.
+        """
         self.chat_group_name = 'chat_activity'
         if self.scope["user"] == AnonymousUser():
             self.authenticate()
         user = self.scope["user"]
-        # chat_url = self.scope['query_string'].decode()
-        # if 'conversation_id' in chat_url:
-        #     self.conversation_id = self.scope['query_string'].decode().split('conversation_id=')[1]
-        # elif 'user_id' in chat_url:
-        #     user_id = self.scope['query_string'].decode().split('user_id=')[1]
-        #     user_instance = User.objects.get(id=user_id)
-        #     user_list = [self.scope["user"], user_instance]
-        #     if Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).exists():
-        #         conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
-        #         chat_user=user_instance)
-        #         for conversation in conversations:
-        #             self.conversation_id = conversation.id
-        #             self.conversation = conversation
-        #     else:
-        #         conversation = Conversation.objects.create()
-        #         conversation.chat_user.add(self.scope["user"], user_instance)
-        #         conversation.save()
-        #         self.conversation_id = conversation.id
-        #         self.conversation = conversation
-        # self.conversation = self.get_conversation(self.conversation_id)
-        # Assuming you have a list of ModelB instances you want to filter by
-
-        # user_list = [model_b1, model_b2]
-
-        # # Retrieve instances of ModelA that are related to the specified ModelB instances
-        # model_a_queryset = ModelA.objects.filter(chat_user__in=user_list)
-
-        # self.conversation_group_name = f'chat_{self.conversation.id}'
-        # if self.scope["user"] == AnonymousUser():
-        #     self.authenticate()
-        user = self.scope["user"]
-        # if user.is_anonymous:
-        #     pass
-        #     # self.close()
-        # else:
         async_to_sync(self.channel_layer.group_add)(
             self.chat_group_name,
             self.channel_name
         )
         self.accept()
-    
+
     def disconnect(self, close_code):
+        """
+        Disconnects the consumer from the chat group.
+        """
         self.channel_layer.group_discard(
             self.chat_group_name,
             self.channel_name
         )
 
     def change_status(self, event):
+        """
+        Handles the "change_status" event by updating the user's online status and sending the event data as JSON.
+        
+        Args:
+            event (dict): The event data.
+        """
         user_instance = self.get_user_instance(id=event["user_id"])
         user_instance.online_status = event["status"]
         user_instance.save()
         self.send_json(content=event)
 
     def update_conversation(self, event):
+        """
+        Handles the "update_conversation" event by sending the event data as JSON.
+        
+        Args:
+            event (dict): The event data.
+        """
         self.send_json(content=event)
