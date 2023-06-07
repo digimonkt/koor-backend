@@ -12,6 +12,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 # from core.models import Media
 # from core.serializers import MediaSerializer
 from core.pagination import CustomPagination
+from users.models import User
 from .models import ChatMessage, Conversation
 from .paginations import LinkPagination
 from .serializers import (
@@ -46,6 +47,38 @@ class ConversationListView(generics.ListAPIView):
 
         serializer = self.get_serializer(filtered_queryset, many=True, context={'user': self.request.user})
         return response.Response(serializer.data)
+
+# -----------------------------------
+class GetConversationView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, userId):
+
+        context = dict()
+        try:
+            user_instance = User.objects.get(id=userId)
+            converesation = Conversation.objects.get(chat_user=self.request.user and user_instance)
+            context['converesation_id'] = converesation.id
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"userId": "Invalid userId"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Conversation.DoesNotExist:
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 # -----------------------------------
