@@ -578,6 +578,7 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'website',
             'country',
             'city',
+            'is_verified'
         )
 
     def get_license_id_file(self, obj):
