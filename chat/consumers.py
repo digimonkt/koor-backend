@@ -21,18 +21,19 @@ class BaseConsumer(JsonWebsocketConsumer):
     Base consumer class for handling websocket connections.
     """
 
-    def get_session(self, session_id):
+    def get_session(self, session_id, uid):
         """
         Get the user session for the given session ID.
         
         Args:
             session_id (str): ID of the user session.
+            uid (str): ID of the user.
         
         Returns:
             UserSession or None: UserSession object if found, None otherwise.
         """
         try:
-            session = UserSession.objects.get(id=session_id)
+            session = UserSession.objects.get(id=session_id, user_id=uid)
             return session
         except UserSession.DoesNotExist:
             return None
@@ -44,13 +45,18 @@ class BaseConsumer(JsonWebsocketConsumer):
         logger = logging.getLogger(__name__)
         try:
             session_id = None
+            uid = None
             chat_url = self.scope['query_string'].decode()
             print(chat_url, 'chat url')
             if 'sid=' in chat_url:
                 session_id = chat_url.split('sid=')[1].split('&')[0]
             elif '&sid=' in chat_url:
                 session_id = chat_url.split('&sid=')[1].split('&')[0]
-            get_session = self.get_session(session_id)
+            if 'uid=' in chat_url:
+                uid = chat_url.split('uid=')[1].split('&')[0]
+            elif '&uid=' in chat_url:
+                uid = chat_url.split('&uid=')[1].split('&')[0]
+            get_session = self.get_session(session_id, uid)
             if get_session and get_session.user.is_verified:
                 self.scope["user"] = get_session.user
             else:
@@ -101,6 +107,7 @@ class BaseConsumer(JsonWebsocketConsumer):
             # add the user to the conversation
             pass
         return conversation
+
 
 class ChatConsumer(BaseConsumer):
     """
