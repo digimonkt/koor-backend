@@ -143,7 +143,7 @@ class JobsView(generics.ListAPIView):
         context = dict()
         serializer = CreateJobsSerializers(data=request.data)
         try:
-            if self.request.user.role == "employer":
+            if self.request.user.role == "employer" and self.request.user.user_profile_employerprofile_user.first().is_verified:
                 serializer.is_valid(raise_exception=True)
                 serializer.save(self.request.user)
                 context["message"] = "Job added successfully."
@@ -441,7 +441,7 @@ class TendersView(generics.ListAPIView):
         context = dict()
         serializer = CreateTendersSerializers(data=request.data)
         try:
-            if self.request.user.role == "employer":
+            if self.request.user.role == "employer" and self.request.user.user_profile_employerprofile_user.first().is_verified:
                 serializer.is_valid(raise_exception=True)
                 serializer.save(self.request.user)
                 context["message"] = "Tender added successfully."
