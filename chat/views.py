@@ -1,5 +1,6 @@
 # chat/views.py
 from django.shortcuts import redirect
+from django.db.models import Q
 from django.views.generic import View, DetailView
 from rest_framework import (
     status, generics, serializers,
@@ -39,7 +40,7 @@ class ConversationListView(generics.ListAPIView):
 
     def list(self, request):
         context = dict()
-        filtered_queryset = self.filter_queryset(self.get_queryset().filter(chat_user=self.request.user))
+        filtered_queryset = self.filter_queryset(self.get_queryset().filter(chat_user=self.request.user).filter(~Q(last_message=None)))
         page = self.paginate_queryset(filtered_queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={'user': self.request.user})
