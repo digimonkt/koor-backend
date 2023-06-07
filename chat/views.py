@@ -71,7 +71,7 @@ class GetConversationView(generics.GenericAPIView):
         except Conversation.DoesNotExist:
             return response.Response(
                 data=context,
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_200_OK
             )
         except Exception as e:
             context["error"] = str(e)
