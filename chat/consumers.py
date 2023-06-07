@@ -132,6 +132,15 @@ class ChatConsumer(BaseConsumer):
         elif '&conversation_id=' in chat_url:
             self.conversation_id = chat_url.split('&conversation_id=')[1].split('&')[0]
 
+        if self.conversation_id:
+            if Conversation.all_objects.filter(id=self.conversation_id).filter(is_removed=True).exists():
+                Conversation.all_objects.filter(id=self.conversation_id).filter(is_removed=True).update(is_removed=False)
+            
+            conversations = Conversation.objects.filter(id=self.conversation_id)
+            if conversations.exists():
+                self.conversation_id = conversations.first().id
+                self.conversation = conversations.first()
+                    
         user_id = None
         if 'user_id=' in chat_url:
             user_id = chat_url.split('user_id=')[1].split('&')[0]
@@ -184,7 +193,6 @@ class ChatConsumer(BaseConsumer):
         Handles incoming JSON data from the WebSocket.
         """
         event_type = content.get('event_type', 'receive_message')
-
         chat_message = self.create_chat_message(content)
 
         async_to_sync(self.channel_layer.group_send)(
