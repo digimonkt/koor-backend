@@ -50,7 +50,7 @@ from .serializers import (
     ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
     CreateResourcesSerializers, SocialUrlSerializers,
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
-    FAQSerializers, CreateFAQSerializers
+    FAQSerializers, CreateFAQSerializers, UploadLogoSerializers
 )
 
 
@@ -4198,5 +4198,61 @@ class ResourcesDetailView(generics.GenericAPIView):
             response_context["message"] = str(e)
             return response.Response(
                 data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class UploadLogo(generics.GenericAPIView):
+    """
+    A view for uploading logos.
+
+    This class-based view handles the HTTP POST request for uploading logos.
+        - It uses the specified serializer to validate the request data and save the logo.
+        - If the data is valid, the view returns the URL of the saved logo with a status code of 201.
+        - If there are validation errors, the view returns the error details with a status code of 400.
+
+    Attributes:
+        - serializer_class (Serializer): The serializer class used to validate and save the logo.
+        - permission_classes (list): A list of permission classes applied to the view.
+
+    Methods:
+        - post(request): Handles the POST request for uploading logos.
+
+    Raises:
+        - serializers.ValidationError: If the provided data is invalid according to the serializer.
+
+    Returns:
+        - A Response object containing the result of the upload operation.
+
+    """
+
+    serializer_class = UploadLogoSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        """
+        Handles the HTTP POST request for uploading logos.
+
+        Parameters:
+            request (HttpRequest): The request object containing the logo data.
+
+        Returns:
+            A Response object containing the result of the upload operation.
+        """
+
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                get_url = serializer.save()
+                return response.Response(data=get_url.data, status=status.HTTP_201_CREATED)
+            else:
+                return response.Response(
+                    data={'message': "You do not have permission to perform this action."},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )

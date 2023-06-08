@@ -298,4 +298,29 @@ class FAQ(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "FAQs"
         db_table = "FAQ"
         ordering = ['-created']
-   
+
+
+class CategoryLogo(BaseModel, TimeStampedModel, models.Model):
+
+    logo = models.OneToOneField(
+        Media,
+        verbose_name=_('Logo'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="logo",
+        related_name='%(app_label)s_%(class)s_logo'
+    )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    class Meta:
+        verbose_name = "CategoryLogo"
+        verbose_name_plural = "Category Logos"
+        db_table = "CategoryLogo"
+        ordering = ['-created']

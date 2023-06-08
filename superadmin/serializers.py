@@ -27,7 +27,8 @@ from users.models import User, UserSession
 
 from .models import (
     Content, ResourcesContent, SocialUrl,
-    AboutUs, FaqCategory, FAQ
+    AboutUs, FaqCategory, FAQ,
+    CategoryLogo
 )
 
 
@@ -1170,3 +1171,72 @@ class CreateFAQSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+class UploadLogoSerializers(serializers.ModelSerializer):
+    """
+    Serializes the `Media` model fields for logo data.
+
+    This serializer is used to convert the `Media` model fields into a JSON representation
+    for logo data. It specifies the model, `Media`, and the fields to be included
+    in the serialized output.
+
+    Attributes:
+        model (class): The model class that the serializer is based on.
+        fields (list): The list of fields from the `Media` model to be serialized.
+
+    Example:
+        serializer = UploadLogoSerializers(data)
+        serialized_data = serializer.data
+
+    """
+    category_logo = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+    
+    class Meta:
+        model = CategoryLogo
+        fields = ['id', 'category_logo']
+
+    def validate_category_logo(self, category_logo):
+        """
+        Validates that the uploaded category logo is a valid image file.
+
+        Args:
+            - `category_logo (File)`: The category logo file to validate.
+
+        Returns:
+            - `File`: The validated category logo file.
+
+        Raises:
+            - `ValidationError`: If the category logo file is `blank or invalid`.
+        """
+        if category_logo in ["", None]:
+            raise serializers.ValidationError('Category logo can not be blank.', code='category_logo')
+        content_type = str(category_logo.content_type).split("/")
+        if content_type[0] == "image":
+            return category_logo
+        else:
+            raise serializers.ValidationError('Invalid category logo.', code='category_logo')
+
+    def save(self):
+
+        if 'category_logo' in self.validated_data:
+            category_logo = self.validated_data.pop('category_logo')
+        category_logo_instance = super().save(status=True)
+        if category_logo:
+            content_type = str(category_logo.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=category_logo.name, file_path=category_logo, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            category_logo_instance.logo = media_instance
+            category_logo_instance.save()
+        return self
+
