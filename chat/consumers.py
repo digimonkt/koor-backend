@@ -211,31 +211,17 @@ class ChatConsumer(BaseConsumer):
         message = event["content"]
 
         self.send_json(content=message)
-        uid = None
-        chat_url = self.scope['query_string'].decode()
-        if 'uid=' in chat_url:
-            uid = chat_url.split('uid=')[1].split('&')[0]
-        elif '&uid=' in chat_url:
-            uid = chat_url.split('&uid=')[1].split('&')[0]
-        user_instance = User.objects.get(id=uid)
-        async_to_sync(self.channel_layer.group_send)(
-            str(self.scope["user"].id),
-            {
-                "type": "update_conversation",
-                "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]).filter(~Q(last_message=None)),
-                                                  many=True, context={'user': self.scope["user"]}).data,
-                "sender_channel_name": self.channel_name,
-            }
-        )
-        async_to_sync(self.channel_layer.group_send)(
-            str(user_instance.id),
-            {
-                "type": "update_conversation",
-                "content": ConversationSerializer(Conversation.objects.filter(chat_user=user_instance).filter(~Q(last_message=None)),
-                                                  many=True, context={'user': user_instance}).data,
-                "sender_channel_name": self.channel_name,
-            }
-        )
+        conversation_instance = Conversation.objects.filter(chat_user=self.scope["user"]).filter(~Q(last_message=None)).first()
+        for chat_user in conversation_instance.chat_user.all():
+            async_to_sync(self.channel_layer.group_send)(
+                str(chat_user.id),
+                {
+                    "type": "update_conversation",
+                    "content": ConversationSerializer(Conversation.objects.filter(chat_user=chat_user).filter(~Q(last_message=None)),
+                                                    many=True, context={'user': chat_user}).data,
+                    "sender_channel_name": self.channel_name,
+                }
+            )
 
     def create_chat_message(self, content):
         """
