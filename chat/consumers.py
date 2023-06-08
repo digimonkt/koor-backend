@@ -211,13 +211,28 @@ class ChatConsumer(BaseConsumer):
         message = event["content"]
 
         self.send_json(content=message)
-
+        uid = None
+        chat_url = self.scope['query_string'].decode()
+        if 'uid=' in chat_url:
+            uid = chat_url.split('uid=')[1].split('&')[0]
+        elif '&uid=' in chat_url:
+            uid = chat_url.split('&uid=')[1].split('&')[0]
+        user_instance = User.objects.get(id=uid)
         async_to_sync(self.channel_layer.group_send)(
-            "chat_activity",
+            str(self.scope["user"].id),
             {
                 "type": "update_conversation",
                 "content": ConversationSerializer(Conversation.objects.filter(chat_user=self.scope["user"]).filter(~Q(last_message=None)),
                                                   many=True, context={'user': self.scope["user"]}).data,
+                "sender_channel_name": self.channel_name,
+            }
+        )
+        async_to_sync(self.channel_layer.group_send)(
+            str(user_instance.id),
+            {
+                "type": "update_conversation",
+                "content": ConversationSerializer(Conversation.objects.filter(chat_user=user_instance).filter(~Q(last_message=None)),
+                                                  many=True, context={'user': user_instance}).data,
                 "sender_channel_name": self.channel_name,
             }
         )
@@ -259,7 +274,14 @@ class ChatActivityConsumer(BaseConsumer):
         """
         Connects the consumer to the chat group and performs authentication if necessary.
         """
-        self.chat_group_name = 'chat_activity'
+        uid = None
+        chat_url = self.scope['query_string'].decode()
+        if 'uid=' in chat_url:
+            uid = chat_url.split('uid=')[1].split('&')[0]
+        elif '&uid=' in chat_url:
+            uid = chat_url.split('&uid=')[1].split('&')[0]
+        user_instance = User.objects.get(id=uid)
+        self.chat_group_name = str(user_instance.id)
         if self.scope["user"] == AnonymousUser():
             self.authenticate()
         user = self.scope["user"]
@@ -298,3 +320,4 @@ class ChatActivityConsumer(BaseConsumer):
             event (dict): The event data.
         """
         self.send_json(content=event)
+        
