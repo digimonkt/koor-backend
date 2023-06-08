@@ -572,11 +572,13 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'other_notification',
             'license_id',
             'license_id_file',
+            'is_verified',
             'description',
             'address',
             'website',
             'country',
             'city',
+            'is_verified'
         )
 
     def get_license_id_file(self, obj):
@@ -670,7 +672,11 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile']
+        fields = [
+            'id', 'email', 'mobile_number', 'country_code', 
+            'name', 'image', 'role', 'get_email', 
+            'get_notification', 'profile'
+        ]
         
     def get_image(self, obj):
         context = dict()
@@ -947,7 +953,8 @@ class VendorDetailSerializers(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
-            'name', 'image', 'role', 'profile', 'sector', 'tag'
+            'name', 'image', 'role', 'get_email', 'get_notification', 
+            'profile', 'sector', 'tag'
         ]
         
     def get_image(self, obj):
