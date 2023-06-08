@@ -120,10 +120,9 @@ class ChatHistory(generics.ListAPIView):
         conversation = Conversation.objects.get(id=conversationId)
         message_id = self.request.GET.get('messageId', None)
         if not message_id:
-            return ChatMessage.objects.filter(conversation=conversation).order_by('-created')[:10]
+            return ChatMessage.objects.filter(conversation=conversation).order_by('-created')
         current_object = ChatMessage.objects.get(id=message_id)
-        return ChatMessage.objects.filter(conversation=conversation).filter(
-            created__lt=current_object.created).order_by('-created')[:10]
+        return ChatMessage.objects.filter(conversation=conversation).filter(created__lt=current_object.created).order_by('-created')
 
 
 class Attachment(generics.GenericAPIView):
