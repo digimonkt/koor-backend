@@ -108,38 +108,86 @@ class ChatHistory(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request, conversationId):
-        queryset = self.filter_queryset(self.get_queryset(request, conversationId))
+        """
+        Retrieve a paginated list of chat messages for a given conversation ID.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            conversationId (int): The ID of the conversation to retrieve messages for.
+
+        Returns:
+            Response: A paginated response containing serialized chat messages.
+        """
+
+        queryset = self.get_queryset(request, conversationId)
         page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return response.Response(serializer.data)
+        serializer = self.get_serializer(page, many=True) if page is not None else self.get_serializer(queryset, many=True)
+        return self.get_paginated_response(serializer.data) if page is not None else response.Response(serializer.data)
 
     def get_queryset(self, request, conversationId, **kwargs):
+        """
+        Retrieve the queryset of chat messages for a given conversation ID.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            conversationId (int): The ID of the conversation to retrieve messages for.
+            kwargs (dict): Additional keyword arguments.
+
+        Returns:
+            QuerySet: The queryset of chat messages.
+        """
+
         conversation = Conversation.objects.get(id=conversationId)
-        message_id = self.request.GET.get('messageId', None)
-        if not message_id:
-            return ChatMessage.objects.filter(conversation=conversation).order_by('-created')
-        current_object = ChatMessage.objects.get(id=message_id)
-        return ChatMessage.objects.filter(conversation=conversation).filter(created__lt=current_object.created).order_by('-created')
+        message_id = self.request.GET.get('messageId')
+        if message_id:
+            current_object = ChatMessage.objects.get(id=message_id)
+            return ChatMessage.objects.filter(conversation=conversation, created__lt=current_object.created).order_by('-created')
+        return ChatMessage.objects.filter(conversation=conversation).order_by('-created')
 
 
 class Attachment(generics.GenericAPIView):
+    """
+    A view for uploading attachments.
+
+    This class-based view handles the HTTP POST request for uploading attachments.
+        - It uses the specified serializer to validate the request data and save the attachment.
+        - If the data is valid, the view returns the URL of the saved attachment with a status code of 201.
+        - If there are validation errors, the view returns the error details with a status code of 400.
+
+    Attributes:
+        - serializer_class (Serializer): The serializer class used to validate and save the attachment.
+        - permission_classes (list): A list of permission classes applied to the view.
+
+    Methods:
+        - post(request): Handles the POST request for uploading attachments.
+
+    Raises:
+        - serializers.ValidationError: If the provided data is invalid according to the serializer.
+
+    Returns:
+        - A Response object containing the result of the upload operation.
+
+    """
+
     serializer_class = UploadAttachmentSerializers
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        context = dict()
-        response_context = dict()
+        """
+        Handles the HTTP POST request for uploading attachments.
+
+        Parameters:
+            request (HttpRequest): The request object containing the attachment data.
+
+        Returns:
+            A Response object containing the result of the upload operation.
+        """
+
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
             get_url = serializer.save()
-            return response.Response(
-                data=get_url,
-                status=status.HTTP_201_CREATED
-            )
+            return response.Response(data=get_url, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
