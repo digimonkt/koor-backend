@@ -333,11 +333,17 @@ class CandidatesSerializers(serializers.ModelSerializer):
     `User` model. It defines the fields that should be included in the serialized representation of the model,
     including 'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active'.
     """
-
+    verify = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active']
+        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active', 'verify']
         read_only_fields = ['id'] 
+    
+    def get_verify(self, obj):
+        verify = False
+        if obj.user_profile_employerprofile_user.first():
+            verify = obj.user_profile_employerprofile_user.first().is_verified
+        return verify
 
 
 class JobListSerializers(serializers.ModelSerializer):

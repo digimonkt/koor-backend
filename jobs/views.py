@@ -1,4 +1,8 @@
-from django.db.models import Value, F, Case, When, IntegerField, Q
+from django.db.models import (
+    Value, F, Case, When, IntegerField, Q,
+    Count
+)
+
 
 from rest_framework import (
     generics, response, status,
@@ -12,10 +16,18 @@ from django_filters import rest_framework as django_filters
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
-from jobs.models import JobDetails, JobFilters, JobShare
+from jobs.models import (
+    JobDetails, JobFilters, JobShare,
+    JobCategory, JobSubCategory
+)
+from tenders.models import (
+    TenderCategory
+)
 
 from job_seekers.models import AppliedJob
-from jobs.serializers import GetAppliedJobsSerializers
+from jobs.serializers import (
+    GetAppliedJobsSerializers, JobCategorySerializer
+)
 
 from notification.models import Notification
 
@@ -88,12 +100,32 @@ class JobSearchView(generics.ListAPIView):
         context = dict()
         if request.user.is_authenticated:
             context = {"user": request.user}
-
         queryset = self.filter_queryset(self.get_queryset())
         jobCategory = request.GET.getlist('jobCategory')
-        if jobCategory:
-            queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         jobSubCategory = request.GET.getlist('jobSubCategory')
+        fullTime = request.GET.get('fullTime')
+        partTime = request.GET.get('partTime')
+        contract = request.GET.get('contract')
+        job_type = None
+        if fullTime:
+            if job_type:
+                job_type = job_type | Q(is_full_time=True)
+            else:
+                job_type = Q(is_full_time=True)
+        if partTime:
+            if job_type:
+                job_type = job_type | Q(is_part_time=True)
+            else:
+                job_type = Q(is_part_time=True)
+        if contract:
+            if job_type:
+                job_type = job_type | Q(has_contract=True)
+            else:
+                job_type = Q(has_contract=True)
+        if job_type:
+            queryset = queryset.filter(job_type)
+        if jobCategory  and jobSubCategory in ["", None, []]:
+            queryset = queryset.filter(job_category__title__in=jobCategory).distinct()
         if jobSubCategory:
             queryset = queryset.filter(job_sub_category__title__in=jobSubCategory).distinct()
         page = self.paginate_queryset(queryset)
@@ -224,7 +256,7 @@ class JobApplicationsView(generics.ListAPIView):
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
-                    if filter_data == "planned_interviews": filters = filters & Q(interview_at=None)
+                    if filter_data == "planned_interviews": filters = filters & ~Q(interview_at=None)
                     if filter_data == "blacklisted": filters = filters & Q(user__in=blacklisted_user_list)
                 queryset = self.filter_queryset(AppliedJob.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
@@ -377,25 +409,27 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         else:
                             application_status.shortlisted_at = datetime.now()
                             application_status.save()
-                            Notification.objects.create(
-                                user=application_status.user, application=application_status,
-                                notification_type='shortlisted', created_by=request.user
-                            )
-                            if application_status.user.email:
-                                email_context = dict()
-                                if application_status.user.name:
-                                    user_name = application_status.user.name
-                                else:
-                                    user_name = application_status.user.email
-                                email_context["yourname"] = user_name
-                                email_context["notification_type"] = "shortlisted jobs"
-                                email_context["job_instance"] = application_status.job
-                                get_email_object(
-                                    subject=f'Notification for shortlisted job',
-                                    email_template_name='email-templates/send-notification.html',
-                                    context=email_context,
-                                    to_email=[application_status.user.email, ]
+                            if application_status.user.get_notification:
+                                Notification.objects.create(
+                                    user=application_status.user, application=application_status,
+                                    notification_type='shortlisted', created_by=request.user
                                 )
+                                if application_status.user.email:
+                                    email_context = dict()
+                                    if application_status.user.name:
+                                        user_name = application_status.user.name
+                                    else:
+                                        user_name = application_status.user.email
+                                    email_context["yourname"] = user_name
+                                    email_context["notification_type"] = "shortlisted jobs"
+                                    email_context["job_instance"] = application_status.job
+                                    if application_status.user.get_email:
+                                        get_email_object(
+                                            subject=f'Notification for shortlisted job',
+                                            email_template_name='email-templates/send-notification.html',
+                                            context=email_context,
+                                            to_email=[application_status.user.email, ]
+                                        )
                     elif action == "rejected":
                         if application_status.rejected_at:
                             message = "Already "
@@ -428,25 +462,27 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                         application_status.shortlisted_at = datetime.now()
                                     application_status.interview_at = request.data['interview_at']
                                     application_status.save()
-                                    Notification.objects.create(
-                                        user=application_status.user, application=application_status,
-                                        notification_type='planned_interviews', created_by=request.user
-                                    )
-                                    if application_status.user.email:
-                                        email_context = dict()
-                                        if application_status.user.name:
-                                            user_name = application_status.user.name
-                                        else:
-                                            user_name = application_status.user.email
-                                        email_context["yourname"] = user_name
-                                        email_context["notification_type"] = "interview planned"
-                                        email_context["job_instance"] = application_status.job
-                                        get_email_object(
-                                            subject=f'Notification for interview planned',
-                                            email_template_name='email-templates/send-notification.html',
-                                            context=email_context,
-                                            to_email=[application_status.user.email, ]
+                                    if application_status.user.get_notification:
+                                        Notification.objects.create(
+                                            user=application_status.user, application=application_status,
+                                            notification_type='planned_interviews', created_by=request.user
                                         )
+                                        if application_status.user.email:
+                                            email_context = dict()
+                                            if application_status.user.name:
+                                                user_name = application_status.user.name
+                                            else:
+                                                user_name = application_status.user.email
+                                            email_context["yourname"] = user_name
+                                            email_context["notification_type"] = "interview planned"
+                                            email_context["job_instance"] = application_status.job
+                                            if application_status.user.get_email:
+                                                get_email_object(
+                                                    subject=f'Notification for interview planned',
+                                                    email_template_name='email-templates/send-notification.html',
+                                                    context=email_context,
+                                                    to_email=[application_status.user.email, ]
+                                                )
                             else:
                                 return response.Response(
                                     data={"interview_at": "This field is requeired."},
@@ -845,3 +881,154 @@ class JobShareView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class JobCategoryView(generics.ListAPIView):
+    """
+    A view for retrieving the top job categories along with their counts of associated jobs and talents.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes applied to the view.
+        - `queryset`: The queryset for the view. (Note: It is set to None in this case.)
+
+    Methods:
+        - `list(self, request)`: Handles the GET request and returns the response with the top job categories,
+          along with the counts of associated jobs and talents.
+
+    Returns:
+        A response with a JSON payload containing the following structure:
+        {
+            "jobs": [
+                {
+                    "title": <job_category_title>,
+                    "count": <job_category_count>
+                },
+                ...
+            ],
+            "talents": [
+                {
+                    "title": <talent_category_title>,
+                    "count": <talent_category_count>
+                },
+                ...
+            ]
+        }
+    """
+
+    permission_classes = [permissions.AllowAny]
+    queryset = None
+
+    def list(self, request):
+        """
+        Handles the GET request and returns the response with the top job categories,
+        along with the counts of associated jobs and talents.
+
+        Returns:
+        A response with a JSON payload containing the top job categories and their counts of associated jobs and talents.
+        """
+        context = dict()
+        jobs = []
+        talents = []
+        tenders = []
+
+        # Retrieve the top job categories and their counts of associated jobs
+        all_jobs = JobCategory.objects.annotate(
+            category_count=Count(
+                'jobs_jobdetails_job_category',
+                distinct=True,
+                filter=Q(jobs_jobdetails_job_category__is_removed=False)
+            )
+        ).order_by('-category_count')[:5]
+
+        # Retrieve the top job categories and their counts of associated talents
+        all_talents = JobCategory.objects.annotate(
+            category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
+        ).order_by('-category_count')[:5]
+
+        # Retrieve the top tenders categories and their counts of associated tender
+        all_tenders = TenderCategory.objects.annotate(
+            category_count=Count(
+                'tenders_tenderdetails_tender_category',
+                distinct=True,
+                filter=Q(tenders_tenderdetails_tender_category__is_removed=False)
+            )
+        ).order_by('-category_count')[:5]
+
+        # Prepare the jobs list with title and count information
+        for category in all_jobs:
+            jobs.append({"id": category.id, "title": category.title, "count": category.category_count})
+
+        # Prepare the talents list with title and count information
+        for category in all_talents:
+            talents.append({"id": category.id, "title": category.title, "count": category.category_count})
+            
+        # Prepare the tenders list with title and count information
+        for category in all_tenders:
+            tenders.append({"id": category.id, "title": category.title, "count": category.category_count})
+
+        # Populate the context dictionary with jobs and talents information
+        context['jobs'] = jobs
+        context['talents'] = talents
+        context['tenders'] = tenders
+        
+        return response.Response(
+            data=context,
+            status=status.HTTP_200_OK
+        )
+
+class PopularJobCategoryView(generics.ListAPIView):
+    """
+    A view for retrieving the popular job categories along with their counts.
+
+    Attributes:
+        - `permission_classes`: A list of permission classes applied to the view.
+        - `queryset`: The queryset for the view. (Note: It is set to None in this case.)
+
+    Methods:
+        - `list(self, request)`: Handles the GET request and returns the response with the popular job categories
+          and their counts.
+
+    Returns:
+        A response with a JSON payload containing the following structure:
+        {
+            "job_categories": [
+                {
+                    "title": <job_category_title>,
+                    "count": <job_category_count>
+                },
+                ...
+            ]
+        }
+    """
+
+    permission_classes = [permissions.AllowAny]
+    queryset = None
+
+    def list(self, request):
+        """
+        Handles the GET request and returns the response with the popular job categories and their counts.
+
+        Returns:
+        A response with a JSON payload containing the popular job categories and their counts.
+        """
+        job_categories = []
+
+        # Retrieve the popular job categories and their counts
+        most_used_categories = JobDetails.objects.values('job_category__id', 'job_category__title').annotate(
+            category_count=Count('job_category')).order_by('-category_count')
+
+        # Prepare the job categories list with title and count information
+        for category in most_used_categories:
+            job_categories.append(
+                {
+                    "id": category['job_category__id'],
+                    "title": category['job_category__title'],
+                    "count": category['category_count']
+                }
+            )
+
+        return response.Response(
+            data=job_categories,
+            status=status.HTTP_200_OK
+        )
+        

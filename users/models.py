@@ -111,6 +111,16 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         blank=True,
         default=False
     )
+    get_email = models.BooleanField(
+        verbose_name=_('Get Email'),
+        db_column="get_email",
+        default=True
+    )
+    get_notification = models.BooleanField(
+        verbose_name=_('Get Notification'),
+        db_column="get_notification",
+        default=True
+    )
     USERNAME_FIELD = 'email'  # set email as a username
     REQUIRED_FIELDS = []
 

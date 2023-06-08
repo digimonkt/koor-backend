@@ -8,7 +8,7 @@ from users.models import User, TimeStampedModel
 from tenders.models import TenderDetails
 
 from project_meta.models import (
-    Media
+    Media, Choice, Tag
 )
 
 
@@ -147,4 +147,92 @@ class AppliedTenderAttachmentsItem(BaseModel, SoftDeleteModel, TimeStampedModel,
         verbose_name = "Applied Tender Attachment Item"
         verbose_name_plural = "Applied Tender Attachment Items"
         db_table = "AppliedTenderAttachmentsItem"
+        ordering = ['-created']
+
+
+class VendorSector(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Model representing a Vendor Sector.
+
+    Attributes:
+        user (ForeignKey): The user associated with the vendor sector.
+        sector (ForeignKey): The sector associated with the vendor sector.
+
+    Methods:
+        __str__(): Returns a string representation of the VendorSector instance.
+
+    Meta:
+        verbose_name (str): The human-readable name for the model.
+        verbose_name_plural (str): The plural form of the verbose_name.
+        db_table (str): The name of the database table for the model.
+        ordering (list): The default ordering for querysets.
+
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    sector = models.ForeignKey(
+        to=Choice,
+        verbose_name=_('Sector'),
+        on_delete=models.CASCADE,
+        db_column="sector",
+        related_name='%(app_label)s_%(class)s_sector'
+    )
+
+    def __str__(self):
+        return str(self.sector) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Vendor Sector"
+        verbose_name_plural = "Vendor Sectors"
+        db_table = "VendorSector"
+        ordering = ['-created']
+
+
+class VendorTag(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Model representing a Vendor Tag.
+
+    Attributes:
+        user (ForeignKey): The user associated with the vendor tag.
+        tag (ForeignKey): The tag associated with the vendor tag.
+
+    Methods:
+        __str__(): Returns a string representation of the VendorTag instance.
+
+    Meta:
+        verbose_name (str): The human-readable name for the model.
+        verbose_name_plural (str): The plural form of the verbose_name.
+        db_table (str): The name of the database table for the model.
+        ordering (list): The default ordering for querysets.
+
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    tag = models.ForeignKey(
+        to=Tag,
+        verbose_name=_('Tag'),
+        on_delete=models.CASCADE,
+        db_column="tag",
+        related_name='%(app_label)s_%(class)s_tag'
+    )
+
+    def __str__(self):
+        return str(self.tag) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Vendor Tag"
+        verbose_name_plural = "Vendor Tags"
+        db_table = "VendorTag"
         ordering = ['-created']

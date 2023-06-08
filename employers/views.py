@@ -143,7 +143,7 @@ class JobsView(generics.ListAPIView):
         context = dict()
         serializer = CreateJobsSerializers(data=request.data)
         try:
-            if self.request.user.role == "employer":
+            if self.request.user.role == "employer" and self.request.user.user_profile_employerprofile_user.first().is_verified:
                 serializer.is_valid(raise_exception=True)
                 serializer.save(self.request.user)
                 context["message"] = "Job added successfully."
@@ -289,34 +289,35 @@ def my_callback(sender, **kwargs):
     ).filter(
         Q(duration=job_instance.duration) | Q(duration=None)
     )
-
-    Notification.objects.bulk_create(
-        [
-            Notification(
-                user=job_filter.user,
-                job_filter=job_filter,
-                job=job_instance,
-                notification_type='advance_filter',
-                created_by=job_instance.user
-            ) for job_filter in job_filter_data
-        ]
-    )
-    for job_filter in job_filter_data:
-        if job_filter.user.email:
-            context = dict()
-            if job_filter.user.name:
-                user_name = job_filter.user.name
-            else:
-                user_name = job_filter.user.email
-            context["yourname"] = user_name
-            context["notification_type"] = "advance filter"
-            context["job_instance"] = job_instance
-            get_email_object(
-                subject=f'Notification for advance filter job',
-                email_template_name='email-templates/send-notification.html',
-                context=context,
-                to_email=[job_filter.user.email, ]
-            )
+    if job_filter.user.get_notification:
+        Notification.objects.bulk_create(
+            [
+                Notification(
+                    user=job_filter.user,
+                    job_filter=job_filter,
+                    job=job_instance,
+                    notification_type='advance_filter',
+                    created_by=job_instance.user
+                ) for job_filter in job_filter_data
+            ]
+        )
+        for job_filter in job_filter_data:
+            if job_filter.user.email:
+                context = dict()
+                if job_filter.user.name:
+                    user_name = job_filter.user.name
+                else:
+                    user_name = job_filter.user.email
+                context["yourname"] = user_name
+                context["notification_type"] = "advance filter"
+                context["job_instance"] = job_instance
+                if job_filter.user.get_email:
+                    get_email_object(
+                        subject=f'Notification for advance filter job',
+                        email_template_name='email-templates/send-notification.html',
+                        context=context,
+                        to_email=[job_filter.user.email, ]
+                    )
     request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
 
 
@@ -440,7 +441,7 @@ class TendersView(generics.ListAPIView):
         context = dict()
         serializer = CreateTendersSerializers(data=request.data)
         try:
-            if self.request.user.role == "employer":
+            if self.request.user.role == "employer" and self.request.user.user_profile_employerprofile_user.first().is_verified:
                 serializer.is_valid(raise_exception=True)
                 serializer.save(self.request.user)
                 context["message"] = "Tender added successfully."

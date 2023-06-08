@@ -1,5 +1,5 @@
 from django.db.models import Value, F, Case, When, IntegerField, Q
-from datetime import date
+from datetime import date, datetime
 
 from django_filters import rest_framework as django_filters
 
@@ -8,6 +8,7 @@ from rest_framework import (
     response, permissions, filters
 )
 
+from core.emails import get_email_object
 from core.pagination import CustomPagination
 
 from tenders.models import TenderDetails, TenderFilter
@@ -21,6 +22,9 @@ from tenders.serializers import (
 
 from vendors.serializers import GetAppliedTenderApplicationSerializers
 from vendors.models import AppliedTender
+
+from notification.models import Notification
+from employers.models import BlackList
 
 
 class TenderSearchView(generics.ListAPIView):
@@ -480,6 +484,80 @@ class ApplicationsDetailView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+    def put(self, request, applicationId, action):
+        context = dict()
+        try:
+            if applicationId:
+                application_status = AppliedTender.objects.get(id=applicationId)
+                if application_status.tender.user == request.user:
+                    message = "Successfully "
+                    if action == "shortlisted":
+                        if application_status.shortlisted_at:
+                            message = "Already "
+                        else:
+                            application_status.shortlisted_at = datetime.now()
+                            application_status.save()
+                            if application_status.user.get_notification:
+                                Notification.objects.create(
+                                    user=application_status.user, tender_application=application_status,
+                                    notification_type='shortlisted', created_by=request.user
+                                )
+                                if application_status.user.email:
+                                    email_context = dict()
+                                    if application_status.user.name:
+                                        user_name = application_status.user.name
+                                    else:
+                                        user_name = application_status.user.email
+                                    email_context["yourname"] = user_name
+                                    email_context["notification_type"] = "shortlisted tender"
+                                    email_context["job_instance"] = application_status.shortlisted_at
+                                    if application_status.user.get_email:
+                                        get_email_object(
+                                            subject=f'Notification for shortlisted tender',
+                                            email_template_name='email-templates/send-notification.html',
+                                            context=email_context,
+                                            to_email=[application_status.user.email, ]
+                                        )
+                    elif action == "rejected":
+                        if application_status.rejected_at:
+                            message = "Already "
+                        else:
+                            application_status.shortlisted_at = None
+                            application_status.rejected_at = datetime.now()
+                            application_status.save()
+                    elif action == "blacklisted":
+                        if 'reason' in request.data:
+                            if BlackList.objects.filter(user=request.user, blacklisted_user=application_status.user):
+                                message = "Already "
+                            else:
+                                BlackList.objects.create(
+                                    user=request.user,
+                                    blacklisted_user=application_status.user,
+                                    reason=request.data['reason']
+                                )
+                        else:
+                            return response.Response(
+                                data={"message": "Please enter a reason"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                    context['message'] = str(message) + str(action)
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                else:
+                    context['message'] = "You do not have permission to perform this action."
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class TenderApplicationsView(generics.ListAPIView):
     """
@@ -560,3 +638,70 @@ class TenderApplicationsView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class RecentApplicationsView(generics.ListAPIView):
+    """
+    A view class that returns a list of AppliedTender instances.
+
+    Attributes:
+            - `serializer_class`: A serializer class used to serialize the AppliedTender instances.
+            - `permission_classes`: A list of permission classes that a user must pass in order to access the view.
+            - `queryset`: A QuerySet instance representing the list of AppliedTender instances. The queryset is not
+                defined in the class, but it can be defined dynamically in the dispatch method.
+            - `filter_backends`: A list of filter backend classes used to filter the queryset.
+            - `search_fields`: A list of fields on which the search filtering is applied.
+            - `pagination_class`: A pagination class that is used to paginate the result set.
+
+    """
+    serializer_class = AppliedTenderSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['tender__title', 'user__email', 'user__name']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.role == "employer":
+            try:
+                queryset = self.filter_queryset(self.get_queryset())
+                page = self.paginate_queryset(queryset)
+                if page is not None:
+                    serializer = self.get_serializer(page, many=True, context={"request": request})
+                    return self.get_paginated_response(serializer.data)
+                serializer = self.get_serializer(queryset, many=True, context={"request": request})
+                return response.Response(serializer.data)
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `AppliedTender instances`. It filters the queryset based on the `employer jobs`
+        provided in the `request query parameters`.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of AppliedTender instances.
+
+        """
+        tender_data = TenderDetails.objects.filter(user=self.request.user.id)
+        return AppliedTender.objects.filter(tender__in=tender_data)
+
