@@ -1,37 +1,19 @@
-# chat/views.py
-from django.shortcuts import redirect
 from django.db.models import Q
-from django.views.generic import View, DetailView
 from rest_framework import (
     status, generics, serializers,
-    response, permissions, filters,
-    renderers, authentication
+    response, permissions
 )
 
-from rest_framework_simplejwt.authentication import JWTAuthentication
-
-# from core.models import Media
-# from core.serializers import MediaSerializer
 from core.pagination import CustomPagination
 from users.models import User
+
 from .models import ChatMessage, Conversation
-from .paginations import LinkPagination
 from .serializers import (
     ChatMessageSerializer, ConversationSerializer,
     UploadAttachmentSerializers
 )
 
 
-class ChatView(View):
-    template_name = 'chat/base.html'
-
-    def get(self, request, *args, **kwargs):
-        # conversation = request.user.conversation_participants.last()
-        # return redirect('chat:chat_room', room_name="str(conversation.id)")
-        return redirect('chat:chat_room', room_name=str("e9dfd38e-d61d-4b8e-93c9-0c197e2b17ee"))
-
-
-# -----------------------------------
 class ConversationListView(generics.ListAPIView):
     serializer_class = ConversationSerializer
     permission_classes = [permissions.AllowAny]
@@ -39,20 +21,24 @@ class ConversationListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
-        context = dict()
-        filtered_queryset = self.filter_queryset(self.get_queryset().filter(chat_user=self.request.user).filter(~Q(last_message=None)))
-        page = self.paginate_queryset(filtered_queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True, context={'user': self.request.user})
-            return self.get_paginated_response(serializer.data)
+        filtered_queryset = self.filter_queryset(
+            self.get_queryset().filter(chat_user=self.request.user).filter(~Q(last_message=None))
+        )
+        paginated_queryset = self.paginate_queryset(filtered_queryset)
 
-        serializer = self.get_serializer(filtered_queryset, many=True, context={'user': self.request.user})
-        return response.Response(serializer.data)
+        serializer = self.get_serializer(
+            paginated_queryset or filtered_queryset,
+            many=True,
+            context={'user': self.request.user}
+        )
+        return self.get_paginated_response(serializer.data) if paginated_queryset else response.Response(
+            serializer.data
+        )
 
-# -----------------------------------
+
 class GetConversationView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get(self, request, userId):
 
         context = dict()
@@ -82,24 +68,6 @@ class GetConversationView(generics.GenericAPIView):
             )
 
 
-# -----------------------------------
-
-
-class ChatRoomView(DetailView):
-    model = Conversation
-    queryset = Conversation.objects.all()
-    context_object_name = "conversation"
-    template_name = "chat/room.html"
-    lookup_field = 'room_name'
-
-    def get_object(self, queryset=None):
-        if queryset is None:
-            queryset = self.get_queryset()
-        queryset = queryset.filter(id=self.kwargs['room_name'])
-        obj = queryset.get()
-        return obj
-
-
 class ChatHistory(generics.ListAPIView):
     serializer_class = ChatMessageSerializer
     permission_classes = [permissions.AllowAny]
@@ -121,7 +89,8 @@ class ChatHistory(generics.ListAPIView):
         if not message_id:
             return ChatMessage.objects.filter(conversation=conversation).order_by('-created')[:10]
         current_object = ChatMessage.objects.get(id=message_id)
-        return ChatMessage.objects.filter(conversation=conversation).filter(created__lt=current_object.created).order_by('-created')[:10]
+        return ChatMessage.objects.filter(conversation=conversation).filter(
+            created__lt=current_object.created).order_by('-created')[:10]
 
 
 class Attachment(generics.GenericAPIView):

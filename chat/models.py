@@ -132,7 +132,7 @@ class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=255,
         editable=False,
         default="text",
-    )  
+    )
 
     class Meta:
         verbose_name = "Chat Message"
@@ -159,7 +159,7 @@ def update_last_message(sender, instance, created, **kwargs):
         Updates the last_message field of the conversation associated with the saved ChatMessage instance.
 
     """
-    
+
     if created:
         conversation = instance.conversation
         conversation.last_message = instance

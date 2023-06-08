@@ -1,20 +1,16 @@
 import logging
-from django.db.models import Q
-import jwt
+
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
-from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.db.models import Q
 
-from koor.config.common import Common
-from users.models import UserSession, User
 from project_meta.models import Media
+from users.models import UserSession, User
+
 from .models import Conversation, ChatMessage
 from .serializers import ChatMessageSerializer, ConversationSerializer
 
-# Get JWT secret key
-SECRET_KEY = settings.SECRET_KEY
 
 class BaseConsumer(JsonWebsocketConsumer):
     """
@@ -87,7 +83,7 @@ class BaseConsumer(JsonWebsocketConsumer):
         Returns:
             User: User instance matching the filter criteria.
         """
-        return get_user_model().objects.get(**kwargs)
+        return User.objects.get(**kwargs)
 
     def get_conversation(self, conversation_id):
         """
@@ -134,13 +130,14 @@ class ChatConsumer(BaseConsumer):
 
         if self.conversation_id:
             if Conversation.all_objects.filter(id=self.conversation_id).filter(is_removed=True).exists():
-                Conversation.all_objects.filter(id=self.conversation_id).filter(is_removed=True).update(is_removed=False)
-            
+                Conversation.all_objects.filter(id=self.conversation_id).filter(is_removed=True).update(
+                    is_removed=False)
+
             conversations = Conversation.objects.filter(id=self.conversation_id)
             if conversations.exists():
                 self.conversation_id = conversations.first().id
                 self.conversation = conversations.first()
-                    
+
         user_id = None
         if 'user_id=' in chat_url:
             user_id = chat_url.split('user_id=')[1].split('&')[0]
@@ -153,10 +150,11 @@ class ChatConsumer(BaseConsumer):
                 user_list = [self.scope["user"], user_instance]
                 if Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
                         is_removed=True).exists():
-                    Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
-                        is_removed=True).update(is_removed=False)
+                    Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(
+                        chat_user=user_instance).filter(is_removed=True).update(is_removed=False)
 
-                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance)
+                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
+                    chat_user=user_instance)
                 if conversations.exists():
                     self.conversation_id = conversations.first().id
                     self.conversation = conversations.first()
@@ -211,14 +209,16 @@ class ChatConsumer(BaseConsumer):
         message = event["content"]
 
         self.send_json(content=message)
-        conversation_instance = Conversation.objects.filter(chat_user=self.scope["user"]).filter(~Q(last_message=None)).first()
+        conversation_instance = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
+            ~Q(last_message=None)).first()
         for chat_user in conversation_instance.chat_user.all():
             async_to_sync(self.channel_layer.group_send)(
                 str(chat_user.id),
                 {
                     "type": "update_conversation",
-                    "content": ConversationSerializer(Conversation.objects.filter(chat_user=chat_user).filter(~Q(last_message=None)),
-                                                    many=True, context={'user': chat_user}).data,
+                    "content": ConversationSerializer(
+                        Conversation.objects.filter(chat_user=chat_user).filter(~Q(last_message=None)),
+                        many=True, context={'user': chat_user}).data,
                     "sender_channel_name": self.channel_name,
                 }
             )
@@ -306,4 +306,3 @@ class ChatActivityConsumer(BaseConsumer):
             event (dict): The event data.
         """
         self.send_json(content=event)
-        
