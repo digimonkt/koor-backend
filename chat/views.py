@@ -15,6 +15,31 @@ from .serializers import (
 
 
 class ConversationListView(generics.ListAPIView):
+    """
+    API view for listing conversations.
+
+    This view returns a paginated list of conversations filtered by the current user, excluding conversations with no
+    last message. The conversations are serialized using the ConversationSerializer class.
+
+    Required permissions:
+        - AllowAny: All users have access to this view.
+
+    Pagination:
+        - The paginated response is based on the CustomPagination class.
+
+    HTTP Methods:
+        - GET: Retrieves the paginated list of conversations.
+
+    Query Parameters:
+        - None
+
+    Response:
+        - If pagination is applied and there are paginated results, the response includes the paginated data with
+            pagination metadata.
+        - If pagination is not applied or there are no paginated results, the response includes the serialized data
+        for all conversations.
+    """
+
     serializer_class = ConversationSerializer
     permission_classes = [permissions.AllowAny]
     queryset = Conversation.objects.all()
@@ -40,32 +65,40 @@ class GetConversationView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, userId):
+        """
+        Get the conversation ID between the authenticated user and the specified user ID.
 
-        context = dict()
+        Args:
+            request (HttpRequest): The HTTP request object.
+            userId (int): The ID of the user to retrieve the conversation for.
+
+        Returns:
+            A response object with the following possible statuses:
+            - 200 OK: If the conversation exists, returns the conversation ID in the response data.
+            - 404 NOT FOUND: If the specified user ID does not exist.
+            - 400 BAD REQUEST: If an error occurred during the conversation retrieval.
+
+        Raises:
+            N/A
+        """
+        
+        context = {}
+
         try:
             user_instance = User.objects.get(id=userId)
-            converesation = Conversation.objects.get(chat_user=self.request.user and user_instance)
-            context['converesation_id'] = converesation.id
-            return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
-            )
-        except User.DoesNotExist:
-            return response.Response(
-                data={"userId": "Invalid userId"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            conversation = Conversation.objects.get(chat_user=self.request.user and user_instance)
+            context['conversation_id'] = conversation.id
+            return response.Response(data=context, status=status.HTTP_200_OK)
+
         except Conversation.DoesNotExist:
-            return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
-            )
+            return response.Response(data=context, status=status.HTTP_200_OK)
+
+        except User.DoesNotExist:
+            return response.Response(data={'userId': 'Invalid userId'}, status=status.HTTP_404_NOT_FOUND)
+
         except Exception as e:
             context["error"] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChatHistory(generics.ListAPIView):
