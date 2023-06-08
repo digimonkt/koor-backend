@@ -1,56 +1,53 @@
-import io, csv, os, pathlib
+import csv
+import io
+import os
+import pathlib
 from datetime import datetime, date, timedelta
-from django.db.models import Exists, OuterRef
 
+from django.db.models import Exists, OuterRef
 from django.db.models import Q
 from django_filters import rest_framework as django_filters
-
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
-
+from jobs.filters import JobDetailsFilter
 from jobs.models import (
     JobCategory, JobDetails,
     JobSubCategory
 )
-from jobs.filters import JobDetailsFilter
-
-from users.filters import UsersFilter
-from user_profile.models import EmployerProfile
-from users.models import UserSession, User
-
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
     AllCountry, AllCity,
     Choice, OpportunityType
 )
-
-from tenders.models import TenderCategory, TenderDetails
 from tenders.filters import TenderDetailsFilter
-
+from tenders.models import TenderCategory, TenderDetails
+from user_profile.models import EmployerProfile
+from users.filters import UsersFilter
+from users.models import UserSession, User
 from .models import (
     Content, ResourcesContent, SocialUrl,
-    AboutUs, FaqCategory, FAQ
+    AboutUs, FaqCategory, FAQ, CategoryLogo
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
-    DashboardCountSerializers, TenderCategorySerializers, 
+    DashboardCountSerializers, TenderCategorySerializers,
     JobSubCategorySerializers, OpportunityTypeSerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers,
     ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
     CreateResourcesSerializers, SocialUrlSerializers,
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
-    FAQSerializers, CreateFAQSerializers, UploadLogoSerializers
+    FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
+    LogoSerializers
 )
 
 
@@ -4202,7 +4199,7 @@ class ResourcesDetailView(generics.GenericAPIView):
             )
 
 
-class UploadLogo(generics.GenericAPIView):
+class UploadLogo(generics.ListAPIView):
     """
     A view for uploading logos.
 
@@ -4226,8 +4223,38 @@ class UploadLogo(generics.GenericAPIView):
 
     """
 
-    serializer_class = UploadLogoSerializers
     permission_classes = [permissions.AllowAny]
+    serializer_class = LogoSerializers
+    queryset = CategoryLogo.objects.filter(status=True)
+
+    def list(self, request):
+        """
+        Retrieves a list of serialized data.
+
+        This method retrieves a list of data by executing the queryset specified in the class.
+        It filters the queryset based on the request parameters and applies any necessary serialization.
+        The resulting serialized data is returned in the response.
+
+        Parameters:
+            request (Request): The request object containing information about the client's request.
+
+        Returns:
+            A Response object containing the serialized data as the response payload.
+
+        Example Usage:
+            # Create an instance of the class containing the `list` method
+            instance = ClassName()
+
+            # Create a request object
+            request = Request()
+
+            # Invoke the `list` method
+            response = instance.list(request)
+        """
+        
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
 
     def post(self, request):
         """
@@ -4240,12 +4267,12 @@ class UploadLogo(generics.GenericAPIView):
             A Response object containing the result of the upload operation.
         """
 
-        serializer = self.serializer_class(data=request.data)
+        serializer = UploadLogoSerializers(data=request.data)
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 get_url = serializer.save()
-                return response.Response(data=get_url.data, status=status.HTTP_201_CREATED)
+                return response.Response(data=get_url, status=status.HTTP_201_CREATED)
             else:
                 return response.Response(
                     data={'message': "You do not have permission to perform this action."},
@@ -4256,3 +4283,59 @@ class UploadLogo(generics.GenericAPIView):
                 data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+    def delete(self, request, logoId):
+        """
+        Deletes a category logo.
+
+        - This method handles the HTTP DELETE request to delete a category logo with the specified logoId.
+        - If the user making the request is a staff member, the category logo is deleted from the database.
+        - If the logo is found and deleted successfully, a success message is returned with a status code 
+            of 200.
+        - If the logo does not exist, a corresponding error message is returned with a status code of 404.
+        - If any other exception occurs during the deletion process, the exception message is returned with 
+            a status code of 404.
+        - If the user is not a staff member, an unauthorized message is returned with a status code of 401.
+
+        Parameters:
+            - request (HttpRequest): The request object containing the user making the request.
+            - logoId (int): The ID of the category logo to be deleted.
+
+        Returns:
+            - A Response object containing the result of the deletion operation.
+
+        Example Usage:
+            # Create an instance of the view
+            view = CategoryLogo()
+
+            # Make a DELETE request to delete a category logo with ID 42
+            request = HttpRequest()
+            response = view.delete(request, 42)
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                CategoryLogo.objects.get(id=logoId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except CategoryLogo.DoesNotExist:
+                return response.Response(
+                    data={"logoId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            ) 

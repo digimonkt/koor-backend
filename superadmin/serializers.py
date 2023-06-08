@@ -18,6 +18,7 @@ from project_meta.serializers import (
     TagSerializer, ChoiceSerializer,
     OpportunityTypeSerializer
 )
+from chat.serializers import AttachmentSerializer
 
 from tenders.models import TenderCategory, TenderDetails
 from tenders.serializers import TenderCategorySerializer
@@ -1238,5 +1239,13 @@ class UploadLogoSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             category_logo_instance.logo = media_instance
             category_logo_instance.save()
-        return self
+            return media_instance.file_path.url
+        return None
 
+
+class LogoSerializers(serializers.ModelSerializer):
+
+    logo = AttachmentSerializer()
+    class Meta:
+        model = CategoryLogo
+        fields = ['id', 'logo']
