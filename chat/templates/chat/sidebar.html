@@ -1,0 +1,15 @@
+{% load static %}
+
+<div id="sidepanel">
+  <div id="search">
+    <a href="{% url 'admin:index' %}">
+      <img src="/static_root/img/profile.png" alt="Logo" class="profile-logo" style="margin: 8px 0px;">
+    </a>
+    <input type="text" placeholder="Search contacts..." name="search"/>
+    <label for="search"><i class="fa fa-search" aria-hidden="true"></i></label>
+  </div>
+  <div id="contacts">
+    <ul class="userlist">
+    </ul>
+  </div>
+</div>
