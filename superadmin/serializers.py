@@ -18,6 +18,7 @@ from project_meta.serializers import (
     TagSerializer, ChoiceSerializer,
     OpportunityTypeSerializer
 )
+from chat.serializers import AttachmentSerializer
 
 from tenders.models import TenderCategory, TenderDetails
 from tenders.serializers import TenderCategorySerializer
@@ -27,7 +28,8 @@ from users.models import User, UserSession
 
 from .models import (
     Content, ResourcesContent, SocialUrl,
-    AboutUs, FaqCategory, FAQ
+    AboutUs, FaqCategory, FAQ,
+    CategoryLogo, Testimonial
 )
 
 
@@ -1169,4 +1171,229 @@ class CreateFAQSerializers(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
+        return instance
+
+
+class UploadLogoSerializers(serializers.ModelSerializer):
+    """
+    Serializes the `Media` model fields for logo data.
+
+    This serializer is used to convert the `Media` model fields into a JSON representation
+    for logo data. It specifies the model, `Media`, and the fields to be included
+    in the serialized output.
+
+    Attributes:
+        model (class): The model class that the serializer is based on.
+        fields (list): The list of fields from the `Media` model to be serialized.
+
+    Example:
+        serializer = UploadLogoSerializers(data)
+        serialized_data = serializer.data
+
+    """
+    category_logo = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+    
+    class Meta:
+        model = CategoryLogo
+        fields = ['id', 'category_logo']
+
+    def validate_category_logo(self, category_logo):
+        """
+        Validates that the uploaded category logo is a valid image file.
+
+        Args:
+            - `category_logo (File)`: The category logo file to validate.
+
+        Returns:
+            - `File`: The validated category logo file.
+
+        Raises:
+            - `ValidationError`: If the category logo file is `blank or invalid`.
+        """
+        if category_logo in ["", None]:
+            raise serializers.ValidationError('Category logo can not be blank.', code='category_logo')
+        content_type = str(category_logo.content_type).split("/")
+        if content_type[0] == "image":
+            return category_logo
+        else:
+            raise serializers.ValidationError('Invalid category logo.', code='category_logo')
+
+    def save(self):
+        category_logo = None
+        if 'category_logo' in self.validated_data:
+            category_logo = self.validated_data.pop('category_logo')
+        category_logo_instance = super().save(status=True)
+        if category_logo:
+            content_type = str(category_logo.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=category_logo.name, file_path=category_logo, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            category_logo_instance.logo = media_instance
+            category_logo_instance.save()
+            return media_instance.file_path.url
+        return None
+
+
+class LogoSerializers(serializers.ModelSerializer):
+
+    logo = AttachmentSerializer()
+    class Meta:
+        model = CategoryLogo
+        fields = ['id', 'logo']
+
+
+class GetTestimonialSerializers(serializers.ModelSerializer):
+    """
+    Serializer for retrieving testimonials.
+
+    This serializer is used to convert Testimonial model instances into JSON-compatible representations.
+    It includes a nested image field, serialized using the AttachmentSerializer.
+
+    Attributes:
+        - image: An instance of the AttachmentSerializer used to serialize the image field.
+    
+    Meta:
+        - model: The model class to be serialized (Testimonial).
+        - fields: The fields to include in the serialized output (id, title, client_name, client_company, 
+            client_position, description, image).
+        - read_only_fields: The fields that are read-only and should not be modified when deserializing input 
+            data (id).
+    """
+    
+    image = AttachmentSerializer()
+    class Meta:
+        model = Testimonial
+        fields = ['id', 'title', 'client_name', 'client_company', 'client_position', 'description', 'image']
+        read_only_fields = ['id'] 
+
+
+class TestimonialSerializers(serializers.ModelSerializer):
+    """
+    Serializes and deserializes Testimonial objects.
+
+    This class defines the serialization and deserialization behavior for Testimonial objects,
+    allowing them to be represented as JSON or validated input data. It provides a file field
+    for the testimonial image, allowing file upload and processing.
+
+    Attributes:
+        testimonial_image (serializers.FileField): A file field for the testimonial image.
+            It specifies the input type as a file and allows only non-null values.
+
+    Meta:
+        model (Testimonial): The model class to be serialized/deserialized.
+        fields (list): The list of fields to be included in the serialization/deserialization.
+
+    Usage:
+        serializer = TestimonialSerializers(data=request.data)
+        if serializer.is_valid():
+            testimonial = serializer.save()
+            # Perform further operations with the serialized testimonial object.
+
+    """
+    
+    testimonial_image = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = Testimonial
+        fields = ['id', 'title', 'client_name', 'client_company', 'client_position', 'description', 'testimonial_image']
+
+    def validate_testimonial_image(self, testimonial_image):
+        """
+        Validates the testimonial image provided.
+
+        Parameters:
+            testimonial_image (File): The testimonial image to validate.
+
+        Raises:
+            serializers.ValidationError: If the testimonial image is blank or not an image.
+
+        Returns:
+            File: The validated testimonial image.
+
+        """
+    
+        if not testimonial_image:
+            raise serializers.ValidationError('Testimonial image cannot be blank.', code='testimonial_image')
+        content_type = testimonial_image.content_type.split("/")
+        if content_type[0] != "image":
+            raise serializers.ValidationError('Invalid testimonial image.', code='testimonial_image')
+        return testimonial_image
+
+    def save(self):
+        """
+        Save method for TestimonialSerializers.
+
+        This method saves the testimonial instance along with its associated image.
+        It retrieves the testimonial image from the validated data, creates a media instance,
+        and links it to the testimonial instance.
+
+        Returns:
+            self: The updated TestimonialSerializers instance.
+
+        Raises:
+            N/A
+        """
+
+        testimonial_image = None
+        if 'testimonial_image' in self.validated_data:
+            testimonial_image = self.validated_data.pop('testimonial_image')
+        testimonial_instance = super().save(status=True)
+        if testimonial_image:
+            content_type = testimonial_image.content_type.split("/")
+            media_type = content_type[0] if content_type[0] in ["video", "image"] else 'document'
+            media_instance = Media(title=testimonial_image.name, file_path=testimonial_image, media_type=media_type)
+            media_instance.save()
+            testimonial_instance.image = media_instance
+            testimonial_instance.save()
+        return self
+
+    def update(self, instance, validated_data):
+        """
+        Update an existing Testimonial instance with the provided validated data.
+        
+        Args:
+            self: The TestimonialSerializer instance.
+            instance: The Testimonial object to update.
+            validated_data: A dictionary of validated data containing the fields to update.
+            
+        Returns:
+            The updated Testimonial instance.
+            
+        Raises:
+            N/A
+            
+        This method updates the fields of the Testimonial instance based on the provided
+        validated data. If there is a 'testimonial_image' field in the validated data, it
+        is extracted and used to create a Media instance. The media type of the image is 
+        determined based on the content type. The Media instance is then associated with
+        the Testimonial instance by assigning it to the 'image' field. The 'slug' field of
+        the Testimonial instance is updated with a slugified version of the testimonial
+        title. Finally, the updated Testimonial instance is saved and returned.
+        """
+        
+        testimonial_image = None
+        if 'testimonial_image' in self.validated_data:
+            testimonial_image = self.validated_data.pop('testimonial_image')
+        testimonial_instance = super().update(instance, validated_data)
+        if testimonial_image:
+            content_type = testimonial_image.content_type.split("/")
+            media_type = content_type[0] if content_type[0] in ["video", "image"] else 'document'
+            media_instance = Media(title=testimonial_image.name, file_path=testimonial_image, media_type=media_type)
+            media_instance.save()
+            instance.image = media_instance
+        instance.slug = slugify(testimonial_instance.title)
+        instance.save()
         return instance

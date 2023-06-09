@@ -1,56 +1,54 @@
-import io, csv, os, pathlib
+import csv
+import io
+import os
+import pathlib
 from datetime import datetime, date, timedelta
-from django.db.models import Exists, OuterRef
 
+from django.db.models import Exists, OuterRef
 from django.db.models import Q
 from django_filters import rest_framework as django_filters
-
 from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
-from rest_framework.pagination import LimitOffsetPagination
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
-
+from jobs.filters import JobDetailsFilter
 from jobs.models import (
     JobCategory, JobDetails,
     JobSubCategory
 )
-from jobs.filters import JobDetailsFilter
-
-from users.filters import UsersFilter
-from user_profile.models import EmployerProfile
-from users.models import UserSession, User
-
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
     AllCountry, AllCity,
     Choice, OpportunityType
 )
-
-from tenders.models import TenderCategory, TenderDetails
 from tenders.filters import TenderDetailsFilter
-
+from tenders.models import TenderCategory, TenderDetails
+from user_profile.models import EmployerProfile
+from users.filters import UsersFilter
+from users.models import UserSession, User
 from .models import (
     Content, ResourcesContent, SocialUrl,
-    AboutUs, FaqCategory, FAQ
+    AboutUs, FaqCategory, FAQ, CategoryLogo,
+    Testimonial
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
     TagSerializers, ChangePasswordSerializers, ContentSerializers,
     CandidatesSerializers, JobListSerializers, UserCountSerializers,
-    DashboardCountSerializers, TenderCategorySerializers, 
+    DashboardCountSerializers, TenderCategorySerializers,
     JobSubCategorySerializers, OpportunityTypeSerializers,
     AllCountrySerializers, GetJobSubCategorySerializers,
     AllCitySerializers, GetCitySerializers,
     ChoiceSerializers, TenderListSerializers, ResourcesSerializers,
     CreateResourcesSerializers, SocialUrlSerializers,
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
-    FAQSerializers, CreateFAQSerializers
+    FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
+    LogoSerializers, TestimonialSerializers, GetTestimonialSerializers
 )
 
 
@@ -4200,3 +4198,343 @@ class ResourcesDetailView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class UploadLogo(generics.ListAPIView):
+    """
+    A view for uploading logos.
+
+    This class-based view handles the HTTP POST request for uploading logos.
+        - It uses the specified serializer to validate the request data and save the logo.
+        - If the data is valid, the view returns the URL of the saved logo with a status code of 201.
+        - If there are validation errors, the view returns the error details with a status code of 400.
+
+    Attributes:
+        - serializer_class (Serializer): The serializer class used to validate and save the logo.
+        - permission_classes (list): A list of permission classes applied to the view.
+
+    Methods:
+        - post(request): Handles the POST request for uploading logos.
+
+    Raises:
+        - serializers.ValidationError: If the provided data is invalid according to the serializer.
+
+    Returns:
+        - A Response object containing the result of the upload operation.
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = LogoSerializers
+    queryset = CategoryLogo.objects.filter(status=True)
+
+    def list(self, request):
+        """
+        Retrieves a list of serialized data.
+
+        This method retrieves a list of data by executing the queryset specified in the class.
+        It filters the queryset based on the request parameters and applies any necessary serialization.
+        The resulting serialized data is returned in the response.
+
+        Parameters:
+            request (Request): The request object containing information about the client's request.
+
+        Returns:
+            A Response object containing the serialized data as the response payload.
+
+        Example Usage:
+            # Create an instance of the class containing the `list` method
+            instance = ClassName()
+
+            # Create a request object
+            request = Request()
+
+            # Invoke the `list` method
+            response = instance.list(request)
+        """
+        
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handles the HTTP POST request for uploading logos.
+
+        Parameters:
+            request (HttpRequest): The request object containing the logo data.
+
+        Returns:
+            A Response object containing the result of the upload operation.
+        """
+
+        serializer = UploadLogoSerializers(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                get_url = serializer.save()
+                return response.Response(data=get_url, status=status.HTTP_201_CREATED)
+            else:
+                return response.Response(
+                    data={'message': "You do not have permission to perform this action."},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, logoId):
+        """
+        Deletes a category logo.
+
+        - This method handles the HTTP DELETE request to delete a category logo with the specified logoId.
+        - If the user making the request is a staff member, the category logo is deleted from the database.
+        - If the logo is found and deleted successfully, a success message is returned with a status code 
+            of 200.
+        - If the logo does not exist, a corresponding error message is returned with a status code of 404.
+        - If any other exception occurs during the deletion process, the exception message is returned with 
+            a status code of 404.
+        - If the user is not a staff member, an unauthorized message is returned with a status code of 401.
+
+        Parameters:
+            - request (HttpRequest): The request object containing the user making the request.
+            - logoId (int): The ID of the category logo to be deleted.
+
+        Returns:
+            - A Response object containing the result of the deletion operation.
+
+        Example Usage:
+            # Create an instance of the view
+            view = CategoryLogo()
+
+            # Make a DELETE request to delete a category logo with ID 42
+            request = HttpRequest()
+            response = view.delete(request, 42)
+        """
+
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                CategoryLogo.objects.get(id=logoId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except CategoryLogo.DoesNotExist:
+                return response.Response(
+                    data={"logoId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            ) 
+
+
+class TestimonialView(generics.ListAPIView):
+    """
+    A view for retrieving a list of testimonials.
+
+    This view allows both staff and non-staff users to retrieve a list of testimonials.
+    The testimonials can be filtered by title using the search functionality.
+    Pagination is applied to the results.
+
+    Attributes:
+        - permission_classes (list): A list of permission classes for the view. AllowAny is used, meaning all users
+            have access.
+        - serializer_class: The serializer class used for serializing and deserializing testimonial data.
+        - queryset: The queryset representing the testimonials to be retrieved.
+        - filter_backends (list): A list of filter backends for the view. SearchFilter is used for title filtering.
+        - search_fields (list): A list of fields that can be searched for filtering the testimonials.
+        - pagination_class: The pagination class used for paginating the testimonials.
+
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = GetTestimonialSerializers
+    queryset = Testimonial.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Retrieves a paginated list of testimonials.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A paginated response containing serialized testimonial data.
+
+        """
+
+        queryset = self.filter_queryset(self.get_queryset()) if self.request.user.is_staff else self.filter_queryset(
+            self.get_queryset().filter(status=True))
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True) if page is not None else self.get_serializer(
+            queryset, many=True)
+        return self.get_paginated_response(serializer.data) if page is not None else response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Create a new testimonial.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A Response object with the created testimonial data and status code 201 if successful, or a Response object
+             with an error message and status code 400 if there are validation errors or any other exception occurs
+             during the process.
+
+        Raises:
+            serializers.ValidationError: If the serializer validation fails.
+
+        """
+
+        context = dict()
+        serializer = TestimonialSerializers(data=request.data)
+        if not self.request.user.is_staff:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.update_testimonial(serializer.validated_data['title'])
+            serializer.save()
+            context['data'] = serializer.data
+            context['data']['image'] = self.get_testimonial_image(serializer.data['id'])
+            return response.Response(data=context, status=status.HTTP_201_CREATED)
+        except (serializers.ValidationError, Exception) as e:
+            context['message'] = str(e)
+            return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, testimonialId):
+        """
+        Delete a testimonial.
+
+        Args:
+            request: The HTTP request object.
+            testimonialId (int): The ID of the testimonial to delete.
+
+        Returns:
+            A response containing the result of the deletion operation.
+
+        Raises:
+            Testimonial.DoesNotExist: If the testimonial with the specified ID does not exist.
+            Exception: If an error occurs during the deletion process.
+
+        """
+
+        context = dict()
+        if not self.request.user.is_staff:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            testimonial = Testimonial.objects.get(id=testimonialId)
+            testimonial.delete()
+            context['message'] = "Deleted Successfully"
+            return response.Response(data=context, status=status.HTTP_200_OK)
+        except Testimonial.DoesNotExist:
+            return response.Response(data={"testimonialId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(data=context, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, testimonialId):
+        """
+        Update a testimonial.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - testimonialId (int): The ID of the testimonial to be updated.
+
+        Returns:
+            - HttpResponse: The HTTP response containing the result of the update operation.
+
+        Raises:
+            - Testimonial.DoesNotExist: If the testimonial with the given ID does not exist.
+            - serializers.ValidationError: If the serializer encounters a validation error.
+            - Exception: If an unexpected exception occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            testimonial_instance = Testimonial.all_objects.get(id=testimonialId)
+            serializer = TestimonialSerializers(data=request.data, instance=testimonial_instance, partial=True)
+            serializer.is_valid(raise_exception=True)
+            if serializer.update(testimonial_instance, serializer.validated_data):
+                context['message'] = "Updated Successfully"
+                return response.Response(data=context, status=status.HTTP_200_OK)
+        except Testimonial.DoesNotExist:
+            return response.Response(data={"testimonialId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+        except (serializers.ValidationError, Exception) as e:
+            context['message'] = str(e)
+            return response.Response(data=context, status=status.HTTP_404_NOT_FOUND)
+
+    def get_filtered_queryset(self):
+        """
+        Retrieve the filtered queryset based on the user's staff status.
+
+        If the user is a staff member, the function returns the filtered queryset obtained by calling
+        `filter_queryset` on the original queryset.
+
+        If the user is not a staff member, the function returns the filtered queryset obtained by calling
+        `filter_queryset` on the original queryset and further filtering it based on the `status` field being `True`.
+
+        Returns:
+            QuerySet: The filtered queryset based on the user's staff status.
+
+        """
+
+        if self.request.user.is_staff:
+            return self.filter_queryset(self.get_queryset())
+        else:
+            return self.filter_queryset(self.get_queryset().filter(status=True))
+
+    def update_testimonial(self, title):
+        """
+        Updates the status of a testimonial by setting 'is_removed' to False if a testimonial with the given title
+        exists and its 'is_removed' field is currently set to True.
+
+        Args:
+            title (str): The title of the testimonial to update.
+
+        Returns:
+            None
+        """
+
+        testimonial_qs = Testimonial.all_objects.filter(title__iexact=title, is_removed=True)
+        if testimonial_qs.exists():
+            testimonial_qs.update(is_removed=False)
+
+    def get_testimonial_image(self, testimonial_id):
+        """
+        Retrieves the image file path URL associated with a testimonial.
+
+        Args:
+            testimonial_id (int): The ID of the testimonial.
+
+        Returns:
+            str or None: The file path URL of the testimonial image if it exists,
+                         otherwise None.
+
+        Raises:
+            Testimonial.DoesNotExist: If the testimonial with the given ID does not exist.
+        """
+
+        testimonial_instance = Testimonial.objects.get(id=testimonial_id)
+        return testimonial_instance.image.file_path.url if testimonial_instance.image else None

@@ -103,14 +103,23 @@ class AttachmentSerializer(serializers.ModelSerializer):
         serialized_data = serializer.data
 
     """
+    type = serializers.SerializerMethodField()
+    path = serializers.SerializerMethodField()
     class Meta:
         model = Media
         fields = [
             'id',
             'title',
             'type',
-            'url',
+            'path'
         ]
+            
+    def get_type(self, obj):
+        return obj.media_type  
+      
+    def get_path(self, obj):
+        return obj.file_path.url
+
 
 
 class ChatMessageSerializer(serializers.ModelSerializer):
