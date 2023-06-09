@@ -429,8 +429,6 @@ class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
     
     email = models.EmailField(
         verbose_name=_('Email Address'),
-        blank=True,
-        null=True,
         db_column="email"
     )
     status = models.BooleanField(
