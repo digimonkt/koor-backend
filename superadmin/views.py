@@ -32,7 +32,8 @@ from users.filters import UsersFilter
 from users.models import UserSession, User
 from .models import (
     Content, ResourcesContent, SocialUrl,
-    AboutUs, FaqCategory, FAQ, CategoryLogo
+    AboutUs, FaqCategory, FAQ, CategoryLogo,
+    Testimonial
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -47,7 +48,7 @@ from .serializers import (
     CreateResourcesSerializers, SocialUrlSerializers,
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
-    LogoSerializers
+    LogoSerializers, TestimonialSerializers, GetTestimonialSerializers
 )
 
 
@@ -4339,3 +4340,201 @@ class UploadLogo(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             ) 
+
+
+class TestimonialView(generics.ListAPIView):
+    """
+    A view for retrieving a list of testimonials.
+
+    This view allows both staff and non-staff users to retrieve a list of testimonials.
+    The testimonials can be filtered by title using the search functionality.
+    Pagination is applied to the results.
+
+    Attributes:
+        - permission_classes (list): A list of permission classes for the view. AllowAny is used, meaning all users
+            have access.
+        - serializer_class: The serializer class used for serializing and deserializing testimonial data.
+        - queryset: The queryset representing the testimonials to be retrieved.
+        - filter_backends (list): A list of filter backends for the view. SearchFilter is used for title filtering.
+        - search_fields (list): A list of fields that can be searched for filtering the testimonials.
+        - pagination_class: The pagination class used for paginating the testimonials.
+
+    """
+    
+    permission_classes = [permissions.AllowAny]
+    serializer_class = GetTestimonialSerializers
+    queryset = Testimonial.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Retrieves a paginated list of testimonials.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A paginated response containing serialized testimonial data.
+
+        """
+
+        queryset = self.filter_queryset(self.get_queryset()) if self.request.user.is_staff else self.filter_queryset(
+            self.get_queryset().filter(status=True))
+        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(page, many=True) if page is not None else self.get_serializer(
+            queryset, many=True)
+        return self.get_paginated_response(serializer.data) if page is not None else response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Create a new testimonial.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A Response object with the created testimonial data and status code 201 if successful, or a Response object
+             with an error message and status code 400 if there are validation errors or any other exception occurs
+             during the process.
+
+        Raises:
+            serializers.ValidationError: If the serializer validation fails.
+
+        """
+
+        context = dict()
+        serializer = TestimonialSerializers(data=request.data)
+        if not self.request.user.is_staff:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.update_testimonial(serializer.validated_data['title'])
+            serializer.save()
+            context['data'] = serializer.data
+            context['data']['image'] = self.get_testimonial_image(serializer.data['id'])
+            return response.Response(data=context, status=status.HTTP_201_CREATED)
+        except (serializers.ValidationError, Exception) as e:
+            context['message'] = str(e)
+            return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, testimonialId):
+        """
+        Delete a testimonial.
+
+        Args:
+            request: The HTTP request object.
+            testimonialId (int): The ID of the testimonial to delete.
+
+        Returns:
+            A response containing the result of the deletion operation.
+
+        Raises:
+            Testimonial.DoesNotExist: If the testimonial with the specified ID does not exist.
+            Exception: If an error occurs during the deletion process.
+
+        """
+
+        context = dict()
+        if not self.request.user.is_staff:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            testimonial = Testimonial.objects.get(id=testimonialId)
+            testimonial.delete()
+            context['message'] = "Deleted Successfully"
+            return response.Response(data=context, status=status.HTTP_200_OK)
+        except Testimonial.DoesNotExist:
+            return response.Response(data={"testimonialId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(data=context, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, testimonialId):
+        """
+        Update a testimonial.
+
+        Args:
+            - request (HttpRequest): The HTTP request object.
+            - testimonialId (int): The ID of the testimonial to be updated.
+
+        Returns:
+            - HttpResponse: The HTTP response containing the result of the update operation.
+
+        Raises:
+            - Testimonial.DoesNotExist: If the testimonial with the given ID does not exist.
+            - serializers.ValidationError: If the serializer encounters a validation error.
+            - Exception: If an unexpected exception occurs during the update process.
+        """
+
+        context = dict()
+        try:
+            testimonial_instance = Testimonial.all_objects.get(id=testimonialId)
+            serializer = TestimonialSerializers(data=request.data, instance=testimonial_instance, partial=True)
+            serializer.is_valid(raise_exception=True)
+            if serializer.update(testimonial_instance, serializer.validated_data):
+                context['message'] = "Updated Successfully"
+                return response.Response(data=context, status=status.HTTP_200_OK)
+        except Testimonial.DoesNotExist:
+            return response.Response(data={"testimonialId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+        except (serializers.ValidationError, Exception) as e:
+            context['message'] = str(e)
+            return response.Response(data=context, status=status.HTTP_404_NOT_FOUND)
+
+    def get_filtered_queryset(self):
+        """
+        Retrieve the filtered queryset based on the user's staff status.
+
+        If the user is a staff member, the function returns the filtered queryset obtained by calling
+        `filter_queryset` on the original queryset.
+
+        If the user is not a staff member, the function returns the filtered queryset obtained by calling
+        `filter_queryset` on the original queryset and further filtering it based on the `status` field being `True`.
+
+        Returns:
+            QuerySet: The filtered queryset based on the user's staff status.
+
+        """
+
+        if self.request.user.is_staff:
+            return self.filter_queryset(self.get_queryset())
+        else:
+            return self.filter_queryset(self.get_queryset().filter(status=True))
+
+    def update_testimonial(self, title):
+        """
+        Updates the status of a testimonial by setting 'is_removed' to False if a testimonial with the given title
+        exists and its 'is_removed' field is currently set to True.
+
+        Args:
+            title (str): The title of the testimonial to update.
+
+        Returns:
+            None
+        """
+
+        testimonial_qs = Testimonial.all_objects.filter(title__iexact=title, is_removed=True)
+        if testimonial_qs.exists():
+            testimonial_qs.update(is_removed=False)
+
+    def get_testimonial_image(self, testimonial_id):
+        """
+        Retrieves the image file path URL associated with a testimonial.
+
+        Args:
+            testimonial_id (int): The ID of the testimonial.
+
+        Returns:
+            str or None: The file path URL of the testimonial image if it exists,
+                         otherwise None.
+
+        Raises:
+            Testimonial.DoesNotExist: If the testimonial with the given ID does not exist.
+        """
+
+        testimonial_instance = Testimonial.objects.get(id=testimonial_id)
+        return testimonial_instance.image.file_path.url if testimonial_instance.image else None
