@@ -398,9 +398,54 @@ class Testimonial(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         blank=True,
         default=False
     )
+    
+    def __str__(self):
+        return str(self.title)
 
     class Meta:
         verbose_name = "Testimonial"
         verbose_name_plural = "Testimonials"
         db_table = "Testimonial"
+        ordering = ['-created']
+
+
+class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
+    """
+    Represents a newsletter subscriber.
+
+    Attributes:
+        email (str): The email address of the subscriber.
+        status (bool): The status of the subscriber (True for active, False for inactive).
+
+    Meta:
+        verbose_name (str): The human-readable name of the model.
+        verbose_name_plural (str): The plural version of the verbose_name.
+        db_table (str): The name of the database table for the model.
+        ordering (list): The default ordering for querysets of this model.
+
+    Methods:
+        __str__(): Returns a string representation of the newsletter user object.
+    """
+    
+    email = models.EmailField(
+        verbose_name=_('Email Address'),
+        blank=True,
+        null=True,
+        db_column="email"
+    )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    def __str__(self):
+        return str(self.email)
+    
+    class Meta:
+        verbose_name = "Newsletter User"
+        verbose_name_plural = "Newsletter Users"
+        db_table = "NewsletterUser"
         ordering = ['-created']
