@@ -301,7 +301,21 @@ class FAQ(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
 
 
 class CategoryLogo(BaseModel, TimeStampedModel, models.Model):
+    """
+    Represents a category logo in the application.
 
+    Attributes:
+        logo (Media): The logo associated with the category.
+        status (bool): The status of the category logo.
+
+    Meta:
+        verbose_name (str): The singular name for the category logo model.
+        verbose_name_plural (str): The plural name for the category logo model.
+        db_table (str): The name of the database table for the category logo model.
+        ordering (list): The default ordering for category logos.
+
+    """
+    
     logo = models.OneToOneField(
         Media,
         verbose_name=_('Logo'),
@@ -320,7 +334,73 @@ class CategoryLogo(BaseModel, TimeStampedModel, models.Model):
     )
 
     class Meta:
-        verbose_name = "CategoryLogo"
+        verbose_name = "Category Logo"
         verbose_name_plural = "Category Logos"
         db_table = "CategoryLogo"
+        ordering = ['-created']
+
+class Testimonial(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Testimonial Model represents a testimonial given by a client.
+
+    Inherits from SlugBaseModel, SoftDeleteModel, TimeStampedModel, and models.Model.
+
+    Attributes:
+        client_name (CharField): The name of the client providing the testimonial.
+        client_company (CharField): The company of the client providing the testimonial.
+        client_position (CharField): The position of the client providing the testimonial.
+        description (TextField): The description or content of the testimonial.
+        image (OneToOneField): An optional image associated with the testimonial.
+        status (BooleanField): The status of the testimonial (active or inactive).
+
+    Meta:
+        verbose_name (str): The singular name used for the model in the admin interface.
+        verbose_name_plural (str): The plural name used for the model in the admin interface.
+        db_table (str): The name of the database table used to store the model's data.
+        ordering (list): The default ordering for querysets of this model.
+
+    """
+
+    client_name = models.CharField(
+        verbose_name=_('Client Name'),
+        max_length=255,
+        db_column="client_name",
+    )
+    client_company = models.CharField(
+        verbose_name=_('Client Company'),
+        max_length=255,
+        db_column="client_company",
+    )
+    client_position = models.CharField(
+        verbose_name=_('Client Position'),
+        max_length=255,
+        db_column="client_position",
+    )
+    description = models.TextField(
+        verbose_name=_('Description'),
+        null=True,
+        blank=True,
+        db_column="description",
+    )
+    image = models.OneToOneField(
+        Media,
+        verbose_name=_('Image'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="image",
+        related_name='%(app_label)s_%(class)s_image'
+    )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    class Meta:
+        verbose_name = "Testimonial"
+        verbose_name_plural = "Testimonials"
+        db_table = "Testimonial"
         ordering = ['-created']
