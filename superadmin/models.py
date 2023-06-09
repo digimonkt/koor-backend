@@ -3,13 +3,14 @@ from django.utils.translation import gettext as _
 from django.contrib.postgres.fields import ArrayField
 
 from core.models import (
-    BaseModel, SlugBaseModel,  SoftDeleteModel, upload_directory_path
+    BaseModel, SlugBaseModel, SoftDeleteModel, upload_directory_path
 )
 
 from users.models import (
     TimeStampedModel, User
 )
 from project_meta.models import Media
+
 
 class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
     smtp_host = models.CharField(
@@ -68,20 +69,20 @@ class GooglePlaceApi(SoftDeleteModel, models.Model):
         verbose_name=_('API Key'),
         db_column="api_key",
         max_length=255
-        )
+    )
     status = models.BooleanField(
         verbose_name=_('Status'),
         db_column="status",
         default=True
-        )
+    )
 
     def __str__(self):
         return self.api_key
-    
+
     class Meta:
         verbose_name_plural = "Google Place Api"
 
-    
+
 class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This is a Django model for a Job Attachment object, associated with a specific Job item, with the following fields:
@@ -117,7 +118,7 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
         verbose_name_plural = "Resources"
         db_table = "Resources"
         ordering = ['-created']
-    
+
 
 class SocialUrl(BaseModel, SoftDeleteModel, models.Model):
     """
@@ -136,7 +137,7 @@ class SocialUrl(BaseModel, SoftDeleteModel, models.Model):
         - db_table (str): Name of the database table.
         - ordering (list): Default ordering for querysets.
     """
-    
+
     PLATFORM_CHOICE = (
         ('iso_app', "ISO Application"),
         ('android_app', "Android Application"),
@@ -186,7 +187,7 @@ class AboutUs(SlugBaseModel, SoftDeleteModel, models.Model):
     - __str__(): Returns the string representation of the model instance (the title).
 
     """
-    
+
     description = models.TextField(
         verbose_name=_('Description'),
         db_column="description",
@@ -218,6 +219,7 @@ class FaqCategory(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model
     - `title`: A string representing the name of the faq. 
     - `slug`: A string representing the slug for the faq, used in URLs or filtering process.
     """
+
     class Meta:
         verbose_name = "Faq Category"
         verbose_name_plural = "Faq Categories"
@@ -315,7 +317,7 @@ class CategoryLogo(BaseModel, TimeStampedModel, models.Model):
         ordering (list): The default ordering for category logos.
 
     """
-    
+
     logo = models.OneToOneField(
         Media,
         verbose_name=_('Logo'),
@@ -338,6 +340,7 @@ class CategoryLogo(BaseModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Category Logos"
         db_table = "CategoryLogo"
         ordering = ['-created']
+
 
 class Testimonial(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
@@ -398,7 +401,7 @@ class Testimonial(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         blank=True,
         default=False
     )
-    
+
     def __str__(self):
         return str(self.title)
 
@@ -426,9 +429,10 @@ class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
     Methods:
         __str__(): Returns a string representation of the newsletter user object.
     """
-    
+
     email = models.EmailField(
         verbose_name=_('Email Address'),
+        unique=True,
         db_column="email"
     )
     status = models.BooleanField(
@@ -441,7 +445,7 @@ class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
 
     def __str__(self):
         return str(self.email)
-    
+
     class Meta:
         verbose_name = "Newsletter User"
         verbose_name_plural = "Newsletter Users"
