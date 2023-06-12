@@ -4623,20 +4623,13 @@ class NewsletterUserView(generics.ListAPIView):
         context = dict()
         serializer = self.serializer_class(data=request.data)
         try:
-            if self.request.user.is_staff:
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                context["data"] = serializer.data
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            context["data"] = serializer.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_201_CREATED
+            )
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
