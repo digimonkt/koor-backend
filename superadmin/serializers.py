@@ -29,7 +29,7 @@ from users.models import User, UserSession
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
-    CategoryLogo, Testimonial
+    CategoryLogo, Testimonial, NewsletterUser
 )
 
 
@@ -1397,3 +1397,22 @@ class TestimonialSerializers(serializers.ModelSerializer):
         instance.slug = slugify(testimonial_instance.title)
         instance.save()
         return instance
+
+
+class NewsletterUserSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for the Country model.
+
+    This serializer is used to serialize/deserialize Country objects.
+    
+    Attributes:
+        model (django.db.models.Model): The model class associated with the serializer.
+        fields (list): The fields to include in the serialized representation.
+        read_only_fields (list): The fields that are read-only and should not be modified during deserialization.
+    """
+
+    class Meta:
+        model = NewsletterUser
+        fields = ['id', 'email']
+        read_only_fields = ['id']    
+

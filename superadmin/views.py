@@ -33,8 +33,9 @@ from users.models import UserSession, User
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
-    Testimonial
+    Testimonial, NewsletterUser
 )
+
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
@@ -48,7 +49,8 @@ from .serializers import (
     CreateResourcesSerializers, SocialUrlSerializers,
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
-    LogoSerializers, TestimonialSerializers, GetTestimonialSerializers
+    LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
+    NewsletterUserSerializers
 )
 
 
@@ -4538,3 +4540,154 @@ class TestimonialView(generics.ListAPIView):
 
         testimonial_instance = Testimonial.objects.get(id=testimonial_id)
         return testimonial_instance.image.file_path.url if testimonial_instance.image else None
+
+
+class NewsletterUserView(generics.ListAPIView):
+    """
+    API view for retrieving a list of newsletter users.
+
+    This view allows retrieval of a paginated list of newsletter users.
+    The list can be filtered by searching for email addresses.
+
+    Permissions:
+    - This view allows access to any user (permission class: AllowAny).
+
+    Serializer:
+    - NewsletterUserSerializers: Serializer class for serializing the newsletter user data.
+
+    Queryset:
+    - NewsletterUser.objects.all(): Retrieves all newsletter users.
+
+    Filters:
+    - SearchFilter: Allows filtering of newsletter users based on email address.
+
+    Pagination:
+    - CustomPagination: Custom pagination class for paginating the results.
+
+    HTTP Methods:
+    - GET: Retrieve a paginated list of newsletter users.
+
+    Usage:
+    - Send a GET request to retrieve a paginated list of newsletter users.
+    - Use the search parameter to filter the list based on email addresses.
+
+    Example:
+    - GET /newsletter/users/?search=test@example.com
+      Retrieves a paginated list of newsletter users with email addresses matching 'test@example.com'.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = NewsletterUserSerializers
+    queryset = NewsletterUser.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['email']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        Retrieve a paginated list of testimonials.
+
+        Args:
+            request: The request object containing the incoming request data.
+
+        Returns:
+            A response containing the paginated list of testimonials serialized as data.
+
+        """
+        
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        """
+        Handles the HTTP POST request to create a new testimonial.
+
+        Args:
+            request: The HTTP request object.
+
+        Returns:
+            A response containing the created testimonial data if the request is successful and the user has permission.
+            If the user doesn't have permission, returns an unauthorized response.
+            If the request data is invalid, returns a response with the validation errors.
+            If any other exception occurs, returns a response with the error message.
+
+        Raises:
+            N/A
+        """
+
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def delete(self, request, newsletterId):
+        """
+        Delete a newsletter user.
+
+        Args:
+            request: The HTTP request.
+            newsletterId (int): The ID of the newsletter user to be deleted.
+
+        Returns:
+            A response containing the result of the deletion operation.
+
+        Raises:
+            NewsletterUser.DoesNotExist: If the newsletter user with the given ID does not exist.
+            Exception: If an unexpected exception occurs during the deletion process.
+        """
+    
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                NewsletterUser.objects.get(id=newsletterId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except NewsletterUser.DoesNotExist:
+                return response.Response(
+                    data={"newsletterId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
