@@ -12,7 +12,8 @@ from .views import (
     WorldCityView, ChoiceView, OpportunityTypeView,
     TenderListView, TenderRevertView, ResourcesView,
     LinksView, AboutUsView, FaqCategoryView,
-    FaqView, ResourcesDetailView
+    FaqView, ResourcesDetailView, UploadLogo,
+    TestimonialView, NewsletterUserView
 )
 
 app_name = "superadmin"
@@ -66,6 +67,8 @@ urlpatterns = [
 
     path('/upload-country', UploadCountryView.as_view(), name="upload_country"),
     path('/upload-city', UploadCityView.as_view(), name="upload_city"),
+    path("/upload-logo", UploadLogo.as_view(), name="upload_logo"),
+    path("/upload-logo/<str:logoId>", UploadLogo.as_view(), name="upload_logo"),
     
     path('/job-sub-category', JobSubCategoryView.as_view(), name="job_sub_category"),
     path('/job-sub-category/<str:jobSubCategoryId>', JobSubCategoryView.as_view(), name="job_sub_category"),
@@ -98,5 +101,11 @@ urlpatterns = [
     path('/faq', FaqView.as_view(), name="faq"),
     path('/faq/<str:faqId>', FaqView.as_view(), name="faq"),
     path('/<str:role>/faq/<str:faqCategoryId>', FaqView.as_view(), name="faq"),
+    
+    path("/testimonial", TestimonialView.as_view(), name="testimonial"),
+    path("/testimonial/<str:testimonialId>", TestimonialView.as_view(), name="testimonial"),
+    
+    path("/newsletter-user", NewsletterUserView.as_view(), name="newsletter_user"),
+    path("/newsletter-user/<str:newsletterId>", NewsletterUserView.as_view(), name="newsletter_user"),
     
 ]

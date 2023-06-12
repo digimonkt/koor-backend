@@ -3,13 +3,14 @@ from django.utils.translation import gettext as _
 from django.contrib.postgres.fields import ArrayField
 
 from core.models import (
-    BaseModel, SlugBaseModel,  SoftDeleteModel, upload_directory_path
+    BaseModel, SlugBaseModel, SoftDeleteModel, upload_directory_path
 )
 
 from users.models import (
     TimeStampedModel, User
 )
 from project_meta.models import Media
+
 
 class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
     smtp_host = models.CharField(
@@ -68,20 +69,20 @@ class GooglePlaceApi(SoftDeleteModel, models.Model):
         verbose_name=_('API Key'),
         db_column="api_key",
         max_length=255
-        )
+    )
     status = models.BooleanField(
         verbose_name=_('Status'),
         db_column="status",
         default=True
-        )
+    )
 
     def __str__(self):
         return self.api_key
-    
+
     class Meta:
         verbose_name_plural = "Google Place Api"
 
-    
+
 class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
     This is a Django model for a Job Attachment object, associated with a specific Job item, with the following fields:
@@ -117,7 +118,7 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
         verbose_name_plural = "Resources"
         db_table = "Resources"
         ordering = ['-created']
-    
+
 
 class SocialUrl(BaseModel, SoftDeleteModel, models.Model):
     """
@@ -136,7 +137,7 @@ class SocialUrl(BaseModel, SoftDeleteModel, models.Model):
         - db_table (str): Name of the database table.
         - ordering (list): Default ordering for querysets.
     """
-    
+
     PLATFORM_CHOICE = (
         ('iso_app', "ISO Application"),
         ('android_app', "Android Application"),
@@ -186,7 +187,7 @@ class AboutUs(SlugBaseModel, SoftDeleteModel, models.Model):
     - __str__(): Returns the string representation of the model instance (the title).
 
     """
-    
+
     description = models.TextField(
         verbose_name=_('Description'),
         db_column="description",
@@ -218,6 +219,7 @@ class FaqCategory(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model
     - `title`: A string representing the name of the faq. 
     - `slug`: A string representing the slug for the faq, used in URLs or filtering process.
     """
+
     class Meta:
         verbose_name = "Faq Category"
         verbose_name_plural = "Faq Categories"
@@ -298,4 +300,154 @@ class FAQ(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "FAQs"
         db_table = "FAQ"
         ordering = ['-created']
-   
+
+
+class CategoryLogo(BaseModel, TimeStampedModel, models.Model):
+    """
+    Represents a category logo in the application.
+
+    Attributes:
+        logo (Media): The logo associated with the category.
+        status (bool): The status of the category logo.
+
+    Meta:
+        verbose_name (str): The singular name for the category logo model.
+        verbose_name_plural (str): The plural name for the category logo model.
+        db_table (str): The name of the database table for the category logo model.
+        ordering (list): The default ordering for category logos.
+
+    """
+
+    logo = models.OneToOneField(
+        Media,
+        verbose_name=_('Logo'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="logo",
+        related_name='%(app_label)s_%(class)s_logo'
+    )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    class Meta:
+        verbose_name = "Category Logo"
+        verbose_name_plural = "Category Logos"
+        db_table = "CategoryLogo"
+        ordering = ['-created']
+
+
+class Testimonial(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+    """
+    Testimonial Model represents a testimonial given by a client.
+
+    Inherits from SlugBaseModel, SoftDeleteModel, TimeStampedModel, and models.Model.
+
+    Attributes:
+        client_name (CharField): The name of the client providing the testimonial.
+        client_company (CharField): The company of the client providing the testimonial.
+        client_position (CharField): The position of the client providing the testimonial.
+        description (TextField): The description or content of the testimonial.
+        image (OneToOneField): An optional image associated with the testimonial.
+        status (BooleanField): The status of the testimonial (active or inactive).
+
+    Meta:
+        verbose_name (str): The singular name used for the model in the admin interface.
+        verbose_name_plural (str): The plural name used for the model in the admin interface.
+        db_table (str): The name of the database table used to store the model's data.
+        ordering (list): The default ordering for querysets of this model.
+
+    """
+
+    client_name = models.CharField(
+        verbose_name=_('Client Name'),
+        max_length=255,
+        db_column="client_name",
+    )
+    client_company = models.CharField(
+        verbose_name=_('Client Company'),
+        max_length=255,
+        db_column="client_company",
+    )
+    client_position = models.CharField(
+        verbose_name=_('Client Position'),
+        max_length=255,
+        db_column="client_position",
+    )
+    description = models.TextField(
+        verbose_name=_('Description'),
+        null=True,
+        blank=True,
+        db_column="description",
+    )
+    image = models.OneToOneField(
+        Media,
+        verbose_name=_('Image'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="image",
+        related_name='%(app_label)s_%(class)s_image'
+    )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Testimonial"
+        verbose_name_plural = "Testimonials"
+        db_table = "Testimonial"
+        ordering = ['-created']
+
+
+class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
+    """
+    Represents a newsletter subscriber.
+
+    Attributes:
+        email (str): The email address of the subscriber.
+        status (bool): The status of the subscriber (True for active, False for inactive).
+
+    Meta:
+        verbose_name (str): The human-readable name of the model.
+        verbose_name_plural (str): The plural version of the verbose_name.
+        db_table (str): The name of the database table for the model.
+        ordering (list): The default ordering for querysets of this model.
+
+    Methods:
+        __str__(): Returns a string representation of the newsletter user object.
+    """
+
+    email = models.EmailField(
+        verbose_name=_('Email Address'),
+        unique=True,
+        db_column="email"
+    )
+    status = models.BooleanField(
+        verbose_name=_('Status'),
+        db_column="status",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    def __str__(self):
+        return str(self.email)
+
+    class Meta:
+        verbose_name = "Newsletter User"
+        verbose_name_plural = "Newsletter Users"
+        db_table = "NewsletterUser"
+        ordering = ['-created']
