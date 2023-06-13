@@ -3815,7 +3815,11 @@ class FaqCategoryView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        role = request.GET.get('role', None)
+        if role:
+            queryset = self.filter_queryset(self.get_queryset().filter(role=role))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
