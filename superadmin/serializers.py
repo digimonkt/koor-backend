@@ -1239,7 +1239,8 @@ class UploadLogoSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             category_logo_instance.logo = media_instance
             category_logo_instance.save()
-            return media_instance.file_path.url
+            
+            return {"id":category_logo_instance.id, "path":media_instance.file_path.url}
         return None
 
 
