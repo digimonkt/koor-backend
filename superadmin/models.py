@@ -219,12 +219,27 @@ class FaqCategory(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model
     - `title`: A string representing the name of the faq. 
     - `slug`: A string representing the slug for the faq, used in URLs or filtering process.
     """
-
+    ROLE_TYPE_CHOICE = (
+        ('job_seeker', "Job Seeker"),
+        ('employer', "Employer"),
+        ('vendor', "Vendor"),
+    )
+    role = models.CharField(
+        verbose_name=_('Role'),
+        max_length=250,
+        db_column="role",
+        choices=ROLE_TYPE_CHOICE
+    )
     class Meta:
         verbose_name = "Faq Category"
         verbose_name_plural = "Faq Categories"
         db_table = "FaqCategory"
         ordering = ['title']
+        
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title) + "-" + slugify(self.role)
+        return super().save(*args, **kwargs)
 
 
 class FAQ(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -250,7 +265,6 @@ class FAQ(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
 
     ROLE_TYPE_CHOICE = (
-        ('admin', "Admin"),
         ('job_seeker', "Job Seeker"),
         ('employer', "Employer"),
         ('vendor', "Vendor"),
