@@ -3850,8 +3850,10 @@ class FaqCategoryView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if FaqCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                  role__iexact=serializer.validated_data['role'],
                                                   is_removed=True).exists():
                     FaqCategory.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                   role__iexact=serializer.validated_data['role'],
                                                    is_removed=True).update(
                         is_removed=False)
                 else:
