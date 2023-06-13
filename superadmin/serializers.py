@@ -1064,7 +1064,7 @@ class FaqCategorySerializers(serializers.ModelSerializer):
 
     class Meta:
         model = FaqCategory
-        fields = ['id', 'title']
+        fields = ['id', 'title', 'role']
         read_only_fields = ['id'] 
 
     def validate(self, data):
@@ -1414,6 +1414,6 @@ class NewsletterUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = NewsletterUser
-        fields = ['id', 'email']
-        read_only_fields = ['id']    
+        fields = ['id', 'email', 'created']
+        read_only_fields = ['id', 'created']    
 
