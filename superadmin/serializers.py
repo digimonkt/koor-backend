@@ -1087,7 +1087,8 @@ class FaqCategorySerializers(serializers.ModelSerializer):
             data (dict): The validated data.
         """
         title = data.get("title")
-        if FaqCategory.objects.filter(title__iexact=title, is_removed=False).exists():
+        role = data.get("role")
+        if FaqCategory.objects.filter(title__iexact=title, role__iexact=role, is_removed=False).exists():
             raise serializers.ValidationError({'title': title + ' already exist.'})
         return data
 
