@@ -33,7 +33,7 @@ from users.models import UserSession, User
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
-    Testimonial, NewsletterUser
+    Testimonial, NewsletterUser, PointDetection
 )
 
 from .serializers import (
@@ -4727,6 +4727,80 @@ class NewsletterUserView(generics.ListAPIView):
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
                 )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class SetPointsView(generics.GenericAPIView):
+    """
+    API view for retrieving and updating point data.
+
+    This view requires authentication for all requests.
+
+    Attributes:
+        permission_classes (list): A list of permission classes for authentication.
+
+    Methods:
+        get(self, request): Retrieves the point data from the database.
+        patch(self, request): Updates the point data in the database.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve the first point from the PointDetection objects and return it in the response.
+
+        Args:
+            request (rest_framework.request.Request): The incoming request object.
+
+        Returns:
+            rest_framework.response.Response: A response object containing the point value or None.
+
+        Raises:
+            None.
+        """
+        
+        point_data = PointDetection.objects.values('points').first()
+        point = point_data['points'] if point_data else None
+        return response.Response(
+            data={'point': point},
+            status=status.HTTP_200_OK
+        )
+            
+    def patch(self, request):
+        """
+        Updates the 'points' field of the PointDetection object.
+
+        Args:
+            request: The HTTP request object containing the updated 'point' value in the request data.
+
+        Returns:
+            A response indicating the result of the update operation. If the user is a staff member and 
+            the update operation is successful, a response with status code 200 and the updated 'point' 
+            value is returned. Otherwise, a response with status code 401 and an appropriate error 
+            message is returned.
+        """
+        
+        context = {}
+        point = request.data.get('point')
+        if self.request.user.is_staff:
+            point_data = PointDetection.objects.first()
+            if point_data:
+                point_data.points = point
+                point_data.save(update_fields=['points'])
+            else:
+                PointDetection.objects.create(points=point)
+            context['point'] = point
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
