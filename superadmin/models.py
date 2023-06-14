@@ -466,3 +466,43 @@ class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Newsletter Users"
         db_table = "NewsletterUser"
         ordering = ['-created']
+
+
+class PointDetection(BaseModel, models.Model):
+    """
+    Represents a point detection entry in the database.
+
+    This model stores information about points earned by a user.
+
+    Attributes:
+        points (int): The number of points earned. Can be null or blank. Default value is 5.
+
+    Methods:
+        __str__(): Returns a string representation of the points.
+
+    Meta:
+        verbose_name (str): A human-readable name for the model class.
+        verbose_name_plural (str): A human-readable plural name for the model class.
+        db_table (str): The name of the database table associated with the model.
+    """
+    points = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=5,
+        verbose_name=_('Points'),
+        db_column="points",
+    )
+
+    def __str__(self):
+        """
+        Returns a string representation of the points.
+
+        Returns:
+            str: The string representation of the points.
+        """
+        return str(self.points)
+
+    class Meta:
+        verbose_name = "Point Detection"
+        verbose_name_plural = "Points Detection"
+        db_table = "PointDetection"
