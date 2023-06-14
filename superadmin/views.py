@@ -1698,6 +1698,10 @@ class EmployerListView(generics.ListAPIView):
                 employer_instance.is_verified = False
                 employer_instance.save()
                 context['message'] = "Employer unverified."
+        elif action == 'recharge':
+            employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
+            employer_instance.save()
+            context['message'] = "Point credited."
         else:
             context['message'] = "Invalid action"
 
