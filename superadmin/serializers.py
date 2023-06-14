@@ -1064,7 +1064,7 @@ class FaqCategorySerializers(serializers.ModelSerializer):
 
     class Meta:
         model = FaqCategory
-        fields = ['id', 'title']
+        fields = ['id', 'title', 'role']
         read_only_fields = ['id'] 
 
     def validate(self, data):
@@ -1087,7 +1087,8 @@ class FaqCategorySerializers(serializers.ModelSerializer):
             data (dict): The validated data.
         """
         title = data.get("title")
-        if FaqCategory.objects.filter(title__iexact=title, is_removed=False).exists():
+        role = data.get("role")
+        if FaqCategory.objects.filter(title__iexact=title, role__iexact=role, is_removed=False).exists():
             raise serializers.ValidationError({'title': title + ' already exist.'})
         return data
 
@@ -1239,7 +1240,8 @@ class UploadLogoSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             category_logo_instance.logo = media_instance
             category_logo_instance.save()
-            return media_instance.file_path.url
+            
+            return {"id":category_logo_instance.id, "path":media_instance.file_path.url}
         return None
 
 
@@ -1413,6 +1415,6 @@ class NewsletterUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = NewsletterUser
-        fields = ['id', 'email']
-        read_only_fields = ['id']    
+        fields = ['id', 'email', 'created']
+        read_only_fields = ['id', 'created']    
 
