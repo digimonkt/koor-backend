@@ -143,7 +143,7 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
     - `license_id`: A string representing the user's license ID.
     - `license_id_file`: A Media object representing the user's license ID file.
     """
-    user = models.ForeignKey(
+    user = models.OneToOneField(
         to=User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
@@ -224,6 +224,13 @@ class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         blank=True,
         default=False,
         db_column="is_verified",
+    )
+    points = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=500,
+        verbose_name=_('Points'),
+        db_column="points",
     )
 
     def __str__(self):

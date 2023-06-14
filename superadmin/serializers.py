@@ -338,13 +338,13 @@ class CandidatesSerializers(serializers.ModelSerializer):
     verify = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active', 'verify']
+        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active', 'verify', 'date_joined']
         read_only_fields = ['id'] 
     
     def get_verify(self, obj):
         verify = False
-        if obj.user_profile_employerprofile_user.first():
-            verify = obj.user_profile_employerprofile_user.first().is_verified
+        if obj.role == 'employer':
+            verify = obj.user_profile_employerprofile_user.is_verified
         return verify
 
 
