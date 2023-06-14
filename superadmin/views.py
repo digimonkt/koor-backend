@@ -1527,7 +1527,18 @@ class CandidatesListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset().filter(Q(role="job_seeker") | Q(role="vendor")))
+            period = self.request.GET.get('period', None)
+            if period:
+                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
+                end_date = date.today()
+                queryset = self.filter_queryset(self.get_queryset().filter(
+                    Q(role="job_seeker") | Q(role="vendor")
+                    ).filter(
+                    date_joined__gte=start_date,
+                    date_joined__lte=end_date,
+                    ))
+            else:
+                queryset = self.filter_queryset(self.get_queryset().filter(Q(role="job_seeker") | Q(role="vendor")))
             action = request.GET.get('action', None)
             if action == 'download':
                 directory_path = create_directory()
@@ -1601,7 +1612,17 @@ class EmployerListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
+            period = self.request.GET.get('period', None)
+            if period:
+                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
+                end_date = date.today()
+                queryset = self.filter_queryset(self.get_queryset().filter(
+                    role="employer",
+                    date_joined__gte=start_date,
+                    date_joined__lte=end_date,
+                    ))
+            else:                
+                queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
             action = request.GET.get('action', None)
             if action == 'download':
                 directory_path = create_directory()
@@ -1750,6 +1771,17 @@ class JobsListView(generics.ListAPIView):
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
             action = request.GET.get('action', None)
+            period = self.request.GET.get('period', None)
+            if period:
+                filter_type = self.request.GET.get('filter_type', None)
+                if filter_type == 'closed':
+                    queryset = queryset.filter(deadline__lt=date.today())
+                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
+                end_date = date.today()
+                queryset = queryset.filter(
+                    created__gte=start_date,
+                    created__lte=end_date,
+                )
             if action == 'download':
                 directory_path = create_directory()
                 file_name = '{0}/{1}'.format(directory_path, 'jobs.csv')
@@ -3159,6 +3191,17 @@ class TenderListView(generics.ListAPIView):
             if tender_type:
                 queryset = queryset.filter(tender_type__title__in=tender_type).distinct()
             action = request.GET.get('action', None)
+            period = self.request.GET.get('period', None)
+            if period:
+                filter_type = self.request.GET.get('filter_type', None)
+                if filter_type == 'closed':
+                    queryset = queryset.filter(deadline__lt=date.today())
+                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
+                end_date = date.today()
+                queryset = queryset.filter(
+                    created__gte=start_date,
+                    created__lte=end_date,
+                )
             if action == 'download':
                 directory_path = create_directory()
                 file_name = '{0}/{1}'.format(directory_path, 'tenders.csv')
