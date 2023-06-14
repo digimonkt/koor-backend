@@ -12,6 +12,8 @@ from rest_framework import (
 from core.pagination import CustomPagination
 from core.emails import get_email_object
 
+from superadmin.models import PointDetection
+
 from jobs.models import JobDetails, JobFilters
 from jobs.serializers import GetJobsSerializers
 
@@ -140,34 +142,30 @@ class JobsView(generics.ListAPIView):
             - `ValidationError`: If the job post data is invalid.
             - `Exception`: If there is an unexpected error during job post creation.
         """
-        context = dict()
+        context = {}
         serializer = CreateJobsSerializers(data=request.data)
-        try:
-            if self.request.user.role == "employer" and self.request.user.user_profile_employerprofile_user.first().is_verified:
-                serializer.is_valid(raise_exception=True)
-                serializer.save(self.request.user)
-                context["message"] = "Job added successfully."
-                request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            return response.Response(
-                data=str(e),
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        employer_profile_instance = get_object_or_404(EmployerProfile, user=request.user)
+        point_data = PointDetection.objects.first()
+
+        if request.user.role == "employer" and employer_profile_instance.is_verified:
+            serializer.is_valid(raise_exception=True)
+            if employer_profile_instance.points < point_data.points:
+                context["message"] = "You do not have enough points to create a new job."
+                return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save(request.user)
+            remaining_points = employer_profile_instance.points - point_data.points
+            employer_profile_instance.points = remaining_points
+            employer_profile_instance.save()
+
+            context["message"] = "Job added successfully."
+            request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+            return response.Response(data=context, status=status.HTTP_201_CREATED)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+
+        return response.Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_queryset(self, **kwargs):
         """
