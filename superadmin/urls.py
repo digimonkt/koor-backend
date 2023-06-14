@@ -46,13 +46,13 @@ urlpatterns = [
     path('/user-rights', UserRightsView.as_view(), name="user_rights"),
 
     path('/privacy-policy', PrivacyPolicyView.as_view(), name="privacy_policy"),
-    
+
+    path('/candidates', CandidatesListView.as_view(), name="candidates_list"),
+        
     path('/faq', FaqView.as_view(), name="faq"),
     path('/faq/<str:faqId>', FaqView.as_view(), name="faq"),
     path('/<str:role>/faq/<str:faqCategoryId>', FaqView.as_view(), name="faq"),
     
-    path('/candidates', CandidatesListView.as_view(), name="candidates_list"),
-
     path('/employer', EmployerListView.as_view(), name="employer_list"),
     path('/employer/<str:employerId>/<str:action>', EmployerListView.as_view(), name="employer_list"),
 
