@@ -13,7 +13,7 @@ from .views import (
     TenderListView, TenderRevertView, ResourcesView,
     LinksView, AboutUsView, FaqCategoryView,
     FaqView, ResourcesDetailView, UploadLogo,
-    TestimonialView, NewsletterUserView
+    TestimonialView, NewsletterUserView, SetPointsView
 )
 
 app_name = "superadmin"
@@ -46,7 +46,11 @@ urlpatterns = [
     path('/user-rights', UserRightsView.as_view(), name="user_rights"),
 
     path('/privacy-policy', PrivacyPolicyView.as_view(), name="privacy_policy"),
-
+    
+    path('/faq', FaqView.as_view(), name="faq"),
+    path('/faq/<str:faqId>', FaqView.as_view(), name="faq"),
+    path('/<str:role>/faq/<str:faqCategoryId>', FaqView.as_view(), name="faq"),
+    
     path('/candidates', CandidatesListView.as_view(), name="candidates_list"),
 
     path('/employer', EmployerListView.as_view(), name="employer_list"),
@@ -97,10 +101,6 @@ urlpatterns = [
     
     path('/faq-category', FaqCategoryView.as_view(), name="faq_category"),
     path('/faq-category/<str:faqCategoryId>', FaqCategoryView.as_view(), name="faq_category"),
-        
-    path('/faq', FaqView.as_view(), name="faq"),
-    path('/faq/<str:faqId>', FaqView.as_view(), name="faq"),
-    path('/<str:role>/faq/<str:faqCategoryId>', FaqView.as_view(), name="faq"),
     
     path("/testimonial", TestimonialView.as_view(), name="testimonial"),
     path("/testimonial/<str:testimonialId>", TestimonialView.as_view(), name="testimonial"),
@@ -108,4 +108,5 @@ urlpatterns = [
     path("/newsletter-user", NewsletterUserView.as_view(), name="newsletter_user"),
     path("/newsletter-user/<str:newsletterId>", NewsletterUserView.as_view(), name="newsletter_user"),
     
+    path('/set-points', SetPointsView.as_view(), name="set_points"),
 ]
