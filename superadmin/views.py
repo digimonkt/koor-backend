@@ -3249,7 +3249,7 @@ class TenderListView(generics.ListAPIView):
                                     sector = str(data.title)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.job_id), str(rows.title),
+                                str(counter + 1), str(rows.tender_id), str(rows.title),
                                 str(rows.user.name), tag, tender_category, tender_type,
                                 sector, location
                             ]
