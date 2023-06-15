@@ -1777,7 +1777,7 @@ class JobsListView(generics.ListAPIView):
             action = request.GET.get('action', None)
             period = self.request.GET.get('period', None)
             if period:
-                filter_type = self.request.GET.get('filter_type', None)
+                filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
                 start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
@@ -3197,7 +3197,7 @@ class TenderListView(generics.ListAPIView):
             action = request.GET.get('action', None)
             period = self.request.GET.get('period', None)
             if period:
-                filter_type = self.request.GET.get('filter_type', None)
+                filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
                 start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
