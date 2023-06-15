@@ -1527,10 +1527,9 @@ class CandidatesListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            period = self.request.GET.get('period', None)
-            if period:
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     Q(role="job_seeker") | Q(role="vendor")
                     ).filter(
@@ -1612,10 +1611,9 @@ class EmployerListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            period = self.request.GET.get('period', None)
-            if period:
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     role="employer",
                     date_joined__gte=start_date,
@@ -1775,13 +1773,12 @@ class JobsListView(generics.ListAPIView):
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
             action = request.GET.get('action', None)
-            period = self.request.GET.get('period', None)
-            if period:
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
                 filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
                 queryset = queryset.filter(
                     created__gte=start_date,
                     created__lte=end_date,
@@ -3195,13 +3192,12 @@ class TenderListView(generics.ListAPIView):
             if tender_type:
                 queryset = queryset.filter(tender_type__title__in=tender_type).distinct()
             action = request.GET.get('action', None)
-            period = self.request.GET.get('period', None)
-            if period:
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
                 filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
                 queryset = queryset.filter(
                     created__gte=start_date,
                     created__lte=end_date,
