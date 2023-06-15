@@ -1698,6 +1698,10 @@ class EmployerListView(generics.ListAPIView):
                 employer_instance.is_verified = False
                 employer_instance.save()
                 context['message'] = "Employer unverified."
+        elif action == 'recharge':
+            employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
+            employer_instance.save()
+            context['message'] = "Point credited."
         else:
             context['message'] = "Invalid action"
 
@@ -1773,7 +1777,7 @@ class JobsListView(generics.ListAPIView):
             action = request.GET.get('action', None)
             period = self.request.GET.get('period', None)
             if period:
-                filter_type = self.request.GET.get('filter_type', None)
+                filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
                 start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
@@ -3193,7 +3197,7 @@ class TenderListView(generics.ListAPIView):
             action = request.GET.get('action', None)
             period = self.request.GET.get('period', None)
             if period:
-                filter_type = self.request.GET.get('filter_type', None)
+                filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
                 start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
@@ -3245,7 +3249,7 @@ class TenderListView(generics.ListAPIView):
                                     sector = str(data.title)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.job_id), str(rows.title),
+                                str(counter + 1), str(rows.tender_id), str(rows.title),
                                 str(rows.user.name), tag, tender_category, tender_type,
                                 sector, location
                             ]
