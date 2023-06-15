@@ -16,7 +16,7 @@ from tenders.models import (
     TenderCategory,
     TenderAttachmentsItem
 )
-
+from vendors.models import AppliedTender
 from user_profile.models import EmployerProfile
 from users.models import User
 from users.serializers import UserSerializer
@@ -838,11 +838,12 @@ class ActivitySerializers(serializers.Serializer):
     active_tender = serializers.SerializerMethodField()
     applied_jobs = serializers.SerializerMethodField()
     applied_tender = serializers.SerializerMethodField()
+    credit = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
-            'active_jobs', 'active_tender', 'applied_jobs', 'applied_tender'
+            'active_jobs', 'active_tender', 'applied_jobs', 'applied_tender', 'credit'
         ]
 
     def get_active_jobs(self, obj):
@@ -893,7 +894,11 @@ class ActivitySerializers(serializers.Serializer):
         Returns:
             An integer representing the number of tenders that the user has applied for.
         """
-        return 0
+        return AppliedTender.objects.filter(tender__user=obj).count()
+
+    def get_credit(self, obj):
+
+        return obj.user_profile_employerprofile_user.points
 
 
 class BlacklistedUserSerializers(serializers.ModelSerializer):
