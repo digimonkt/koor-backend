@@ -1781,6 +1781,8 @@ class JobsListView(generics.ListAPIView):
                 filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
+                else:
+                    queryset = queryset.filter(deadline__gte=date.today())
                 queryset = queryset.filter(
                     created__gte=start_date,
                     created__lte=end_date,
@@ -3200,6 +3202,8 @@ class TenderListView(generics.ListAPIView):
                 filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
+                else:
+                    queryset = queryset.filter(deadline__gte=date.today())
                 queryset = queryset.filter(
                     created__gte=start_date,
                     created__lte=end_date,
