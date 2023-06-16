@@ -353,7 +353,7 @@ class CandidatesSerializers(serializers.ModelSerializer):
     def get_points(self, obj):
         point = 0
         if obj.role == 'employer':
-            verify = obj.user_profile_employerprofile_user.points
+            point = obj.user_profile_employerprofile_user.points
         return point
 
 
