@@ -159,6 +159,7 @@ class JobsView(generics.ListAPIView):
             employer_profile_instance.save()
 
             context["message"] = "Job added successfully."
+            context["remaining_points"] = remaining_points
             request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         else:
