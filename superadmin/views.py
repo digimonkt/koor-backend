@@ -1545,7 +1545,7 @@ class CandidatesListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Role", "Name", "Email", "Mobile Number"]
+                        ["Number", "Role", "Name", "Email", "Mobile Number", "Registration Date"]
                     )
                     for counter, rows in enumerate(queryset):
                         mobile_number = "None"
@@ -1553,7 +1553,8 @@ class CandidatesListView(generics.ListAPIView):
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.role), str(rows.name), str(rows.email), mobile_number
+                                str(counter + 1), str(rows.role), str(rows.name), 
+                                str(rows.email), mobile_number, str(rows.date_joined)
                             ]
                         )
                 return response.Response(
@@ -1628,7 +1629,7 @@ class EmployerListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Name", "Email", "Mobile Number"]
+                        ["Number", "Name", "Email", "Mobile Number", "Registration Date"]
                     )
                     for counter, rows in enumerate(queryset):
                         mobile_number = "None"
@@ -1636,7 +1637,8 @@ class EmployerListView(generics.ListAPIView):
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.name), str(rows.email), mobile_number
+                                str(counter + 1), str(rows.name), str(rows.email), 
+                                mobile_number, str(rows.date_joined)
                             ]
                         )
                 return response.Response(
@@ -1789,7 +1791,7 @@ class JobsListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Job ID", "Job Title", "Company", "Location"])
+                        ["Number", "Job ID", "Job Title", "Company", "Location", "Created At"])
                     for counter, rows in enumerate(queryset):
                         location = "None"
                         if rows.city:
@@ -1797,7 +1799,7 @@ class JobsListView(generics.ListAPIView):
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.job_id), str(rows.title),
-                                str(rows.user.name), location
+                                str(rows.user.name), location, str(rows.created)
                             ]
                         )
                 return response.Response(
@@ -3210,7 +3212,7 @@ class TenderListView(generics.ListAPIView):
                     file_writer.writerow(
                         ["Number", "Tender ID", "Tender Title", "Company", 
                          "Tag", "Tender Category", "Tender Type", "Sector", 
-                         "Location"])
+                         "Location", "Created At"])
                     for counter, rows in enumerate(queryset):
                         location = "None"
                         tag = "None"
@@ -3247,7 +3249,7 @@ class TenderListView(generics.ListAPIView):
                             [
                                 str(counter + 1), str(rows.tender_id), str(rows.title),
                                 str(rows.user.name), tag, tender_category, tender_type,
-                                sector, location
+                                sector, location, str(rows.created)
                             ]
                         )
                 return response.Response(
