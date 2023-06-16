@@ -1554,7 +1554,7 @@ class CandidatesListView(generics.ListAPIView):
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.role), str(rows.name), 
-                                str(rows.email), mobile_number, str(rows.date_joined)
+                                str(rows.email), mobile_number, str(rows.date_joined.date())
                             ]
                         )
                 return response.Response(
@@ -1638,7 +1638,7 @@ class EmployerListView(generics.ListAPIView):
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.name), str(rows.email), 
-                                mobile_number, str(rows.date_joined)
+                                mobile_number, str(rows.date_joined.date())
                             ]
                         )
                 return response.Response(
@@ -1801,7 +1801,7 @@ class JobsListView(generics.ListAPIView):
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.job_id), str(rows.title),
-                                str(rows.user.name), location, str(rows.created)
+                                str(rows.user.name), location, str(rows.created.date())
                             ]
                         )
                 return response.Response(
@@ -3253,7 +3253,7 @@ class TenderListView(generics.ListAPIView):
                             [
                                 str(counter + 1), str(rows.tender_id), str(rows.title),
                                 str(rows.user.name), tag, tender_category, tender_type,
-                                sector, location, str(rows.created)
+                                sector, location, str(rows.created.date())
                             ]
                         )
                 return response.Response(
