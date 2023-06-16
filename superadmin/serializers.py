@@ -336,9 +336,12 @@ class CandidatesSerializers(serializers.ModelSerializer):
     including 'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active'.
     """
     verify = serializers.SerializerMethodField()
+    points = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active', 'verify', 'date_joined']
+        fields = [
+            'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 
+            'is_active', 'verify', 'date_joined', 'points']
         read_only_fields = ['id'] 
     
     def get_verify(self, obj):
@@ -346,6 +349,12 @@ class CandidatesSerializers(serializers.ModelSerializer):
         if obj.role == 'employer':
             verify = obj.user_profile_employerprofile_user.is_verified
         return verify
+    
+    def get_points(self, obj):
+        point = 0
+        if obj.role == 'employer':
+            verify = obj.user_profile_employerprofile_user.points
+        return point
 
 
 class JobListSerializers(serializers.ModelSerializer):
