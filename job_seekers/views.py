@@ -1474,7 +1474,14 @@ class ResumeView(generics.GenericAPIView):
             heading_style2.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
             heading_style2.paragraph_format.space_after = Pt(0)
             heading_style2.paragraph_format.space_before = Pt(0)
+            # document.add_heading('CURICULUM VITAE (CV)', level=1)
+            
+            from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
             document.add_heading('CURICULUM VITAE (CV)', level=1)
+            cv_heading = document.paragraphs[-1]
+            cv_heading.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+            cv_heading.runs[0].font.size = Pt(16)
+            cv_heading.runs[0].underline = True
             if profile_instance.user.name:
                 document.add_heading(profile_instance.user.name.upper(), level=1)
             if profile_instance.user.mobile_number:
@@ -1493,7 +1500,15 @@ class ResumeView(generics.GenericAPIView):
             document.add_heading('SKILLS', level=2)
             sills_data = JobSeekerSkill.objects.filter(user=profile_instance.user)
             for data in sills_data:
-                p = document.add_paragraph(data.skill.title)
+                # # Add a paragraph with an arrow bullet
+                paragraph = document.add_paragraph(u'\u27A4    ' + str(data.skill.title))
+
+                # # Set the font size and left indent
+                paragraph.style.font.size = Pt(12)
+                paragraph.paragraph_format.left_indent = Pt(36)
+
+                # # Set the spacing after the paragraph
+                paragraph.paragraph_format.space_after = Pt(0)
             document.add_heading('EDUCATION', level=2)
             education_data = EducationRecord.objects.filter(user=profile_instance.user)
             for data in education_data:
@@ -1506,14 +1521,12 @@ class ResumeView(generics.GenericAPIView):
                     period = period + " - " + "Present"
                 p = document.add_paragraph(
                     period + " " +
-                    data.education_level.title + ", " +
+                    data.education_level.title + " - " +
                     data.institute
                 )
             document.add_heading('EMPLOYMENT SUMMARY', level=2)
             employment_data = EmploymentRecord.objects.filter(user=profile_instance.user)
             for data in employment_data:
-                document.add_heading(data.title, level=3)
-                document.add_heading(data.organization, level=4)
                 period = " "
                 if data.start_date:
                     period = str(data.start_date.year)
@@ -1521,7 +1534,8 @@ class ResumeView(generics.GenericAPIView):
                     period = period + " - " + str(data.end_date.year)
                 else:
                     period = period + " - " + "Present"
-                document.add_heading(period, level=5)
+                heading = period + " : " + str(data.title) + " - " + str(data.organization)
+                document.add_heading(heading, level=3)
                 p = document.add_paragraph(data.description)
             document.add_heading('LANGUAGES', level=2)
             languages_data = JobSeekerLanguageProficiency.objects.filter(user=profile_instance.user)

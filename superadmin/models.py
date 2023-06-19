@@ -91,6 +91,13 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
     - `job`: the job associated with the attachment
     - `attachment`: the attachment uploaded for the job
     """
+    subtitle = models.CharField(
+        verbose_name=_('Subtitle'),
+        db_column="subtitle",
+        null=True, 
+        blank=True,
+        max_length=255
+    )
     description = ArrayField(
         models.TextField(
             verbose_name=_('Description'),
