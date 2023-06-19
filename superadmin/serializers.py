@@ -1424,6 +1424,6 @@ class NewsletterUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = NewsletterUser
-        fields = ['id', 'email', 'created']
+        fields = ['id', 'email', 'role', 'created']
         read_only_fields = ['id', 'created']    
 

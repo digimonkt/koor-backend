@@ -4678,8 +4678,12 @@ class NewsletterUserView(generics.ListAPIView):
         context = dict()
         serializer = self.serializer_class(data=request.data)
         try:
+            role = 'user'
+            if self.request.user:
+                if self.request.user.role != 'admin':
+                    role = self.request.user.role
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(role=role)
             context["data"] = serializer.data
             return response.Response(
                 data=context,

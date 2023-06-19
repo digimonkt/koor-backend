@@ -433,6 +433,7 @@ class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
 
     Attributes:
         email (str): The email address of the subscriber.
+        role (str): The role of the subscriber.
         status (bool): The status of the subscriber (True for active, False for inactive).
 
     Meta:
@@ -449,6 +450,13 @@ class NewsletterUser(BaseModel, TimeStampedModel, models.Model):
         verbose_name=_('Email Address'),
         unique=True,
         db_column="email"
+    )
+    role = models.EmailField(
+        verbose_name=_('Role'),
+        null=True,
+        blank=True,
+        default='user',
+        db_column="role"
     )
     status = models.BooleanField(
         verbose_name=_('Status'),
