@@ -845,7 +845,7 @@ class CreateResourcesSerializers(serializers.ModelSerializer):
     )
     class Meta:
         model = ResourcesContent
-        fields = ['id', 'title', 'description', 'attachment_file']
+        fields = ['id', 'title', 'subtitle', 'description', 'attachment_file']
         read_only_fields = ['id'] 
     
     def save(self):
@@ -902,7 +902,7 @@ class ResourcesSerializers(serializers.ModelSerializer):
     class Meta:
         model = ResourcesContent
         fields = (
-            'id', 'title', 'description', 'attachment'
+            'id', 'title', 'subtitle', 'description', 'attachment'
         )
     
     def get_attachment(self, obj):
