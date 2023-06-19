@@ -33,7 +33,7 @@ from users.models import UserSession, User
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
-    Testimonial, NewsletterUser
+    Testimonial, NewsletterUser, PointDetection
 )
 
 from .serializers import (
@@ -1527,10 +1527,9 @@ class CandidatesListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            period = self.request.GET.get('period', None)
-            if period:
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     Q(role="job_seeker") | Q(role="vendor")
                     ).filter(
@@ -1546,7 +1545,7 @@ class CandidatesListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Role", "Name", "Email", "Mobile Number"]
+                        ["Number", "Role", "Name", "Email", "Mobile Number", "Registration Date"]
                     )
                     for counter, rows in enumerate(queryset):
                         mobile_number = "None"
@@ -1554,7 +1553,8 @@ class CandidatesListView(generics.ListAPIView):
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.role), str(rows.name), str(rows.email), mobile_number
+                                str(counter + 1), str(rows.role), str(rows.name), 
+                                str(rows.email), mobile_number, str(rows.date_joined.date())
                             ]
                         )
                 return response.Response(
@@ -1612,10 +1612,9 @@ class EmployerListView(generics.ListAPIView):
     def list(self, request):
         context = dict()
         if self.request.user.is_staff:
-            period = self.request.GET.get('period', None)
-            if period:
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     role="employer",
                     date_joined__gte=start_date,
@@ -1630,7 +1629,7 @@ class EmployerListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Name", "Email", "Mobile Number"]
+                        ["Number", "Name", "Email", "Mobile Number", "Registration Date"]
                     )
                     for counter, rows in enumerate(queryset):
                         mobile_number = "None"
@@ -1638,7 +1637,8 @@ class EmployerListView(generics.ListAPIView):
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.name), str(rows.email), mobile_number
+                                str(counter + 1), str(rows.name), str(rows.email), 
+                                mobile_number, str(rows.date_joined.date())
                             ]
                         )
                 return response.Response(
@@ -1698,6 +1698,10 @@ class EmployerListView(generics.ListAPIView):
                 employer_instance.is_verified = False
                 employer_instance.save()
                 context['message'] = "Employer unverified."
+        elif action == 'recharge':
+            employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
+            employer_instance.save()
+            context['message'] = "Point credited."
         else:
             context['message'] = "Invalid action"
 
@@ -1771,13 +1775,14 @@ class JobsListView(generics.ListAPIView):
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
             action = request.GET.get('action', None)
-            period = self.request.GET.get('period', None)
-            if period:
-                filter_type = self.request.GET.get('filter_type', None)
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
+                filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
+                else:
+                    queryset = queryset.filter(deadline__gte=date.today())
                 queryset = queryset.filter(
                     created__gte=start_date,
                     created__lte=end_date,
@@ -1788,7 +1793,7 @@ class JobsListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Job ID", "Job Title", "Company", "Location"])
+                        ["Number", "Job ID", "Job Title", "Company", "Location", "Created At"])
                     for counter, rows in enumerate(queryset):
                         location = "None"
                         if rows.city:
@@ -1796,7 +1801,7 @@ class JobsListView(generics.ListAPIView):
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.job_id), str(rows.title),
-                                str(rows.user.name), location
+                                str(rows.user.name), location, str(rows.created.date())
                             ]
                         )
                 return response.Response(
@@ -3191,13 +3196,14 @@ class TenderListView(generics.ListAPIView):
             if tender_type:
                 queryset = queryset.filter(tender_type__title__in=tender_type).distinct()
             action = request.GET.get('action', None)
-            period = self.request.GET.get('period', None)
-            if period:
-                filter_type = self.request.GET.get('filter_type', None)
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
+                filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
                     queryset = queryset.filter(deadline__lt=date.today())
-                start_date = date.today().replace(day=1) - timedelta(days=31*int(period))
-                end_date = date.today()
+                else:
+                    queryset = queryset.filter(deadline__gte=date.today())
                 queryset = queryset.filter(
                     created__gte=start_date,
                     created__lte=end_date,
@@ -3210,7 +3216,7 @@ class TenderListView(generics.ListAPIView):
                     file_writer.writerow(
                         ["Number", "Tender ID", "Tender Title", "Company", 
                          "Tag", "Tender Category", "Tender Type", "Sector", 
-                         "Location"])
+                         "Location", "Created At"])
                     for counter, rows in enumerate(queryset):
                         location = "None"
                         tag = "None"
@@ -3245,9 +3251,9 @@ class TenderListView(generics.ListAPIView):
                                     sector = str(data.title)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.job_id), str(rows.title),
+                                str(counter + 1), str(rows.tender_id), str(rows.title),
                                 str(rows.user.name), tag, tender_category, tender_type,
-                                sector, location
+                                sector, location, str(rows.created.date())
                             ]
                         )
                 return response.Response(
@@ -4672,8 +4678,12 @@ class NewsletterUserView(generics.ListAPIView):
         context = dict()
         serializer = self.serializer_class(data=request.data)
         try:
+            role = 'user'
+            if self.request.user:
+                if self.request.user.role != 'admin':
+                    role = self.request.user.role
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(role=role)
             context["data"] = serializer.data
             return response.Response(
                 data=context,
@@ -4727,6 +4737,80 @@ class NewsletterUserView(generics.ListAPIView):
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
                 )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class SetPointsView(generics.GenericAPIView):
+    """
+    API view for retrieving and updating point data.
+
+    This view requires authentication for all requests.
+
+    Attributes:
+        permission_classes (list): A list of permission classes for authentication.
+
+    Methods:
+        get(self, request): Retrieves the point data from the database.
+        patch(self, request): Updates the point data in the database.
+
+    """
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """
+        Retrieve the first point from the PointDetection objects and return it in the response.
+
+        Args:
+            request (rest_framework.request.Request): The incoming request object.
+
+        Returns:
+            rest_framework.response.Response: A response object containing the point value or None.
+
+        Raises:
+            None.
+        """
+        
+        point_data = PointDetection.objects.values('points').first()
+        point = point_data['points'] if point_data else None
+        return response.Response(
+            data={'point': point},
+            status=status.HTTP_200_OK
+        )
+            
+    def patch(self, request):
+        """
+        Updates the 'points' field of the PointDetection object.
+
+        Args:
+            request: The HTTP request object containing the updated 'point' value in the request data.
+
+        Returns:
+            A response indicating the result of the update operation. If the user is a staff member and 
+            the update operation is successful, a response with status code 200 and the updated 'point' 
+            value is returned. Otherwise, a response with status code 401 and an appropriate error 
+            message is returned.
+        """
+        
+        context = {}
+        point = request.data.get('point')
+        if self.request.user.is_staff:
+            point_data = PointDetection.objects.first()
+            if point_data:
+                point_data.points = point
+                point_data.save(update_fields=['points'])
+            else:
+                PointDetection.objects.create(points=point)
+            context['point'] = point
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(

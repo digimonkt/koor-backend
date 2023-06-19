@@ -336,16 +336,25 @@ class CandidatesSerializers(serializers.ModelSerializer):
     including 'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active'.
     """
     verify = serializers.SerializerMethodField()
+    points = serializers.SerializerMethodField()
     class Meta:
         model = User
-        fields = ['id', 'role', 'name', 'email', 'country_code', 'mobile_number', 'is_active', 'verify']
+        fields = [
+            'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 
+            'is_active', 'verify', 'date_joined', 'points']
         read_only_fields = ['id'] 
     
     def get_verify(self, obj):
         verify = False
-        if obj.user_profile_employerprofile_user.first():
-            verify = obj.user_profile_employerprofile_user.first().is_verified
+        if obj.role == 'employer':
+            verify = obj.user_profile_employerprofile_user.is_verified
         return verify
+    
+    def get_points(self, obj):
+        point = 0
+        if obj.role == 'employer':
+            point = obj.user_profile_employerprofile_user.points
+        return point
 
 
 class JobListSerializers(serializers.ModelSerializer):
@@ -836,7 +845,7 @@ class CreateResourcesSerializers(serializers.ModelSerializer):
     )
     class Meta:
         model = ResourcesContent
-        fields = ['id', 'title', 'description', 'attachment_file']
+        fields = ['id', 'title', 'subtitle', 'description', 'attachment_file']
         read_only_fields = ['id'] 
     
     def save(self):
@@ -893,7 +902,7 @@ class ResourcesSerializers(serializers.ModelSerializer):
     class Meta:
         model = ResourcesContent
         fields = (
-            'id', 'title', 'description', 'attachment'
+            'id', 'title', 'subtitle', 'description', 'attachment'
         )
     
     def get_attachment(self, obj):
@@ -1415,6 +1424,6 @@ class NewsletterUserSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = NewsletterUser
-        fields = ['id', 'email', 'created']
+        fields = ['id', 'email', 'role', 'created']
         read_only_fields = ['id', 'created']    
 
