@@ -13,7 +13,8 @@ from .views import (
     TenderListView, TenderRevertView, ResourcesView,
     LinksView, AboutUsView, FaqCategoryView,
     FaqView, ResourcesDetailView, UploadLogo,
-    TestimonialView, NewsletterUserView, SetPointsView
+    TestimonialView, NewsletterUserView, SetPointsView,
+    TestimonialDetailView
 )
 
 app_name = "superadmin"
@@ -104,6 +105,7 @@ urlpatterns = [
     
     path("/testimonial", TestimonialView.as_view(), name="testimonial"),
     path("/testimonial/<str:testimonialId>", TestimonialView.as_view(), name="testimonial"),
+    path('/testimonial/<str:testimonialId>/detail', TestimonialDetailView.as_view(), name="testimonial_detail"), 
     
     path("/newsletter-user", NewsletterUserView.as_view(), name="newsletter_user"),
     path("/newsletter-user/<str:newsletterId>", NewsletterUserView.as_view(), name="newsletter_user"),
