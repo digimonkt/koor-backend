@@ -4597,6 +4597,35 @@ class TestimonialView(generics.ListAPIView):
         return testimonial_instance.image.file_path.url if testimonial_instance.image else None
 
 
+class TestimonialDetailView(generics.GenericAPIView):
+
+    serializer_class = GetTestimonialSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, testimonialId):
+        response_context = dict()
+        context = dict()
+        try:
+            testimonial_data = Testimonial.objects.get(id=testimonialId)
+            get_data = self.serializer_class(testimonial_data)
+            response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except Testimonial.DoesNotExist:
+            return response.Response(
+                data={"testimonialId": "Does Not Exist"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            response_context["message"] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class NewsletterUserView(generics.ListAPIView):
     """
     API view for retrieving a list of newsletter users.
