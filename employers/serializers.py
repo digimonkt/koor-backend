@@ -1088,12 +1088,15 @@ class ShareCountSerializers(serializers.ModelSerializer):
         """
 
         job_share = JobShare.objects.filter(job__user=obj)
-        total_counts = job_share.aggregate(
-            total_whatsapp=Sum('whatsapp'),
-            total_telegram=Sum('telegram'),
-            total_facebook=Sum('facebook'),
-            total_linked_in=Sum('linked_in'),
-            total_mail=Sum('mail'),
-            total_direct_link=Sum('direct_link')
-        )
-        return sum(total_counts.values())
+        if job_share:
+            total_counts = job_share.aggregate(
+                total_whatsapp=Sum('whatsapp'),
+                total_telegram=Sum('telegram'),
+                total_facebook=Sum('facebook'),
+                total_linked_in=Sum('linked_in'),
+                total_mail=Sum('mail'),
+                total_direct_link=Sum('direct_link')
+            )
+            return sum(total_counts.values())
+        else:
+            return 0
