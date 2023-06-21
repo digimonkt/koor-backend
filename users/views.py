@@ -860,7 +860,8 @@ class UserFilterView(generics.GenericAPIView):
 
         context = dict()
         try:
-            user_filter_data = UserFilters.objects.filter(user=request.user)
+            role = request.GET.get('role')
+            user_filter_data = UserFilters.objects.filter(user=request.user, role=role)
             get_data = GetUserFiltersSerializers(user_filter_data, many=True)
             return response.Response(
                 data=get_data.data,
