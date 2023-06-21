@@ -418,7 +418,18 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         - `db_table (str)`: The name of the database table to use for the model.
         - `ordering (list)`: The default ordering for the model.
    """
-
+    ROLE_TYPE_CHOICE = (
+        ('admin', "Admin"),
+        ('job_seeker', "Job Seeker"),
+        ('employer', "Employer"),
+        ('vendor', "Vendor"),
+    )
+    role = models.CharField(
+        verbose_name=_('Role'),
+        max_length=250,
+        db_column="role",
+        choices=ROLE_TYPE_CHOICE
+    )
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),

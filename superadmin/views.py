@@ -4597,6 +4597,35 @@ class TestimonialView(generics.ListAPIView):
         return testimonial_instance.image.file_path.url if testimonial_instance.image else None
 
 
+class TestimonialDetailView(generics.GenericAPIView):
+
+    serializer_class = GetTestimonialSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, testimonialId):
+        response_context = dict()
+        context = dict()
+        try:
+            testimonial_data = Testimonial.objects.get(id=testimonialId)
+            get_data = self.serializer_class(testimonial_data)
+            response_context = get_data.data
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except Testimonial.DoesNotExist:
+            return response.Response(
+                data={"testimonialId": "Does Not Exist"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            response_context["message"] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
 class NewsletterUserView(generics.ListAPIView):
     """
     API view for retrieving a list of newsletter users.
@@ -4651,6 +4680,25 @@ class NewsletterUserView(generics.ListAPIView):
         """
         
         queryset = self.filter_queryset(self.get_queryset())
+        action = request.GET.get('action', None)
+        if action == 'download':
+            directory_path = create_directory()
+            file_name = '{0}/{1}'.format(directory_path, 'newsletterusers.csv')
+            with open(file_name, mode='w') as data_file:
+                file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                file_writer.writerow(
+                    ["Number", "Role", "Email"]
+                )
+                for counter, rows in enumerate(NewsletterUser.objects.all()):
+                    file_writer.writerow(
+                        [
+                            str(counter + 1), str(rows.role), str(rows.email)
+                        ]
+                    )
+            return response.Response(
+                data={"url": "/" + file_name},
+                status=status.HTTP_200_OK
+            )
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
