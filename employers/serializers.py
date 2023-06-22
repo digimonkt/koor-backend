@@ -99,13 +99,9 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
             if mobile_number.isdigit():
-                try:
-                    if len(mobile_number) > 13:
-                        raise serializers.ValidationError('This is an invalid mobile number.', code='mobile_number')
-                    else:
-                        if User.objects.get(mobile_number=mobile_number):
-                            raise serializers.ValidationError('Mobile number already in use.', code='mobile_number')
-                except User.DoesNotExist:
+                if len(mobile_number) > 13:
+                    raise serializers.ValidationError('This is an invalid mobile number.', code='mobile_number')
+                else:
                     return mobile_number
             else:
                 raise serializers.ValidationError('Mobile number must contain only numbers', code='mobile_number')
