@@ -32,7 +32,6 @@ class Media(BaseModel, models.Model):
     )
     file_path = models.FileField(
         verbose_name=_('File Path'),
-        unique=True,
         upload_to=upload_directory_path,
         db_column="file_path",
     )
