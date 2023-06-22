@@ -3860,7 +3860,7 @@ class FaqCategoryView(generics.ListAPIView):
     serializer_class = FaqCategorySerializers
     queryset = FaqCategory.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['title', 'role']
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -4041,7 +4041,7 @@ class FaqView(generics.ListAPIView):
     serializer_class = FAQSerializers
     queryset = FAQ.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['category__title', 'answer', 'question']
     pagination_class = CustomPagination
 
     def list(self, request, role, faqCategoryId):
