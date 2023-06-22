@@ -1172,13 +1172,6 @@ class CreateFAQSerializers(serializers.ModelSerializer):
         fields = ['id', 'question', 'answer', 'category', 'role', 'status']
         read_only_fields = ['id'] 
 
-    def validate(self, data):
-
-        question = data.get("question")
-        if FAQ.objects.filter(question__iexact=question, is_removed=False).exists():
-            raise serializers.ValidationError({'question': question + ' already exist.'})
-        return data
-
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance

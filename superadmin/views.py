@@ -4117,6 +4117,13 @@ class FaqView(generics.ListAPIView):
                                                        is_removed=False)
                     serializer.update(faq_instance, serializer.validated_data)
                 else:
+                    if 'question' in serializer.validated_data:
+                        if FAQ.objects.filter(question__iexact=serializer.validated_data['question'], is_removed=False).exists():
+                            context['question'] = [serializer.validated_data['question'] + ' already exist.']
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
                     serializer.save(user=request.user)
                 context["data"] = serializer.data
                 return response.Response(
@@ -4208,6 +4215,13 @@ class FaqView(generics.ListAPIView):
             serializer = CreateFAQSerializers(data=request.data, instance=faq_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
+                if 'question' in serializer.validated_data:
+                    if FAQ.objects.filter(question__iexact=serializer.validated_data['question'], is_removed=False).exclude(id=faqId).exists():
+                        context['question'] = [serializer.validated_data['question'] + ' already exist.']
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 if serializer.update(faq_instance, serializer.validated_data):
                     context['message'] = "Updated Successfully"
                     return response.Response(
