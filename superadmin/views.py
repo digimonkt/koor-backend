@@ -4223,7 +4223,7 @@ class FaqView(generics.ListAPIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
                 if serializer.update(faq_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
+                    context['message'] = "Updated Successfully."
                     return response.Response(
                         data=context,
                         status=status.HTTP_200_OK
