@@ -1518,7 +1518,7 @@ class CandidatesListView(generics.ListAPIView):
 
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
     search_fields = ['name', 'email']
@@ -1603,7 +1603,7 @@ class EmployerListView(generics.ListAPIView):
 
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
     search_fields = ['name']
