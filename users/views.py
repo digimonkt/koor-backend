@@ -4,8 +4,10 @@ from django.db.models import (
 import json, jwt
 import requests
 from datetime import datetime, date
+import uuid
 
 from django_filters import rest_framework as django_filters
+from django.db.models import Sum
 
 from rest_framework import (
     status, generics, serializers,
@@ -27,10 +29,8 @@ from core.emails import get_email_object
 from core.pagination import CustomPagination
 
 from user_profile.models import (
-    JobSeekerProfile,
-    EmployerProfile,
-    VendorProfile,
-    UserFilters
+    JobSeekerProfile, EmployerProfile,
+    VendorProfile, UserFilters, UserAnalytic
 )
 
 from jobs.models import JobSubCategory
@@ -217,7 +217,6 @@ class UserView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-
 
 class CreateSessionView(generics.GenericAPIView):
     """
@@ -1007,3 +1006,104 @@ class VisitorLogView(generics.GenericAPIView):
         return response.Response(
             status=status.HTTP_201_CREATED
         )
+
+class AnalyticView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        """
+        Handle POST request to update user analytic count.
+
+        Parameters:
+            - request: The HTTP request object.
+
+        Returns:
+            - HTTP response indicating the result of the request.
+        """
+        
+        context = dict()
+        try:
+            # Check if user_id is provided and valid
+            if not request.data['user_id']:
+                return response.Response(
+                    data={'user_id': 'user_id cannot be empty.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            try:
+                uuid.UUID(request.data['user_id'])
+            except ValueError:
+                return response.Response(
+                    data={'user_id': 'Invalid user_id.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            # Get the user instance
+            user_instance = User.objects.get(id=request.data['user_id'])
+            
+            # Check if UserAnalytic record exists for the user and today's date
+            if UserAnalytic.objects.filter(user=user_instance, date=date.today()).exists():
+                # Update the count if record exists
+                analytic_instance = UserAnalytic.objects.get(user=user_instance, date=date.today())
+                UserAnalytic.objects.filter(user=user_instance, date=date.today()).update(count=int(analytic_instance.count) + 1)
+            else:
+                # Create a new UserAnalytic record if it doesn't exist
+                UserAnalytic.objects.create(user=user_instance, date=date.today(), count=1)
+                
+            return response.Response(
+                data={"message": "Count updated successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"user_id": "User Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except KeyError:
+            return response.Response(
+                data={'user_id': 'user_id is required.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    def get(self, request):
+        """
+        Handle GET request to retrieve user analytic data by year.
+
+        Parameters:
+            - request: The HTTP request object.
+
+        Returns:
+            - HTTP response with the user analytic data grouped by month.
+        """
+        context = dict()
+        try:
+            # Get the 'year' parameter from the request query parameters
+            year = request.GET.get('year')
+            
+            # Get the user analytic data grouped by month for the specified year
+            data_by_month = self.get_data_by_year(year)
+            
+            return response.Response(
+                data=data_by_month,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    def get_data_by_year(self, year):
+        """
+        Retrieve user analytic data grouped by month for the specified year.
+
+        Parameters:
+            - year: The year for which to retrieve the data.
+
+        Returns:
+            - Queryset containing the user analytic data grouped by month and the total count.
+        """
+        user_analytics = UserAnalytic.objects.filter(date__year=year).order_by('-date')
+        data_by_month = user_analytics.values('date__year', 'date__month').annotate(total_count=Sum('count'))
+        return data_by_month
+            
