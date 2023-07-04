@@ -1075,12 +1075,19 @@ class AnalyticView(generics.GenericAPIView):
             - HTTP response with the user analytic data grouped by month.
         """
         context = dict()
+        if self.request.user.is_anonymous:
+            context["message"] = "Login is required."
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         try:
             # Get the 'year' parameter from the request query parameters
             year = request.GET.get('year')
             
             # Get the user analytic data grouped by month for the specified year
-            data_by_month = self.get_data_by_year(year)
+            data_by_month = self.get_data_by_year(year, self.request.user)
             
             return response.Response(
                 data=data_by_month,
@@ -1093,7 +1100,7 @@ class AnalyticView(generics.GenericAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
-    def get_data_by_year(self, year):
+    def get_data_by_year(self, year, user_instance):
         """
         Retrieve user analytic data grouped by month for the specified year.
 
@@ -1103,7 +1110,8 @@ class AnalyticView(generics.GenericAPIView):
         Returns:
             - Queryset containing the user analytic data grouped by month and the total count.
         """
-        user_analytics = UserAnalytic.objects.filter(date__year=year).order_by('-date')
+        
+        user_analytics = UserAnalytic.objects.filter(user=user_instance).filter(date__year=year).order_by('-date')
         data_by_month = user_analytics.values('date__year', 'date__month').annotate(total_count=Sum('count'))
         return data_by_month
             
