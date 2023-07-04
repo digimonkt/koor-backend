@@ -44,13 +44,28 @@ class ConversationListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Conversation.objects.all()
     pagination_class = CustomPagination
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['chat_user__name']
 
     def list(self, request):
-        filtered_queryset = self.filter_queryset(
-            self.get_queryset().filter(chat_user=self.request.user).filter(~Q(last_message=None))
-        )
+        search_query = request.GET.get('search', None)
+        if search_query:
+            chat_user1 = []
+            logged_in_user = request.user  # Replace with your logged-in user retrieval logic
+
+            # Retrieve conversations that have chat users matching the search query
+            conversations = Conversation.objects.filter(chat_user__name__icontains=search_query)
+
+            # Get all chat users from the conversations
+            chat_users = conversations.values_list('chat_user', flat=True).distinct()
+            for chat in chat_users:
+                if chat != self.request.user.id:
+                    chat_user1.append(chat)
+            filtered_queryset = self.filter_queryset(
+                self.get_queryset().filter(chat_user=self.request.user).filter(chat_user__id__in=chat_user1).filter(~Q(last_message=None))
+            )
+        else:
+            filtered_queryset = self.filter_queryset(
+                self.get_queryset().filter(chat_user=self.request.user).filter(~Q(last_message=None))
+            )
         paginated_queryset = self.paginate_queryset(filtered_queryset)
 
         serializer = self.get_serializer(
