@@ -1,7 +1,7 @@
 from django.db.models import Q
 from rest_framework import (
     status, generics, serializers,
-    response, permissions
+    response, permissions, filters
 )
 
 from core.pagination import CustomPagination
@@ -44,6 +44,8 @@ class ConversationListView(generics.ListAPIView):
     permission_classes = [permissions.AllowAny]
     queryset = Conversation.objects.all()
     pagination_class = CustomPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['chat_user__name']
 
     def list(self, request):
         filtered_queryset = self.filter_queryset(
