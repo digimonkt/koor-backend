@@ -36,14 +36,6 @@ class Conversation(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="user",
         related_name='%(app_label)s_%(class)s_user'
     )
-    receiver = models.ForeignKey(
-        User,
-        verbose_name=_("Receiver"),
-        related_name='%(app_label)s_%(class)s_receiver',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True
-    )
     last_message = models.ForeignKey(
         to="chat.ChatMessage",
         verbose_name=_("Last Message"),

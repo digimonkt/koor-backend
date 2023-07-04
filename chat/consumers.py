@@ -161,7 +161,6 @@ class ChatConsumer(BaseConsumer):
                 else:
                     conversation = Conversation.objects.create()
                     conversation.chat_user.add(self.scope["user"], user_instance)
-                    conversation.receiver = user_instance
                     conversation.save()
                     self.conversation_id = conversation.id
                     self.conversation = conversation
