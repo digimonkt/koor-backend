@@ -564,3 +564,46 @@ class UserFilters(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "User Filters"
         db_table = "UserFilters"
         ordering = ['-created']
+
+class UserAnalytic(BaseModel, models.Model):
+    """
+    Model representing user analytics.
+
+    Attributes:
+        user (ForeignKey): The user associated with the analytic.
+        date (DateField): The date of the analytic.
+        count (BigIntegerField): The count value for the analytic.
+
+    Meta:
+        verbose_name (str): The human-readable name for a single object of this model.
+        verbose_name_plural (str): The human-readable name for multiple objects of this model.
+        db_table (str): The database table name for this model.
+    """
+    
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    date = models.DateField(
+        verbose_name=_('Date'),
+        blank=True,
+        null=True,
+        db_column='date'
+    )
+    count = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=0,
+        verbose_name=_('Count'),
+        db_column="count",
+    )
+    def __str__(self):
+        return str(self.user)
+
+    class Meta:
+        verbose_name = "User Analytic"
+        verbose_name_plural = "User Analytics"
+        db_table = "UserAnalytic"
