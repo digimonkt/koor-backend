@@ -45,7 +45,7 @@ class ConversationListView(generics.ListAPIView):
     queryset = Conversation.objects.all()
     pagination_class = CustomPagination
     filter_backends = [filters.SearchFilter]
-    search_fields = ['chat_user__name']
+    search_fields = ['receiver__name']
 
     def list(self, request):
         filtered_queryset = self.filter_queryset(
