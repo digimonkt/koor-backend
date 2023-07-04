@@ -324,7 +324,8 @@ class JobPreferencesSerializer(serializers.ModelSerializer):
             'is_part_time',
             'is_full_time',
             'has_contract',
-            'expected_salary'
+            'expected_salary',
+            'pay_period'
         )
 
 
