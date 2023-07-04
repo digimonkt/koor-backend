@@ -862,7 +862,7 @@ class SkillView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = SkillSerializers
-    queryset = Skill.objects.all()
+    queryset = Skill.objects.all().order_by('title')
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
