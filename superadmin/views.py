@@ -862,7 +862,7 @@ class SkillView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = SkillSerializers
-    queryset = Skill.objects.all()
+    queryset = Skill.objects.all().order_by('title')
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
@@ -1518,7 +1518,7 @@ class CandidatesListView(generics.ListAPIView):
 
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
     search_fields = ['name', 'email']
@@ -1603,7 +1603,7 @@ class EmployerListView(generics.ListAPIView):
 
     serializer_class = CandidatesSerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('-date_joined')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
     search_fields = ['name']
@@ -3860,7 +3860,7 @@ class FaqCategoryView(generics.ListAPIView):
     serializer_class = FaqCategorySerializers
     queryset = FaqCategory.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['title', 'role']
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -4041,7 +4041,7 @@ class FaqView(generics.ListAPIView):
     serializer_class = FAQSerializers
     queryset = FAQ.objects.all()
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['category__title', 'answer', 'question']
     pagination_class = CustomPagination
 
     def list(self, request, role, faqCategoryId):
@@ -4117,6 +4117,13 @@ class FaqView(generics.ListAPIView):
                                                        is_removed=False)
                     serializer.update(faq_instance, serializer.validated_data)
                 else:
+                    if 'question' in serializer.validated_data:
+                        if FAQ.objects.filter(question__iexact=serializer.validated_data['question'], is_removed=False).exists():
+                            context['question'] = [serializer.validated_data['question'] + ' already exist.']
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
                     serializer.save(user=request.user)
                 context["data"] = serializer.data
                 return response.Response(
@@ -4208,8 +4215,15 @@ class FaqView(generics.ListAPIView):
             serializer = CreateFAQSerializers(data=request.data, instance=faq_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
+                if 'question' in serializer.validated_data:
+                    if FAQ.objects.filter(question__iexact=serializer.validated_data['question'], is_removed=False).exclude(id=faqId).exists():
+                        context['question'] = [serializer.validated_data['question'] + ' already exist.']
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                 if serializer.update(faq_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
+                    context['message'] = "Updated Successfully."
                     return response.Response(
                         data=context,
                         status=status.HTTP_200_OK

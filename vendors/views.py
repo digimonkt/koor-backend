@@ -49,6 +49,22 @@ class UpdateAboutView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
+                if 'email' in serializer.validated_data:
+                    if User.objects.filter(email__iexact=serializer.validated_data['email']).exists():
+                        if profile_instance.user.email__iexact != serializer.validated_data['email']:
+                            context['email'] = ["email already in use."]
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                if 'mobile_number' in serializer.validated_data:
+                    if User.objects.filter(mobile_number=serializer.validated_data['mobile_number']).exists():
+                        if profile_instance.user.mobile_number != serializer.validated_data['mobile_number']:
+                            context['mobile_number'] = ["mobile number already in use."]
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
                 if serializer.update(profile_instance, serializer.validated_data):
                     context['message'] = "Updated Successfully"
                     return response.Response(

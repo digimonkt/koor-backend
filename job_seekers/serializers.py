@@ -561,7 +561,8 @@ class UpdateJobPreferencesSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobPreferences
         fields = ['is_available', 'display_in_search', 'is_part_time',
-                  'is_full_time', 'has_contract', 'expected_salary'
+                  'is_full_time', 'has_contract', 'expected_salary',
+                  'pay_period'
                   ]
 
     def update(self, instance, validated_data):

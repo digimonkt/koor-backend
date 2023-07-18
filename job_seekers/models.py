@@ -416,7 +416,13 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         - `TimeStampedModel`: A model class that adds created and modified timestamps.
         - `models.Model`: The base class for all Django models.
     """
-
+    PAY_PERIOD_CHOICE = (
+        ('yearly', "Yearly"),
+        ('quarterly', "Quarterly"),
+        ('monthly', "Monthly"),
+        ('weekly', "Weekly"),
+        ('hourly', "Hourly"),
+    )
     user = models.OneToOneField(
         User,
         verbose_name=_('User'),
@@ -466,6 +472,15 @@ class JobPreferences(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model)
         blank=True,
         verbose_name=_('Expected Salary'),
         db_column="expected_salary",
+    )
+    pay_period = models.CharField(
+        verbose_name=_('Pay Period'),
+        max_length=255,
+        default='monthly',
+        null=True,
+        blank=True,
+        db_column="pay_period",
+        choices=PAY_PERIOD_CHOICE,
     )
 
     class Meta:

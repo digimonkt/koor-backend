@@ -324,7 +324,8 @@ class JobPreferencesSerializer(serializers.ModelSerializer):
             'is_part_time',
             'is_full_time',
             'has_contract',
-            'expected_salary'
+            'expected_salary',
+            'pay_period'
         )
 
 
@@ -1418,13 +1419,17 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
     city = serializers.SerializerMethodField()
     category = serializers.SerializerMethodField()
     sub_category = serializers.SerializerMethodField()
+    organization_type = serializers.SerializerMethodField()
+    sector = serializers.SerializerMethodField()
+    tag = serializers.SerializerMethodField()
 
     class Meta:
         model = UserFilters
         fields = [
-            'id', 'title', 'country', 'city', 'category', 'sub_category',
-            'is_full_time', 'is_part_time', 'has_contract',  'availability', 
-            'is_notification','salary_min','salary_max', 'experience'
+            'id', 'role', 'title', 'country', 'city', 'category', 'sub_category',
+            'is_full_time', 'is_part_time', 'has_contract', 'is_notification',
+            'salary_min', 'salary_max', 'availability', 'experience', 
+            'organization_type', 'sector', 'tag', 'years_in_market'
         ]
 
     def get_country(self, obj):
@@ -1508,6 +1513,30 @@ class GetUserFiltersSerializers(serializers.ModelSerializer):
 
         context = []
         get_data = UserSubCategorySerializer(obj.sub_category, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_organization_type(self, obj):
+        
+        context = []
+        get_data = ChoiceSerializer(obj.organization_type, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_sector(self, obj):
+        
+        context = []
+        get_data = ChoiceSerializer(obj.sector, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
+    def get_tag(self, obj):
+        
+        context = []
+        get_data = TagSerializer(obj.tag, many=True)
         if get_data.data:
             context = get_data.data
         return context
