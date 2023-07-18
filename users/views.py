@@ -613,8 +613,8 @@ class SocialLoginView(generics.GenericAPIView):
                 elif user.role == "vendor":
                     VendorProfile.objects.create(user=user)
             if user.role != serializer.validated_data['role']:
-                context["message"] = "Email already registered with another role."
-                context["role"] = user.role
+                context["message"] = ["Email already registered with another role."]
+                context["role"] = [user.role]
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
