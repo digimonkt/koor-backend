@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from django.db.models import Q
@@ -6,7 +7,8 @@ from django.template.defaultfilters import slugify
 
 from jobs.models import (
     JobCategory, JobDetails,
-    JobSubCategory
+    JobSubCategory, JobAttachmentsItem,
+    JobsLanguageProficiency, JobShare
 )
 from project_meta.models import (
     Country, City, EducationLevel,
@@ -20,7 +22,7 @@ from project_meta.serializers import (
 )
 from chat.serializers import AttachmentSerializer
 
-from tenders.models import TenderCategory, TenderDetails
+from tenders.models import TenderCategory, TenderDetails, TenderAttachmentsItem
 from tenders.serializers import TenderCategorySerializer
 
 from users.backends import MobileOrEmailBackend as cb
@@ -45,7 +47,7 @@ class CountrySerializers(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ['id', 'title', 'currency_code', 'country_code', 'iso_code2', 'iso_code3']
-        read_only_fields = ['id']    
+        read_only_fields = ['id']
 
 
 class CitySerializers(serializers.ModelSerializer):
@@ -66,14 +68,15 @@ class CitySerializers(serializers.ModelSerializer):
         - fields (list): List of fields from the City model that should be included in the API representation.
     """
     country_name = serializers.CharField(
-            style={"input_type": "text"},
-            write_only=True,
-            allow_blank=False
-        )
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+
     class Meta:
         model = City
         fields = ['id', 'title', 'country_name']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def validate(self, data):
         """
@@ -102,7 +105,8 @@ class CitySerializers(serializers.ModelSerializer):
             try:
                 country_instance = Country.objects.get(title=country_name)
                 if City.objects.filter(title__iexact=title, country=country_instance).exists():
-                    raise serializers.ValidationError({'title': title + ' in ' + str(country_instance.title) + ' already exist.'})
+                    raise serializers.ValidationError(
+                        {'title': title + ' in ' + str(country_instance.title) + ' already exist.'})
                 return data
             except Country.DoesNotExist:
                 raise serializers.ValidationError('Country not available.', code='country_name')
@@ -126,7 +130,7 @@ class GetCitySerializers(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'title', 'country']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def get_country(self, obj):
         return {"id": obj.country.id, "title": obj.country.title}
@@ -144,7 +148,7 @@ class JobCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobCategory
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def validate(self, data):
         """
@@ -189,7 +193,7 @@ class EducationLevelSerializers(serializers.ModelSerializer):
     class Meta:
         model = EducationLevel
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         education_instance = super().update(instance, validated_data)
@@ -210,7 +214,7 @@ class LanguageSerializers(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         language_instance = super().update(instance, validated_data)
@@ -231,7 +235,7 @@ class SkillSerializers(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         skill_instance = super().update(instance, validated_data)
@@ -252,7 +256,7 @@ class TagSerializers(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         tag_instance = super().update(instance, validated_data)
@@ -337,19 +341,20 @@ class CandidatesSerializers(serializers.ModelSerializer):
     """
     verify = serializers.SerializerMethodField()
     points = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = [
-            'id', 'role', 'name', 'email', 'country_code', 'mobile_number', 
+            'id', 'role', 'name', 'email', 'country_code', 'mobile_number',
             'is_active', 'verify', 'date_joined', 'points']
-        read_only_fields = ['id'] 
-    
+        read_only_fields = ['id']
+
     def get_verify(self, obj):
         verify = False
         if obj.role == 'employer':
             verify = obj.user_profile_employerprofile_user.is_verified
         return verify
-    
+
     def get_points(self, obj):
         point = 0
         if obj.role == 'employer':
@@ -383,7 +388,7 @@ class JobListSerializers(serializers.ModelSerializer):
     class Meta:
         model = JobDetails
         fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status', 'user']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def get_country(self, obj):
         """
@@ -547,7 +552,7 @@ class TenderCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = TenderCategory
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def validate(self, data):
         title = data.get("title")
@@ -555,7 +560,7 @@ class TenderCategorySerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'title': str(title) + ' already exists'})
         else:
             return data
-    
+
     def update(self, instance, validated_data):
         tender_category_instance = super().update(instance, validated_data)
         instance.slug = slugify(tender_category_instance.title)
@@ -576,7 +581,7 @@ class GetJobSubCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSubCategory
         fields = ['id', 'title', 'category']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def get_category(self, obj):
         return {"id": obj.category.id, "title": obj.category.title}
@@ -594,7 +599,7 @@ class JobSubCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = JobSubCategory
         fields = ['id', 'title', 'category']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def validate(self, data):
         """
@@ -648,7 +653,7 @@ class AllCountrySerializers(serializers.ModelSerializer):
     class Meta:
         model = AllCountry
         fields = ['id', 'title', 'currency', 'phone_code', 'iso2', 'iso3']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
 
 class AllCitySerializers(serializers.ModelSerializer):
@@ -673,7 +678,7 @@ class AllCitySerializers(serializers.ModelSerializer):
     class Meta:
         model = AllCountry
         fields = ['id', 'title', 'country']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def get_country(self, obj):
         return {"id": obj.country.id, "title": obj.country.title}
@@ -691,7 +696,7 @@ class ChoiceSerializers(serializers.ModelSerializer):
     class Meta:
         model = Choice
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         choice_instance = super().update(instance, validated_data)
@@ -712,7 +717,7 @@ class OpportunityTypeSerializers(serializers.ModelSerializer):
     class Meta:
         model = OpportunityType
         fields = ['id', 'title']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         opportunity_instance = super().update(instance, validated_data)
@@ -751,10 +756,10 @@ class TenderListSerializers(serializers.ModelSerializer):
     class Meta:
         model = TenderDetails
         fields = [
-            'id', 'tender_id', 'title', 'tag', 'tender_category', 
+            'id', 'tender_id', 'title', 'tag', 'tender_category',
             'tender_type', 'sector', 'city', 'country', 'status', 'user', 'address'
-            ]
-        read_only_fields = ['id'] 
+        ]
+        read_only_fields = ['id']
 
     def get_country(self, obj):
         """
@@ -843,11 +848,12 @@ class CreateResourcesSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
+
     class Meta:
         model = ResourcesContent
         fields = ['id', 'title', 'subtitle', 'description', 'attachment_file']
-        read_only_fields = ['id'] 
-    
+        read_only_fields = ['id']
+
     def save(self):
         attachment_file = None
         if 'attachment_file' in self.validated_data:
@@ -899,19 +905,20 @@ class ResourcesSerializers(serializers.ModelSerializer):
             to be included in the serialized data.
     """
     attachment = serializers.SerializerMethodField()
+
     class Meta:
         model = ResourcesContent
         fields = (
             'id', 'title', 'subtitle', 'description', 'attachment'
         )
-    
+
     def get_attachment(self, obj):
         if obj.attachment:
-            return {'id': obj.attachment.id, 
-                    'title': obj.attachment.title, 
-                    'type':obj.attachment.media_type,
+            return {'id': obj.attachment.id,
+                    'title': obj.attachment.title,
+                    'type': obj.attachment.media_type,
                     'path': obj.attachment.file_path.url
-            }
+                    }
         return None
 
 
@@ -932,7 +939,7 @@ class SocialUrlSerializers(serializers.ModelSerializer):
         fields = (
             'id', 'platform', 'url'
         )
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
 
 class AboutUsSerializers(serializers.ModelSerializer):
@@ -951,12 +958,13 @@ class AboutUsSerializers(serializers.ModelSerializer):
     - fields: The fields to be serialized from the AboutUs model.
 
     """
-    
+
     image = serializers.SerializerMethodField()
+
     class Meta:
         model = AboutUs
         fields = ['id', 'description', 'image']
-    
+
     def get_image(self, obj):
         """
         Retrieves additional information about the image if it exists.
@@ -971,7 +979,7 @@ class AboutUsSerializers(serializers.ModelSerializer):
                    - 'type': The media type of the image.
         
         """
-        
+
         context = {}
         if obj.image:
             context['title'] = obj.image.title
@@ -982,7 +990,7 @@ class AboutUsSerializers(serializers.ModelSerializer):
             context['type'] = obj.image.media_type
             return context
         return None
-        
+
 
 class UpdateAboutUsSerializers(serializers.ModelSerializer):
     """
@@ -997,17 +1005,17 @@ class UpdateAboutUsSerializers(serializers.ModelSerializer):
     - update: Updates the instance of AboutUs model with the validated data, including saving the image file as media.
 
     """
-    
+
     image_file = serializers.FileField(
         style={"input_type": "file"},
         write_only=True,
         allow_null=False
     )
+
     class Meta:
         model = AboutUs
         fields = ['description', 'image_file']
-        
-    
+
     def validate_image_file(self, image_file):
         """
         Validates the image file and ensures it is not blank and has a valid format.
@@ -1022,7 +1030,7 @@ class UpdateAboutUsSerializers(serializers.ModelSerializer):
         - serializers.ValidationError: If the image file is blank or has an invalid format.
 
         """
-        
+
         if image_file in ["", None]:
             raise serializers.ValidationError('Image file can not be blank.', code='image_file')
         content_type = str(image_file.content_type).split("/")
@@ -1043,7 +1051,7 @@ class UpdateAboutUsSerializers(serializers.ModelSerializer):
         - The updated instance of AboutUs model.
 
         """
-        
+
         super().update(instance, validated_data)
         if 'image_file' in validated_data:
             # Get media type from upload license file
@@ -1074,7 +1082,7 @@ class FaqCategorySerializers(serializers.ModelSerializer):
     class Meta:
         model = FaqCategory
         fields = ['id', 'title', 'role']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def validate(self, data):
         """
@@ -1124,13 +1132,14 @@ class FAQSerializers(serializers.ModelSerializer):
         get_category(obj): Custom method to serialize the category information.
 
     """
-    
+
     category = serializers.SerializerMethodField()
+
     class Meta:
         model = FAQ
         fields = ['id', 'question', 'answer', 'category', 'role', 'status']
-        read_only_fields = ['id'] 
-        
+        read_only_fields = ['id']
+
     def get_category(self, obj):
         """
         Retrieve and serialize the category information.
@@ -1143,14 +1152,14 @@ class FAQSerializers(serializers.ModelSerializer):
             or None if no category is associated with the FAQ.
 
         """
-        
+
         context = {}
         if obj.category:
             context['id'] = obj.category.id
             context['title'] = obj.category.title
             return context
         return None
- 
+
 
 class CreateFAQSerializers(serializers.ModelSerializer):
     """
@@ -1170,7 +1179,7 @@ class CreateFAQSerializers(serializers.ModelSerializer):
     class Meta:
         model = FAQ
         fields = ['id', 'question', 'answer', 'category', 'role', 'status']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
@@ -1199,7 +1208,7 @@ class UploadLogoSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
-    
+
     class Meta:
         model = CategoryLogo
         fields = ['id', 'category_logo']
@@ -1242,14 +1251,14 @@ class UploadLogoSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             category_logo_instance.logo = media_instance
             category_logo_instance.save()
-            
-            return {"id":category_logo_instance.id, "path":media_instance.file_path.url}
+
+            return {"id": category_logo_instance.id, "path": media_instance.file_path.url}
         return None
 
 
 class LogoSerializers(serializers.ModelSerializer):
-
     logo = AttachmentSerializer()
+
     class Meta:
         model = CategoryLogo
         fields = ['id', 'logo']
@@ -1272,12 +1281,13 @@ class GetTestimonialSerializers(serializers.ModelSerializer):
         - read_only_fields: The fields that are read-only and should not be modified when deserializing input 
             data (id).
     """
-    
+
     image = AttachmentSerializer()
+
     class Meta:
         model = Testimonial
         fields = ['id', 'title', 'client_name', 'client_company', 'client_position', 'description', 'image']
-        read_only_fields = ['id'] 
+        read_only_fields = ['id']
 
 
 class TestimonialSerializers(serializers.ModelSerializer):
@@ -1303,7 +1313,7 @@ class TestimonialSerializers(serializers.ModelSerializer):
             # Perform further operations with the serialized testimonial object.
 
     """
-    
+
     testimonial_image = serializers.FileField(
         style={"input_type": "file"},
         write_only=True,
@@ -1328,7 +1338,7 @@ class TestimonialSerializers(serializers.ModelSerializer):
             File: The validated testimonial image.
 
         """
-    
+
         if not testimonial_image:
             raise serializers.ValidationError('Testimonial image cannot be blank.', code='testimonial_image')
         content_type = testimonial_image.content_type.split("/")
@@ -1387,7 +1397,7 @@ class TestimonialSerializers(serializers.ModelSerializer):
         the Testimonial instance is updated with a slugified version of the testimonial
         title. Finally, the updated Testimonial instance is saved and returned.
         """
-        
+
         testimonial_image = None
         if 'testimonial_image' in self.validated_data:
             testimonial_image = self.validated_data.pop('testimonial_image')
@@ -1418,5 +1428,335 @@ class NewsletterUserSerializers(serializers.ModelSerializer):
     class Meta:
         model = NewsletterUser
         fields = ['id', 'email', 'role', 'created']
-        read_only_fields = ['id', 'created']    
+        read_only_fields = ['id', 'created']
 
+
+class CreateJobsSerializers(serializers.ModelSerializer):
+    """
+    Serializer class for creating job details.
+
+    This serializer class is based on the `serializers.ModelSerializer` class and extends its functionality to handle
+    the creation of job details objects. The serializer handles the following fields:
+        - `title`: title of the job
+        - `budget_currency`: currency of the budget amount
+        - `budget_amount`: amount of the budget
+        - `budget_pay_period`: period of payment for the budget
+        - `description`: description of the job
+        - `country`: country where the job is located
+        - `city`: city where the job is located
+        - `address`: address of the job location
+        - `job_category`: categories related to the job
+        - `job_sub_category`: sub-categories related to the job
+        - `is_full_time`: boolean indicating if the job is full-time
+        - `is_part_time`: boolean indicating if the job is part-time
+        - `has_contract`: boolean indicating if the job has a contract
+        - `contact_email`: contact email for the job
+        - `cc1`: cc1 for the job
+        - `cc2`: cc2 for the job
+        - `contact_whatsapp`: contact WhatsApp for the job
+        - `highest_education`: highest education required for the job
+        - `language`: languages required for the job
+        - `skill`: skills required for the job
+
+    The `job_category`, `job_sub_category`, `language`, and `skill` fields are related fields that are read-only.
+    """
+    job_category = serializers.PrimaryKeyRelatedField(
+        queryset=JobCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    job_sub_category = serializers.PrimaryKeyRelatedField(
+        queryset=JobSubCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    skill = serializers.PrimaryKeyRelatedField(
+        queryset=Skill.objects.all(),
+        many=True,
+        write_only=True,
+        allow_null=True,
+        required=False
+    )
+    language = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=True,
+        required=False
+    )
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = JobDetails
+        fields = [
+            'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
+            'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
+            'duration', 'experience', 'attachments', 'deadline', 'start_date'
+        ]
+
+    def validate_job_category(self, job_category):
+        """
+        validate_job_category - A function to validate the job category for a job instance.
+
+        Parameters:
+            job_category (str): The job category to be validated.
+
+        Returns:
+            job_category (str): The validated job category.
+
+            This function validates the job category of a job instance. If the job category is an empty string, a
+        ValidationError is raised with a message indicating that the job category cannot be blank. If the length of
+        the job category string is greater than 3, a ValidationError is raised with a message indicating that the
+        choices are limited to 3. If the job category is not blank and its length is within limits, the job category
+        is returned.
+        """
+        if job_category not in [None, ""]:
+            limit = 3
+            if len(job_category) > limit:
+                raise serializers.ValidationError({'job_category': 'Choices limited to ' + str(limit)})
+            return job_category
+        else:
+            raise serializers.ValidationError({'job_category': 'Job category can not be blank.'})
+
+    def validate_job_sub_category(self, job_sub_category):
+        """
+        validate_job_sub_category - A function to validate the job sub category for a job instance.
+
+        Parameters:
+            job_sub_category (str): The job category to be validated.
+
+        Returns:
+            job_sub_category (str): The validated job sub category.
+
+            This function validates the job category of a job instance. If the job sub category is an empty string, a
+        ValidationError is raised with a message indicating that the job sub category cannot be blank. If the length of
+        the job sub category string is greater than 3, a ValidationError is raised with a message indicating that the
+        choices are limited to 3. If the job sub category is not blank and its length is within limits, the job sub category
+        is returned.
+        """
+        if job_sub_category not in [None, ""]:
+            limit = 3
+            if len(job_sub_category) > limit:
+                raise serializers.ValidationError({'job_sub_category': 'Choices limited to ' + str(limit)})
+            return job_sub_category
+        else:
+            raise serializers.ValidationError({'job_sub_category': 'Job sub category can not be blank.'})
+
+    def validate_language(self, language):
+        """
+        validate_language - A function to validate the language for a job instance.
+
+        Parameters:
+            language (str): The language to be validated.
+
+        Returns:
+            language (str): The validated language.
+
+        This function validates the language of a job instance. If the language is an empty string, a ValidationError
+        is raised with a message indicating that the language cannot be blank. If the length of the language string is
+        greater than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If
+        the language is not blank and its length is within limits, the language is returned.
+        """
+        if language not in [""]:
+            limit = 3
+            if len(language) > limit:
+                raise serializers.ValidationError({'language': 'Choices limited to ' + str(limit)})
+            for language_data in language:
+                language_data = json.loads(language_data)
+                if 'language' not in language_data:
+                    raise serializers.ValidationError('This field is required.', code='language')
+                else:
+                    try:
+                        if Language.objects.get(id=language_data['language']):
+                            pass
+                    except Language.DoesNotExist:
+                        raise serializers.ValidationError('Language not exist.', code='language')
+                # if 'written' not in language_data: raise serializers.ValidationError({'language_written': 'Language
+                # written proficiency is required.'}) if 'spoken' not in language_data: raise
+                # serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
+            return language
+        else:
+            raise serializers.ValidationError('This field is required.', code='language')
+
+    def validate_skill(self, skill):
+        """
+        validate_skill - A function to validate the skill for a job instance.
+
+        Parameters:
+            skill (str): The skill to be validated.
+
+        Returns:
+            skill (str): The validated skill.
+
+        This function validates the skill of a job instance. If the skill is an empty string, a ValidationError is
+        raised with a message indicating that the skill cannot be blank. If the length of the skill string is greater
+        than 3, a ValidationError is raised with a message indicating that the choices are limited to 3. If the skill
+        is not blank and its length is within limits, the skill is returned.
+        """
+        if skill not in [""]:
+            limit = 3
+            if len(skill) > limit:
+                raise serializers.ValidationError({'skill': 'Choices limited to ' + str(limit)})
+            return skill
+        else:
+            raise serializers.ValidationError({'skill': 'Skill can not be blank.'})
+
+    def validate(self, data):
+        job_category = data.get("job_category")
+        job_sub_category = data.get("job_sub_category")
+        if not job_category:
+            raise serializers.ValidationError({'job_category': 'This field is required.'})
+        if not job_sub_category:
+            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
+        return data
+
+    def save(self, user):
+        """
+            save - A function to save the validated data and its attachments (if any) for a job instance.
+        
+        Parameters:
+            - user (object): The user for whom the job instance is being saved.
+        
+        Returns:
+            - self (object): The instance of the class.
+        
+        This function saves the validated data of a job instance, and if there are any attachments in the validated
+        data, it saves them as well. The attachments are saved in the 'Media' table and the relation between the job
+        instance and the attachments is saved in the 'JobAttachmentsItem' table. The media type of the attachment is
+        determined based on its content type, with application types being saved as 'documents' and other types being
+        saved as their content type.
+        """
+        language = None
+        attachments = None
+
+        if 'language' in self.validated_data:
+            language = self.validated_data.pop('language')
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        job_instance = super().save(user=user, status='active', post_by_admin=True)
+        JobShare.objects.create(job=job_instance)
+        if language:
+            for language_data in language:
+                language_data = json.loads(language_data)
+                language_instance = Language.objects.get(id=language_data['language'])
+                job_language_instance = JobsLanguageProficiency.objects.create(
+                    job=job_instance,
+                    language=language_instance,
+                    # spoken=language_data['spoken'],
+                    # written=language_data['written']
+                )
+                job_language_instance.save()
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
+                attachments_instance.save()
+        return self
+
+
+class CreateTendersSerializers(serializers.ModelSerializer):
+    """
+    Serializer for creating `TenderDetails` instances.
+
+    Fields:
+        - `title (str)`: The title of the tender.
+        - `budget_currency (str)`: The currency used for the tender budget.
+        - `budget_amount (float)`: The amount of the tender budget.
+        - `description (str)`: A description of the tender.
+        - `country (str)`: The country where the tender is located.
+        - `city (str)`: The city where the tender is located.
+        - `tender_category (PrimaryKeyRelatedField)`: The category/categories of the tender. Accepts a list of primary
+            keys.
+        - `tender_type (str)`: The type of the tender.
+        - `sector (str)`: The sector of the tender.
+        - `tag (PrimaryKeyRelatedField)`: The tag/tags of the tender. Accepts a list of primary keys.
+
+    Methods:
+        - `validate_tender_category(self, tender_category)`: Validates the tender category field. Raises a
+            `ValidationError` if there are more than `3 categories`.
+        - `validate_tag(self, tag)`: Validates the tag field. Raises a `ValidationError` if there are more than
+            `3 tags`.
+        - `validate(self, data)`: Validates the `tender_category` and `tag` fields. Raises a ValidationError if they
+            are missing.
+        - `save(self, user)`: Saves the TenderDetails instance and creates `TenderAttachmentsItem` instances for any
+            attachments.
+
+    """
+
+    tender_category = serializers.PrimaryKeyRelatedField(
+        queryset=TenderCategory.objects.all(),
+        many=True,
+        write_only=True
+    )
+    tag = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
+        many=True,
+        write_only=True
+    )
+    attachments = serializers.ListField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = TenderDetails
+        fields = [
+            'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
+            'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
+            'start_date', 'address'
+        ]
+
+    def validate_tender_category(self, tender_category):
+        if tender_category not in [None, ""]:
+            limit = 3
+            if len(tender_category) > limit:
+                raise serializers.ValidationError({'tender_category': 'Choices limited to ' + str(limit)})
+            return tender_category
+        else:
+            raise serializers.ValidationError({'tender_category': 'Tender category can not be blank.'})
+
+    def validate_tag(self, tag):
+        if tag not in [None, ""]:
+            limit = 3
+            if len(tag) > limit:
+                raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
+            return tag
+        else:
+            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
+
+    def save(self, user):
+        attachments = None
+        if 'attachments' in self.validated_data:
+            attachments = self.validated_data.pop('attachments')
+        tender_instance = super().save(user=user, status='active', post_by_admin=True)
+
+        if attachments:
+            for attachment in attachments:
+                content_type = str(attachment.content_type).split("/")
+                if content_type[0] not in ["video", "image"]:
+                    media_type = 'document'
+                else:
+                    media_type = content_type[0]
+                # save media file into media table and get instance of saved data.
+                media_instance = Media(title=attachment.name, file_path=attachment, media_type=media_type)
+                media_instance.save()
+                # save media instance into license id file into employer profile table.
+                attachments_instance = TenderAttachmentsItem.objects.create(tender=tender_instance,
+                                                                            attachment=media_instance)
+                attachments_instance.save()
+        return self

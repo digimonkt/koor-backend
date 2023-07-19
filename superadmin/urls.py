@@ -14,7 +14,7 @@ from .views import (
     LinksView, AboutUsView, FaqCategoryView,
     FaqView, ResourcesDetailView, UploadLogo,
     TestimonialView, NewsletterUserView, SetPointsView,
-    TestimonialDetailView
+    TestimonialDetailView, JobsCreateView, TenderCreateView
 )
 
 app_name = "superadmin"
@@ -60,6 +60,7 @@ urlpatterns = [
     path('/user/<str:userId>', UserView.as_view(), name="user"),
 
     path('/jobs', JobsListView.as_view(), name="jobs_list"),
+    path('/jobs/create/<str:employerId>', JobsCreateView.as_view(), name="jobs_create"),
     path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_revert"),
 
@@ -88,6 +89,7 @@ urlpatterns = [
     path('/opportunity-type/<str:opportunityId>', OpportunityTypeView.as_view(), name="opportunity_type"),
     
     path('/tender', TenderListView.as_view(), name="tender_list"),
+    path('/tender/create/<str:employerId>', TenderCreateView.as_view(), name="tender_create"),
     path('/tender/<str:tenderId>', TenderListView.as_view(), name="tender_list"),
     path('/tender/<str:tenderId>/revert', TenderRevertView.as_view(), name="tender_revert"),
     

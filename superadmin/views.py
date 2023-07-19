@@ -4,8 +4,10 @@ import os
 import pathlib
 from datetime import datetime, date, timedelta
 
-from django.db.models import Exists, OuterRef
-from django.db.models import Q
+from django.core.handlers.wsgi import WSGIHandler
+from django.core.signals import request_finished
+from django.db.models import Exists, OuterRef, Q
+from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as django_filters
 from rest_framework import (
     status, generics, serializers,
@@ -14,11 +16,13 @@ from rest_framework import (
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
+from employers.views import my_callback
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
     JobCategory, JobDetails,
     JobSubCategory
 )
+from jobs.serializers import GetJobsSerializers
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
@@ -27,6 +31,7 @@ from project_meta.models import (
 )
 from tenders.filters import TenderDetailsFilter
 from tenders.models import TenderCategory, TenderDetails
+from tenders.serializers import TendersSerializers
 from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
@@ -35,7 +40,6 @@ from .models import (
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection
 )
-
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
     EducationLevelSerializers, LanguageSerializers, SkillSerializers,
@@ -50,7 +54,7 @@ from .serializers import (
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
-    NewsletterUserSerializers
+    NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers
 )
 
 
@@ -120,8 +124,9 @@ class CountryView(generics.ListAPIView):
                     Country.all_objects.filter(title__iexact=serializer.validated_data['title'],
                                                is_removed=True).update(
                         is_removed=False)
-                    country_instance = Country.all_objects.get(title__iexact=serializer.validated_data['title'], is_removed=False)
-                    
+                    country_instance = Country.all_objects.get(title__iexact=serializer.validated_data['title'],
+                                                               is_removed=False)
+
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -249,9 +254,11 @@ class CityView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if City.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                           country__title=serializer.validated_data['country_name'], is_removed=True).exists():
+                                           country__title=serializer.validated_data['country_name'],
+                                           is_removed=True).exists():
                     City.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                            country__title=serializer.validated_data['country_name'], is_removed=True).update(
+                                            country__title=serializer.validated_data['country_name'],
+                                            is_removed=True).update(
                         is_removed=False)
                     city = City.objects.get(title__iexact=serializer.validated_data['title'],
                                             country__title=serializer.validated_data['country_name'], is_removed=False)
@@ -340,7 +347,8 @@ class JobCategoryView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = JobCategorySerializers
-    queryset = JobCategory.objects.annotate(has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id'))))
+    queryset = JobCategory.objects.annotate(
+        has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id'))))
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
@@ -1532,10 +1540,10 @@ class CandidatesListView(generics.ListAPIView):
             if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     Q(role="job_seeker") | Q(role="vendor")
-                    ).filter(
+                ).filter(
                     date_joined__gte=start_date,
                     date_joined__lte=end_date,
-                    ))
+                ))
             else:
                 queryset = self.filter_queryset(self.get_queryset().filter(Q(role="job_seeker") | Q(role="vendor")))
             action = request.GET.get('action', None)
@@ -1553,7 +1561,7 @@ class CandidatesListView(generics.ListAPIView):
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.role), str(rows.name), 
+                                str(counter + 1), str(rows.role), str(rows.name),
                                 str(rows.email), mobile_number, str(rows.date_joined.date())
                             ]
                         )
@@ -1619,8 +1627,8 @@ class EmployerListView(generics.ListAPIView):
                     role="employer",
                     date_joined__gte=start_date,
                     date_joined__lte=end_date,
-                    ))
-            else:                
+                ))
+            else:
                 queryset = self.filter_queryset(self.get_queryset().filter(role="employer"))
             action = request.GET.get('action', None)
             if action == 'download':
@@ -1637,7 +1645,7 @@ class EmployerListView(generics.ListAPIView):
                             mobile_number = str(rows.country_code) + str(rows.mobile_number)
                         file_writer.writerow(
                             [
-                                str(counter + 1), str(rows.name), str(rows.email), 
+                                str(counter + 1), str(rows.name), str(rows.email),
                                 mobile_number, str(rows.date_joined.date())
                             ]
                         )
@@ -2832,7 +2840,8 @@ class ChoiceView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if Choice.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
+                if Choice.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                             is_removed=True).exists():
                     Choice.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
                         is_removed=False)
                 else:
@@ -3003,8 +3012,10 @@ class OpportunityTypeView(generics.ListAPIView):
         try:
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
-                if OpportunityType.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).exists():
-                    OpportunityType.all_objects.filter(title__iexact=serializer.validated_data['title'], is_removed=True).update(
+                if OpportunityType.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                      is_removed=True).exists():
+                    OpportunityType.all_objects.filter(title__iexact=serializer.validated_data['title'],
+                                                       is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -3214,8 +3225,8 @@ class TenderListView(generics.ListAPIView):
                 with open(file_name, mode='w') as data_file:
                     file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                     file_writer.writerow(
-                        ["Number", "Tender ID", "Tender Title", "Company", 
-                         "Tag", "Tender Category", "Tender Type", "Sector", 
+                        ["Number", "Tender ID", "Tender Title", "Company",
+                         "Tag", "Tender Category", "Tender Type", "Sector",
                          "Location", "Created At"])
                     for counter, rows in enumerate(queryset):
                         location = "None"
@@ -3224,19 +3235,19 @@ class TenderListView(generics.ListAPIView):
                         tender_type = "None"
                         sector = "None"
                         if rows.city:
-                            location = str(rows.city) + ", " + str(rows.country)                        
+                            location = str(rows.city) + ", " + str(rows.country)
                         if rows.tag:
                             for data in rows.tag.all():
                                 if tag != "None":
                                     tag = tag + ", " + str(data.title)
                                 else:
-                                    tag = str(data.title)                       
+                                    tag = str(data.title)
                         if rows.tender_category:
                             for data in rows.tender_category.all():
                                 if tender_category != "None":
                                     tender_category = tender_category + ", " + str(data.title)
                                 else:
-                                    tender_category = str(data.title)                       
+                                    tender_category = str(data.title)
                         if rows.tender_type:
                             for data in rows.tender_type.all():
                                 if tender_type != "None":
@@ -3470,9 +3481,9 @@ class ResourcesView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if ResourcesContent.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                                  is_removed=True).exists():
+                                                       is_removed=True).exists():
                     ResourcesContent.all_objects.filter(title__iexact=serializer.validated_data['title'],
-                                                   is_removed=True).update(
+                                                        is_removed=True).update(
                         is_removed=False)
                 else:
                     serializer.save()
@@ -3595,7 +3606,7 @@ class LinksView(generics.ListAPIView):
     - Search fields: ['platform']
     - Pagination class: CustomPagination
     """
-    
+
     permission_classes = [permissions.AllowAny]
     serializer_class = SocialUrlSerializers
     queryset = SocialUrl.objects.all()
@@ -3613,7 +3624,7 @@ class LinksView(generics.ListAPIView):
         Returns:
             Response object containing serialized data of the paginated list.
         """
-    
+
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -3647,7 +3658,7 @@ class LinksView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if SocialUrl.all_objects.filter(platform=serializer.validated_data['platform'],
-                                                  is_removed=True).exists():
+                                                is_removed=True).exists():
                     SocialUrl.all_objects.filter(platform=serializer.validated_data['platform'],
                                                  is_removed=True).update(is_removed=False)
                     social_url_instance = SocialUrl.all_objects.get(
@@ -3773,7 +3784,6 @@ class LinksView(generics.ListAPIView):
 
 
 class AboutUsView(generics.GenericAPIView):
-
     permission_classes = [permissions.AllowAny]
     serializer_class = AboutUsSerializers
 
@@ -4060,7 +4070,7 @@ class FaqView(generics.ListAPIView):
             N/A
 
         """
-    
+
         queryset = self.filter_queryset(self.get_queryset().filter(role=role, category_id=faqCategoryId))
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -4109,16 +4119,17 @@ class FaqView(generics.ListAPIView):
             if self.request.user.is_staff:
                 serializer.is_valid(raise_exception=True)
                 if FAQ.all_objects.filter(question__iexact=serializer.validated_data['question'],
-                                                  is_removed=True).exists():
+                                          is_removed=True).exists():
                     FAQ.all_objects.filter(question__iexact=serializer.validated_data['question'],
-                                                   is_removed=True).update(
+                                           is_removed=True).update(
                         is_removed=False)
                     faq_instance = FAQ.all_objects.get(question__iexact=serializer.validated_data['question'],
                                                        is_removed=False)
                     serializer.update(faq_instance, serializer.validated_data)
                 else:
                     if 'question' in serializer.validated_data:
-                        if FAQ.objects.filter(question__iexact=serializer.validated_data['question'], is_removed=False).exists():
+                        if FAQ.objects.filter(question__iexact=serializer.validated_data['question'],
+                                              is_removed=False).exists():
                             context['question'] = [serializer.validated_data['question'] + ' already exist.']
                             return response.Response(
                                 data=context,
@@ -4216,7 +4227,8 @@ class FaqView(generics.ListAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 if 'question' in serializer.validated_data:
-                    if FAQ.objects.filter(question__iexact=serializer.validated_data['question'], is_removed=False).exclude(id=faqId).exists():
+                    if FAQ.objects.filter(question__iexact=serializer.validated_data['question'],
+                                          is_removed=False).exclude(id=faqId).exists():
                         context['question'] = [serializer.validated_data['question'] + ' already exist.']
                         return response.Response(
                             data=context,
@@ -4247,7 +4259,6 @@ class FaqView(generics.ListAPIView):
 
 
 class ResourcesDetailView(generics.GenericAPIView):
-
     serializer_class = ResourcesSerializers
     permission_classes = [permissions.AllowAny]
 
@@ -4323,7 +4334,7 @@ class UploadLogo(generics.ListAPIView):
             # Invoke the `list` method
             response = instance.list(request)
         """
-        
+
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
@@ -4410,7 +4421,7 @@ class UploadLogo(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
-            ) 
+            )
 
 
 class TestimonialView(generics.ListAPIView):
@@ -4431,7 +4442,7 @@ class TestimonialView(generics.ListAPIView):
         - pagination_class: The pagination class used for paginating the testimonials.
 
     """
-    
+
     permission_classes = [permissions.AllowAny]
     serializer_class = GetTestimonialSerializers
     queryset = Testimonial.objects.all()
@@ -4612,7 +4623,6 @@ class TestimonialView(generics.ListAPIView):
 
 
 class TestimonialDetailView(generics.GenericAPIView):
-
     serializer_class = GetTestimonialSerializers
     permission_classes = [permissions.AllowAny]
 
@@ -4629,7 +4639,7 @@ class TestimonialDetailView(generics.GenericAPIView):
             )
         except Testimonial.DoesNotExist:
             return response.Response(
-                data={"testimonialId": "Does Not Exist"}, 
+                data={"testimonialId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
@@ -4692,7 +4702,7 @@ class NewsletterUserView(generics.ListAPIView):
             A response containing the paginated list of testimonials serialized as data.
 
         """
-        
+
         queryset = self.filter_queryset(self.get_queryset())
         action = request.GET.get('action', None)
         if action == 'download':
@@ -4778,7 +4788,7 @@ class NewsletterUserView(generics.ListAPIView):
             NewsletterUser.DoesNotExist: If the newsletter user with the given ID does not exist.
             Exception: If an unexpected exception occurs during the deletion process.
         """
-    
+
         context = dict()
         if self.request.user.is_staff:
             try:
@@ -4837,14 +4847,14 @@ class SetPointsView(generics.GenericAPIView):
         Raises:
             None.
         """
-        
+
         point_data = PointDetection.objects.values('points').first()
         point = point_data['points'] if point_data else None
         return response.Response(
             data={'point': point},
             status=status.HTTP_200_OK
         )
-            
+
     def patch(self, request):
         """
         Updates the 'points' field of the PointDetection object.
@@ -4858,7 +4868,7 @@ class SetPointsView(generics.GenericAPIView):
             value is returned. Otherwise, a response with status code 401 and an appropriate error 
             message is returned.
         """
-        
+
         context = {}
         point = request.data.get('point')
         if self.request.user.is_staff:
@@ -4879,3 +4889,380 @@ class SetPointsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class JobsCreateView(generics.ListAPIView):
+    """
+    A view class that returns a list of JobDetails instances.
+
+    Attributes:
+            - `serializer_class`: A serializer class used to serialize the JobDetails instances.
+            - `permission_classes`: A list of permission classes that a user must pass in order to access the view.
+            - `queryset`: A QuerySet instance representing the list of JobDetails instances. The queryset is not
+                defined in the class, but it can be defined in the get_queryset method or set dynamically in the
+                dispatch method.
+            - `filter_backends`: A list of filter backend classes used to filter the queryset.
+            - `search_fields`: A list of fields on which the search filtering is applied.
+            - `pagination_class`: A pagination class that is used to paginate the result set.
+
+    """
+    serializer_class = GetJobsSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title', 'description',
+        'skill__title', 'highest_education__title',
+        'job_category__title', 'job_sub_category__title',
+        'country__title', 'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"user": request.user})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"user": request.user})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def post(self, request, employerId):
+        """
+        Create a new job post for an employer.
+
+        Args:
+            - `request`: HTTP request object containing the job post data.
+
+        Returns:
+            - HTTP response object with a success or error message and status code.
+
+        Raises:
+            - `ValidationError`: If the job post data is invalid.
+            - `Exception`: If there is an unexpected error during job post creation.
+        """
+        context = {}
+        try:
+            serializer = CreateJobsSerializers(data=request.data)
+            user_instance = User.objects.get(id=employerId)
+            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+            point_data = PointDetection.objects.first()
+
+            if user_instance.role == "employer" and employer_profile_instance.is_verified:
+                serializer.is_valid(raise_exception=True)
+                if employer_profile_instance.points < point_data.points:
+                    context["message"] = "You do not have enough points to create a new job."
+                    return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+                serializer.save(user_instance)
+                remaining_points = employer_profile_instance.points - point_data.points
+                employer_profile_instance.points = remaining_points
+                employer_profile_instance.save()
+
+                context["message"] = "Job added successfully."
+                context["remaining_points"] = remaining_points
+                request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+                return response.Response(data=context, status=status.HTTP_201_CREATED)
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+            return response.Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return response.Response(
+                data={"employerId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `JobDetails instances`. It filters the queryset based on the `employer ID`
+        provided in the `request query parameters`.
+        If the `'employerId'` parameter is provided, it filters the queryset to include only the JobDetails instances
+        associated with the specified `user ID`. Otherwise, it returns `all JobDetails` instances.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of JobDetails instances.
+
+        """
+        user_id = self.request.GET.get('employerId', None)
+        if not user_id:
+            user_id = self.request.user.id
+        user_data = User.objects.get(id=user_id)
+        return JobDetails.objects.filter(user=user_data)
+
+    # def put(self, request, jobId):
+    #     """
+    #     Update an existing job instance with the provided request data.
+
+    #     Args:
+    #         - `request`: An instance of the Django Request object.
+
+    #     Returns:
+    #         An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
+    #         was updated successfully or not.
+
+    #     Raises:
+    #         - `Http404`: If the JobDetails instance with the provided jobId does not exist.
+
+    #     Notes:
+    #         This method requires a jobId to be included in the request data, and will only update the job if the
+    #         authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
+    #         used to serialize the request data and update the job instance. If the serializer is invalid or the user
+    #         does not have permission to update the job instance, an appropriate error response is returned.
+    #     """
+    #     context = dict()
+    #     try:
+    #         job_instance = JobDetails.objects.get(id=jobId)
+    #         if request.user == job_instance.user:
+    #             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
+    #             try:
+    #                 serializer.is_valid(raise_exception=True)
+    #                 if serializer.update(job_instance, serializer.validated_data):
+    #                     context['message'] = "Updated Successfully"
+    #                     return response.Response(
+    #                         data=context,
+    #                         status=status.HTTP_200_OK
+    #                     )
+    #             except serializers.ValidationError:
+    #                 return response.Response(
+    #                     data=serializer.errors,
+    #                     status=status.HTTP_400_BAD_REQUEST
+    #                 )
+    #         else:
+    #             context['message'] = "You do not have permission to perform this action."
+    #             return response.Response(
+    #                 data=context,
+    #                 status=status.HTTP_401_UNAUTHORIZED
+    #             )
+    #     except JobDetails.DoesNotExist:
+    #         return response.Response(
+    #             data={"job": "Does Not Exist"},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+    #     except Exception as e:
+    #         context["message"] = str(e)
+    #         return response.Response(
+    #             data=context,
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+
+
+class TenderCreateView(generics.ListAPIView):
+    """
+    A class-based view for retrieving a list of tenders filtered and paginated according to search criteria.
+
+    Serializer class used: TendersSerializers
+    Permission class used: permissions.IsAuthenticated
+    Filter backend used: filters.SearchFilter
+    Search fields used:
+        - 'title': title of the tender
+        - 'description': description of the tender
+        - 'tag__title': tag title associated with the tender
+        - 'tender_type': type of the tender
+        - 'sector': sector associated with the tender
+        - 'tender_category__title': tender category title associated with the tender
+        - 'country__title': country title associated with the tender
+        - 'city__title': city title associated with the tender
+
+    Pagination class used: CustomPagination
+
+    Attributes:
+        - serializer_class (TendersSerializers): The serializer class used to serialize the tenders
+        - permission_classes (list): The permission classes required for accessing the view
+        - queryset (None): The initial queryset used to retrieve the tenders. It is set to None and will be overridden.
+        - filter_backends (list): The filter backends used for filtering the tenders
+        - search_fields (list): The search fields used for searching the tenders
+        - pagination_class (CustomPagination): The pagination class used for pagination of the tenders
+    """
+
+    serializer_class = TendersSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = None
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title', 'description',
+        'tag__title', 'tender_type__title', 'sector__title',
+        'tender_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        """
+        A method that handles the HTTP GET request for retrieving a list of resources, with the condition that the user
+        role is an employer.
+
+        Args:
+            - `request (HttpRequest)`: The HTTP request object.
+
+        Returns:
+            - A JSON response containing a list of serialized resources or an error message with an HTTP status code.
+
+        Raises:
+            N/A
+
+        Behaviour:
+            - If the user role is 'employer', the queryset is filtered and paginated before being serialized using the
+                `get_serializer` method, with the current user's details being passed into the context. The serialized
+                    data is then returned in a paginated response if paginated, or just the serialized data if not.
+            - If the user role is not 'employer', a message indicating the user's lack of permission is returned with
+                an HTTP status code of 401 (unauthorized).
+
+        Attributes:
+            N/A
+        """
+
+        context = dict()
+        if self.request.user.role == 'employer':
+            queryset = self.filter_queryset(self.get_queryset())
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"user": request.user})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"user": request.user})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def get_queryset(self, **kwargs):
+        """
+        A method that returns a queryset of `TenderDetails instances`. It filters the queryset based on the
+        `employer ID` provided in the `request query parameters`.
+        If the `'employerId'` parameter is provided, it filters the queryset to include only the TenderDetails
+        instances associated with the specified `user ID`. Otherwise, it returns `all TenderDetails` instances.
+
+        Args:
+            **kwargs: A dictionary of keyword arguments.
+
+        Returns:
+            QuerySet: A filtered queryset of TenderDetails instances.
+
+        """
+
+        user_id = self.request.GET.get('employerId', None)
+        if not user_id:
+            user_id = self.request.user.id
+        user_data = User.objects.get(id=user_id)
+        return TenderDetails.objects.filter(user=user_data).order_by('-created')
+
+    def post(self, request, employerId):
+        """
+        Handles POST requests to create a new `TenderDetails` instance.
+
+        Args:
+            - `request`: The HTTP request object.
+
+        Returns:
+            - A response object with the following possible status codes:
+                - `HTTP_201_CREATED`: The tender was created successfully.
+                - `HTTP_400_BAD_REQUEST`: The request data was invalid or there was an error saving the tender.
+                - `HTTP_401_UNAUTHORIZED`: The user does not have permission to create a tender.
+
+        """
+
+        context = dict()
+        serializer = CreateTendersSerializers(data=request.data)
+        try:
+            user_instance = User.objects.get(id=employerId)
+            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+            if user_instance.role == "employer" and employer_profile_instance.is_verified:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user_instance)
+                context["message"] = "Tender added successfully."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return response.Response(
+                data=str(e),
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # def put(self, request, tendersId):
+    #     """
+    #     Update an existing tender instance with the provided request data.
+
+    #     Args:
+    #         - `request`: An instance of the Django Request object.
+
+    #     Returns:
+    #         An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
+    #         was updated successfully or not.
+
+    #     Raises:
+    #         - `Http404`: If the TenderDetails instance with the provided tendersId does not exist.
+
+    #     Notes:
+    #         This method requires a tendersId to be included in the request data, and will only update the tender if the
+    #         authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
+    #         is used to serialize the request data and update the tender instance. If the serializer is invalid or the
+    #         user does not have permission to update the tender instance, an appropriate error response is returned.
+    #     """
+    #     context = dict()
+    #     try:
+    #         tender_instance = TenderDetails.objects.get(id=tendersId)
+    #         if request.user == tender_instance.user:
+    #             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
+    #             try:
+    #                 serializer.is_valid(raise_exception=True)
+    #                 if serializer.update(tender_instance, serializer.validated_data):
+    #                     context['message'] = "Updated Successfully"
+    #                     return response.Response(
+    #                         data=context,
+    #                         status=status.HTTP_200_OK
+    #                     )
+    #             except serializers.ValidationError:
+    #                 return response.Response(
+    #                     data=serializer.errors,
+    #                     status=status.HTTP_400_BAD_REQUEST
+    #                 )
+    #         else:
+    #             context['message'] = "You do not have permission to perform this action."
+    #             return response.Response(
+    #                 data=context,
+    #                 status=status.HTTP_401_UNAUTHORIZED
+    #             )
+    #     except TenderDetails.DoesNotExist:
+    #         return response.Response(
+    #             data={"tendersId": "Does Not Exist"},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+    #     except Exception as e:
+    #         context["message"] = str(e)
+    #         return response.Response(
+    #             data=context,
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
