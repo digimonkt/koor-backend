@@ -456,7 +456,8 @@ class TendersView(generics.ListAPIView):
         context = dict()
         serializer = CreateTendersSerializers(data=request.data)
         try:
-            if self.request.user.role == "employer" and self.request.user.user_profile_employerprofile_user.first().is_verified:
+            employer_profile_instance = get_object_or_404(EmployerProfile, user=self.request.user)
+            if self.request.user.role == "employer" and employer_profile_instance.is_verified:
                 serializer.is_valid(raise_exception=True)
                 serializer.save(self.request.user)
                 context["message"] = "Tender added successfully."

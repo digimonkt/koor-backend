@@ -169,6 +169,13 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         max_length=25,
         choices=STATUS_CHOICE,
     )
+    post_by_admin = models.BooleanField(
+        verbose_name=_('Post by Admin'),
+        null=True,
+        blank=True,
+        db_column="post_by_admin",
+        default=False
+    )
 
     def __str__(self):
         return str(self.title)

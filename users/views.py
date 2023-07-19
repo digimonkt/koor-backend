@@ -195,7 +195,7 @@ class UserView(generics.GenericAPIView):
                         status=status.HTTP_401_UNAUTHORIZED
                     )
             user_data = User.objects.get(id=user_id)
-            session_id = user_data.users_usersession_user.last().id
+            session_id = UserSession.objects.filter(user=user_data).order_by('-created').first()
             if user_data.role == "job_seeker":
                 get_data = JobSeekerDetailSerializers(user_data)
                 context = get_data.data
@@ -205,7 +205,7 @@ class UserView(generics.GenericAPIView):
             elif user_data.role == "vendor":
                 get_data = VendorDetailSerializers(user_data)
                 context = get_data.data
-            context['session_id'] = session_id
+            context['session_id'] = session_id.id if session_id else ''
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
@@ -613,8 +613,8 @@ class SocialLoginView(generics.GenericAPIView):
                 elif user.role == "vendor":
                     VendorProfile.objects.create(user=user)
             if user.role != serializer.validated_data['role']:
-                context["message"] = "Email already registered with another role."
-                context["role"] = user.role
+                context["message"] = ["Email already registered with another role."]
+                context["role"] = [user.role]
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
