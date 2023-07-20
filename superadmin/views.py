@@ -148,7 +148,10 @@ class CountryView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            context['message'] = str(e)
+            if 'already exists' in str(e):
+                context['message'] = ['This country already exists.']
+            else:
+                context['message'] = [str(e)]
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
@@ -179,7 +182,7 @@ class CountryView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
-                context["message"] = e
+                context["message"] = [e]
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
@@ -281,7 +284,10 @@ class CityView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            context['message'] = str(e)
+            if 'already exists' in str(e):
+                context['message'] = ['This city already exists.']
+            else:
+                context['message'] = [str(e)]
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
