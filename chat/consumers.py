@@ -3,7 +3,7 @@ import logging
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Q
+from django.db.models import Q, F
 
 from project_meta.models import Media
 from users.models import UserSession, User
@@ -168,9 +168,20 @@ class ChatConsumer(BaseConsumer):
         self.conversation_group_name = f'chat_{self.conversation_id}'
 
         user = self.scope["user"]
+        
         if user.is_anonymous:
             self.close()
         else:
+            conversation = Conversation.objects.create()
+            conversation.chat_user.add(self.scope["user"], user_instance)
+            conversation.save()
+            
+            # Assuming you have a list of related objects you want to add
+            related_objects = [user]  # Replace with your own objects
+            ChatMessage.objects.filter(conversation=self.conversation).update(read_by=F('read_by') | set(related_objects))
+            
+            
+            
             async_to_sync(self.channel_layer.group_add)(
                 self.conversation_group_name,
                 self.channel_name
@@ -234,7 +245,9 @@ class ChatConsumer(BaseConsumer):
             message=content.get("message", ""),
             content_type=content_type,
         )
-
+        # Assuming you have a list of related objects you want to add
+        related_objects = [self.get_user()]  # Replace with your own objects
+        chat_message.read_by.add(*related_objects)
         if content_type != "text":
             media_id = content.get("message_attachment").get("id")
             media = Media.objects.get(id=media_id)

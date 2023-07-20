@@ -1720,7 +1720,7 @@ class EmployerListView(generics.ListAPIView):
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
             PointInvoice.objects.create(
-                user=employer_instance, 
+                user=employer_instance.user, 
                 points=int(request.data.get('points', 0)),
                 amount=0
                 )
