@@ -1715,6 +1715,11 @@ class EmployerListView(generics.ListAPIView):
         elif action == 'recharge':
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
+            PointInvoice.objects.create(
+                user=employer_instance, 
+                points=int(request.data.get('points', 0)),
+                amount=0
+                )
             context['message'] = "Point credited."
         else:
             context['message'] = "Invalid action"
