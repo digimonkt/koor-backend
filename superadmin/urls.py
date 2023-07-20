@@ -114,5 +114,7 @@ urlpatterns = [
     path("/newsletter-user/<str:newsletterId>", NewsletterUserView.as_view(), name="newsletter_user"),
     
     path('/set-points', SetPointsView.as_view(), name="set_points"),
+    
     path('/invoice', InvoiceView.as_view(), name="invoice"),
+    path('/invoice/<str:invoiceId>', InvoiceView.as_view(), name="invoice"),
 ]
