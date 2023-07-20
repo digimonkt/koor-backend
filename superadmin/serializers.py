@@ -1763,7 +1763,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
                 attachments_instance.save()
         return self
 
-class PointInvoiceListSerializers(serializers.ModelSerializer):
+class PointInvoiceSerializers(serializers.ModelSerializer):
     
     user = serializers.SerializerMethodField()
     
