@@ -58,7 +58,7 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    PointInvoiceListSerializers
+    PointInvoiceSerializers
 )
 
 
@@ -5285,7 +5285,7 @@ class TenderCreateView(generics.ListAPIView):
 
 class InvoiceView(generics.ListAPIView):
 
-    serializer_class = PointInvoiceListSerializers
+    serializer_class = PointInvoiceSerializers
     permission_classes = [permissions.IsAuthenticated]
     queryset = PointInvoice.objects.all().order_by('-created')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
@@ -5416,3 +5416,30 @@ class InvoiceView(generics.ListAPIView):
     #             data=context,
     #             status=status.HTTP_401_UNAUTHORIZED
     #         )
+
+
+class InvoiceDetailView(generics.GenericAPIView):
+    serializer_class = PointInvoiceSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, invoiceId):
+        context = dict()
+        try:
+            invoice_data = PointInvoice.objects.get(id=invoiceId)
+            get_data = self.serializer_class(invoice_data)
+            context = get_data.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except PointInvoice.DoesNotExist:
+            return response.Response(
+                data={"invoiceId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
