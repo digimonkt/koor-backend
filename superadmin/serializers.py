@@ -27,11 +27,13 @@ from tenders.serializers import TenderCategorySerializer
 
 from users.backends import MobileOrEmailBackend as cb
 from users.models import User, UserSession
+from users.serializers import UserSerializer
 
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
-    CategoryLogo, Testimonial, NewsletterUser
+    CategoryLogo, Testimonial, NewsletterUser,
+    PointInvoice
 )
 
 
@@ -1760,3 +1762,23 @@ class CreateTendersSerializers(serializers.ModelSerializer):
                                                                             attachment=media_instance)
                 attachments_instance.save()
         return self
+
+class PointInvoiceListSerializers(serializers.ModelSerializer):
+    
+    user = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PointInvoice
+        fields = [
+            'id', 'user', 'invoice_id', 'points', 'amount',
+            'is_send', 'created'
+        ]
+        read_only_fields = ['id', 'user', 'created']
+        
+    def get_user(self, obj):
+
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
