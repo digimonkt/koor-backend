@@ -5341,41 +5341,33 @@ class InvoiceView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-    # def delete(self, request, jobId):
-    #     """
-    #     Deletes a Job object with the given ID if the authenticated user is a admin.
-    #     Args:
-    #         request: A DRF request object.
-    #         jobId: An integer representing the ID of the Job to be deleted.
-    #     Returns:
-    #         A DRF response object with a success or error message and appropriate status code.
-    #     """
-    #     context = dict()
-    #     if self.request.user.is_staff:
-    #         try:
-    #             JobDetails.objects.get(id=jobId).delete()
-    #             context['message'] = "Deleted Successfully"
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_200_OK
-    #             )
-    #         except JobDetails.DoesNotExist:
-    #             return response.Response(
-    #                 data={"jobId": "Does Not Exist"},
-    #                 status=status.HTTP_404_NOT_FOUND
-    #             )
-    #         except Exception as e:
-    #             context["message"] = e
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_404_NOT_FOUND
-    #             )
-    #     else:
-    #         context['message'] = "You do not have permission to perform this action."
-    #         return response.Response(
-    #             data=context,
-    #             status=status.HTTP_401_UNAUTHORIZED
-    #         )
+    def delete(self, request, invoiceId):
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                PointInvoice.objects.get(id=invoiceId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except PointInvoice.DoesNotExist:
+                return response.Response(
+                    data={"invoiceId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
     # def patch(self, request, jobId):
     #     """
