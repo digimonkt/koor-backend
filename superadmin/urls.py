@@ -14,7 +14,8 @@ from .views import (
     LinksView, AboutUsView, FaqCategoryView,
     FaqView, ResourcesDetailView, UploadLogo,
     TestimonialView, NewsletterUserView, SetPointsView,
-    TestimonialDetailView, JobsCreateView, TenderCreateView
+    TestimonialDetailView, JobsCreateView, TenderCreateView,
+    InvoiceView, InvoiceDetailView
 )
 
 app_name = "superadmin"
@@ -113,4 +114,8 @@ urlpatterns = [
     path("/newsletter-user/<str:newsletterId>", NewsletterUserView.as_view(), name="newsletter_user"),
     
     path('/set-points', SetPointsView.as_view(), name="set_points"),
+    
+    path('/invoice', InvoiceView.as_view(), name="invoice"),
+    path('/invoice-detail/<str:invoiceId>', InvoiceDetailView.as_view(), name="invoice_detail"),
+    path('/invoice/<str:invoiceId>', InvoiceView.as_view(), name="invoice"),
 ]

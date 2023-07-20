@@ -556,6 +556,13 @@ class PointInvoice(BaseModel, TimeStampedModel, models.Model):
         verbose_name=_('Amount'),
         db_column="amount",
     )
+    is_send = models.BooleanField(
+        verbose_name=_('Is Send'),
+        db_column="is_send",
+        null=True,
+        blank=True,
+        default=False
+    )
 
     def __str__(self):
         """
