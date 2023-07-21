@@ -35,10 +35,13 @@ from tenders.serializers import TendersSerializers
 from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
+
+from .filters import PointInvoiceDetailsFilter
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
-    Testimonial, NewsletterUser, PointDetection
+    Testimonial, NewsletterUser, PointDetection,
+    PointInvoice
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -54,7 +57,8 @@ from .serializers import (
     AboutUsSerializers, UpdateAboutUsSerializers, FaqCategorySerializers,
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
-    NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers
+    NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
+    PointInvoiceSerializers
 )
 
 
@@ -148,7 +152,10 @@ class CountryView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            context['message'] = str(e)
+            if 'already exists' in str(e):
+                context['message'] = ['This country already exists.']
+            else:
+                context['message'] = [str(e)]
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
@@ -179,7 +186,7 @@ class CountryView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
-                context["message"] = e
+                context["message"] = [e]
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
@@ -281,7 +288,10 @@ class CityView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            context['message'] = str(e)
+            if 'already exists' in str(e):
+                context['message'] = ['This city already exists.']
+            else:
+                context['message'] = [str(e)]
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
@@ -1709,6 +1719,11 @@ class EmployerListView(generics.ListAPIView):
         elif action == 'recharge':
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
+            PointInvoice.objects.create(
+                user=employer_instance.user, 
+                points=int(request.data.get('points', 0)),
+                amount=0
+                )
             context['message'] = "Point credited."
         else:
             context['message'] = "Invalid action"
@@ -5266,3 +5281,165 @@ class TenderCreateView(generics.ListAPIView):
     #             data=context,
     #             status=status.HTTP_404_NOT_FOUND
     #         )
+
+
+class InvoiceView(generics.ListAPIView):
+
+    serializer_class = PointInvoiceSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = PointInvoice.objects.all().order_by('-created')
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = PointInvoiceDetailsFilter
+    search_fields = [
+        'invoice_id',
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        
+        context = dict()
+        if self.request.user.is_staff:
+            queryset = self.filter_queryset(self.get_queryset())
+            start_date = self.request.GET.get('from', None)
+            end_date = self.request.GET.get('to', None)
+            if start_date:
+                queryset = queryset.filter(
+                    created__gte=start_date,
+                    created__lte=end_date,
+                )
+            # if action == 'download':
+            #     directory_path = create_directory()
+            #     file_name = '{0}/{1}'.format(directory_path, 'jobs.csv')
+            #     with open(file_name, mode='w') as data_file:
+            #         file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            #         file_writer.writerow(
+            #             ["Number", "Job ID", "Job Title", "Company", "Location", "Created At"])
+            #         for counter, rows in enumerate(queryset):
+            #             location = "None"
+            #             if rows.city:
+            #                 location = str(rows.city) + ", " + str(rows.country)
+            #             file_writer.writerow(
+            #                 [
+            #                     str(counter + 1), str(rows.job_id), str(rows.title),
+            #                     str(rows.user.name), location, str(rows.created.date())
+            #                 ]
+            #             )
+                # return response.Response(
+                #     data={"url": "/" + file_name},
+                #     status=status.HTTP_200_OK
+                # )
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def delete(self, request, invoiceId):
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                PointInvoice.objects.get(id=invoiceId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except PointInvoice.DoesNotExist:
+                return response.Response(
+                    data={"invoiceId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    # def patch(self, request, jobId):
+    #     """
+    #     View function for `updating the status` of a job instance.
+
+    #     Args:
+    #         - `request`: Request object containing metadata about the current request.
+    #         - `jobId`: Integer representing the ID of the job instance to be updated.
+
+    #     Returns:
+    #         Response object containing data about the updated job instance, along with an HTTP status code.
+
+    #     Raises:
+    #         - `Http404`: If the job instance with the given `jobId does not exist`.
+    #     """
+
+    #     context = dict()
+    #     if self.request.user.is_staff:
+    #         try:
+    #             jobs_instance = JobDetails.objects.get(id=jobId)
+    #             if jobs_instance.status == "inactive":
+    #                 jobs_instance.status = "active"
+    #                 context['message'] = "This job is active"
+    #             else:
+    #                 jobs_instance.status = "inactive"
+    #                 context['message'] = "This job is inactive"
+    #             jobs_instance.save()
+    #             return response.Response(
+    #                 data=context,
+    #                 status=status.HTTP_200_OK
+    #             )
+    #         except JobDetails.DoesNotExist:
+    #             return response.Response(
+    #                 data={"jobId": "Does Not Exist"},
+    #                 status=status.HTTP_404_NOT_FOUND
+    #             )
+    #         except Exception as e:
+    #             context["message"] = e
+    #             return response.Response(
+    #                 data=context,
+    #                 status=status.HTTP_404_NOT_FOUND
+    #             )
+    #     else:
+    #         context['message'] = "You do not have permission to perform this action."
+    #         return response.Response(
+    #             data=context,
+    #             status=status.HTTP_401_UNAUTHORIZED
+    #         )
+
+
+class InvoiceDetailView(generics.GenericAPIView):
+    serializer_class = PointInvoiceSerializers
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, invoiceId):
+        context = dict()
+        try:
+            invoice_data = PointInvoice.objects.get(id=invoiceId)
+            get_data = self.serializer_class(invoice_data)
+            context = get_data.data
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except PointInvoice.DoesNotExist:
+            return response.Response(
+                data={"invoiceId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )

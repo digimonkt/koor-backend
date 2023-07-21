@@ -3,7 +3,7 @@ import logging
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
-from django.db.models import Q
+from django.db.models import Q, F
 
 from project_meta.models import Media
 from users.models import UserSession, User
@@ -168,9 +168,19 @@ class ChatConsumer(BaseConsumer):
         self.conversation_group_name = f'chat_{self.conversation_id}'
 
         user = self.scope["user"]
+
         if user.is_anonymous:
             self.close()
         else:
+            conversation = Conversation.objects.create()
+            conversation.chat_user.add(self.scope["user"], user_instance)
+            conversation.save()
+
+            # Assuming you have a list of related objects you want to add
+            related_objects = [user]  # Replace with your own objects
+            ChatMessage.objects.filter(conversation=self.conversation).update(
+                read_by=F('read_by') | set(related_objects))
+
             async_to_sync(self.channel_layer.group_add)(
                 self.conversation_group_name,
                 self.channel_name
@@ -234,7 +244,9 @@ class ChatConsumer(BaseConsumer):
             message=content.get("message", ""),
             content_type=content_type,
         )
-
+        # Assuming you have a list of related objects you want to add
+        related_objects = [self.get_user()]  # Replace with your own objects
+        chat_message.read_by.add(*related_objects)
         if content_type != "text":
             media_id = content.get("message_attachment").get("id")
             media = Media.objects.get(id=media_id)
@@ -299,6 +311,58 @@ class ChatActivityConsumer(BaseConsumer):
         self.send_json(content=event)
 
     def update_conversation(self, event):
+        """
+        Handles the "update_conversation" event by sending the event data as JSON.
+        
+        Args:
+            event (dict): The event data.
+        """
+        self.send_json(content=event)
+
+
+class NotificationConsumer(BaseConsumer):
+    """
+    This class represents a consumer for chat activity.
+
+    Attributes:
+        chat_group_name (str): The name of the chat group.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(args, kwargs)
+        self.chat_group_name = None
+
+    def connect(self):
+        """
+        Connects the consumer to the chat group and performs authentication if necessary.
+        """
+        uid = None
+        chat_url = self.scope['query_string'].decode()
+        if 'uid=' in chat_url:
+            uid = chat_url.split('uid=')[1].split('&')[0]
+        elif '&uid=' in chat_url:
+            uid = chat_url.split('&uid=')[1].split('&')[0]
+        user_instance = User.objects.get(id=uid)
+        self.chat_group_name = str(user_instance.id)
+        if self.scope["user"] == AnonymousUser():
+            self.authenticate()
+        user = self.scope["user"]
+        async_to_sync(self.channel_layer.group_add)(
+            self.chat_group_name,
+            self.channel_name
+        )
+        self.accept()
+
+    def disconnect(self, close_code):
+        """
+        Disconnects the consumer from the chat group.
+        """
+        self.channel_layer.group_discard(
+            self.chat_group_name,
+            self.channel_name
+        )
+
+    def update_notification(self, event):
         """
         Handles the "update_conversation" event by sending the event data as JSON.
         

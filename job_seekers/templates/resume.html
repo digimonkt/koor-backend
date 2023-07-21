@@ -1,0 +1,64 @@
+
+<div class="container body" id="div-to-pdf">
+  <div class="header">
+    <div class="align_right">
+      <h4 class="align_right">CURICULUM VITAE (CV)</h4>
+      <div>
+        <span class="align_right">{{profile_instance.user.name|upper}}</span>
+      </div>
+    </div>
+    <div>
+      {% if new_mobile_number %}
+      <span class="align_right">Phone : {{profile_instance.user.country_code}} {{new_mobile_number}}</span>
+      {% endif %}
+      <br />
+    <span class="align_right email-val">Email : <a href="{{profile_instance.user.email}}" target="_blank" class="email-val" rel="noreferrer">{{profile_instance.user.email}}</a></span>
+    </div>
+  </div>
+  <hr>
+
+  <div class="about">
+    <h4 class="align_right"> </h4>
+    <h4 class="align_left">PROFILE SUMMARY</h4>
+    <p class="job-description">{{profile_instance.description}}</p>
+  </div>
+
+  <div class="knowledge">
+    {/* also known as skills */}
+    <h4 class="align_left">KNOWLEDGE AND EXPERTISE</h4>
+    <ul>
+      {% for data in sills_data %}
+      <li key="{{data.id}}">{{data.skill.title}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="education">
+    <h4 class="align_left">Education</h4>
+      {% for data in education_data %}
+      <span key="{{data.id}}" class='education'>{{data.start_date.year}} - {% if data.end_date %}{{data.end_date.year}}{% else %}Present{% endif %} {{data.education_level.title}} - {{data.institute}}</span>
+      {% endfor %}
+      <span class='education'> </span>
+  </div>
+  <div class="summary">
+    <h4 class="align_left employment">Employment Summary</h4>
+    {% for data in employment_data %}
+    <h6 class="align_left">{{ data.start_date|date:"F" }} {{data.start_date.year}} - {% if data.end_date %}{{ data.end_date|date:"F" }} {{data.end_date.year}}{% else %}Present{% endif %} {{data.title}} {{data.organization}}</h6>
+    <p
+        class="mt-3"
+      >{{data.description|safe}}</p>
+      {% endfor %}
+  </div>
+  <div class="qualification">
+    <h4 class="align_left">Languages</h4>
+    <ul>
+      {% for data in languages_data %}
+      <li key="111">
+        <h4>{{data.language.title}}</h4>
+        <span>Spoken: {{data.spoken}}</span> <br />
+        <span>Written: {{data.written}}</span>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

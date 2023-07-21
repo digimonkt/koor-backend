@@ -1,18 +1,18 @@
+from asgiref.sync import async_to_sync
+
+from channels.layers import get_channel_layer
 from django.db import models
 from django.utils.translation import gettext as _
 
 from core.models import (
     BaseModel, SoftDeleteModel
 )
-
+from job_seekers.models import AppliedJob
+from jobs.models import JobFilters, JobDetails
 from users.models import (
     TimeStampedModel, User
 
 )
-from job_seekers.models import AppliedJob
-
-from jobs.models import JobFilters, JobDetails
-
 from vendors.models import AppliedTender
 
 
@@ -112,3 +112,14 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Notifications"
         db_table = "Notification"
         ordering = ['-created']
+
+    def save(self, *args, **kwargs):
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            str(self.user.id),
+            {
+                "type": "update_notification",
+                "content": "You got a notification about " + str(self.notification_type),
+            }
+        )
+        return super().save(*args, **kwargs)

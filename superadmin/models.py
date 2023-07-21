@@ -3,6 +3,8 @@ from django.utils.translation import gettext as _
 from django.template.defaultfilters import slugify
 from django.contrib.postgres.fields import ArrayField
 
+from random import randint
+
 from core.models import (
     BaseModel, SlugBaseModel, SoftDeleteModel, upload_directory_path
 )
@@ -521,3 +523,72 @@ class PointDetection(BaseModel, models.Model):
         verbose_name = "Point Detection"
         verbose_name_plural = "Points Detection"
         db_table = "PointDetection"
+
+
+class PointInvoice(BaseModel, TimeStampedModel, models.Model):
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    invoice_id = models.CharField(
+        verbose_name=_('Invoice Id'),
+        max_length=255,
+        db_column="invoice_id",
+        null=True,
+        blank=True,
+        unique=True
+    )
+    points = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=5,
+        verbose_name=_('Points'),
+        db_column="points",
+    )
+    amount = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=0,
+        verbose_name=_('Amount'),
+        db_column="amount",
+    )
+    is_send = models.BooleanField(
+        verbose_name=_('Is Send'),
+        db_column="is_send",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    def __str__(self):
+        """
+        Returns a string representation of the points.
+
+        Returns:
+            str: The string representation of the points.
+        """
+        return str(self.invoice_id)
+
+    class Meta:
+        verbose_name = "Point Invoice"
+        verbose_name_plural = "Point Invoices"
+        db_table = "PointInvoice"
+        
+        
+    def save(self, *args, **kwargs):
+        if not self.invoice_id:
+            self.invoice_id = unique_invoice_id()
+        return super().save(*args, **kwargs)
+    
+def unique_invoice_id():
+    invoice_id = str(randint(1000, 9999)) + "-" + str(randint(1000, 9999))
+    try:
+        if PointInvoice.objects.get(invoice_id=invoice_id):
+            return unique_invoice_id()
+    except PointInvoice.DoesNotExist:
+        return invoice_id
+    

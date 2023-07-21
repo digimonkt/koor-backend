@@ -121,6 +121,14 @@ class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         default=False,
         db_column="is_seen",
     )
+    read_by = models.ManyToManyField(
+        to=User,
+        verbose_name=_('Read By'),
+        related_name='%(app_label)s_%(class)s_read_by',
+        blank=True,
+        null=True,
+        db_column="read_by",
+    )
     is_edited = models.BooleanField(
         verbose_name=_('Is Edited'),
         default=False,
