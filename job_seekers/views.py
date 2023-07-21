@@ -1,34 +1,30 @@
+import io
 import os
 from datetime import date
 
+from bs4 import BeautifulSoup
 from django.db.models import Exists, OuterRef
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-
+from django.template.loader import render_to_string
 from docx import Document
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from docx.shared import Cm, Pt, RGBColor
-
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.oxml import OxmlElement
+from docx.shared import Pt, RGBColor
 from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
 )
 
 from core.pagination import CustomPagination
-
 from jobs.models import JobDetails, JobSubCategory, JobCategory
-
 from koor.config.common import Common
-
 from user_profile.models import JobSeekerProfile
-
 from users.models import User
-
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
     JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
 )
-
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
@@ -1343,7 +1339,7 @@ class CategoryView(generics.GenericAPIView):
         if self.request.user.role == "job_seeker":
             category_data = JobCategory.objects.filter(is_removed=False).annotate(
                 has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id')))
-                ).filter(has_subcategory=True)
+            ).filter(has_subcategory=True)
             get_data = CategoriesSerializers(category_data, many=True, context={'user': request.user})
             return response.Response(
                 data=get_data.data,
@@ -1447,114 +1443,9 @@ class ResumeView(generics.GenericAPIView):
         response_context = dict()
         if self.request.user.role == "job_seeker":
             profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
-            document = Document()
-            section = document.sections[0]
-            page_width = section.page_width - section.left_margin - section.right_margin
-            section_width = page_width - Cm(0.5)
-            section.page_width = section_width + section.left_margin + section.right_margin
-            intense_quote_style = document.styles['Intense Quote']
-            intense_quote_style.paragraph_format.left_indent = 0
-            intense_quote_style.paragraph_format.right_indent = 0
-            intense_quote_style.paragraph_format.first_line_indent = 0
-            intense_quote_style.font.size = Pt(1)
-            intense_quote_style.font.color.rgb = RGBColor(0, 0, 0)
-            for i in range(1, 10):
-                heading_style = document.styles['Heading %d' % i]
-                heading_style.font.color.rgb = RGBColor(0, 0, 0)
-            heading_style1 = document.styles['Heading 1']
-            heading_style1.font.name = 'Calibri'
-            heading_style1.font.size = Pt(16)
-            heading_style1.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-            heading_style1.paragraph_format.space_after = Pt(0)
-            heading_style1.paragraph_format.space_before = Pt(0)
-            heading_style2 = document.styles['Heading 2']
-            heading_style2.font.name = 'Calibri'
-            heading_style2.font.size = Pt(14)
-            heading_style2.font.color.rgb = RGBColor(0, 0, 0)
-            heading_style2.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            heading_style2.paragraph_format.space_after = Pt(0)
-            heading_style2.paragraph_format.space_before = Pt(0)
-            # document.add_heading('CURICULUM VITAE (CV)', level=1)
-            
-            from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-            document.add_heading('CURICULUM VITAE (CV)', level=1)
-            cv_heading = document.paragraphs[-1]
-            cv_heading.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
-            cv_heading.runs[0].font.size = Pt(16)
-            cv_heading.runs[0].underline = True
-            if profile_instance.user.name:
-                document.add_heading(profile_instance.user.name.upper(), level=1)
-            if profile_instance.user.mobile_number:
-                mobile_number = profile_instance.user.mobile_number
-                new_mobile_number = " "
-                for i in range(0, len(mobile_number), 5):
-                    new_mobile_number += mobile_number[i:i + 5] + " "
-                contact_number = profile_instance.user.country_code + new_mobile_number
-                document.add_heading('Phone : ' + contact_number, level=1)
-            if profile_instance.user.email:
-                document.add_heading('Email : ' + profile_instance.user.email.lower(), level=1)
-            paragraph = document.add_paragraph('', style='Intense Quote')
-            document.add_heading('PROFILE SUMMARY', level=2)
-            if profile_instance.description:
-                p = document.add_paragraph(profile_instance.description)
-            document.add_heading('SKILLS', level=2)
-            sills_data = JobSeekerSkill.objects.filter(user=profile_instance.user)
-            for data in sills_data:
-                # # Add a paragraph with an arrow bullet
-                paragraph = document.add_paragraph(u'\u27A4    ' + str(data.skill.title))
-
-                # # Set the font size and left indent
-                paragraph.style.font.size = Pt(12)
-                paragraph.paragraph_format.left_indent = Pt(36)
-
-                # # Set the spacing after the paragraph
-                paragraph.paragraph_format.space_after = Pt(0)
-            document.add_heading('EDUCATION', level=2)
-            education_data = EducationRecord.objects.filter(user=profile_instance.user)
-            for data in education_data:
-                period = " "
-                if data.start_date:
-                    period = str(data.start_date.year)
-                if data.end_date:
-                    period = period + " - " + str(data.end_date.year)
-                else:
-                    period = period + " - " + "Present"
-                p = document.add_paragraph(
-                    period + " " +
-                    data.education_level.title + " - " +
-                    data.institute
-                )
-            document.add_heading('EMPLOYMENT SUMMARY', level=2)
-            employment_data = EmploymentRecord.objects.filter(user=profile_instance.user)
-            for data in employment_data:
-                period = " "
-                if data.start_date:
-                    period = str(data.start_date.year)
-                if data.end_date:
-                    period = period + " - " + str(data.end_date.year)
-                else:
-                    period = period + " - " + "Present"
-                heading = period + " : " + str(data.title) + " - " + str(data.organization)
-                document.add_heading(heading, level=3)
-                p = document.add_paragraph(data.description)
-            document.add_heading('LANGUAGES', level=2)
-            languages_data = JobSeekerLanguageProficiency.objects.filter(user=profile_instance.user)
-            for data in languages_data:
-                paragraph1 = document.add_paragraph('', style='List Bullet')
-                paragraph1.add_run(data.language.title).bold = True
-                paragraph2 = document.add_paragraph('Spoken: ' + data.spoken)
-                paragraph3 = document.add_paragraph('Written: ' + data.written)
-                paragraph_format1 = paragraph1.paragraph_format
-                paragraph_format2 = paragraph2.paragraph_format
-                paragraph_format3 = paragraph3.paragraph_format
-                paragraph_format1.left_indent = Pt(34)
-                paragraph_format2.left_indent = Pt(30)
-                paragraph_format3.left_indent = Pt(30)
-            file_name = str(profile_instance.id) + '.docx'
-            document_path = os.path.join(Common.MEDIA_ROOT, file_name)
-            document.save(document_path)
+            downloaded_file = download_word_document(request)
             return response.Response(
-                data={"url": "/media/" + file_name},
+                data={"url": "/media/" + downloaded_file},
                 status=status.HTTP_200_OK
             )
         else:
@@ -1563,3 +1454,233 @@ class ResumeView(generics.GenericAPIView):
                 data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+def add_horizontal_line(doc):
+    # Add a paragraph with a border to mimic the horizontal line
+    paragraph = doc.add_paragraph()
+    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER  # Set the alignment to center
+    paragraph.add_run().add_break()  # Add an empty line to create some space above the line
+    paragraph.paragraph_format.line_spacing_rule = WD_LINE_SPACING.SINGLE  # Set line spacing to single
+    border = paragraph.border_bottom
+    border.color.rgb = (0, 0, 0)  # Set border color to black
+    border.width = Pt(6)  # Set border width to 6pt (adjust as needed)
+
+
+def get_element_qname(element):
+    """
+    Get the fully qualified name of the element.
+    """
+    return f"{{{element.nsmap[element.prefix]}}}{element.tag.split('}')[-1]}"
+
+
+def add_hyperlink(paragraph, url, text):
+    """
+    Add a hyperlink to the paragraph with the given URL and display text.
+    """
+    run = paragraph.add_run("Email : ")
+    hyperlink_run = paragraph.add_run()
+    hyperlink_run.add_text(text)
+    hyperlink = OxmlElement('w:hyperlink')
+    hyperlink.set(get_element_qname(OxmlElement('w:rId')), url)
+    hyperlink_run._r.append(hyperlink)
+    hyperlink_run.font.underline = True
+    hyperlink_run.font.color.rgb = RGBColor(0x00, 0x00, 0xFF)  # Set the hyperlink color to blue
+
+
+def add_content_to_document(element, doc, processed_elements):
+    if element in processed_elements:
+        return
+
+    processed_elements.add(element)
+
+    if element.name == 'h1':
+        # Add the title with 'Title' style
+        doc.add_paragraph(element.text, style='Title')
+
+    elif element.name == 'h4':
+        # Create a new paragraph for <h4> tag
+        paragraph = doc.add_paragraph()
+        if element.get('class') == ['align_right']:
+            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT  # Set the alignment to right
+            # Set the line spacing to 1.5 (you can change the value to your desired line spacing)
+            paragraph_format = paragraph.paragraph_format
+            paragraph_format.space_after = 0
+        elif element.get('class') == ['align_left']:
+            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT  # Set the alignment to left
+            # Set the line spacing to 1.5 (you can change the value to your desired line spacing)
+            paragraph_format = paragraph.paragraph_format
+            paragraph_format.space_before = 12
+
+        # Set the text and apply formatting
+        run = paragraph.add_run(element.text)
+        run.bold = True
+        font = run.font
+        font.size = Pt(14)  # Set the font size to 14pt (adjust as needed)
+
+    elif element.name == 'h6':
+        # Create a new paragraph for <h4> tag
+        paragraph = doc.add_paragraph()
+        # Set the text and apply formatting
+        run = paragraph.add_run(element.text)
+        run.bold = True
+        font = run.font
+        font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
+
+    elif element.name == 'p':
+        if element.strong:
+            add_content_to_document(element.strong, doc, processed_elements)
+        else:
+            # Create a new paragraph for <span> tag
+            paragraph = doc.add_paragraph()
+            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT  # Set the alignment to right
+
+            # Set the text and apply formatting
+            run = paragraph.add_run(element.text)
+            font = run.font
+            font.size = Pt(11)  # Set the font size to 11pt (adjust as needed)
+
+    elif element.name == 'strong':
+        # Create a new paragraph for <h4> tag
+        paragraph = doc.add_paragraph()
+        # Set the text and apply formatting
+        run = paragraph.add_run(element.text)
+        run.bold = True
+        font = run.font
+        font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
+
+    elif element.name == 'li':
+        # Create a new paragraph for <h4> tag
+        paragraph = doc.add_paragraph('', style='List Bullet')
+        run = paragraph.add_run(element.text)
+        font = run.font
+        font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
+
+    elif element.name == 'hr':
+        # Handle <hr> tag, add a horizontal line
+        paragraph = doc.add_paragraph('', style='Intense Quote')
+        paragraph.alignment = 1  # This sets the alignment to centered
+        # Set the line spacing to 1.5 (you can change the value to your desired line spacing)
+        paragraph_format = paragraph.paragraph_format
+        paragraph_format.space_after = 0
+        paragraph_format.space_before = 0
+        paragraph_format.line_spacing = 0.6
+
+        # Set the font size to 1 for the content of the paragraph
+        run = paragraph.add_run('')  # Add an empty space to the paragraph
+        font = run.font
+        font.size = Pt(1)  # Pt() is a function to set font size in points
+
+        paragraph.style.paragraph_format.left_indent = -1440  # Set a negative left indent to expand the width
+        paragraph.style.paragraph_format.right_indent = -1440  # Set a negative right indent to expand the width
+
+    elif element.name == 'span' and element.get('class') == ['align_right']:
+        # Handle <span> with class 'align_right'
+        if element.a:
+            # If <span> contains an <a> tag, process it separately
+            add_content_to_document(element.a, doc, processed_elements)
+        else:
+            # Create a new paragraph for <span> tag
+            paragraph = doc.add_paragraph()
+            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT  # Set the alignment to right
+            # Set the line spacing to 1.5 (you can change the value to your desired line spacing)
+            paragraph_format = paragraph.paragraph_format
+            paragraph_format.space_after = 0
+            # Set the text and apply formatting
+            run = paragraph.add_run(element.text)
+            font = run.font
+            font.size = Pt(11)  # Set the font size to 11pt (adjust as needed)
+
+    elif element.name == 'span' and element.get('class') == ['education']:
+        # Handle <span> with class 'align_right'
+        if element.a:
+            # If <span> contains an <a> tag, process it separately
+            add_content_to_document(element.a, doc, processed_elements)
+        else:
+            # Create a new paragraph for <span> tag
+            paragraph = doc.add_paragraph()
+            paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.LEFT  # Set the alignment to right
+            # Set the line spacing to 1.5 (you can change the value to your desired line spacing)
+            paragraph_format = paragraph.paragraph_format
+            paragraph_format.space_after = 0
+
+            # Set the text and apply formatting
+            run = paragraph.add_run(element.text)
+            font = run.font
+            font.size = Pt(11)  # Set the font size to 11pt (adjust as needed)
+
+    elif element.name == 'a':
+        # Handle <a> tag
+        url = element['href']
+        text = element.text.strip()
+        paragraph = doc.add_paragraph(style='Normal')
+        paragraph_format = paragraph.paragraph_format
+        paragraph_format.space_after = 0
+        paragraph_format.space_before = 0
+        paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        add_hyperlink(paragraph, url, text)
+
+    elif element.string and element.string.strip():
+        # Add other non-empty text elements as regular paragraphs with 'Normal' style
+        doc.add_paragraph(element.string.strip(), style='Normal')
+
+
+    elif element.string and element.string.strip():
+        # Add other non-empty text elements as regular paragraphs
+        doc.add_paragraph(element.string.strip())
+
+    # Recursively process child elements
+    for child in element.children:
+        if child.name:
+            add_content_to_document(child, doc, processed_elements)
+
+
+def download_word_document(request):
+    profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+    sills_data = JobSeekerSkill.objects.filter(user=profile_instance.user)
+    education_data = EducationRecord.objects.filter(user=profile_instance.user)
+    employment_data = EmploymentRecord.objects.filter(user=profile_instance.user)
+    languages_data = JobSeekerLanguageProficiency.objects.filter(user=profile_instance.user)
+    mobile_number = profile_instance.user.mobile_number
+    new_mobile_number = " "
+    for i in range(0, len(mobile_number), 5):
+        new_mobile_number += mobile_number[i:i + 5] + " "
+
+    # Sample HTML content to be converted to DOCX
+    html_content = render_to_string('resume.html', {
+        'profile_instance': profile_instance, 'new_mobile_number': new_mobile_number, 'sills_data': sills_data,
+        'education_data': education_data, 'employment_data': employment_data, 'languages_data': languages_data,
+    })
+
+    # Create a new Document
+    doc = Document()
+
+    # Convert HTML to plain text using BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # Process the HTML content and add to the Word document
+    processed_elements = set()
+    for element in soup.recursiveChildGenerator():
+        if element.name:
+            add_content_to_document(element, doc, processed_elements)
+
+    # Create a file path for the DOC file in the media folder
+    media_root = Common.MEDIA_ROOT
+    file_name = str(profile_instance.id) + '.docx'
+    file_path = os.path.join(media_root, file_name)
+
+    # Save the document to the file path
+    doc.save(file_path)
+
+    # Create a buffer to store the document
+    output_buffer = io.BytesIO()
+    doc.save(output_buffer)
+
+    # Set the appropriate headers for the response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    response['Content-Disposition'] = 'attachment; filename="converted_document.docx"'
+
+    # Write the content of the buffer to the response
+    response.write(output_buffer.getvalue())
+
+    return file_name
