@@ -137,33 +137,32 @@ class ChatConsumer(BaseConsumer):
             if conversations.exists():
                 self.conversation_id = conversations.first().id
                 self.conversation = conversations.first()
-        else:
-            user_id = None
-            if 'user_id=' in chat_url:
-                user_id = chat_url.split('user_id=')[1].split('&')[0]
-            elif '&user_id=' in chat_url:
-                user_id = chat_url.split('&user_id=')[1].split('&')[0]
 
-            if user_id:
-                user_instance = User.objects.get(id=user_id)
-                if self.scope["user"] != user_instance:
-                    user_list = [self.scope["user"], user_instance]
-                    if Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
-                            is_removed=True).exists():
-                        Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(
-                            chat_user=user_instance).filter(is_removed=True).update(is_removed=False)
+        user_id = None
+        if 'user_id=' in chat_url:
+            user_id = chat_url.split('user_id=')[1].split('&')[0]
+        elif '&user_id=' in chat_url:
+            user_id = chat_url.split('&user_id=')[1].split('&')[0]
+        if user_id:
+            user_instance = User.objects.get(id=user_id)
+            if self.scope["user"] != user_instance:
+                user_list = [self.scope["user"], user_instance]
+                if Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(chat_user=user_instance).filter(
+                        is_removed=True).exists():
+                    Conversation.all_objects.filter(chat_user=self.scope["user"]).filter(
+                        chat_user=user_instance).filter(is_removed=True).update(is_removed=False)
 
-                    conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
-                        chat_user=user_instance)
-                    if conversations.exists():
-                        self.conversation_id = conversations.first().id
-                        self.conversation = conversations.first()
-                    else:
-                        conversation = Conversation.objects.create()
-                        conversation.chat_user.add(self.scope["user"], user_instance)
-                        conversation.save()
-                        self.conversation_id = conversation.id
-                        self.conversation = conversation
+                conversations = Conversation.objects.filter(chat_user=self.scope["user"]).filter(
+                    chat_user=user_instance)
+                if conversations.exists():
+                    self.conversation_id = conversations.first().id
+                    self.conversation = conversations.first()
+                else:
+                    conversation = Conversation.objects.create()
+                    conversation.chat_user.add(self.scope["user"], user_instance)
+                    conversation.save()
+                    self.conversation_id = conversation.id
+                    self.conversation = conversation
 
         self.conversation_group_name = f'chat_{self.conversation_id}'
 
@@ -172,10 +171,6 @@ class ChatConsumer(BaseConsumer):
         if user.is_anonymous:
             self.close()
         else:
-            conversation = Conversation.objects.create()
-            conversation.chat_user.add(self.scope["user"], user_instance)
-            conversation.save()
-
             # Assuming you have a list of related objects you want to add
             related_objects = [user]  # Replace with your own objects
             conversation = self.conversation
