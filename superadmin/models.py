@@ -592,3 +592,51 @@ def unique_invoice_id():
     except PointInvoice.DoesNotExist:
         return invoice_id
     
+
+class Packages(BaseModel, TimeStampedModel, models.Model):
+    """
+    This is a Django model for a Job Attachment object, associated with a specific Job item, with the following fields:
+
+    - `job`: the job associated with the attachment
+    - `attachment`: the attachment uploaded for the job
+    """
+    title = models.CharField(
+        verbose_name=_('Title'),
+        max_length=255,
+        db_column="title",
+    )
+    benefit = ArrayField(
+        models.CharField(
+            verbose_name=_('Benefit'),
+            max_length=450,
+            null=True,
+            blank=True,
+            db_column="benefit",
+        ),
+        blank=True,
+        null=True
+    )
+    price = models.DecimalField(
+        max_digits=19,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        verbose_name=_('Price'),
+        db_column="price",
+    )
+    credit = models.BigIntegerField(
+        null=True,
+        blank=True,
+        verbose_name=_('Credit'),
+        db_column="credit",
+    )
+
+
+    def __str__(self):
+        return str(self.title)
+
+    class Meta:
+        verbose_name = "Package"
+        verbose_name_plural = "Packages"
+        db_table = "Packages"
+        ordering = ['-created']
