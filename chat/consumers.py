@@ -178,9 +178,15 @@ class ChatConsumer(BaseConsumer):
 
             # Assuming you have a list of related objects you want to add
             related_objects = [user]  # Replace with your own objects
-            ChatMessage.objects.filter(conversation=self.conversation).update(
-                read_by=F('read_by') | set(related_objects))
+            conversation = self.conversation
 
+            # Fetch the ChatMessage objects related to the conversation
+            chat_messages = ChatMessage.objects.filter(conversation=conversation)
+
+            # Add the related_objects to the read_by ManyToManyField for each ChatMessage
+            for chat_message in chat_messages:
+                chat_message.read_by.add(*related_objects)
+                
             async_to_sync(self.channel_layer.group_add)(
                 self.conversation_group_name,
                 self.channel_name
@@ -251,6 +257,7 @@ class ChatConsumer(BaseConsumer):
         # Assuming you have a list of related objects you want to add
         related_objects = [self.get_user()]  # Replace with your own objects
         chat_message.read_by.add(*related_objects)
+
         if content_type != "text":
             media_id = content.get("message_attachment").get("id")
             media = Media.objects.get(id=media_id)
