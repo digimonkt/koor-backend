@@ -111,6 +111,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         blank=True,
         default=False
     )
+    is_online = models.BooleanField(
+        verbose_name=_('Is Online'),
+        db_column="is_online",
+        null=True,
+        blank=True,
+        default=False
+    )
     get_email = models.BooleanField(
         verbose_name=_('Get Email'),
         db_column="get_email",
