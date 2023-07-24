@@ -185,12 +185,16 @@ class ChatConsumer(BaseConsumer):
                 self.conversation_group_name,
                 self.channel_name
             )
+            self.scope["user"].is_online = True
+            self.scope["user"].save()
             self.accept()
 
     def disconnect(self, close_code):
         """
         Disconnects the consumer from the WebSocket.
         """
+        self.scope["user"].is_online = False
+        self.scope["user"].save()
         self.channel_layer.group_discard(
             self.conversation_group_name,
             self.channel_name
@@ -287,12 +291,16 @@ class ChatActivityConsumer(BaseConsumer):
             self.chat_group_name,
             self.channel_name
         )
+        self.scope["user"].is_online = True
+        self.scope["user"].save()
         self.accept()
 
     def disconnect(self, close_code):
         """
         Disconnects the consumer from the chat group.
         """
+        self.scope["user"].is_online = False
+        self.scope["user"].save()
         self.channel_layer.group_discard(
             self.chat_group_name,
             self.channel_name
@@ -351,12 +359,16 @@ class NotificationConsumer(BaseConsumer):
             self.chat_group_name,
             self.channel_name
         )
+        self.scope["user"].is_online = True
+        self.scope["user"].save()
         self.accept()
 
     def disconnect(self, close_code):
         """
         Disconnects the consumer from the chat group.
         """
+        self.scope["user"].is_online = False
+        self.scope["user"].save()
         self.channel_layer.group_discard(
             self.chat_group_name,
             self.channel_name
