@@ -5510,8 +5510,6 @@ class PackageView(generics.ListAPIView):
             obj_id = UUID(data["id"])
             try:
                 obj = Packages.objects.get(id=obj_id)
-                if data["title"]:
-                    obj.title = data["title"]
                 if data['benefit']:
                     obj.benefit = data["benefit"]
                 if data['price']:
