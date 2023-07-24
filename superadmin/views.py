@@ -41,7 +41,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    PointInvoice
+    PointInvoice, Packages
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -58,9 +58,9 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    PointInvoiceSerializers
+    PointInvoiceSerializers, PackageSerializers
 )
-
+from .seeds import run_seed
 
 class CountryView(generics.ListAPIView):
     """
@@ -5443,3 +5443,93 @@ class InvoiceDetailView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class PackageView(generics.ListAPIView):
+    """
+    A view for displaying a list of resources.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (ResourcesSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `Packages.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = PackageSerializers
+    queryset = Packages.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        if self.get_queryset().exists():
+            pass
+        else:
+            run_seed()
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update an `Packages` instance with the provided data.
+
+        Args:
+            - `request (django.http.request.Request)`: The HTTP request object.
+            - `packageId (int)`: The ID of the `Packages` instance to update.
+
+        Returns:
+            - `django.http.response.Response`: An HTTP response object containing the updated data
+            and appropriate status code.
+
+        Raises:
+            - `serializers.ValidationError`: If the provided data is invalid.
+            - `Packages.DoesNotExist`: If the Packages instance with the given ID does not exist.
+            - `Exception`: If any other error occurs during the update process.
+        """
+
+        context = dict()
+        error_message = []
+        package_list = request.data.get('package_list', []) 
+        for data in data_list:
+            obj_id = UUID(data["id"])
+            try:
+                obj = Packages.objects.get(id=obj_id)
+                if data['benefit']:
+                    obj.benefit = data["benefit"]
+                if data['price']:
+                    obj.price = data["price"]
+                if data['credit']:
+                    obj.credit = data["credit"]
+                obj.save()
+            except Packages.DoesNotExist:
+                error_message.append(str(obj_id) + ' does not exist.')
+        if error_message:
+            context["message"] = error_message
+            return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context["message"] = 'Packages update successfully.'
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+            
+

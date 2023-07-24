@@ -33,7 +33,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
     CategoryLogo, Testimonial, NewsletterUser,
-    PointInvoice
+    PointInvoice, Packages
 )
 
 
@@ -1782,3 +1782,80 @@ class PointInvoiceSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+# class CreateResourcesSerializers(serializers.ModelSerializer):
+#     """
+#     Serializer class for the `ResourcesContent` model.
+
+#     The `CreateResourcesSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
+#     `ResourcesContent` model. It defines the fields that should be included in the serialized representation of the model,
+#     including 'id', 'title', 'category'.
+#     """
+#     attachment_file = serializers.FileField(
+#         style={"input_type": "file"},
+#         write_only=True,
+#         allow_null=False
+#     )
+
+#     class Meta:
+#         model = ResourcesContent
+#         fields = ['id', 'title', 'subtitle', 'description', 'attachment_file']
+#         read_only_fields = ['id']
+
+#     def save(self):
+#         attachment_file = None
+#         if 'attachment_file' in self.validated_data:
+#             attachment_file = self.validated_data.pop('attachment_file')
+#         resource_instance = super().save()
+#         if attachment_file:
+#             content_type = str(attachment_file.content_type).split("/")
+#             if content_type[0] not in ["video", "image"]:
+#                 media_type = 'document'
+#             else:
+#                 media_type = content_type[0]
+#             # save media file into media table and get instance of saved data.
+#             media_instance = Media(title=attachment_file.name, file_path=attachment_file, media_type=media_type)
+#             media_instance.save()
+#             # save media instance into license id file into employer profile table.
+#             resource_instance.attachment = media_instance
+#             resource_instance.save()
+#         return resource_instance
+
+#     def update(self, instance, validated_data):
+#         attachment_file = None
+#         if 'attachment_file' in self.validated_data:
+#             attachment_file = self.validated_data.pop('attachment_file')
+#         super().update(instance, validated_data)
+#         if attachment_file:
+#             content_type = str(attachment_file.content_type).split("/")
+#             if content_type[0] not in ["video", "image"]:
+#                 media_type = 'document'
+#             else:
+#                 media_type = content_type[0]
+#             # save media file into media table and get instance of saved data.
+#             media_instance = Media(title=attachment_file.name, file_path=attachment_file, media_type=media_type)
+#             media_instance.save()
+#             # save media instance into license id file into employer profile table.
+#             instance.attachment = media_instance
+#             instance.save()
+#         return instance
+
+
+class PackageSerializers(serializers.ModelSerializer):
+    """
+    Serializer for the Packages model.
+
+    This serializer is used to serialize/deserialize Packages objects to/from JSON format. It defines
+    the fields that will be included in the serialized data and provides validation for deserialization.
+
+    Attributes:
+        Meta: A subclass of the serializer that specifies the model to be serialized and the fields
+            to be included in the serialized data.
+    """
+    class Meta:
+        model = Packages
+        fields = (
+            'id', 'title', 'benefit', 'price', 'credit'
+        )
+        read_only_fields = ['id']
