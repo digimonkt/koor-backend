@@ -46,6 +46,7 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('message', "Message"),
         ('advance_filter', "Advance Filter"),
         ('expired_save_job', "Expired Save Job"),
+        ('message', "Message"),
     )
     user = models.ForeignKey(
         User,
@@ -59,6 +60,13 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="nitification_type",
         max_length=25,
         choices=NOTIFICATION_TYPE_CHOICE,
+    )
+    message = models.CharField(
+        verbose_name=_('Message'),
+        max_length=255,
+        null=True,
+        blank=True,
+        db_column="message",
     )
     application = models.ForeignKey(
         AppliedJob,

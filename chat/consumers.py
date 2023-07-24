@@ -8,6 +8,8 @@ from django.db.models import Q, F
 from project_meta.models import Media
 from users.models import UserSession, User
 
+from notification.models import Notification
+
 from .models import Conversation, ChatMessage
 from .serializers import ChatMessageSerializer, ConversationSerializer
 
@@ -252,6 +254,15 @@ class ChatConsumer(BaseConsumer):
         # Assuming you have a list of related objects you want to add
         related_objects = [self.get_user()]  # Replace with your own objects
         chat_message.read_by.add(*related_objects)
+        print(self.conversation)
+        message = str(self.get_user().name) + ' is send you a message ' + str(content.get("message", ""))
+        for chat_user in self.conversation.chat_user.all():
+            print(chat_user)
+            # if chat_user != self.get_user() and chat_user.is_online == False:
+            if chat_user != self.get_user():
+                Notification.objects.create(
+                    user=chat_user, notification_type='message', message=message
+                )
 
         if content_type != "text":
             media_id = content.get("message_attachment").get("id")
