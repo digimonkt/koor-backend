@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
-from docx.shared import Pt, RGBColor
+from docx.shared import Pt, RGBColor, Cm
 from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
@@ -1550,11 +1550,16 @@ def add_content_to_document(element, doc, processed_elements):
         font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
 
     elif element.name == 'li':
+        
         # Create a new paragraph for <h4> tag
-        paragraph = doc.add_paragraph('', style='List Bullet')
-        run = paragraph.add_run(element.text)
+        paragraph = doc.add_paragraph(style='List Bullet')
+        
+        # Set a custom paragraph indentation to position the text after the bullet
+        paragraph.paragraph_format.left_indent = Cm(1.5)
+
+        run = paragraph.add_run(element.text)  # Add the text
         font = run.font
-        font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
+        font.size = Pt(11)  # Set the font size of the text (adjust as needed)
 
     elif element.name == 'hr':
         # Handle <hr> tag, add a horizontal line
