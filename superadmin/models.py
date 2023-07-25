@@ -639,4 +639,4 @@ class Packages(BaseModel, TimeStampedModel, models.Model):
         verbose_name = "Package"
         verbose_name_plural = "Packages"
         db_table = "Packages"
-        ordering = ['-created']
+        ordering = ['created']

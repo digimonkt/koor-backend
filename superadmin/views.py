@@ -13,6 +13,7 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+from uuid import UUID
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
@@ -5487,26 +5488,54 @@ class PackageView(generics.ListAPIView):
 
     def patch(self, request):
         """
-        Update an `Packages` instance with the provided data.
+        Update multiple Packages objects based on the data received in the PATCH request.
 
         Args:
-            - `request (django.http.request.Request)`: The HTTP request object.
-            - `packageId (int)`: The ID of the `Packages` instance to update.
+            request (HttpRequest): The HTTP request object containing the data to update.
 
         Returns:
-            - `django.http.response.Response`: An HTTP response object containing the updated data
-            and appropriate status code.
+            Response: A Response object indicating the status of the update operation.
 
-        Raises:
-            - `serializers.ValidationError`: If the provided data is invalid.
-            - `Packages.DoesNotExist`: If the Packages instance with the given ID does not exist.
-            - `Exception`: If any other error occurs during the update process.
+        Description:
+        This function is used to update multiple Packages objects in the database based on the data received
+        in the PATCH request. The request should contain a list of packages in JSON format, and each package
+        should have an 'id' field that matches the primary key of the corresponding Packages object.
+
+        The 'request' object should contain the list of packages under the 'data' key. Each package in the list
+        should have fields representing the properties that need to be updated. The function iterates over the
+        list of packages, retrieves the corresponding Packages object from the database using the 'id' field,
+        and then updates the object with the new data provided in the request.
+
+        If a package with a given 'id' is not found in the database, an error message is added to the 'error_message'
+        list. After processing all the packages, if any errors were encountered, the function returns a Response
+        object with status code 400 and a JSON object containing the error messages. Otherwise, it returns a Response
+        object with status code 200 and a JSON object indicating that the packages were updated successfully.
+
+        Note:
+        - The 'Packages' model should be defined in the Django app for this function to work correctly.
+        - The 'request' object should contain a list of packages under the key 'data'.
+        - Each package in the list should have an 'id' field that corresponds to the primary key of the Packages model.
+        - The 'benefit', 'price', and 'credit' fields are updated only if the corresponding fields are present in the package.
+
+        Example:
+        If you send a PATCH request to this view with the following JSON data:
+        {
+            "data": [
+                {"id": "53735375-e684-4426-ab34-d2e4d8243393", "benefit": "New Benefit"},
+                {"id": "b5b6a35f-9153-4549-b6f8-649023a45843", "price": "9.99"}
+            ]
+        }
+
+        It will update the 'benefit' field for the object with 'id' 53735375-e684-4426-ab34-d2e4d8243393 and
+        the 'price' field for the object with 'id' b5b6a35f-9153-4549-b6f8-649023a45843. If any of the provided 'id's
+        are not found in the database, it will return a response with the error message for the corresponding 'id'.
+
         """
-
+        
         context = dict()
         error_message = []
-        package_list = request.data.get('package_list', []) 
-        for data in data_list:
+        package_list = request.data  # Directly access the list from request.data
+        for data in package_list:
             obj_id = UUID(data["id"])
             try:
                 obj = Packages.objects.get(id=obj_id)
@@ -5531,5 +5560,3 @@ class PackageView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_200_OK
             )
-            
-
