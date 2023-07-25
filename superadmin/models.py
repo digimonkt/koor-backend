@@ -542,6 +542,13 @@ class PointInvoice(BaseModel, TimeStampedModel, models.Model):
         blank=True,
         unique=True
     )
+    note = models.CharField(
+        verbose_name=_('Note'),
+        max_length=255,
+        db_column="note",
+        null=True,
+        blank=True
+    )
     points = models.BigIntegerField(
         null=True,
         blank=True,
