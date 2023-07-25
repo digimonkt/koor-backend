@@ -5505,7 +5505,7 @@ class PackageView(generics.ListAPIView):
 
         context = dict()
         error_message = []
-        package_list = request.data.get('package_list', []) 
+        package_list = request.data('package_list', []) 
         for data in data_list:
             obj_id = UUID(data["id"])
             try:
