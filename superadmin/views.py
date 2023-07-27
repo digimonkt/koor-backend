@@ -1726,7 +1726,7 @@ class EmployerListView(generics.ListAPIView):
                 user=employer_instance.user, 
                 points=int(request.data.get('points', 0)),
                 amount=int(request.data.get('amount', 0)),
-                note=int(request.data.get('note', ''))
+                note=request.data.get('note', '')
                 )
             context['message'] = "Point credited."
         else:
