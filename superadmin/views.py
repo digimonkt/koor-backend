@@ -1693,10 +1693,6 @@ class EmployerListView(generics.ListAPIView):
             NotFound: If the employer profile with the specified ID doesn't exist.
             BadRequest: If any other exception occurs during the process.
         """
-        if not self.request.user.is_staff:
-            context = {'message': "You do not have permission to perform this action."}
-            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
-
         try:
             employer_instance = EmployerProfile.objects.get(user_id=employerId)
         except EmployerProfile.DoesNotExist:
@@ -1704,6 +1700,9 @@ class EmployerListView(generics.ListAPIView):
 
         context = {'message': ''}
         if action == 'verify':
+            if not self.request.user.is_staff:
+                context = {'message': "You do not have permission to perform this action."}
+                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             if employer_instance.is_verified:
                 context['message'] = "Employer is already verified"
             else:
@@ -1711,6 +1710,9 @@ class EmployerListView(generics.ListAPIView):
                 employer_instance.save()
                 context['message'] = "Employer verified."
         elif action == 'unverify':
+            if not self.request.user.is_staff:
+                context = {'message': "You do not have permission to perform this action."}
+                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             if not employer_instance.is_verified:
                 context['message'] = "Employer is not verified"
             else:
