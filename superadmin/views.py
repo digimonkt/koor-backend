@@ -37,12 +37,12 @@ from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
 
-from .filters import PointInvoiceDetailsFilter
+from .filters import RechargeHistoryDetailsFilter
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    PointInvoice, Packages
+    RechargeHistory, Packages
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -59,7 +59,7 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    PointInvoiceSerializers, PackageSerializers
+    RechargeHistorySerializers, PackageSerializers
 )
 from .seeds import run_seed
 
@@ -1722,7 +1722,7 @@ class EmployerListView(generics.ListAPIView):
         elif action == 'recharge':
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
-            PointInvoice.objects.create(
+            RechargeHistory.objects.create(
                 user=employer_instance.user, 
                 points=int(request.data.get('points', 0)),
                 amount=int(request.data.get('amount', 0)),
@@ -5289,13 +5289,13 @@ class TenderCreateView(generics.ListAPIView):
 
 class InvoiceView(generics.ListAPIView):
 
-    serializer_class = PointInvoiceSerializers
+    serializer_class = RechargeHistorySerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = PointInvoice.objects.all().order_by('-created')
+    queryset = RechargeHistory.objects.all().order_by('-created')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
-    filterset_class = PointInvoiceDetailsFilter
+    filterset_class = RechargeHistoryDetailsFilter
     search_fields = [
-        'invoice_id',
+        'user__name',
     ]
     pagination_class = CustomPagination
 
@@ -5349,13 +5349,13 @@ class InvoiceView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                PointInvoice.objects.get(id=invoiceId).delete()
+                RechargeHistory.objects.get(id=invoiceId).delete()
                 context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
                 )
-            except PointInvoice.DoesNotExist:
+            except RechargeHistory.DoesNotExist:
                 return response.Response(
                     data={"invoiceId": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
@@ -5423,20 +5423,20 @@ class InvoiceView(generics.ListAPIView):
 
 
 class InvoiceDetailView(generics.GenericAPIView):
-    serializer_class = PointInvoiceSerializers
+    serializer_class = RechargeHistorySerializers
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, invoiceId):
         context = dict()
         try:
-            invoice_data = PointInvoice.objects.get(id=invoiceId)
+            invoice_data = RechargeHistory.objects.get(id=invoiceId)
             get_data = self.serializer_class(invoice_data)
             context = get_data.data
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
             )
-        except PointInvoice.DoesNotExist:
+        except RechargeHistory.DoesNotExist:
             return response.Response(
                 data={"invoiceId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND

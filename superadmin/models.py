@@ -525,7 +525,7 @@ class PointDetection(BaseModel, models.Model):
         db_table = "PointDetection"
 
 
-class PointInvoice(BaseModel, TimeStampedModel, models.Model):
+class RechargeHistory(BaseModel, TimeStampedModel, models.Model):
 
     user = models.ForeignKey(
         User,
@@ -533,14 +533,6 @@ class PointInvoice(BaseModel, TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         db_column="user",
         related_name='%(app_label)s_%(class)s_user'
-    )
-    invoice_id = models.CharField(
-        verbose_name=_('Invoice Id'),
-        max_length=255,
-        db_column="invoice_id",
-        null=True,
-        blank=True,
-        unique=True
     )
     note = models.CharField(
         verbose_name=_('Note'),
@@ -578,26 +570,12 @@ class PointInvoice(BaseModel, TimeStampedModel, models.Model):
         Returns:
             str: The string representation of the points.
         """
-        return str(self.invoice_id)
+        return str(self.user) + "(" + str(self.points) + ")"
 
     class Meta:
-        verbose_name = "Point Invoice"
-        verbose_name_plural = "Point Invoices"
-        db_table = "PointInvoice"
-        
-        
-    def save(self, *args, **kwargs):
-        if not self.invoice_id:
-            self.invoice_id = unique_invoice_id()
-        return super().save(*args, **kwargs)
-    
-def unique_invoice_id():
-    invoice_id = str(randint(1000, 9999)) + "-" + str(randint(1000, 9999))
-    try:
-        if PointInvoice.objects.get(invoice_id=invoice_id):
-            return unique_invoice_id()
-    except PointInvoice.DoesNotExist:
-        return invoice_id
+        verbose_name = "Recharge History"
+        verbose_name_plural = "Recharge History"
+        db_table = "RechargeHistory"
     
 
 class Packages(BaseModel, TimeStampedModel, models.Model):

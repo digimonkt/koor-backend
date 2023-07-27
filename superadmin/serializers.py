@@ -33,7 +33,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
     CategoryLogo, Testimonial, NewsletterUser,
-    PointInvoice, Packages
+    RechargeHistory, Packages
 )
 
 
@@ -1763,14 +1763,14 @@ class CreateTendersSerializers(serializers.ModelSerializer):
                 attachments_instance.save()
         return self
 
-class PointInvoiceSerializers(serializers.ModelSerializer):
+class RechargeHistorySerializers(serializers.ModelSerializer):
     
     user = serializers.SerializerMethodField()
     
     class Meta:
-        model = PointInvoice
+        model = RechargeHistory
         fields = [
-            'id', 'user', 'invoice_id', 'points', 'amount',
+            'id', 'user', 'points', 'amount',
             'is_send', 'created'
         ]
         read_only_fields = ['id', 'user', 'created']
