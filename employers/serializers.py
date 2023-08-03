@@ -487,7 +487,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
             'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date',
-            'company', 'company_logo'
+            'company', 'company_logo_item'
         ]
 
     def validate_job_category(self, job_category):

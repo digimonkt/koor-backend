@@ -62,6 +62,7 @@ urlpatterns = [
 
     path('/jobs', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/create', JobsCreateView.as_view(), name="jobs_create"),
+    path('/jobs/create/<str:jobId>', JobsCreateView.as_view(), name="jobs_create"),
     path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_revert"),
 
