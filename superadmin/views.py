@@ -59,7 +59,7 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    RechargeHistorySerializers, PackageSerializers
+    RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers
 )
 from .seeds import run_seed
 
@@ -5034,61 +5034,54 @@ class JobsCreateView(generics.ListAPIView):
         user_data = User.objects.get(id=user_id)
         return JobDetails.objects.filter(user=user_data)
 
-    # def put(self, request, jobId):
-    #     """
-    #     Update an existing job instance with the provided request data.
+    def put(self, request, jobId):
+        """
+        Update an existing job instance with the provided request data.
 
-    #     Args:
-    #         - `request`: An instance of the Django Request object.
+        Args:
+            - `request`: An instance of the Django Request object.
 
-    #     Returns:
-    #         An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
-    #         was updated successfully or not.
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
+            was updated successfully or not.
 
-    #     Raises:
-    #         - `Http404`: If the JobDetails instance with the provided jobId does not exist.
+        Raises:
+            - `Http404`: If the JobDetails instance with the provided jobId does not exist.
 
-    #     Notes:
-    #         This method requires a jobId to be included in the request data, and will only update the job if the
-    #         authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
-    #         used to serialize the request data and update the job instance. If the serializer is invalid or the user
-    #         does not have permission to update the job instance, an appropriate error response is returned.
-    #     """
-    #     context = dict()
-    #     try:
-    #         job_instance = JobDetails.objects.get(id=jobId)
-    #         if request.user == job_instance.user:
-    #             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
-    #             try:
-    #                 serializer.is_valid(raise_exception=True)
-    #                 if serializer.update(job_instance, serializer.validated_data):
-    #                     context['message'] = "Updated Successfully"
-    #                     return response.Response(
-    #                         data=context,
-    #                         status=status.HTTP_200_OK
-    #                     )
-    #             except serializers.ValidationError:
-    #                 return response.Response(
-    #                     data=serializer.errors,
-    #                     status=status.HTTP_400_BAD_REQUEST
-    #                 )
-    #         else:
-    #             context['message'] = "You do not have permission to perform this action."
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_401_UNAUTHORIZED
-    #             )
-    #     except JobDetails.DoesNotExist:
-    #         return response.Response(
-    #             data={"job": "Does Not Exist"},
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
-    #     except Exception as e:
-    #         context["message"] = str(e)
-    #         return response.Response(
-    #             data=context,
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
+        Notes:
+            This method requires a jobId to be included in the request data, and will only update the job if the
+            authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
+            used to serialize the request data and update the job instance. If the serializer is invalid or the user
+            does not have permission to update the job instance, an appropriate error response is returned.
+        """
+        context = dict()
+        try:
+            job_instance = JobDetails.objects.get(id=jobId)
+            serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"job": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class TenderCreateView(generics.ListAPIView):
