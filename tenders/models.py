@@ -72,6 +72,8 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
+        null=True,
+        blank=True,
         related_name='%(app_label)s_%(class)s_user'
     )
     title = models.CharField(
@@ -175,6 +177,22 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="post_by_admin",
         default=False
+    )
+    company = models.CharField(
+        verbose_name=_('Company Name'),
+        max_length=255,
+        db_column="company",
+        null=True,
+        blank=True
+    )
+    company_logo = models.OneToOneField(
+        Media,
+        verbose_name=_('Company Logo'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="company_logo",
+        related_name='%(app_label)s_%(class)s_company_logo'
     )
 
     def __str__(self):
