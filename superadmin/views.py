@@ -59,7 +59,8 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers
+    RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers,
+    UpdateTenderSerializers
 )
 from .seeds import run_seed
 
@@ -5186,7 +5187,7 @@ class TenderCreateView(generics.ListAPIView):
         user_data = User.objects.get(id=user_id)
         return TenderDetails.objects.filter(user=user_data).order_by('-created')
 
-    def post(self, request, employerId):
+    def post(self, request):
         """
         Handles POST requests to create a new `TenderDetails` instance.
 
@@ -5202,24 +5203,16 @@ class TenderCreateView(generics.ListAPIView):
         """
 
         context = dict()
-        serializer = CreateTendersSerializers(data=request.data)
         try:
-            user_instance = User.objects.get(id=employerId)
-            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
-            if user_instance.role == "employer" and employer_profile_instance.is_verified:
-                serializer.is_valid(raise_exception=True)
-                serializer.save(user_instance)
-                context["message"] = "Tender added successfully."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+            user_instance = None
+            if 'employer_id' in request.data:
+                employerId = request.data['employer_id']
+                user_instance = User.objects.get(id=employerId)
+            serializer = CreateTendersSerializers(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user_instance)
+            context["message"] = "Tender added successfully."
+            return response.Response(data=context, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
@@ -5231,61 +5224,54 @@ class TenderCreateView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    # def put(self, request, tendersId):
-    #     """
-    #     Update an existing tender instance with the provided request data.
+    def put(self, request, tenderId):
+        """
+        Update an existing tender instance with the provided request data.
 
-    #     Args:
-    #         - `request`: An instance of the Django Request object.
+        Args:
+            - `request`: An instance of the Django Request object.
 
-    #     Returns:
-    #         An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
-    #         was updated successfully or not.
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
+            was updated successfully or not.
 
-    #     Raises:
-    #         - `Http404`: If the TenderDetails instance with the provided tendersId does not exist.
+        Raises:
+            - `Http404`: If the TenderDetails instance with the provided tenderId does not exist.
 
-    #     Notes:
-    #         This method requires a tendersId to be included in the request data, and will only update the tender if the
-    #         authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
-    #         is used to serialize the request data and update the tender instance. If the serializer is invalid or the
-    #         user does not have permission to update the tender instance, an appropriate error response is returned.
-    #     """
-    #     context = dict()
-    #     try:
-    #         tender_instance = TenderDetails.objects.get(id=tendersId)
-    #         if request.user == tender_instance.user:
-    #             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
-    #             try:
-    #                 serializer.is_valid(raise_exception=True)
-    #                 if serializer.update(tender_instance, serializer.validated_data):
-    #                     context['message'] = "Updated Successfully"
-    #                     return response.Response(
-    #                         data=context,
-    #                         status=status.HTTP_200_OK
-    #                     )
-    #             except serializers.ValidationError:
-    #                 return response.Response(
-    #                     data=serializer.errors,
-    #                     status=status.HTTP_400_BAD_REQUEST
-    #                 )
-    #         else:
-    #             context['message'] = "You do not have permission to perform this action."
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_401_UNAUTHORIZED
-    #             )
-    #     except TenderDetails.DoesNotExist:
-    #         return response.Response(
-    #             data={"tendersId": "Does Not Exist"},
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
-    #     except Exception as e:
-    #         context["message"] = str(e)
-    #         return response.Response(
-    #             data=context,
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
+        Notes:
+            This method requires a tenderId to be included in the request data, and will only update the tender if the
+            authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
+            is used to serialize the request data and update the tender instance. If the serializer is invalid or the
+            user does not have permission to update the tender instance, an appropriate error response is returned.
+        """
+        context = dict()
+        try:
+            tender_instance = TenderDetails.objects.get(id=tenderId)
+            serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(tender_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"tenderId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class InvoiceView(generics.ListAPIView):

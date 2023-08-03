@@ -698,13 +698,19 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         allow_null=False,
         required=False
     )
+    company_logo_item = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
 
     class Meta:
         model = TenderDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
             'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
-            'start_date', 'address'
+            'start_date', 'address', 'company', 'company_logo_item'
         ]
 
     def validate_tender_category(self, tender_category):
@@ -727,8 +733,11 @@ class CreateTendersSerializers(serializers.ModelSerializer):
 
     def save(self, user):
         attachments = None
+        company_logo_item = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
+        if 'company_logo_item' in self.validated_data:
+            company_logo_item = self.validated_data.pop('company_logo_item')
         tender_instance = super().save(user=user, status='active')
 
         if attachments:
@@ -745,6 +754,22 @@ class CreateTendersSerializers(serializers.ModelSerializer):
                 attachments_instance = TenderAttachmentsItem.objects.create(tender=tender_instance,
                                                                             attachment=media_instance)
                 attachments_instance.save()
+        
+        if company_logo_item:
+            # Get media type from upload license file
+            content_type = str(company_logo_item.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=company_logo_item.name,
+                                   file_path=company_logo_item, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            tender_instance.company_logo = media_instance
+            tender_instance.save()
+        
         return self
 
 
@@ -786,13 +811,19 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
+    company_logo_item = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
 
     class Meta:
         model = TenderDetails
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
             'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
-            'start_date', 'attachments_remove', 'address'
+            'start_date', 'attachments_remove', 'address', 'company', 'company_logo_item'
         ]
 
     def validate_tender_category(self, tender_category):
@@ -824,6 +855,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         attachments = None
+        company_logo_item = None
         attachments_remove = None
 
         if 'attachments' in self.validated_data:
@@ -850,6 +882,21 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
                 attachments_instance = TenderAttachmentsItem.objects.create(tender=instance,
                                                                             attachment=media_instance)
                 attachments_instance.save()
+        
+        if company_logo_item:
+            # Get media type from upload license file
+            content_type = str(company_logo_item.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=company_logo_item.name,
+                                   file_path=company_logo_item, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.company_logo = media_instance
+            instance.save()
         return instance
 
 

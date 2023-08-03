@@ -61,14 +61,20 @@ class TendersSerializers(serializers.ModelSerializer):
     is_saved = serializers.SerializerMethodField()
     vendor = serializers.SerializerMethodField()
     sector = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
             'created', 'deadline', 'is_applied', 'is_saved', 'user', 'vendor',
-            'status', 'address'
+            'status', 'address', 'company', 'company_logo'
         ]
+        
+    def get_company_logo(self, obj):
+        if obj.company_logo:
+            return {'id':str(obj.company_logo.id), 'path':obj.company_logo.file_path.url}
+        return None
 
     def get_tender_category(self, obj):
         """
@@ -262,6 +268,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
     tender_type = serializers.SerializerMethodField()
     is_editable = serializers.SerializerMethodField()
     application = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
 
     class Meta:
         model = TenderDetails
@@ -269,10 +276,14 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'tender_id', 'budget_currency', 'budget_amount', 'description',
             'country', 'city', 'tag', 'tender_category', 'tender_type', 'sector', 'deadline',
             'start_date', 'status', 'user', 'attachments', 'created', 'vendor',
-            'is_applied', 'is_saved', 'is_editable', 'application', 'address'
+            'is_applied', 'is_saved', 'is_editable', 'application', 'address', 'company', 'company_logo'
 
         ]
-
+    def get_company_logo(self, obj):
+        if obj.company_logo:
+            return {'id':str(obj.company_logo.id), 'path':obj.company_logo.file_path.url}
+        return None
+    
     def get_country(self, obj):
         """Get the serialized country data for a TenderDetails object.
 

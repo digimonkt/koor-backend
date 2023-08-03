@@ -91,7 +91,8 @@ urlpatterns = [
     path('/opportunity-type/<str:opportunityId>', OpportunityTypeView.as_view(), name="opportunity_type"),
     
     path('/tender', TenderListView.as_view(), name="tender_list"),
-    path('/tender/create/<str:employerId>', TenderCreateView.as_view(), name="tender_create"),
+    path('/tender/create', TenderCreateView.as_view(), name="tender_create"),
+    path('/tender/create/<str:tenderId>', TenderCreateView.as_view(), name="tender_create"),
     path('/tender/<str:tenderId>', TenderListView.as_view(), name="tender_list"),
     path('/tender/<str:tenderId>/revert', TenderRevertView.as_view(), name="tender_revert"),
     
