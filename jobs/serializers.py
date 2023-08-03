@@ -273,6 +273,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
     is_rejected = serializers.SerializerMethodField()
     is_saved = serializers.SerializerMethodField()
     interview_at = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -280,8 +281,14 @@ class GetJobsSerializers(serializers.ModelSerializer):
             'id', 'title', 'description', 'budget_currency', 'budget_amount',
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
             'has_contract', 'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date',
-            'created', 'is_applied', 'is_saved', 'is_shortlisted', 'is_rejected', 'interview_at', 'user'
+            'created', 'is_applied', 'is_saved', 'is_shortlisted', 'is_rejected', 'interview_at', 'user',
+            'company', 'company_logo'
         ]
+
+    def get_company_logo(self, obj):
+        if obj.company_logo:
+            return {'id':str(obj.company_logo.id), 'path':obj.company_logo.file_path.url}
+        return None
 
     def get_country(self, obj):
         """
@@ -526,6 +533,7 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
     is_rejected = serializers.SerializerMethodField()
     is_shortlisted = serializers.SerializerMethodField()
     interview_at = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
@@ -536,10 +544,14 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'highest_education', 'language', 'skill', 'duration', 'experience', 'status', 
             'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
             'is_applied', 'application', 'is_saved', 'is_editable', 'is_rejected', 
-            'is_shortlisted', 'interview_at'
+            'is_shortlisted', 'interview_at', 'company', 'company_logo'
 
         ]
-
+    def get_company_logo(self, obj):
+        if obj.company_logo:
+            return {'id':str(obj.company_logo.id), 'path':obj.company_logo.file_path.url}
+        return None
+    
     def get_country(self, obj):
         """Get the serialized country data for a JobDetails object.
 
