@@ -437,7 +437,9 @@ class JobListSerializers(serializers.ModelSerializer):
         return context
 
     def get_user(self, obj):
-        return obj.user.name
+        if obj.user:
+            return obj.user.name
+        return None
 
 
 class UserCountSerializers(serializers.Serializer):
