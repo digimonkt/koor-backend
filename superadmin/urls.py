@@ -61,7 +61,7 @@ urlpatterns = [
     path('/user/<str:userId>', UserView.as_view(), name="user"),
 
     path('/jobs', JobsListView.as_view(), name="jobs_list"),
-    path('/jobs/create/<str:employerId>', JobsCreateView.as_view(), name="jobs_create"),
+    path('/jobs/create', JobsCreateView.as_view(), name="jobs_create"),
     path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_revert"),
 

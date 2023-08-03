@@ -386,12 +386,20 @@ class JobListSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    company_logo = serializers.SerializerMethodField()
 
     class Meta:
         model = JobDetails
-        fields = ['id', 'job_id', 'title', 'address', 'city', 'country', 'status', 'user']
+        fields = [
+            'id', 'job_id', 'title', 'address', 'city', 'country', 
+            'status', 'user', 'company', 'company_logo'
+        ]
         read_only_fields = ['id']
-
+    def get_company_logo(self, obj):
+        if obj.company_logo:
+            return {'id':str(obj.company_logo.id), 'path':obj.company_logo.file_path.url}
+        return None
+    
     def get_country(self, obj):
         """
         Retrieves the serialized data for the country related to a JobDetails object.
@@ -1491,6 +1499,12 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         allow_null=False,
         required=False
     )
+    company_logo_item = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
 
     class Meta:
         model = JobDetails
@@ -1498,7 +1512,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'duration', 'experience', 'attachments', 'deadline', 'start_date'
+            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'company_logo_item'
         ]
 
     def validate_job_category(self, job_category):
@@ -1635,9 +1649,12 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         """
         language = None
         attachments = None
+        company_logo_item = None
 
         if 'language' in self.validated_data:
             language = self.validated_data.pop('language')
+        if 'company_logo_item' in self.validated_data:
+            company_logo_item = self.validated_data.pop('company_logo_item')
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         job_instance = super().save(user=user, status='active', post_by_admin=True)
@@ -1666,6 +1683,21 @@ class CreateJobsSerializers(serializers.ModelSerializer):
                 # save media instance into license id file into employer profile table.
                 attachments_instance = JobAttachmentsItem.objects.create(job=job_instance, attachment=media_instance)
                 attachments_instance.save()
+        
+        if company_logo_item:
+            # Get media type from upload license file
+            content_type = str(company_logo_item.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=company_logo_item.name,
+                                   file_path=company_logo_item, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            job_instance.company_logo = media_instance
+            job_instance.save()
         return self
 
 

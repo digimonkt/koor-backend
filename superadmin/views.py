@@ -4954,7 +4954,7 @@ class JobsCreateView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-    def post(self, request, employerId):
+    def post(self, request):
         """
         Create a new job post for an employer.
 
@@ -4970,29 +4970,37 @@ class JobsCreateView(generics.ListAPIView):
         """
         context = {}
         try:
-            serializer = CreateJobsSerializers(data=request.data)
-            user_instance = User.objects.get(id=employerId)
-            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
-            point_data = PointDetection.objects.first()
+            user_instance = None
+            if 'employer_id' in request.data:
+                employerId = request.data['employer_id']
+                serializer = CreateJobsSerializers(data=request.data)
+                user_instance = User.objects.get(id=employerId)
+                employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+                point_data = PointDetection.objects.first()
+                if user_instance.role == "employer" and employer_profile_instance.is_verified:
+                    serializer.is_valid(raise_exception=True)
+                    if employer_profile_instance.points < point_data.points:
+                        context["message"] = "You do not have enough points to create a new job."
+                        return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
-            if user_instance.role == "employer" and employer_profile_instance.is_verified:
-                serializer.is_valid(raise_exception=True)
-                if employer_profile_instance.points < point_data.points:
-                    context["message"] = "You do not have enough points to create a new job."
-                    return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+                    serializer.save(user_instance)
+                    remaining_points = employer_profile_instance.points - point_data.points
+                    employer_profile_instance.points = remaining_points
+                    employer_profile_instance.save()
 
-                serializer.save(user_instance)
-                remaining_points = employer_profile_instance.points - point_data.points
-                employer_profile_instance.points = remaining_points
-                employer_profile_instance.save()
-
-                context["message"] = "Job added successfully."
-                context["remaining_points"] = remaining_points
-                request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
-                return response.Response(data=context, status=status.HTTP_201_CREATED)
+                    context["message"] = "Job added successfully."
+                    context["remaining_points"] = remaining_points
+                    request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+                    return response.Response(data=context, status=status.HTTP_201_CREATED)
+                else:
+                    context['message'] = "You do not have permission to perform this action."
+                    return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+                serializer = CreateJobsSerializers(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user_instance)
+                context["message"] = "Job added successfully."
+                return response.Response(data=context, status=status.HTTP_201_CREATED)
             return response.Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return response.Response(
