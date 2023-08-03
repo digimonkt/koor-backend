@@ -777,9 +777,9 @@ class JobsApplyView(generics.ListAPIView):
         context = dict()
         if request.user.role == "job_seeker":
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    if AppliedJob.objects.get(job=job_instace, user=request.user):
+                    if AppliedJob.objects.get(job=job_instance, user=request.user):
                         context["message"] = "You are already applied"
                         return response.Response(
                             data=context,
@@ -789,7 +789,7 @@ class JobsApplyView(generics.ListAPIView):
                     serializer = AppliedJobSerializers(data=request.data)
                     try:
                         serializer.is_valid(raise_exception=True)
-                        serializer.save(user=request.user, job_instace=job_instace)
+                        serializer.save(user=request.user, job_instance=job_instance)
                         context["message"] = "Applied Successfully"
                         return response.Response(
                             data=context,
@@ -848,9 +848,9 @@ class JobsApplyView(generics.ListAPIView):
         if self.request.user.role == "job_seeker":
             serializer = UpdateAppliedJobSerializers(data=request.data)
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    applied_job = AppliedJob.objects.get(job=job_instace, user=request.user)
+                    applied_job = AppliedJob.objects.get(job=job_instance, user=request.user)
                     if applied_job.shortlisted_at or applied_job.rejected_at or applied_job.created.date() < date.today():
                         context['message'] = "You cannot update this applied job"
                         return response.Response(
@@ -907,9 +907,9 @@ class JobsApplyView(generics.ListAPIView):
         if request.user.role == "job_seeker":
             # print(timezone.now())
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    applied_job = AppliedJob.all_objects.get(job=job_instace, user=request.user)
+                    applied_job = AppliedJob.all_objects.get(job=job_instance, user=request.user)
                     if applied_job.shortlisted_at or applied_job.rejected_at or applied_job.created.date() < date.today():
                         context['message'] = "You cannot revoke this applied job"
                     else:
@@ -1066,9 +1066,9 @@ class JobsSaveView(generics.ListAPIView):
         context = dict()
         if request.user.role == "job_seeker":
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    if SavedJob.objects.get(job=job_instace, user=request.user):
+                    if SavedJob.objects.get(job=job_instance, user=request.user):
                         context["message"] = "You are already saved"
                         return response.Response(
                             data=context,
@@ -1078,7 +1078,7 @@ class JobsSaveView(generics.ListAPIView):
                     serializer = SavedJobSerializers(data=request.data)
                     try:
                         serializer.is_valid(raise_exception=True)
-                        serializer.save(user=request.user, job_instace=job_instace)
+                        serializer.save(user=request.user, job_instance=job_instance)
                         context["message"] = "Saved Successfully"
                         return response.Response(
                             data=context,
@@ -1121,9 +1121,9 @@ class JobsSaveView(generics.ListAPIView):
         context = dict()
         if request.user.role == "job_seeker":
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    SavedJob.all_objects.get(job=job_instace, user=request.user).delete(soft=False)
+                    SavedJob.all_objects.get(job=job_instance, user=request.user).delete(soft=False)
                     context['message'] = "Job Unsaved"
                     return response.Response(
                         data=context,
