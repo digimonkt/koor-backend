@@ -351,11 +351,39 @@ class AppliedJobSerializers(serializers.ModelSerializer):
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         applied_job_instance = super().save(user=user, job=job_instance)
-        if job_instance.user.get_notification:
-            Notification.objects.create(
-                user=job_instance.user, application=applied_job_instance,
-                notification_type='applied', created_by=user
-            )
+        if job_instance.user:
+            if job_instance.user.get_notification:
+                Notification.objects.create(
+                    user=job_instance.user, application=applied_job_instance,
+                    notification_type='applied', created_by=user
+                )
+                user_email = []
+                if job_instance.user.email:
+                    user_email.append(job_instance.user.email)
+                if job_instance.contact_email:
+                    user_email.append(job_instance.contact_email)
+                if job_instance.cc1:
+                    user_email.append(job_instance.cc1)
+                if job_instance.cc2:
+                    user_email.append(job_instance.cc2)
+                if user_email:
+                    email_context = dict()
+                    if job_instance.user.name:
+                        user_name = job_instance.user.name
+                    elif job_instance.company:
+                        user_name = job_instance.company
+                    else:
+                        user_name = user_email[0]
+                    email_context["yourname"] = user_name
+                    email_context["notification_type"] = "applied job"
+                    email_context["job_instance"] = job_instance
+                    get_email_object(
+                        subject=f'Notification for applied job',
+                        email_template_name='email-templates/send-notification.html',
+                        context=email_context,
+                        to_email=user_email
+                    )
+        else:
             user_email = []
             if job_instance.user.email:
                 user_email.append(job_instance.user.email)
