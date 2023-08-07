@@ -385,8 +385,9 @@ class AppliedJobSerializers(serializers.ModelSerializer):
                     )
         else:
             user_email = []
-            if job_instance.user.email:
-                user_email.append(job_instance.user.email)
+            if job_instance.user:
+                if job_instance.user.email:
+                    user_email.append(job_instance.user.email)
             if job_instance.contact_email:
                 user_email.append(job_instance.contact_email)
             if job_instance.cc1:
@@ -395,8 +396,11 @@ class AppliedJobSerializers(serializers.ModelSerializer):
                 user_email.append(job_instance.cc2)
             if user_email:
                 email_context = dict()
-                if job_instance.user.name:
-                    user_name = job_instance.user.name
+                if job_instance.user:
+                    if job_instance.user.name:
+                        user_name = job_instance.user.name
+                    else:
+                        user_name = user_email[0]
                 elif job_instance.company:
                     user_name = job_instance.company
                 else:
