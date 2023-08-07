@@ -409,11 +409,13 @@ class AppliedJobSerializers(serializers.ModelSerializer):
                 else:
                     user_name = user_email[0]
                 email_context["yourname"] = user_name
+                email_context["username"] = user
+                email_context["resume_link"] = Common.BASE_URL  + "api/v1/users/job-seeker/resume/user-id?user-id=" + str(user.id)
                 email_context["notification_type"] = "applied job"
                 email_context["job_instance"] = job_instance
                 get_email_object(
                     subject=f'Notification for applied job',
-                    email_template_name='email-templates/send-notification.html',
+                    email_template_name='email-templates/mail-for-apply-job.html',
                     context=email_context,
                     to_email=user_email
                 )
