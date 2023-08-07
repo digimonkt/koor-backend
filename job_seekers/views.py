@@ -4,7 +4,7 @@ from datetime import date
 
 from bs4 import BeautifulSoup
 from django.db.models import Exists, OuterRef
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from docx import Document
@@ -1443,7 +1443,7 @@ class ResumeView(generics.GenericAPIView):
         response_context = dict()
         if self.request.user.role == "job_seeker":
             profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
-            downloaded_file = download_word_document(request)
+            downloaded_file = download_word_document(request, profile_instance)
             return response.Response(
                 data={"url": "/media/" + downloaded_file},
                 status=status.HTTP_200_OK
@@ -1640,8 +1640,7 @@ def add_content_to_document(element, doc, processed_elements):
             add_content_to_document(child, doc, processed_elements)
 
 
-def download_word_document(request):
-    profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+def download_word_document(request, profile_instance):
     sills_data = JobSeekerSkill.objects.filter(user=profile_instance.user)
     education_data = EducationRecord.objects.filter(user=profile_instance.user)
     employment_data = EmploymentRecord.objects.filter(user=profile_instance.user)
@@ -1689,3 +1688,18 @@ def download_word_document(request):
     response.write(output_buffer.getvalue())
 
     return file_name
+
+
+class ResumeUseridView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+
+        response_context = dict()
+        downloaded_file = ""
+        if 'user-id' in request.GET:
+            profile_instance = get_object_or_404(JobSeekerProfile, user__id=request.GET['user-id'])
+            downloaded_file = download_word_document(request, profile_instance)
+            
+        return HttpResponseRedirect(Common.BASE_URL + "/media/" + downloaded_file)
