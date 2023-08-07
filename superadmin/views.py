@@ -1826,10 +1826,16 @@ class JobsListView(generics.ListAPIView):
                         location = "None"
                         if rows.city:
                             location = str(rows.city) + ", " + str(rows.country)
+                        if rows.user:
+                            user_name = str(rows.user.name)
+                        elif rows.company:
+                            user_name = str(rows.company)
+                        else:
+                            user_name = ""
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.job_id), str(rows.title),
-                                str(rows.user.name), location, str(rows.created.date())
+                                str(user_name), location, str(rows.created.date())
                             ]
                         )
                 return response.Response(
@@ -3280,10 +3286,16 @@ class TenderListView(generics.ListAPIView):
                                     sector = sector + ", " + str(data.title)
                                 else:
                                     sector = str(data.title)
+                        if rows.user:
+                            user_name = str(rows.user.name)
+                        elif rows.company:
+                            user_name = str(rows.company)
+                        else:
+                            user_name = ""
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.tender_id), str(rows.title),
-                                str(rows.user.name), tag, tender_category, tender_type,
+                                str(user_name), tag, tender_category, tender_type,
                                 sector, location, str(rows.created.date())
                             ]
                         )
