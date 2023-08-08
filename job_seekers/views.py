@@ -721,7 +721,7 @@ class JobsApplyView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['job__title']
     pagination_class = CustomPagination
 
     def list(self, request):
