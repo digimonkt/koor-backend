@@ -255,10 +255,10 @@ class ChatConsumer(BaseConsumer):
         related_objects = [self.get_user()]  # Replace with your own objects
         chat_message.read_by.add(*related_objects)
         print(self.conversation)
-        message = str(self.get_user().name) + ' is send you a message ' + str(content.get("message", ""))
+        message = str(self.get_user().name) + ' is send you a message : ' + str(content.get("message", "")[:10])
         for chat_user in self.conversation.chat_user.all():
             print(chat_user)
-            # if chat_user != self.get_user() and chat_user.is_online == False:
+            # if chat_user != self.get_user() and chat_user.is_online == False
             if chat_user != self.get_user():
                 Notification.objects.create(
                     user=chat_user, notification_type='message', message=message
