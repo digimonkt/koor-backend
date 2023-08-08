@@ -4,13 +4,13 @@ from datetime import date
 
 from bs4 import BeautifulSoup
 from django.db.models import Exists, OuterRef
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from docx import Document
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml import OxmlElement
-from docx.shared import Pt, RGBColor
+from docx.shared import Pt, RGBColor, Cm
 from rest_framework import (
     generics, response, status,
     permissions, serializers, filters
@@ -721,7 +721,7 @@ class JobsApplyView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     queryset = None
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title']
+    search_fields = ['job__title']
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -777,9 +777,9 @@ class JobsApplyView(generics.ListAPIView):
         context = dict()
         if request.user.role == "job_seeker":
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    if AppliedJob.objects.get(job=job_instace, user=request.user):
+                    if AppliedJob.objects.get(job=job_instance, user=request.user):
                         context["message"] = "You are already applied"
                         return response.Response(
                             data=context,
@@ -789,7 +789,7 @@ class JobsApplyView(generics.ListAPIView):
                     serializer = AppliedJobSerializers(data=request.data)
                     try:
                         serializer.is_valid(raise_exception=True)
-                        serializer.save(user=request.user, job_instace=job_instace)
+                        serializer.save(user=request.user, job_instance=job_instance)
                         context["message"] = "Applied Successfully"
                         return response.Response(
                             data=context,
@@ -848,9 +848,9 @@ class JobsApplyView(generics.ListAPIView):
         if self.request.user.role == "job_seeker":
             serializer = UpdateAppliedJobSerializers(data=request.data)
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    applied_job = AppliedJob.objects.get(job=job_instace, user=request.user)
+                    applied_job = AppliedJob.objects.get(job=job_instance, user=request.user)
                     if applied_job.shortlisted_at or applied_job.rejected_at or applied_job.created.date() < date.today():
                         context['message'] = "You cannot update this applied job"
                         return response.Response(
@@ -907,9 +907,9 @@ class JobsApplyView(generics.ListAPIView):
         if request.user.role == "job_seeker":
             # print(timezone.now())
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    applied_job = AppliedJob.all_objects.get(job=job_instace, user=request.user)
+                    applied_job = AppliedJob.all_objects.get(job=job_instance, user=request.user)
                     if applied_job.shortlisted_at or applied_job.rejected_at or applied_job.created.date() < date.today():
                         context['message'] = "You cannot revoke this applied job"
                     else:
@@ -1066,9 +1066,9 @@ class JobsSaveView(generics.ListAPIView):
         context = dict()
         if request.user.role == "job_seeker":
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    if SavedJob.objects.get(job=job_instace, user=request.user):
+                    if SavedJob.objects.get(job=job_instance, user=request.user):
                         context["message"] = "You are already saved"
                         return response.Response(
                             data=context,
@@ -1078,7 +1078,7 @@ class JobsSaveView(generics.ListAPIView):
                     serializer = SavedJobSerializers(data=request.data)
                     try:
                         serializer.is_valid(raise_exception=True)
-                        serializer.save(user=request.user, job_instace=job_instace)
+                        serializer.save(user=request.user, job_instance=job_instance)
                         context["message"] = "Saved Successfully"
                         return response.Response(
                             data=context,
@@ -1121,9 +1121,9 @@ class JobsSaveView(generics.ListAPIView):
         context = dict()
         if request.user.role == "job_seeker":
             try:
-                job_instace = JobDetails.objects.get(id=jobId)
+                job_instance = JobDetails.objects.get(id=jobId)
                 try:
-                    SavedJob.all_objects.get(job=job_instace, user=request.user).delete(soft=False)
+                    SavedJob.all_objects.get(job=job_instance, user=request.user).delete(soft=False)
                     context['message'] = "Job Unsaved"
                     return response.Response(
                         data=context,
@@ -1443,7 +1443,7 @@ class ResumeView(generics.GenericAPIView):
         response_context = dict()
         if self.request.user.role == "job_seeker":
             profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
-            downloaded_file = download_word_document(request)
+            downloaded_file = download_word_document(request, profile_instance)
             return response.Response(
                 data={"url": "/media/" + downloaded_file},
                 status=status.HTTP_200_OK
@@ -1550,11 +1550,16 @@ def add_content_to_document(element, doc, processed_elements):
         font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
 
     elif element.name == 'li':
+        
         # Create a new paragraph for <h4> tag
-        paragraph = doc.add_paragraph('', style='List Bullet')
-        run = paragraph.add_run(element.text)
+        paragraph = doc.add_paragraph(style='List Bullet')
+        
+        # Set a custom paragraph indentation to position the text after the bullet
+        paragraph.paragraph_format.left_indent = Cm(1.5)
+
+        run = paragraph.add_run(element.text)  # Add the text
         font = run.font
-        font.size = Pt(11)  # Set the font size to 14pt (adjust as needed)
+        font.size = Pt(11)  # Set the font size of the text (adjust as needed)
 
     elif element.name == 'hr':
         # Handle <hr> tag, add a horizontal line
@@ -1635,8 +1640,7 @@ def add_content_to_document(element, doc, processed_elements):
             add_content_to_document(child, doc, processed_elements)
 
 
-def download_word_document(request):
-    profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+def download_word_document(request, profile_instance):
     sills_data = JobSeekerSkill.objects.filter(user=profile_instance.user)
     education_data = EducationRecord.objects.filter(user=profile_instance.user)
     employment_data = EmploymentRecord.objects.filter(user=profile_instance.user)
@@ -1684,3 +1688,18 @@ def download_word_document(request):
     response.write(output_buffer.getvalue())
 
     return file_name
+
+
+class ResumeUseridView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+
+        response_context = dict()
+        downloaded_file = ""
+        if 'user-id' in request.GET:
+            profile_instance = get_object_or_404(JobSeekerProfile, user__id=request.GET['user-id'])
+            downloaded_file = download_word_document(request, profile_instance)
+            
+        return HttpResponseRedirect(Common.BASE_URL + "/media/" + downloaded_file)

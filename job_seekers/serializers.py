@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from core.emails import get_email_object
+from koor.config.common import Common
 
 from jobs.models import JobDetails, JobSubCategory, JobCategory
 from project_meta.models import (
@@ -320,7 +321,7 @@ class AppliedJobSerializers(serializers.ModelSerializer):
         model = AppliedJob
         fields = ['id', 'attachments', 'short_letter']
 
-    def save(self, user, job_instace):
+    def save(self, user, job_instance):
         """Saves a new instance of the AppliedJob model with the given user and job instance, and saves any attachments
         to the job application.
 
@@ -350,28 +351,74 @@ class AppliedJobSerializers(serializers.ModelSerializer):
         attachments = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
-        applied_job_instance = super().save(user=user, job=job_instace)
-        if job_instace.user.get_notification:
-            Notification.objects.create(
-                user=job_instace.user, application=applied_job_instance,
-                notification_type='applied', created_by=user
-            )
-            if job_instace.user.email:
-                email_context = dict()
-                if job_instace.user.name:
-                    user_name = job_instace.user.name
-                else:
-                    user_name = job_instace.user.email
-                email_context["yourname"] = user_name
-                email_context["notification_type"] = "applied job"
-                email_context["job_instance"] = job_instace
-                if job_instace.user.get_email:
+        applied_job_instance = super().save(user=user, job=job_instance)
+        if job_instance.user:
+            if job_instance.user.get_notification:
+                Notification.objects.create(
+                    user=job_instance.user, application=applied_job_instance,
+                    notification_type='applied', created_by=user
+                )
+                user_email = []
+                if job_instance.user.email:
+                    user_email.append(job_instance.user.email)
+                if job_instance.contact_email:
+                    user_email.append(job_instance.contact_email)
+                if job_instance.cc1:
+                    user_email.append(job_instance.cc1)
+                if job_instance.cc2:
+                    user_email.append(job_instance.cc2)
+                if user_email:
+                    email_context = dict()
+                    if job_instance.user.name:
+                        user_name = job_instance.user.name
+                    elif job_instance.company:
+                        user_name = job_instance.company
+                    else:
+                        user_name = user_email[0]
+                    email_context["yourname"] = user_name
+                    email_context["username"] = user
+                    email_context["resume_link"] = Common.BASE_URL  + "api/v1/users/job-seeker/resume/user-id?user-id=" + str(user.id)
+                    email_context["notification_type"] = "applied job"
+                    email_context["job_instance"] = job_instance
                     get_email_object(
                         subject=f'Notification for applied job',
-                        email_template_name='email-templates/send-notification.html',
+                        email_template_name='email-templates/mail-for-apply-job.html',
                         context=email_context,
-                        to_email=[job_instace.user.email, ]
+                        to_email=user_email
                     )
+        else:
+            user_email = []
+            if job_instance.user:
+                if job_instance.user.email:
+                    user_email.append(job_instance.user.email)
+            if job_instance.contact_email:
+                user_email.append(job_instance.contact_email)
+            if job_instance.cc1:
+                user_email.append(job_instance.cc1)
+            if job_instance.cc2:
+                user_email.append(job_instance.cc2)
+            if user_email:
+                email_context = dict()
+                if job_instance.user:
+                    if job_instance.user.name:
+                        user_name = job_instance.user.name
+                    else:
+                        user_name = user_email[0]
+                elif job_instance.company:
+                    user_name = job_instance.company
+                else:
+                    user_name = user_email[0]
+                email_context["yourname"] = user_name
+                email_context["username"] = user
+                email_context["resume_link"] = Common.BASE_URL  + "/api/v1/users/job-seeker/resume/user-id?user-id=" + str(user.id)
+                email_context["notification_type"] = "applied job"
+                email_context["job_instance"] = job_instance
+                get_email_object(
+                    subject=f'Notification for applied job',
+                    email_template_name='email-templates/mail-for-apply-job.html',
+                    context=email_context,
+                    to_email=user_email
+                )
         if attachments:
             for attachment in attachments:
                 content_type = str(attachment.content_type).split("/")
@@ -475,7 +522,7 @@ class SavedJobSerializers(serializers.ModelSerializer):
         model = SavedJob
         fields = ['id', ]
 
-    def save(self, user, job_instace):
+    def save(self, user, job_instance):
         """Saves a new instance of the SavedJob model with the given user and job instance.
 
         Args:
@@ -498,7 +545,7 @@ class SavedJobSerializers(serializers.ModelSerializer):
             SavedJobSerializers.
 
         """
-        super().save(user=user, job=job_instace)
+        super().save(user=user, job=job_instance)
         return self
 
 

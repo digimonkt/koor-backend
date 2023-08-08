@@ -4,7 +4,7 @@ from .views import (
     UpdateAboutView, EducationsView, LanguageView,
     WorkExperiencesView, SkillsView, JobsApplyView,
     JobsSaveView, UpdateJobPreferencesView, AdditionalParameterView,
-    CategoryView, ResumeView
+    CategoryView, ResumeView, ResumeUseridView
 )
 
 app_name = "job_seekers"
@@ -37,4 +37,6 @@ urlpatterns = [
     path('/category', CategoryView.as_view(), name="category"),
     
     path('/resume', ResumeView.as_view(), name="resume"),
+    
+    path('/resume/user-id', ResumeUseridView.as_view(), name='download_word_document')
 ]

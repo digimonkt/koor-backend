@@ -8,6 +8,8 @@ from django.db.models import Q, F
 from project_meta.models import Media
 from users.models import UserSession, User
 
+from notification.models import Notification
+
 from .models import Conversation, ChatMessage
 from .serializers import ChatMessageSerializer, ConversationSerializer
 
@@ -143,7 +145,6 @@ class ChatConsumer(BaseConsumer):
             user_id = chat_url.split('user_id=')[1].split('&')[0]
         elif '&user_id=' in chat_url:
             user_id = chat_url.split('&user_id=')[1].split('&')[0]
-
         if user_id:
             user_instance = User.objects.get(id=user_id)
             if self.scope["user"] != user_instance:
@@ -172,25 +173,31 @@ class ChatConsumer(BaseConsumer):
         if user.is_anonymous:
             self.close()
         else:
-            conversation = Conversation.objects.create()
-            conversation.chat_user.add(self.scope["user"], user_instance)
-            conversation.save()
-
             # Assuming you have a list of related objects you want to add
             related_objects = [user]  # Replace with your own objects
-            ChatMessage.objects.filter(conversation=self.conversation).update(
-                read_by=F('read_by') | set(related_objects))
+            conversation = self.conversation
 
+            # Fetch the ChatMessage objects related to the conversation
+            chat_messages = ChatMessage.objects.filter(conversation=conversation)
+
+            # Add the related_objects to the read_by ManyToManyField for each ChatMessage
+            for chat_message in chat_messages:
+                chat_message.read_by.add(*related_objects)
+                
             async_to_sync(self.channel_layer.group_add)(
                 self.conversation_group_name,
                 self.channel_name
             )
+            self.scope["user"].is_online = True
+            self.scope["user"].save()
             self.accept()
 
     def disconnect(self, close_code):
         """
         Disconnects the consumer from the WebSocket.
         """
+        self.scope["user"].is_online = False
+        self.scope["user"].save()
         self.channel_layer.group_discard(
             self.conversation_group_name,
             self.channel_name
@@ -247,6 +254,16 @@ class ChatConsumer(BaseConsumer):
         # Assuming you have a list of related objects you want to add
         related_objects = [self.get_user()]  # Replace with your own objects
         chat_message.read_by.add(*related_objects)
+        print(self.conversation)
+        message = str(self.get_user().name) + ' is send you a message ' + str(content.get("message", ""))
+        for chat_user in self.conversation.chat_user.all():
+            print(chat_user)
+            # if chat_user != self.get_user() and chat_user.is_online == False:
+            if chat_user != self.get_user():
+                Notification.objects.create(
+                    user=chat_user, notification_type='message', message=message
+                )
+
         if content_type != "text":
             media_id = content.get("message_attachment").get("id")
             media = Media.objects.get(id=media_id)
@@ -287,12 +304,16 @@ class ChatActivityConsumer(BaseConsumer):
             self.chat_group_name,
             self.channel_name
         )
+        self.scope["user"].is_online = True
+        self.scope["user"].save()
         self.accept()
 
     def disconnect(self, close_code):
         """
         Disconnects the consumer from the chat group.
         """
+        self.scope["user"].is_online = False
+        self.scope["user"].save()
         self.channel_layer.group_discard(
             self.chat_group_name,
             self.channel_name
@@ -351,12 +372,16 @@ class NotificationConsumer(BaseConsumer):
             self.chat_group_name,
             self.channel_name
         )
+        self.scope["user"].is_online = True
+        self.scope["user"].save()
         self.accept()
 
     def disconnect(self, close_code):
         """
         Disconnects the consumer from the chat group.
         """
+        self.scope["user"].is_online = False
+        self.scope["user"].save()
         self.channel_layer.group_discard(
             self.chat_group_name,
             self.channel_name

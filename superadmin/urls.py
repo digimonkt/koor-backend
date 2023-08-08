@@ -15,7 +15,7 @@ from .views import (
     FaqView, ResourcesDetailView, UploadLogo,
     TestimonialView, NewsletterUserView, SetPointsView,
     TestimonialDetailView, JobsCreateView, TenderCreateView,
-    InvoiceView, InvoiceDetailView
+    InvoiceView, InvoiceDetailView, PackageView
 )
 
 app_name = "superadmin"
@@ -61,7 +61,8 @@ urlpatterns = [
     path('/user/<str:userId>', UserView.as_view(), name="user"),
 
     path('/jobs', JobsListView.as_view(), name="jobs_list"),
-    path('/jobs/create/<str:employerId>', JobsCreateView.as_view(), name="jobs_create"),
+    path('/jobs/create', JobsCreateView.as_view(), name="jobs_create"),
+    path('/jobs/create/<str:jobId>', JobsCreateView.as_view(), name="jobs_create"),
     path('/jobs/<str:jobId>', JobsListView.as_view(), name="jobs_list"),
     path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_revert"),
 
@@ -90,7 +91,8 @@ urlpatterns = [
     path('/opportunity-type/<str:opportunityId>', OpportunityTypeView.as_view(), name="opportunity_type"),
     
     path('/tender', TenderListView.as_view(), name="tender_list"),
-    path('/tender/create/<str:employerId>', TenderCreateView.as_view(), name="tender_create"),
+    path('/tender/create', TenderCreateView.as_view(), name="tender_create"),
+    path('/tender/create/<str:tenderId>', TenderCreateView.as_view(), name="tender_create"),
     path('/tender/<str:tenderId>', TenderListView.as_view(), name="tender_list"),
     path('/tender/<str:tenderId>/revert', TenderRevertView.as_view(), name="tender_revert"),
     
@@ -118,4 +120,6 @@ urlpatterns = [
     path('/invoice', InvoiceView.as_view(), name="invoice"),
     path('/invoice-detail/<str:invoiceId>', InvoiceDetailView.as_view(), name="invoice_detail"),
     path('/invoice/<str:invoiceId>', InvoiceView.as_view(), name="invoice"),
+    
+    path('/package', PackageView.as_view(), name="package"),
 ]

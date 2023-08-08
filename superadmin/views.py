@@ -13,6 +13,7 @@ from rest_framework import (
     status, generics, serializers,
     response, permissions, filters
 )
+from uuid import UUID
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
@@ -36,12 +37,12 @@ from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
 
-from .filters import PointInvoiceDetailsFilter
+from .filters import RechargeHistoryDetailsFilter
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    PointInvoice
+    RechargeHistory, Packages
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -58,9 +59,10 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    PointInvoiceSerializers
+    RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers,
+    UpdateTenderSerializers
 )
-
+from .seeds import run_seed
 
 class CountryView(generics.ListAPIView):
     """
@@ -1692,10 +1694,6 @@ class EmployerListView(generics.ListAPIView):
             NotFound: If the employer profile with the specified ID doesn't exist.
             BadRequest: If any other exception occurs during the process.
         """
-        if not self.request.user.is_staff:
-            context = {'message': "You do not have permission to perform this action."}
-            return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
-
         try:
             employer_instance = EmployerProfile.objects.get(user_id=employerId)
         except EmployerProfile.DoesNotExist:
@@ -1703,6 +1701,9 @@ class EmployerListView(generics.ListAPIView):
 
         context = {'message': ''}
         if action == 'verify':
+            if not self.request.user.is_staff:
+                context = {'message': "You do not have permission to perform this action."}
+                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             if employer_instance.is_verified:
                 context['message'] = "Employer is already verified"
             else:
@@ -1710,6 +1711,9 @@ class EmployerListView(generics.ListAPIView):
                 employer_instance.save()
                 context['message'] = "Employer verified."
         elif action == 'unverify':
+            if not self.request.user.is_staff:
+                context = {'message': "You do not have permission to perform this action."}
+                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             if not employer_instance.is_verified:
                 context['message'] = "Employer is not verified"
             else:
@@ -1719,10 +1723,11 @@ class EmployerListView(generics.ListAPIView):
         elif action == 'recharge':
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
-            PointInvoice.objects.create(
+            RechargeHistory.objects.create(
                 user=employer_instance.user, 
                 points=int(request.data.get('points', 0)),
-                amount=0
+                amount=int(request.data.get('amount', 0)),
+                note=request.data.get('note', '')
                 )
             context['message'] = "Point credited."
         else:
@@ -1821,10 +1826,16 @@ class JobsListView(generics.ListAPIView):
                         location = "None"
                         if rows.city:
                             location = str(rows.city) + ", " + str(rows.country)
+                        if rows.user:
+                            user_name = str(rows.user.name)
+                        elif rows.company:
+                            user_name = str(rows.company)
+                        else:
+                            user_name = ""
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.job_id), str(rows.title),
-                                str(rows.user.name), location, str(rows.created.date())
+                                str(user_name), location, str(rows.created.date())
                             ]
                         )
                 return response.Response(
@@ -3275,10 +3286,16 @@ class TenderListView(generics.ListAPIView):
                                     sector = sector + ", " + str(data.title)
                                 else:
                                     sector = str(data.title)
+                        if rows.user:
+                            user_name = str(rows.user.name)
+                        elif rows.company:
+                            user_name = str(rows.company)
+                        else:
+                            user_name = ""
                         file_writer.writerow(
                             [
                                 str(counter + 1), str(rows.tender_id), str(rows.title),
-                                str(rows.user.name), tag, tender_category, tender_type,
+                                str(user_name), tag, tender_category, tender_type,
                                 sector, location, str(rows.created.date())
                             ]
                         )
@@ -4950,7 +4967,7 @@ class JobsCreateView(generics.ListAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-    def post(self, request, employerId):
+    def post(self, request):
         """
         Create a new job post for an employer.
 
@@ -4966,29 +4983,37 @@ class JobsCreateView(generics.ListAPIView):
         """
         context = {}
         try:
-            serializer = CreateJobsSerializers(data=request.data)
-            user_instance = User.objects.get(id=employerId)
-            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
-            point_data = PointDetection.objects.first()
+            user_instance = None
+            if 'employer_id' in request.data:
+                employerId = request.data['employer_id']
+                serializer = CreateJobsSerializers(data=request.data)
+                user_instance = User.objects.get(id=employerId)
+                employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+                point_data = PointDetection.objects.first()
+                if user_instance.role == "employer" and employer_profile_instance.is_verified:
+                    serializer.is_valid(raise_exception=True)
+                    if employer_profile_instance.points < point_data.points:
+                        context["message"] = "You do not have enough points to create a new job."
+                        return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
-            if user_instance.role == "employer" and employer_profile_instance.is_verified:
-                serializer.is_valid(raise_exception=True)
-                if employer_profile_instance.points < point_data.points:
-                    context["message"] = "You do not have enough points to create a new job."
-                    return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+                    serializer.save(user_instance)
+                    remaining_points = employer_profile_instance.points - point_data.points
+                    employer_profile_instance.points = remaining_points
+                    employer_profile_instance.save()
 
-                serializer.save(user_instance)
-                remaining_points = employer_profile_instance.points - point_data.points
-                employer_profile_instance.points = remaining_points
-                employer_profile_instance.save()
-
-                context["message"] = "Job added successfully."
-                context["remaining_points"] = remaining_points
-                request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
-                return response.Response(data=context, status=status.HTTP_201_CREATED)
+                    context["message"] = "Job added successfully."
+                    context["remaining_points"] = remaining_points
+                    request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+                    return response.Response(data=context, status=status.HTTP_201_CREATED)
+                else:
+                    context['message'] = "You do not have permission to perform this action."
+                    return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+                serializer = CreateJobsSerializers(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user_instance)
+                context["message"] = "Job added successfully."
+                return response.Response(data=context, status=status.HTTP_201_CREATED)
             return response.Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return response.Response(
@@ -5022,61 +5047,54 @@ class JobsCreateView(generics.ListAPIView):
         user_data = User.objects.get(id=user_id)
         return JobDetails.objects.filter(user=user_data)
 
-    # def put(self, request, jobId):
-    #     """
-    #     Update an existing job instance with the provided request data.
+    def put(self, request, jobId):
+        """
+        Update an existing job instance with the provided request data.
 
-    #     Args:
-    #         - `request`: An instance of the Django Request object.
+        Args:
+            - `request`: An instance of the Django Request object.
 
-    #     Returns:
-    #         An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
-    #         was updated successfully or not.
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the job instance
+            was updated successfully or not.
 
-    #     Raises:
-    #         - `Http404`: If the JobDetails instance with the provided jobId does not exist.
+        Raises:
+            - `Http404`: If the JobDetails instance with the provided jobId does not exist.
 
-    #     Notes:
-    #         This method requires a jobId to be included in the request data, and will only update the job if the
-    #         authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
-    #         used to serialize the request data and update the job instance. If the serializer is invalid or the user
-    #         does not have permission to update the job instance, an appropriate error response is returned.
-    #     """
-    #     context = dict()
-    #     try:
-    #         job_instance = JobDetails.objects.get(id=jobId)
-    #         if request.user == job_instance.user:
-    #             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
-    #             try:
-    #                 serializer.is_valid(raise_exception=True)
-    #                 if serializer.update(job_instance, serializer.validated_data):
-    #                     context['message'] = "Updated Successfully"
-    #                     return response.Response(
-    #                         data=context,
-    #                         status=status.HTTP_200_OK
-    #                     )
-    #             except serializers.ValidationError:
-    #                 return response.Response(
-    #                     data=serializer.errors,
-    #                     status=status.HTTP_400_BAD_REQUEST
-    #                 )
-    #         else:
-    #             context['message'] = "You do not have permission to perform this action."
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_401_UNAUTHORIZED
-    #             )
-    #     except JobDetails.DoesNotExist:
-    #         return response.Response(
-    #             data={"job": "Does Not Exist"},
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
-    #     except Exception as e:
-    #         context["message"] = str(e)
-    #         return response.Response(
-    #             data=context,
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
+        Notes:
+            This method requires a jobId to be included in the request data, and will only update the job if the
+            authenticated user matches the user associated with the job instance. The UpdateJobSerializers class is
+            used to serialize the request data and update the job instance. If the serializer is invalid or the user
+            does not have permission to update the job instance, an appropriate error response is returned.
+        """
+        context = dict()
+        try:
+            job_instance = JobDetails.objects.get(id=jobId)
+            serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(job_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"job": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class TenderCreateView(generics.ListAPIView):
@@ -5181,7 +5199,7 @@ class TenderCreateView(generics.ListAPIView):
         user_data = User.objects.get(id=user_id)
         return TenderDetails.objects.filter(user=user_data).order_by('-created')
 
-    def post(self, request, employerId):
+    def post(self, request):
         """
         Handles POST requests to create a new `TenderDetails` instance.
 
@@ -5197,24 +5215,16 @@ class TenderCreateView(generics.ListAPIView):
         """
 
         context = dict()
-        serializer = CreateTendersSerializers(data=request.data)
         try:
-            user_instance = User.objects.get(id=employerId)
-            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
-            if user_instance.role == "employer" and employer_profile_instance.is_verified:
-                serializer.is_valid(raise_exception=True)
-                serializer.save(user_instance)
-                context["message"] = "Tender added successfully."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
+            user_instance = None
+            if 'employer_id' in request.data:
+                employerId = request.data['employer_id']
+                user_instance = User.objects.get(id=employerId)
+            serializer = CreateTendersSerializers(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user_instance)
+            context["message"] = "Tender added successfully."
+            return response.Response(data=context, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
@@ -5226,72 +5236,65 @@ class TenderCreateView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    # def put(self, request, tendersId):
-    #     """
-    #     Update an existing tender instance with the provided request data.
+    def put(self, request, tenderId):
+        """
+        Update an existing tender instance with the provided request data.
 
-    #     Args:
-    #         - `request`: An instance of the Django Request object.
+        Args:
+            - `request`: An instance of the Django Request object.
 
-    #     Returns:
-    #         An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
-    #         was updated successfully or not.
+        Returns:
+            An instance of the Django Response object with a JSON-encoded message indicating whether the tender instance
+            was updated successfully or not.
 
-    #     Raises:
-    #         - `Http404`: If the TenderDetails instance with the provided tendersId does not exist.
+        Raises:
+            - `Http404`: If the TenderDetails instance with the provided tenderId does not exist.
 
-    #     Notes:
-    #         This method requires a tendersId to be included in the request data, and will only update the tender if the
-    #         authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
-    #         is used to serialize the request data and update the tender instance. If the serializer is invalid or the
-    #         user does not have permission to update the tender instance, an appropriate error response is returned.
-    #     """
-    #     context = dict()
-    #     try:
-    #         tender_instance = TenderDetails.objects.get(id=tendersId)
-    #         if request.user == tender_instance.user:
-    #             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
-    #             try:
-    #                 serializer.is_valid(raise_exception=True)
-    #                 if serializer.update(tender_instance, serializer.validated_data):
-    #                     context['message'] = "Updated Successfully"
-    #                     return response.Response(
-    #                         data=context,
-    #                         status=status.HTTP_200_OK
-    #                     )
-    #             except serializers.ValidationError:
-    #                 return response.Response(
-    #                     data=serializer.errors,
-    #                     status=status.HTTP_400_BAD_REQUEST
-    #                 )
-    #         else:
-    #             context['message'] = "You do not have permission to perform this action."
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_401_UNAUTHORIZED
-    #             )
-    #     except TenderDetails.DoesNotExist:
-    #         return response.Response(
-    #             data={"tendersId": "Does Not Exist"},
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
-    #     except Exception as e:
-    #         context["message"] = str(e)
-    #         return response.Response(
-    #             data=context,
-    #             status=status.HTTP_404_NOT_FOUND
-    #         )
+        Notes:
+            This method requires a tenderId to be included in the request data, and will only update the tender if the
+            authenticated user matches the user associated with the tender instance. The UpdateTenderSerializers class
+            is used to serialize the request data and update the tender instance. If the serializer is invalid or the
+            user does not have permission to update the tender instance, an appropriate error response is returned.
+        """
+        context = dict()
+        try:
+            tender_instance = TenderDetails.objects.get(id=tenderId)
+            serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(tender_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except TenderDetails.DoesNotExist:
+            return response.Response(
+                data={"tenderId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 
 class InvoiceView(generics.ListAPIView):
 
-    serializer_class = PointInvoiceSerializers
+    serializer_class = RechargeHistorySerializers
     permission_classes = [permissions.IsAuthenticated]
-    queryset = PointInvoice.objects.all().order_by('-created')
+    queryset = RechargeHistory.objects.all().order_by('-created')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
-    filterset_class = PointInvoiceDetailsFilter
+    filterset_class = RechargeHistoryDetailsFilter
     search_fields = [
-        'invoice_id',
+        'user__name',
     ]
     pagination_class = CustomPagination
 
@@ -5345,13 +5348,13 @@ class InvoiceView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                PointInvoice.objects.get(id=invoiceId).delete()
+                RechargeHistory.objects.get(id=invoiceId).delete()
                 context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
                 )
-            except PointInvoice.DoesNotExist:
+            except RechargeHistory.DoesNotExist:
                 return response.Response(
                     data={"invoiceId": "Does Not Exist"},
                     status=status.HTTP_404_NOT_FOUND
@@ -5419,20 +5422,20 @@ class InvoiceView(generics.ListAPIView):
 
 
 class InvoiceDetailView(generics.GenericAPIView):
-    serializer_class = PointInvoiceSerializers
+    serializer_class = RechargeHistorySerializers
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, invoiceId):
         context = dict()
         try:
-            invoice_data = PointInvoice.objects.get(id=invoiceId)
+            invoice_data = RechargeHistory.objects.get(id=invoiceId)
             get_data = self.serializer_class(invoice_data)
             context = get_data.data
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
             )
-        except PointInvoice.DoesNotExist:
+        except RechargeHistory.DoesNotExist:
             return response.Response(
                 data={"invoiceId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
@@ -5442,4 +5445,120 @@ class InvoiceDetailView(generics.GenericAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class PackageView(generics.ListAPIView):
+    """
+    A view for displaying a list of resources.
+
+    Attributes:
+        - permission_classes ([permissions.IsAuthenticated]): List of permission classes that the view requires. In this
+            case, only authenticated users are allowed to access the view.
+
+        - serializer_class (ResourcesSerializers): The serializer class used for data validation and serialization.
+
+        - queryset (QuerySet): The queryset that the view should use to retrieve the countries. By default, it is set
+            to retrieve all countries using `Packages.objects.all()`.
+
+        - filter_backends ([filters.SearchFilter]): List of filter backends to use for filtering the queryset. In this
+            case, only `SearchFilter` is used.
+
+        - search_fields (list): List of fields to search for in the queryset. In this case, the field is "title".
+
+    """
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = PackageSerializers
+    queryset = Packages.objects.all()
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        if self.get_queryset().exists():
+            pass
+        else:
+            run_seed()
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def patch(self, request):
+        """
+        Update multiple Packages objects based on the data received in the PATCH request.
+
+        Args:
+            request (HttpRequest): The HTTP request object containing the data to update.
+
+        Returns:
+            Response: A Response object indicating the status of the update operation.
+
+        Description:
+        This function is used to update multiple Packages objects in the database based on the data received
+        in the PATCH request. The request should contain a list of packages in JSON format, and each package
+        should have an 'id' field that matches the primary key of the corresponding Packages object.
+
+        The 'request' object should contain the list of packages under the 'data' key. Each package in the list
+        should have fields representing the properties that need to be updated. The function iterates over the
+        list of packages, retrieves the corresponding Packages object from the database using the 'id' field,
+        and then updates the object with the new data provided in the request.
+
+        If a package with a given 'id' is not found in the database, an error message is added to the 'error_message'
+        list. After processing all the packages, if any errors were encountered, the function returns a Response
+        object with status code 400 and a JSON object containing the error messages. Otherwise, it returns a Response
+        object with status code 200 and a JSON object indicating that the packages were updated successfully.
+
+        Note:
+        - The 'Packages' model should be defined in the Django app for this function to work correctly.
+        - The 'request' object should contain a list of packages under the key 'data'.
+        - Each package in the list should have an 'id' field that corresponds to the primary key of the Packages model.
+        - The 'benefit', 'price', and 'credit' fields are updated only if the corresponding fields are present in the package.
+
+        Example:
+        If you send a PATCH request to this view with the following JSON data:
+        {
+            "data": [
+                {"id": "53735375-e684-4426-ab34-d2e4d8243393", "benefit": "New Benefit"},
+                {"id": "b5b6a35f-9153-4549-b6f8-649023a45843", "price": "9.99"}
+            ]
+        }
+
+        It will update the 'benefit' field for the object with 'id' 53735375-e684-4426-ab34-d2e4d8243393 and
+        the 'price' field for the object with 'id' b5b6a35f-9153-4549-b6f8-649023a45843. If any of the provided 'id's
+        are not found in the database, it will return a response with the error message for the corresponding 'id'.
+
+        """
+        
+        context = dict()
+        error_message = []
+        package_list = request.data  # Directly access the list from request.data
+        for data in package_list:
+            obj_id = UUID(data["id"])
+            try:
+                obj = Packages.objects.get(id=obj_id)
+                if data['benefit']:
+                    obj.benefit = data["benefit"]
+                if data['price']:
+                    obj.price = data["price"]
+                if data['credit']:
+                    obj.credit = data["credit"]
+                obj.save()
+            except Packages.DoesNotExist:
+                error_message.append(str(obj_id) + ' does not exist.')
+        if error_message:
+            context["message"] = error_message
+            return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context["message"] = 'Packages update successfully.'
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
             )

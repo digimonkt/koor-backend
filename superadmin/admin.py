@@ -6,7 +6,7 @@ from project_meta.models import (
 from .models import (
     SMTPSetting, Content, GooglePlaceApi,
     ResourcesContent, SocialUrl, AboutUs,
-    FaqCategory, PointDetection, PointInvoice
+    FaqCategory, PointDetection, RechargeHistory
 )
 
 admin.site.register(EducationLevel)
@@ -22,4 +22,4 @@ admin.site.register(SocialUrl)
 admin.site.register(AboutUs)
 admin.site.register(FaqCategory)
 admin.site.register(PointDetection)
-admin.site.register(PointInvoice)
+admin.site.register(RechargeHistory)
