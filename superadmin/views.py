@@ -1,7 +1,4 @@
-import csv
-import io
-import os
-import pathlib
+import csv, io, os, pathlib
 from datetime import datetime, date, timedelta
 
 from django.core.handlers.wsgi import WSGIHandler
@@ -37,12 +34,12 @@ from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
 
-from .filters import RechargeHistoryDetailsFilter
+from .filters import InvoiceDetailsFilter
 from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    RechargeHistory, Packages
+    RechargeHistory, Packages, Invoice
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -60,7 +57,7 @@ from .serializers import (
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
     RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers,
-    UpdateTenderSerializers
+    UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers
 )
 from .seeds import run_seed
 
@@ -5286,168 +5283,6 @@ class TenderCreateView(generics.ListAPIView):
             )
 
 
-class InvoiceView(generics.ListAPIView):
-
-    serializer_class = RechargeHistorySerializers
-    permission_classes = [permissions.IsAuthenticated]
-    queryset = RechargeHistory.objects.all().order_by('-created')
-    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
-    filterset_class = RechargeHistoryDetailsFilter
-    search_fields = [
-        'user__name',
-    ]
-    pagination_class = CustomPagination
-
-    def list(self, request):
-        
-        context = dict()
-        if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset())
-            start_date = self.request.GET.get('from', None)
-            end_date = self.request.GET.get('to', None)
-            if start_date:
-                queryset = queryset.filter(
-                    created__gte=start_date,
-                    created__lte=end_date,
-                )
-            # if action == 'download':
-            #     directory_path = create_directory()
-            #     file_name = '{0}/{1}'.format(directory_path, 'jobs.csv')
-            #     with open(file_name, mode='w') as data_file:
-            #         file_writer = csv.writer(data_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            #         file_writer.writerow(
-            #             ["Number", "Job ID", "Job Title", "Company", "Location", "Created At"])
-            #         for counter, rows in enumerate(queryset):
-            #             location = "None"
-            #             if rows.city:
-            #                 location = str(rows.city) + ", " + str(rows.country)
-            #             file_writer.writerow(
-            #                 [
-            #                     str(counter + 1), str(rows.job_id), str(rows.title),
-            #                     str(rows.user.name), location, str(rows.created.date())
-            #                 ]
-            #             )
-                # return response.Response(
-                #     data={"url": "/" + file_name},
-                #     status=status.HTTP_200_OK
-                # )
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                serializer = self.get_serializer(page, many=True, context=context)
-                return self.get_paginated_response(serializer.data)
-            serializer = self.get_serializer(queryset, many=True, context=context)
-            return response.Response(serializer.data)
-        else:
-            context['message'] = "You do not have permission to perform this action."
-            return response.Response(
-                data=context,
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-    def delete(self, request, invoiceId):
-        context = dict()
-        if self.request.user.is_staff:
-            try:
-                RechargeHistory.objects.get(id=invoiceId).delete()
-                context['message'] = "Deleted Successfully"
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
-            except RechargeHistory.DoesNotExist:
-                return response.Response(
-                    data={"invoiceId": "Does Not Exist"},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            except Exception as e:
-                context["message"] = e
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
-        else:
-            context['message'] = "You do not have permission to perform this action."
-            return response.Response(
-                data=context,
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-    # def patch(self, request, jobId):
-    #     """
-    #     View function for `updating the status` of a job instance.
-
-    #     Args:
-    #         - `request`: Request object containing metadata about the current request.
-    #         - `jobId`: Integer representing the ID of the job instance to be updated.
-
-    #     Returns:
-    #         Response object containing data about the updated job instance, along with an HTTP status code.
-
-    #     Raises:
-    #         - `Http404`: If the job instance with the given `jobId does not exist`.
-    #     """
-
-    #     context = dict()
-    #     if self.request.user.is_staff:
-    #         try:
-    #             jobs_instance = JobDetails.objects.get(id=jobId)
-    #             if jobs_instance.status == "inactive":
-    #                 jobs_instance.status = "active"
-    #                 context['message'] = "This job is active"
-    #             else:
-    #                 jobs_instance.status = "inactive"
-    #                 context['message'] = "This job is inactive"
-    #             jobs_instance.save()
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_200_OK
-    #             )
-    #         except JobDetails.DoesNotExist:
-    #             return response.Response(
-    #                 data={"jobId": "Does Not Exist"},
-    #                 status=status.HTTP_404_NOT_FOUND
-    #             )
-    #         except Exception as e:
-    #             context["message"] = e
-    #             return response.Response(
-    #                 data=context,
-    #                 status=status.HTTP_404_NOT_FOUND
-    #             )
-    #     else:
-    #         context['message'] = "You do not have permission to perform this action."
-    #         return response.Response(
-    #             data=context,
-    #             status=status.HTTP_401_UNAUTHORIZED
-    #         )
-
-
-class InvoiceDetailView(generics.GenericAPIView):
-    serializer_class = RechargeHistorySerializers
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request, invoiceId):
-        context = dict()
-        try:
-            invoice_data = RechargeHistory.objects.get(id=invoiceId)
-            get_data = self.serializer_class(invoice_data)
-            context = get_data.data
-            return response.Response(
-                data=context,
-                status=status.HTTP_200_OK
-            )
-        except RechargeHistory.DoesNotExist:
-            return response.Response(
-                data={"invoiceId": "Does Not Exist"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            context["message"] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
 class PackageView(generics.ListAPIView):
     """
     A view for displaying a list of resources.
@@ -5561,4 +5396,246 @@ class PackageView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
+            )
+
+
+class GenerateInvoiceView(generics.ListAPIView):
+    """
+    A view for generating a list of invoices with advanced filtering and searching capabilities.
+
+    This view extends the generics.ListAPIView and provides the functionality to retrieve a list of invoices while
+    allowing filtering, searching, and pagination.
+
+    Attributes:
+        serializer_class (class): The serializer class responsible for converting Invoice objects into JSON
+                                representation.
+        permission_classes (list): A list of permission classes that restrict access to this view, ensuring only
+                                authenticated users can access it.
+        queryset (QuerySet): The base queryset containing all Invoice objects, ordered by creationdate in descending
+                                order.
+        filter_backends (list): A list of filter backend classes responsible for applying various filtering options to
+                                the queryset.
+        filterset_class (class): The class defining the filter fields and lookup options for filtering the queryset
+                                based on specific parameters.
+        search_fields (list): A list of field names that can be searched using a search term, enabling search
+                                functionality on the view.
+        pagination_class (class): The pagination class determining how the list of invoices should be paginated in the
+                                response.
+
+    Note:
+        - This view is designed to be accessed by authenticated users only.
+        - Invoices are retrieved in descending order based on their creation date.
+        - Filtering options are available, allowing users to narrow down the list of invoices.
+        - Search functionality is provided for searching invoices by user's name.
+        - Pagination is applied to the response using the specified pagination class.
+    """
+
+    serializer_class = InvoiceSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Invoice.objects.all().order_by('-created')
+    filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
+    filterset_class = InvoiceDetailsFilter
+    search_fields = [
+        'user__name',
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request, userId):
+        """
+        Retrieve a list of records based on filtering criteria.
+
+        This function is used to retrieve a list of records that match the filtering criteria provided in the request
+        parameters. The function is accessible only to staff users.
+
+        Args:
+            self: The instance of the view.
+            request: The HTTP request object.
+            userId (int): The ID of the user for whom the records are to be retrieved.
+
+        Returns:
+            Response: An HTTP response object containing the serialized data of the retrieved records or an error
+                    message if the request is not authorized or if the specified user does not exist.
+
+        Raises:
+            User.DoesNotExist: If the specified user does not exist.
+
+        """
+        
+        context = dict()
+        
+        # Check if the requesting user is a staff member
+        if self.request.user.is_staff:
+            try:
+                user_instance = User.objects.get(id=userId)
+            except User.DoesNotExist:
+                return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+            
+            queryset = self.filter_queryset(self.get_queryset())
+            
+            # Retrieve start_date and end_date from request parameters
+            start_date = self.request.GET.get('from', None)
+            
+            # Check if start_date is missing
+            if start_date == None:
+                context['message'] = "Please enter from."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            end_date = self.request.GET.get('to', datetime.now())
+            
+            # Apply filtering based on start_date and end_date
+            if start_date:
+                queryset = queryset.filter(
+                    created__gte=start_date,
+                    created__lte=end_date,
+                    user=user_instance
+                )
+            
+            page = self.paginate_queryset(queryset)
+            
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context=context)
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context=context)
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def post(self, request, userId):
+        """
+        Create a new recharge record for a user's recharge history.
+
+        This method handles the creation of a recharge record for a user's recharge history.
+        The user's authentication status is checked, and only staff users are allowed to perform this action.
+        The provided request data is validated using a serializer, and if valid, a recharge history entry is created.
+
+        Args:
+            self: The instance of the view class.
+            request: The HTTP request object containing the data for the recharge record creation.
+            userId: The ID of the user for whom the recharge history is being recorded.
+
+        Returns:
+            A Response object with relevant data and appropriate status code.
+
+        Raises:
+            ValidationError: If the serializer encounters invalid data.
+            Exception: If an unexpected error occurs during the recharge record creation process.
+        """
+        
+        context = dict()
+        serializer = self.get_serializer(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                try:
+                    user_instance = User.objects.get(id=userId)
+                except User.DoesNotExist:
+                    return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+
+                serializer.is_valid(raise_exception=True)
+                start_date = serializer.validated_data['start_date']
+                end_date = serializer.validated_data['end_date']
+                recharge_history_data = RechargeHistory.objects.filter(user=user_instance, created__gte=start_date, created__lte=end_date)
+                total = 0
+                discount = 0
+                points = 0
+                for recharge_history in recharge_history_data:
+                    total = total + recharge_history.amount
+                    points = points + recharge_history.points
+                discount = total
+                grand_total = total - discount
+                serializer.save(user_instance, total, discount, grand_total, points)
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class InvoiceDetailView(generics.GenericAPIView):
+    """
+    A view to retrieve detailed information about an invoice.
+
+    This view retrieves detailed information about an invoice based on the provided `invoiceId`.
+    It requires the user to be authenticated and have staff privileges to access the information.
+    If the user is authorized, the detailed information of the invoice is serialized and returned.
+    If the user lacks proper authorization, an appropriate error message is returned.
+
+    Attributes:
+        serializer_class (Serializer): The serializer class used to serialize the invoice data.
+        permission_classes (list): The list of permission classes required for accessing this view.
+
+    Methods:
+        get(request, invoiceId):
+        Retrieve detailed information about the specified invoice.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            invoiceId (int): The ID of the invoice to retrieve information for.
+
+        Returns:
+            Response: An HTTP response containing serialized invoice data if successful, or an error message with an
+                        appropriate status code if unsuccessful.
+    """
+
+    serializer_class = InvoiceDetailSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, invoiceId):
+        """
+        Retrieve detailed information about the specified invoice.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            invoiceId (int): The ID of the invoice to retrieve information for.
+
+        Returns:
+            Response: An HTTP response containing serialized invoice data if successful, or an error message with an
+                        appropriate status code if unsuccessful.
+        """
+        
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                if invoiceId:
+                    invoice_data = Invoice.objects.get(id=invoiceId)
+                    get_data = self.serializer_class(invoice_data)
+                    context = get_data.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
             )
