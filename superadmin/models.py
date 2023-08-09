@@ -1,4 +1,6 @@
+import random, string
 from django.db import models
+from django.db.models.signals import pre_save
 from django.utils.translation import gettext as _
 from django.template.defaultfilters import slugify
 from django.contrib.postgres.fields import ArrayField
@@ -96,7 +98,7 @@ class ResourcesContent(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.
     subtitle = models.CharField(
         verbose_name=_('Subtitle'),
         db_column="subtitle",
-        null=True, 
+        null=True,
         blank=True,
         max_length=255
     )
@@ -240,12 +242,13 @@ class FaqCategory(SlugBaseModel, SoftDeleteModel, TimeStampedModel, models.Model
         db_column="role",
         choices=ROLE_TYPE_CHOICE
     )
+
     class Meta:
         verbose_name = "Faq Category"
         verbose_name_plural = "Faq Categories"
         db_table = "FaqCategory"
         ordering = ['title']
-        
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title) + "-" + slugify(self.role)
@@ -526,6 +529,26 @@ class PointDetection(BaseModel, models.Model):
 
 
 class RechargeHistory(BaseModel, TimeStampedModel, models.Model):
+    """
+    Model to store recharge history information.
+
+    This model represents the history of recharges made by users. It includes details such as the user who made the
+    recharge, a note (optional), the points associated with the recharge, and the amount paid for the recharge.
+
+    Attributes:
+        user (ForeignKey): A foreign key to the User who made the recharge.
+        note (CharField): A note related to the recharge (optional).
+        points (BigIntegerField): The points associated with the recharge.
+        amount (BigIntegerField): The amount paid for the recharge.
+
+    Methods:
+        __str__(): Returns a string representation of the recharge instance.
+
+    Meta:
+        verbose_name (str): Singular name for the model in human-readable format.
+        verbose_name_plural (str): Plural name for the model in human-readable format.
+        db_table (str): Name of the database table for this model.
+    """
 
     user = models.ForeignKey(
         User,
@@ -555,13 +578,6 @@ class RechargeHistory(BaseModel, TimeStampedModel, models.Model):
         verbose_name=_('Amount'),
         db_column="amount",
     )
-    is_send = models.BooleanField(
-        verbose_name=_('Is Send'),
-        db_column="is_send",
-        null=True,
-        blank=True,
-        default=False
-    )
 
     def __str__(self):
         """
@@ -576,7 +592,7 @@ class RechargeHistory(BaseModel, TimeStampedModel, models.Model):
         verbose_name = "Recharge History"
         verbose_name_plural = "Recharge History"
         db_table = "RechargeHistory"
-    
+
 
 class Packages(BaseModel, TimeStampedModel, models.Model):
     """
@@ -616,7 +632,6 @@ class Packages(BaseModel, TimeStampedModel, models.Model):
         db_column="credit",
     )
 
-
     def __str__(self):
         return str(self.title)
 
@@ -625,3 +640,200 @@ class Packages(BaseModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Packages"
         db_table = "Packages"
         ordering = ['created']
+
+
+class Invoice(BaseModel, TimeStampedModel, models.Model):
+    """
+    Represents an invoice associated with a user, detailing transaction information.
+
+    Attributes:
+        user (User): The user associated with this invoice.
+        invoice_id (str): The unique identifier for this invoice.
+        start_date (datetime.date): The start date of the invoice period.
+        end_date (datetime.date): The end date of the invoice period.
+        comment (str): Additional comments or notes related to the invoice.
+        points (int): The number of points associated with the invoice.
+        total (int): The total amount before any discounts or deductions.
+        discount (int): The discount amount applied to the invoice.
+        grand_total (int): The final total after applying discounts.
+        is_send (bool): Indicates whether the invoice has been sent.
+
+    Methods:
+        __str__():
+            Returns a string representation of the invoice, including user and points.
+
+    Meta:
+        verbose_name (str): Singular name for the Invoice model.
+        verbose_name_plural (str): Plural name for the Invoice model.
+        db_table (str): Name of the database table for storing invoices.
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    invoice_id = models.CharField(
+        verbose_name=_('Invoice Id'),
+        max_length=255,
+        db_column="invoice_id",
+        null=True,
+        blank=True
+    )
+    start_date = models.DateField(
+        verbose_name=_('Start Date'),
+        null=True,
+        blank=True,
+        db_column='start_date',
+    )
+    end_date = models.DateField(
+        verbose_name=_('End Date'),
+        null=True,
+        blank=True,
+        db_column='end_date',
+    )
+    comment = models.TextField(
+        verbose_name=_('Comment'),
+        db_column="comment",
+        null=True,
+        blank=True,
+    )
+    points = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=0,
+        verbose_name=_('Points'),
+        db_column="points",
+    )
+    total = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=0,
+        verbose_name=_('Total'),
+        db_column="total",
+    )
+    discount = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=0,
+        verbose_name=_('Discount'),
+        db_column="discount",
+    )
+    grand_total = models.BigIntegerField(
+        null=True,
+        blank=True,
+        default=0,
+        verbose_name=_('Grand Total'),
+        db_column="grand_total",
+    )
+    is_send = models.BooleanField(
+        verbose_name=_('Is Send'),
+        db_column="is_send",
+        null=True,
+        blank=True,
+        default=False
+    )
+
+    def __str__(self):
+        """
+        Returns a string representation of the points.
+
+        Returns:
+            str: The string representation of the points.
+        """
+        return str(self.user) + "(" + str(self.points) + ")"
+
+    class Meta:
+        verbose_name = "Invoice"
+        verbose_name_plural = "Invoice"
+        db_table = "Invoice"
+
+
+def random_number_generator(size=6, chars=string.digits):
+    """
+    Generate a random string composed of specified characters.
+
+    This function generates a random string of specified size, composed of characters from the given 'chars' parameter.
+    By default, it generates a random number string of size 6 composed of digits.
+
+    Args:
+        size (int, optional): The length of the random string to be generated. Defaults to 6.
+        chars (str, optional): The pool of characters from which the random string is formed. Defaults to string.digits.
+
+    Returns:
+        str: A random string of the specified size composed of the provided characters.
+
+    Example:
+        >>> random_number_generator()
+        '325819'
+        >>> random_number_generator(8, 'ABCDEF')
+        'BFAEDCDB'
+    """
+
+    return ''.join(random.choice(chars) for _ in range(size))
+
+
+def invoice_id_generator(instance):
+    """
+    Generate a unique invoice ID for the given instance using a random number generator.
+
+    This function generates a unique invoice ID for the provided instance by repeatedly generating random numbers until
+    a unique ID is found within the corresponding model's database records. It prevents duplicate invoice IDs by
+    checking for existing records with the generated ID.
+
+    Args:
+        instance: An instance of a Django model for which the invoice ID needs to be generated.
+
+    Returns:
+        str: A unique invoice ID for the provided instance.
+
+    Note:
+        This function assumes the existence of a random_number_generator function and a corresponding model with an
+        'invoice_id' field, represented by user_instance.
+
+    Example:
+        # Assuming there's a model named 'Invoice' with an 'invoice_id' field
+        new_invoice = Invoice(...)
+        unique_invoice_id = invoice_id_generator(new_invoice)
+    """
+
+    invoice_id = random_number_generator()
+    user_instance = instance.__class__
+    qs_exists = user_instance.objects.filter(invoice_id=invoice_id).exists()
+    if qs_exists:
+        return invoice_id_generator(instance)
+    return invoice_id
+
+
+def pre_save_create_invoice_id(sender, instance, *args, **kwargs):
+    """
+    Automatically generates and assigns an invoice ID to the provided instance if it doesn't already have one.
+    
+    This function is intended to be connected to the 'pre_save' signal of the 'Invoice' model. It checks if the
+    provided instance lacks an invoice ID, and if so, generates a new unique invoice ID using the
+    'invoice_id_generator' function and assigns it to the instance.
+    
+    Parameters:
+        sender (class): The class that sends the signal (typically the 'Invoice' model class).
+        instance: The instance being saved (an instance of the 'Invoice' model).
+        *args: Additional positional arguments for the signal (not used in this function).
+        **kwargs: Additional keyword arguments for the signal (not used in this function).
+        
+    Returns:
+        None
+        
+    Example:
+        pre_save.connect(pre_save_create_invoice_id, sender=Invoice)
+        
+    Note:
+        The 'invoice_id_generator' function used in this function should be defined elsewhere and provide a
+        mechanism to generate unique invoice IDs.
+    """
+
+    if not instance.invoice_id:
+        instance.invoice_id = invoice_id_generator(instance)
+
+
+pre_save.connect(pre_save_create_invoice_id, sender=Invoice)
