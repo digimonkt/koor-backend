@@ -33,7 +33,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
     CategoryLogo, Testimonial, NewsletterUser,
-    RechargeHistory, Packages
+    RechargeHistory, Packages, Invoice
 )
 
 
@@ -1964,8 +1964,7 @@ class RechargeHistorySerializers(serializers.ModelSerializer):
     class Meta:
         model = RechargeHistory
         fields = [
-            'id', 'user', 'points', 'amount',
-            'is_send', 'created'
+            'id', 'user', 'points', 'amount', 'created'
         ]
         read_only_fields = ['id', 'user', 'created']
         
@@ -1976,64 +1975,6 @@ class RechargeHistorySerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
-
-
-# class CreateResourcesSerializers(serializers.ModelSerializer):
-#     """
-#     Serializer class for the `ResourcesContent` model.
-
-#     The `CreateResourcesSerializers` class extends `serializers.ModelSerializer` and is used to create instances of the
-#     `ResourcesContent` model. It defines the fields that should be included in the serialized representation of the model,
-#     including 'id', 'title', 'category'.
-#     """
-#     attachment_file = serializers.FileField(
-#         style={"input_type": "file"},
-#         write_only=True,
-#         allow_null=False
-#     )
-
-#     class Meta:
-#         model = ResourcesContent
-#         fields = ['id', 'title', 'subtitle', 'description', 'attachment_file']
-#         read_only_fields = ['id']
-
-#     def save(self):
-#         attachment_file = None
-#         if 'attachment_file' in self.validated_data:
-#             attachment_file = self.validated_data.pop('attachment_file')
-#         resource_instance = super().save()
-#         if attachment_file:
-#             content_type = str(attachment_file.content_type).split("/")
-#             if content_type[0] not in ["video", "image"]:
-#                 media_type = 'document'
-#             else:
-#                 media_type = content_type[0]
-#             # save media file into media table and get instance of saved data.
-#             media_instance = Media(title=attachment_file.name, file_path=attachment_file, media_type=media_type)
-#             media_instance.save()
-#             # save media instance into license id file into employer profile table.
-#             resource_instance.attachment = media_instance
-#             resource_instance.save()
-#         return resource_instance
-
-#     def update(self, instance, validated_data):
-#         attachment_file = None
-#         if 'attachment_file' in self.validated_data:
-#             attachment_file = self.validated_data.pop('attachment_file')
-#         super().update(instance, validated_data)
-#         if attachment_file:
-#             content_type = str(attachment_file.content_type).split("/")
-#             if content_type[0] not in ["video", "image"]:
-#                 media_type = 'document'
-#             else:
-#                 media_type = content_type[0]
-#             # save media file into media table and get instance of saved data.
-#             media_instance = Media(title=attachment_file.name, file_path=attachment_file, media_type=media_type)
-#             media_instance.save()
-#             # save media instance into license id file into employer profile table.
-#             instance.attachment = media_instance
-#             instance.save()
-#         return instance
 
 
 class PackageSerializers(serializers.ModelSerializer):
@@ -2058,14 +1999,14 @@ class PackageSerializers(serializers.ModelSerializer):
 class UpdateJobSerializers(serializers.ModelSerializer):
     """
     Serializer class for updating JobDetails model instances.
-    This class defines a set of fields to be updated and provides validation methods for job_category, job_sub_category, language and
-    skill fields. Additionally, it handles the updating of the attachments and attachments_remove fields. It takes an
-    existing instance of JobDetails and validated data, then performs the update operation on the instance.
+    This class defines a set of fields to be updated and provides validation methods for job_category, job_sub_category,
+    language and skill fields. Additionally, it handles the updating of the attachments and attachments_remove fields.
+    It takes an existing instance of JobDetails and validated data, then performs the update operation on the instance.
     Attributes:
         - `job_category`: PrimaryKeyRelatedField to JobCategory model objects, many to many relationship, used to update
         job categories.
-        - `job_sub_category`: PrimaryKeyRelatedField to JobSubCategory model objects, many to many relationship, used to update
-        job sub categories.
+        - `job_sub_category`: PrimaryKeyRelatedField to JobSubCategory model objects, many to many relationship, used
+        to update job sub categories.
         - `language`: PrimaryKeyRelatedField to Language model objects, many to many relationship, used to update
         languages.
         - `skill`: PrimaryKeyRelatedField to Skill model objects, many to many relationship, used to update skills.
@@ -2074,8 +2015,8 @@ class UpdateJobSerializers(serializers.ModelSerializer):
     Methods:
         - `validate_job_category`: validates the job_category field and raises a ValidationError if the value is empty
         or exceeds a specified limit.
-        - `validate_job_sub_category`: validates the job_sub_category field and raises a ValidationError if the value is empty
-        or exceeds a specified limit.
+        - `validate_job_sub_category`: validates the job_sub_category field and raises a ValidationError if the value
+        is empty or exceeds a specified limit.
         - `validate_language`: validates the language field and raises a ValidationError if the value is empty or
         exceeds a specified limit.
         - `validate_skill`: validates the skill field and raises a ValidationError if the value is empty or exceeds a
@@ -2176,10 +2117,6 @@ class UpdateJobSerializers(serializers.ModelSerializer):
                             pass
                     except Language.DoesNotExist:
                         raise serializers.ValidationError('Language not exist.', code='language')
-                # if 'written' not in language_data:
-                #     raise serializers.ValidationError({'language_written': 'Language written proficiency is required.'})
-                # if 'spoken' not in language_data:
-                #     raise serializers.ValidationError({'language_spoken': 'Language spoken proficiency is required.'})
             return language
         else:
             raise serializers.ValidationError({'language': 'Language can not be blank.'})
@@ -2265,15 +2202,11 @@ class UpdateJobSerializers(serializers.ModelSerializer):
                         job_language_instance = JobsLanguageProficiency.objects.get(id=language_data['id'])
                         job_language_instance.job = instance
                         job_language_instance.language = language_instance
-                        # job_language_instance.spoken = language_data['spoken']
-                        # job_language_instance.written = language_data['written']
                         job_language_instance.save()
                     else:
                         job_language_instance = JobsLanguageProficiency.objects.create(
                             job=instance,
                             language=language_instance,
-                            # spoken=language_data['spoken'],
-                            # written=language_data['written']
                         )
                         job_language_instance.save()
         if attachments:
@@ -2303,3 +2236,112 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             instance.save()
 
         return instance
+
+        
+class InvoiceSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for handling Invoice objects.
+
+    This serializer is designed to convert Invoice objects to and from JSON format, and also provides a custom save
+    method to create or update Invoice instances with additional fields.
+
+    Attributes:
+        model (class): The Invoice model class that this serializer is associated with.
+        fields (list): A list of fields to be serialized and deserialized.
+        read_only_fields (list): A list of fields that are read-only during deserialization.
+
+    Methods:
+        save(user, total, discount, grand_total, points):
+            Save method overridden to create or update an Invoice instance with the provided user, total, discount,
+            grand_total, and points values.
+
+    Note:
+        This class extends the 'serializers.ModelSerializer' class.
+
+    Args:
+        serializers.ModelSerializer: The base serializer class for model-based serializers.
+    """
+
+    class Meta:
+        model = Invoice
+        fields = [
+            'id', 'start_date', 'end_date', 'comment', 'total', 'discount', 'grand_total', 'points'
+        ]
+        read_only_fields = ['id']
+
+    def save(self, user, total, discount, grand_total, points):
+        """
+        Create or update an Invoice instance with the provided data.
+
+        Args:
+            user (User): The user associated with the invoice.
+            total (Decimal): The total amount of the invoice.
+            discount (Decimal): The discount applied to the invoice.
+            grand_total (Decimal): The final amount after applying the discount.
+            points (int): The points associated with the invoice.
+
+        Returns:
+            Invoice: The saved Invoice instance.
+        """
+        
+        invoice_instance = super().save(
+            user=user, total=total, discount=discount,
+            grand_total=grand_total, points=points
+        )
+        return invoice_instance
+    
+
+class InvoiceDetailSerializers(serializers.ModelSerializer):
+    """
+    A serializer for Invoice details, providing a custom representation for the 'detail' field by fetching related
+    RechargeHistory data.
+
+    This serializer transforms Invoice objects into JSON-compatible data, including information about related
+    RechargeHistory instances within the specified date range.
+
+    Attributes:
+        detail (list): A custom representation of related RechargeHistory
+            instances associated with the Invoice, filtered by the date range.
+
+    Meta:
+        model (class): The model class that this serializer is based on.
+        fields (list): The fields to be included in the serialized output, including 'id', 'start_date', 'end_date',
+        'comment', 'total', 'discount', 'grand_total', 'points', and 'detail'.
+
+    Methods:
+        get_detail(obj): Custom method to fetch and serialize related RechargeHistory instances associated with the
+        Invoice object.
+
+    Usage example:
+        serializer = InvoiceDetailSerializers(instance)
+        serialized_data = serializer.data
+    """
+    
+    detail = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Invoice
+        fields = [
+            'id', 'start_date', 'end_date', 'comment', 'total', 'discount', 
+            'grand_total', 'points', 'detail'
+        ]
+        
+    def get_detail(self, obj):
+        """
+        Fetches and serializes related RechargeHistory instances associated with the provided Invoice object within the
+        specified date range.
+
+        Args:
+            obj (Invoice): The Invoice instance for which related RechargeHistory instances are to be fetched.
+
+        Returns:
+            list: A list of serialized RechargeHistory data associated with the Invoice object, filtered by the date
+            range.
+        """
+
+        context = []
+        data = RechargeHistory.objects.filter(user=obj.user, created__gte=obj.start_date, created__lte=obj.end_date)
+        get_data = RechargeHistorySerializers(data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
