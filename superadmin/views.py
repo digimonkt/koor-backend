@@ -5639,3 +5639,54 @@ class InvoiceDetailView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+# ----------------------------------------------------------------------------------------------------------------------
+def GenerateInvoice():
+    
+    # Get the current date
+    current_date = datetime.now()
+
+    # Calculate the first day of the current month
+    first_day_of_current_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Calculate the last day of the last month
+    last_day_of_last_month = first_day_of_current_month - timedelta(days=1)
+
+    # Calculate the first day of the last month
+    first_day_of_last_month = last_day_of_last_month.replace(day=1)
+
+    # Calculate the end date of the last month
+    end_date_of_last_month = last_day_of_last_month.replace(hour=23, minute=59, second=59)
+
+    # Format the dates
+    start_date_formatted = first_day_of_last_month.strftime('%Y-%m-%d %H:%M:%S')
+    end_date_formatted = end_date_of_last_month.strftime('%Y-%m-%d %H:%M:%S')
+    start_date = first_day_of_last_month.strftime('%Y-%m-%d')
+    end_date = end_date_of_last_month.strftime('%Y-%m-%d')
+
+    # Check if the current date is the first day of the month
+    if current_date.date() == first_day_of_current_month.date():
+        user_data = User.objects.filter(role='employer')
+        for user_instance in user_data:
+            recharge_history_data = RechargeHistory.objects.filter(user=user_instance, created__gte=start_date_formatted, created__lte=end_date_formatted)
+            if recharge_history_data:
+                total = 0
+                discount = 0
+                points = 0
+                for recharge_history in recharge_history_data:
+                    total = total + recharge_history.amount
+                    points = points + recharge_history.points
+                discount = total
+                grand_total = total - discount
+                if Invoice.objects.filter(user=user_instance, start_date=start_date, end_date=end_date)..exists():
+                    pass
+                else:
+                    Invoice.objects.create(
+                        start_date=start_date, end_date=end_date, total=total, 
+                        discount=discount, grand_total=grand_total, points=points,
+                        user=user_instance
+                    )
+
+    return HttpResponse("Invoice Generated")
+
+# ----------------------------------------------------------------------------------------------------------------------
