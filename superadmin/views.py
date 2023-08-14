@@ -5687,7 +5687,7 @@ def GenerateInvoice():
                     points = points + recharge_history.points
                 discount = total
                 grand_total = total - discount
-                if Invoice.objects.filter(user=user_instance, start_date=start_date, end_date=end_date)..exists():
+                if Invoice.objects.filter(user=user_instance, start_date=start_date, end_date=end_date).exists():
                     pass
                 else:
                     Invoice.objects.create(
