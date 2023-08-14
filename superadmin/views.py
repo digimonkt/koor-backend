@@ -5699,6 +5699,7 @@ class InvoiceSendView(generics.GenericAPIView):
                 if invoiceId:
                     # Retrieve invoice data from the database
                     invoice_data = Invoice.objects.get(id=invoiceId)
+                    invoice_month = calendar.month_name[invoice_data.start_date.month]
                     user_email = []
 
                     # Get the user's email address
@@ -5721,16 +5722,13 @@ class InvoiceSendView(generics.GenericAPIView):
                             user_name = user_email[0]
 
                         # Populate email context
-                        email_context["yourname"] = user_name
-                        email_context["username"] = invoice_data
+                        email_context["invoice_month"] = invoice_month
                         email_context["resume_link"] = Common.BASE_URL + "/api/v1/admin/invoice/download?invoice-id=" + str(invoiceId)
-                        email_context["notification_type"] = "Invoice"
-                        email_context["job_instance"] = invoice_data
 
                         # Send the email
                         get_email_object(
                             subject=f'Mail for Invoice',
-                            email_template_name='email-templates/mail-for-apply-job.html',
+                            email_template_name='email-templates/mail-for-invoice.html',
                             context=email_context,
                             to_email=user_email
                         )
