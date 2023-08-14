@@ -51,3 +51,6 @@ daphne==4.0.0
 channels==4.0.0
 
 beautifulsoup4==4.12.2
+
+# For Generate PDF
+xhtml2pdf

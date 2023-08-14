@@ -41,7 +41,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    RechargeHistory, Packages, Invoice
+    RechargeHistory, Packages, Invoice, SMTPSetting
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -5591,6 +5591,24 @@ class InvoiceDetailView(generics.GenericAPIView):
 
 
 def GenerateInvoice():
+    """
+    Generates invoices for eligible employers based on recharge history within the previous month.
+
+    This function calculates the first and last days of the previous month, then retrieves recharge history data for eligible employers within that time frame. For each employer, it calculates the total recharge amount, points earned, and applicable discount. An invoice is created for each employer with relevant details.
+
+    Returns:
+        HttpResponse: A response indicating successful invoice generation.
+
+    Usage:
+        Call this function to generate invoices for eligible employers based on their recharge history within the previous month.
+
+    Notes:
+        - Requires the 'User' and 'RechargeHistory' models to be defined and accessible in the current scope.
+        - The current implementation focuses on generating invoices for employers on the first day of the current month. If executed on other days, the function won't generate invoices.
+
+    Example:
+        GenerateInvoice()
+    """
 
     # Get the current date
     current_date = datetime.now()
@@ -5639,33 +5657,60 @@ def GenerateInvoice():
 
 
 class InvoiceSendView(generics.GenericAPIView):
-    
+    """
+    A view to send an invoice via email to a user.
+
+    This view is used to send an invoice to a user's email address. It checks if the requesting user
+    is a staff member, retrieves the specified invoice data, and sends an email containing the invoice
+    information. If successful, a success message is returned; otherwise, an error message is returned.
+
+    Requires authentication.
+
+    Attributes:
+        permission_classes (list): A list of permission classes that define the access permissions
+            for this view. Requires the requesting user to be authenticated.
+
+    Methods:
+        get(request, invoiceId):
+            Send the invoice via email to the user associated with the invoice.
+
+    Raises:
+        Exception: If an error occurs during the process of sending the invoice.
+
+    Returns:
+        Response: A response indicating the outcome of the operation, along with a message.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, invoiceId):
         """
-        Retrieve detailed information about the specified invoice.
+        Send the invoice via email to the user associated with the invoice.
 
         Args:
             request (HttpRequest): The HTTP request object.
-            invoiceId (int): The ID of the invoice to retrieve information for.
+            invoiceId (int): The ID of the invoice to be sent.
 
         Returns:
-            Response: An HTTP response containing serialized invoice data if successful, or an error message with an
-                        appropriate status code if unsuccessful.
+            Response: A response indicating the outcome of the operation, along with a message.
         """
-        
         context = dict()
         if self.request.user.is_staff:
             try:
                 if invoiceId:
+                    # Retrieve invoice data from the database
                     invoice_data = Invoice.objects.get(id=invoiceId)
+                    invoice_month = calendar.month_name[invoice_data.start_date.month]
                     user_email = []
+
+                    # Get the user's email address
                     if invoice_data.user:
                         if invoice_data.user.email:
                             user_email.append(invoice_data.user.email)
+
                     if user_email:
                         email_context = dict()
+
+                        # Determine user name for email context
                         if invoice_data.user:
                             if invoice_data.user.name:
                                 user_name = invoice_data.user.name
@@ -5675,19 +5720,21 @@ class InvoiceSendView(generics.GenericAPIView):
                             user_name = invoice_data.company
                         else:
                             user_name = user_email[0]
-                        email_context["yourname"] = user_name
-                        email_context["username"] = invoice_data
-                        email_context["resume_link"] = Common.BASE_URL  + "/api/v1/admin/invoice/download?invoice-id=" + str(invoiceId)
-                        email_context["notification_type"] = "Invoice"
-                        email_context["job_instance"] = invoice_data
+
+                        # Populate email context
+                        email_context["invoice_month"] = invoice_month
+                        email_context["resume_link"] = Common.BASE_URL + "/api/v1/admin/invoice/download?invoice-id=" + str(invoiceId)
+
+                        # Send the email
                         get_email_object(
                             subject=f'Mail for Invoice',
-                            email_template_name='email-templates/mail-for-apply-job.html',
+                            email_template_name='email-templates/mail-for-invoice.html',
                             context=email_context,
                             to_email=user_email
                         )
                         print(invoice_data.user.email, 'invoice_data.user.email')
-                context["message"]="Invoice sent successfully."
+
+                context["message"] = "Invoice sent successfully."
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -5707,21 +5754,60 @@ class InvoiceSendView(generics.GenericAPIView):
 
 
 class DownloadInvoiceView(generics.GenericAPIView):
+    """
+    A view class that generates and serves PDF invoices for download based on invoice ID.
+
+    This view is intended for allowing anyone (with or without authentication) to download PDF invoices
+    corresponding to a specified invoice ID. It fetches invoice details, user information, and recharge history,
+    then generates a PDF representation of the invoice using an HTML template.
+
+    Attributes:
+        permission_classes (list): A list of permission classes that control access to this view. In this case,
+                                  it allows any user to access the view.
+
+    Methods:
+        get(self, request): Processes the GET request, generates the PDF invoice, and serves it as a response.
+
+    Usage:
+        Make a GET request to this view with the 'invoice-id' parameter in the query string to download the
+        corresponding invoice PDF.
+    """
 
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        """
+        Generate and serve a PDF invoice for download.
+
+        This method handles the GET request to generate a PDF invoice based on the specified 'invoice-id' parameter.
+        It retrieves invoice data, user information, recharge history, and SMTP settings. Then, it generates a PDF
+        using an HTML template and serves it as an HTTP response.
+
+        Args:
+            request (HttpRequest): The HTTP GET request object.
+
+        Returns:
+            HttpResponse: An HTTP response containing the generated PDF invoice with 'application/pdf' content type.
+        """
 
         response_context = dict()
         downloaded_file = ""
         if 'invoice-id' in request.GET:
-            # --------------------------------------------------------------------------------------------------------------
             Page_title = "KOOR INVOICE"
             invoice_data = Invoice.objects.get(id=request.GET['invoice-id'])
             invoice_month = calendar.month_name[invoice_data.start_date.month]
-            # --------------------------------------------------------------------------------------------------------------
+            smtp_setting = SMTPSetting.objects.last()
+            mobile_number = invoice_data.user.mobile_number
+            new_mobile_number = " "
+            for i in range(0, len(mobile_number), 5):
+                new_mobile_number += mobile_number[i:i + 5] + " "
+            if new_mobile_number:
+                new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
+            history_data = RechargeHistory.objects.filter(user=invoice_data.user, created__gte=invoice_data.start_date, created__lte=invoice_data.end_date)
             pdf = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
                                                                     'Page_title': Page_title, 'invoice_month':invoice_month,
+                                                                    'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                                    'mobile_number':new_mobile_number, 'history_data':history_data
                                                                 }
                             )
             # rendering the template

@@ -1,441 +1,81 @@
 {% load static %}
 <!doctype html>
 <html>
-<head>
-<meta charset="utf-8">
-<title>{{Page_title}} Document</title>
-<style type="text/css">
-  .set_display_none{
-    display: none;
-  }
-</style>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;0,300;0,400;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-</head>
-<body>
-  
-<div style="
-    width: 800px;
-    margin: auto;
-    background: #fff;
-    border: 1px solid #ccc;
-   font-family: 'Nunito';
-    box-sizing: border-box;
-  font-weight: 400;
-    line-height: 1.5;
-">
-<table width="100%" border="0" cellpadding="0" cellspacing="0" style="
-    border-collapse: collapse;
-">
-  <tbody><tr>
-    <td style="
-    background: #fff;
-    width: 50%;
-  position:relative;
-    color: #000;
-">
-<!-- <h1>Aroma Of Wine</h1> -->
-<img src='https://aromaofwine.com/static/web/assets/image/wine_png_logo.png' alt="" style="background: #fff;
-    padding: 0px 15px; width: 349px;">
-</td>
-    <td align="center" style="
-    background: #fff;
-    color: #000;
-    margin: 0px;
-    text-transform: uppercase;
-    text-align: right;
-    padding-right: 15px;
-    padding-top: 4px;
-    padding-bottom: 4px;
-    text-align: right;
-"><h2 >{{Page_title}}</h2>
- JC Wine & Spirits Pte Ltd<br>
-<!-- {{get_genral_data.Address}} -->
-7 Gambas Crescent #01-16. ARK @ Gambas,<br> 
-Singapore 757087<br>
-Business Registration: 20 I 009367G<br>
-GST REG. No.201009367G<br>
-</td>
-  </tr>
-  <tr>
-    <td valign="top" style="
-    padding: 5px 15px;
-"><h3 style="
-    margin: 0px;
-    background: #fff;
-    padding:2px 5px;
-    text-align: center;
-    color: #000;
-    text-transform: uppercase;
-">Customer Billing Address</h3>
-    <p style="
-    line-height: 15px;
-    font-weight: 400;
-">
-{{products.0.Order_id.Billing_address.First_Name}} {{products.0.Order_id.Billing_address.Last_Name}} 
-{% if products.0.Order_id.Billing_address.Conpany_Name %}
-({{products.0.Order_id.Billing_address.Conpany_Name}})
-{% endif %}
-<br>
-        {{products.0.Order_id.Billing_address.Address}}<br>
-        {{products.0.Order_id.Billing_address.City}} / {{products.0.Order_id.Order_address.State}} / {{products.0.Order_id.Billing_address.Postcode}} ({{products.0.Order_id.Billing_address.Country}})  <br>
-        Email Id:- {{products.0.Order_id.Billing_address.Email}} <br>
-        Mobile Number:- {{products.0.Order_id.Billing_address.Pnone_no}}
-                    <br>       
-{% if not products.0.Order_id.DirectDelivery %} 
-                              <b>Payment Method:</b> {{products.0.Order_id.Payment_Method}}<br>
-    {% if products.0.Order_id.shipping_charge > 0 or  products.0.Order_id.Deliverycharges > 0 %}
-    <b>Payment Method For Shipping/Delivery:</b> {{products.0.Order_id.shipping_Payment_Method}}<br>
-                        {% endif %}
-  {% else %}
-  <b>Payment Method:</b> {{products.0.Order_id.shipping_Payment_Method}}<br>
-  {% endif %}
-<!-- Payment Method:</b> {{products.0.Order_id.Payment_Method}} <br>   -->
-    </p></td>
-    <td valign="top" style="
-    padding: 5px 15px;
-"><h3 {% if get_order_ins.Order_Type != 'Delivered' %} class="set_display_none" {% endif %} style="
-    margin: 0px;
-    background: #fff;
-    padding: 2px 5px;
-    text-align: center;
-    color: #000;
-    text-transform: uppercase;
-">Customer Shipping Address</h3>
-    <p  {% if get_order_ins.Order_Type != 'Delivered' %} class="set_display_none" {% endif %} style="
-    line-height: 15px;
-    font-weight: 400;
-">
-     {{products.0.Order_id.Order_address.First_Name}} {{products.0.Order_id.Order_address.Last_Name}} 
-   {% if products.0.Order_id.Order_address.Conpany_Name %}
-     ({{products.0.Order_id.Order_address.Conpany_Name}})
-    {% endif %}
-     <br>
-        {{products.0.Order_id.Order_address.Address}}<br>
-        {{products.0.Order_id.Order_address.City}} / {{products.0.Order_id.Order_address.State}} / {{products.0.Order_id.Order_address.Postcode}} ({{products.0.Order_id.Order_address.Country}})  <br>
-        Email Id:- {{products.0.Order_id.Order_address.Email}} <br>
-        Mobile Number:- {{products.0.Order_id.Order_address.Pnone_no}}
-    </p></td>
-  </tr>
-  <tr>
-    <td colspan="2" valign="top" style="
-    padding-top: 5px 15px; 
-"><table width="100%" border="0" cellpadding="0" cellspacing="0">
-  <tbody><tr>
-    <td align="center"><h3 style="
-    margin: 0px;
-    background: #fff;
-    padding: 2px 5px;
-    text-align: center;
-    color: #000;
-">INVOICE #</h3></td>
-    <td align="center"><h3 style="
-    margin: 0px;
-    background: #fff;
-    padding:  5px;
-    text-align: center;
-    color: #000;
-">DATE</h3></td>
-<td align="center"><h3 style="
-    margin: 0px;
-    background: #fff;
-    padding: 2px 5px;
-    text-align: center;
-    color: #000;
-">CUSTOMER ID</h3></td>
-    <td align="center"><h3 style="
-    margin: 0px;
-    background: #fff;
-    padding:2px 5px;
-    text-align: center;
-    color: #000;
-">Order Type</h3></td>  
-  </tr>
-  <tr>
-    <td align="center" style="
-    padding: 3px 15px;
-"><strong>#{{products.0.Order_id}}</strong></td>
-    <td align="center" style="
-    padding:3px 15px;
-"><strong>{{products.0.Order_id.Order_Date}}</strong></td>
-       <td align="center" style="
-    padding: 3px 15px;
-"><strong style="
-">#{{get_order_ins.User.id}}</strong></td>
-    <td align="center" style="padding:3px 15px;"><strong>{% if products.0.Order_id.Order_Type == 'Delivered' %} Delivery {% elif products.0.Order_id.Order_Type == 'Caller' %} Cellar {% else %}
-                    {{products.0.Order_id.Order_Type}} {% endif %}</strong></td>
-  </tr>
-</tbody></table></td>
-  </tr>
-  <tr>
-    <td colspan="2">
-{% if products.0.Order_id.Order_Type == 'Tickets' %}
-      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="
-    border-collapse: collapse;
-">
-      <tbody>
-        <tr>
-        <th align="left" style="
-    margin: 0px;
-    background: #fff;
-    padding:2px 5px;
-    text-align: center;
-    border-right: 1px solid #e7c77e;
-    color: #000;
-">Image</th>
-        <th align="center" style="
-    margin: 0px;
-    background: #fff;
-    padding:2px 5px;
-    text-align: center;
-    border-right: 1px solid #e7c77e;
-    color: #000;
-">Event</th>
-        <th align="center" style="
-    margin: 0px;
-    background: #fff;
-    padding:2px 5px;
-    text-align: center;
-    border-right: 1px solid #e7c77e;
-    color: #000;
-">Quantity</th>
-        <th align="center" valign="top" style="
-    margin: 0px;
-    background: #fff;
-    padding:2px 5px;
-    text-align: center;
-    color: #000;
-">Amount</th>
-      </tr>
- {% if products %}
-                {% for item in products %}
-      <tr>
-        <td align="left" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-right: 1px solid #ccc;
-"><img src="{{item.Event_Ticket.Event_Image.url}}" style="height: 50px;"></td>
-        <td align="center" valign="middle" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-right: 1px solid #ccc;
-"><a target="_blank" href="{% url 'event:event_detail' item.Event_Ticket.id item.Event_Ticket.Slug %}">{{item.Event_Ticket}}({{item.Event_Ticket.Event_Type}})</a></td>
-        <td align="right" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-right: 1px solid #ccc;
-">{{item.Quentity}}</td>
-        <td align="right" valign="top" style="
-    padding:2px 10px;
-    font-weight: 400;
-">${{item.Total_cost}}</td>
-      </tr>
-{% endfor %}
-  <tr>
-        <td colspan="2" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-top: 1px solid #ccc;
-">&nbsp;</td>
-        <td  align="left" valign="top" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-top: 1px solid #ccc;
-    border-left: 1px solid #ccc;
-    line-height: 28px;
-    text-transform: uppercase;
-    color: #000;
-    background: #fff;
-">
-{% if get_order_ins.Use_coupon %}
- Descount:<br>
- {% endif %}
- <strong>Total Amount</strong><br>
- <hr>
-  Payment Status:<br>
-</td>
- <td align="right" valign="top" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-top: 1px solid #ccc;
-    color: #000;
-    background: #fff;
-    line-height: 28px;
-">
-{% if get_order_ins.Use_coupon %}
-  - ${{get_order_ins.Cupon_Discount|floatformat:2}}<br>
- {% endif %}
-          <strong>${{total_cost|floatformat:2}}</strong>
-<hr>
- {% if products.0.Order_id.Payment_Status %} paid {% else %}Not Paid{% endif %}
-      </td>
-      </tr>
-{% endif %}
-    </tbody></table>
-{% else %}
-      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="
-    border-collapse: collapse; width: 100%;
-">
-      <tbody>
-        <tr>
-        <th align="left" style="margin: 0px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">IMAGE</th>
-        <th align="left" style="margin: 0px; width: 180px; background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">PRODUCT</th>
-        <th align="left" style="margin: 0px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">LWIN</th>
-        <th align="left" style="margin: 0px;width: 60px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">TYPE & CASE SIZE</th>
-        <th align="left" style="margin: 0px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">PRICE</th>
-        <th align="left" style="margin: 0px;width: 40px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">GST</th>
-        <th align="left" style="margin: 0px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">PRICE WITH GST</th>
-        <th align="left" style="margin: 0px;width: 40px; background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">QTY</th>
-        <th align="left" style="margin: 0px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">AMOUNT</th>
-      </tr>
- {% if products %}
-                {% for item in products %}
-      <tr>
-        {% if item.Product_Delivered %}
-        <td align="left" style="padding: 5px;font-weight: 400;border-right: 1px solid #ccc;"><img src="https://aromaofwine.com" style="height: 50px;"></td>
-        <td align="left" style="padding: 5px; white-space: pre-line; font-weight: 400;border-right: 1px solid #ccc;"><a href="https://aromaofwine.com{% url 'product_detail:product_detail' item.Product_Delivered.Product_id item.Product_Delivered.Product_slug  item.Year %}">{{item.Product_Delivered}}({{item.Year}})</a></td>
-<td align="left" style="padding: 2px;white-space: pre-line;font-weight: 400;border-right: 1px solid #ccc;">{{item.Product_Delivered.LWineCode}}-{{item.Year}}</td>
-        {% endif %}
-    {% if item.Product_Cellar %}
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;"><img src="https://aromaofwine.com" style="height: 50px;"></td>
-        <td align="left" style="padding:2px 5px;white-space: pre-line;font-weight: 400;border-right: 1px solid #ccc;"><a href="https://aromaofwine.com{% url 'product_detail:product_detail' item.Product_Cellar.Product_id item.Product_Cellar.Product_slug  item.Year %}">{{item.Product_Cellar}}({{item.Year}})</a></td>
-        <td align="left" style="padding: 2px;white-space: pre-line;font-weight: 400;border-right: 1px solid #ccc;">{{item.Product_Cellar.LWineCode}}-{{item.Year}}</td>
-        {% endif %}        
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">{{item.Type}} {{item.Case_Formate.Bottel_Size}} ml)</td>
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">$0</td>
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">{{item.Gst}}%</td>
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">${{item.Cost_of_product|floatformat:2}}</td>
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">{{item.Order_Quentity}}</td>
-        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">${{item.Total_cost|floatformat:2}}</td>
-      </tr>
-{% endfor %}
- <tr>
-        <td colspan="2" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-top: 1px solid #ccc;
-">&nbsp;</td>
-        <td  colspan="6"  align="left" valign="top" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-top: 1px solid #ccc;
-    border-left: 1px solid #ccc;
-    line-height: 28px;
-    text-transform: uppercase;
-    color: #000;
-    background: #fff;
-">
-<span style="color: #000">
-  {% if products.0.Order_id.Use_coupon == False %}
-Total Amount Excluding GST:<br> 
-GST:<br>
-{% endif %}
-{% if products.0.Order_id.Cupon_Discount > 0 %}
- Original Amount:<br>
- Discount:<br>
- Sub Total Excluding GST:<br>
- GST:<br>
- {% endif %}
- <strong>Total Amount Due:</strong><br>
-{% if not products.0.Order_id.DirectDelivery %} 
-<hr>
- Payment Status:<br>
-{% endif %}
-{% if products.0.Order_id.Order_Type == 'Delivered' %}
-{% if not products.0.Order_id.DirectDelivery %}
-<hr>
-Already paid(By Cellar):
-{% else %}
-{% if delivered_orde_starts %}
-Already paid(By Cellar):<br>
-{% endif %}
-{% endif %} 
-<hr>
-Order Shipping({{products.0.Order_id.DeliveryType}}):<br>
-{% endif %}
-{% if products.0.Order_id.Order_Type == 'Delivered' %}
-Grand Total:<br>
-<hr>
-{% if not products.0.Order_id.DirectDelivery %} Shipping/Delivery {% endif %} Payment Status:
-</span>
-{% endif %}
-</td>
- <td align="right" valign="top" style="
-    padding:2px 10px;
-    font-weight: 400;
-    border-top: 1px solid #ccc;
-    color: #000;
-    background: #fff;
-    line-height: 28px;
-">
-{% if products.0.Order_id.Use_coupon == False %}
-{% if products.0.Order_id.Order_Product_Total_Amount == 0 %}{{products.0.Order_id.Order_Product_Amount|floatformat:2 }}{% else %}{% if products.0.Order_id.order_amount == products.0.Order_id.Amount  %}{{products.0.Order_id.Order_Product_Amount|floatformat:2 }}{% else %}{{products.0.Order_id.Order_Product_Total_Amount|floatformat:2 }}{% endif %}{% endif %}
-<!-- ${% if products.0.Order_id.Order_Product_Total_Amount == 0 %}{{products.0.Order_id.Order_Product_Amount|floatformat:2}}{% else %}{{products.0.Order_id.Order_Product_Total_Amount|floatformat:2}}{% endif %}<br> -->
-${{products.0.Order_id.Order_Gst_Amount|floatformat:2}}<br>
-{% endif %}
-{% if products.0.Order_id.Cupon_Discount > 0 %}
-${{products.0.Order_id.Order_Product_Amount|floatformat:2}}<br>
--${{products.0.Order_id.Cupon_Discount|floatformat:2}}<br>
-${{products.0.Order_id.subtotal_after_discount|floatformat:2}}<br>
-${{products.0.Order_id.gst_after_discount|floatformat:2}}<br>
- {% endif %}
- <strong>${{products.0.Order_id.Amount|floatformat:2}}</strong>
-{% if not products.0.Order_id.DirectDelivery %}
-<hr>
- {% if products.0.Order_id.Payment_Status %} Paid {% else %} Not Paid{% endif %}
-{% else %}
- {% if delivered_orde_starts %}
- ${{delivered_orde_amount|floatformat:2}}
- {% endif %}
-{% endif %}
-{% if products.0.Order_id.Order_Type == 'Delivered' %}
-   {% if not products.0.Order_id.DirectDelivery %}
-     <hr>
-     ${{products.0.Order_id.Amount|floatformat:2}}
-   {% endif %}
-   <hr>
-     {% if products.0.Order_id.shipping_charge <= 0  %}
-        Free
-        {% else %}
-        ${{products.0.Order_id.shipping_charge|floatformat:2}}
-
-        {% endif %}
-{% endif %}
- {% if products.0.Order_id.Order_Type == 'Delivered' %}
-   ${{final_amount|floatformat:2}}
-     <hr>
-     {% if products.0.Order_id.shipping_charge <= 0  and final_amount <= 0 %}
-        Free
-     {% else %}
-        {% if products.0.Order_id.shipping_Payment_Status and products.0.Order_id.Payment_Status %}
-            Paid
-        {% else %}
-            Not Paid
-        {% endif %}
-     {% endif %}
- {% endif %}
-      </td>
-      </tr>
-     
-{% endif %}
-    </tbody></table>
-{% endif %}
-</td>
-  </tr>
-</tbody></table>
-
-
-
-<table style="text-align: center;border: none;">
-  <tbody>
-     <tr>
-         <td colspan="9" style="text-align: center;padding-top: 10px">{{payment_message.Other_info|safe}}
-<style type="text/css">
-  h1{margin:0px;}
-</style>
-         </td>
-      </tr>
-  </tbody>
-  </table>
-</div>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <title>{{Page_title}}</title>
+    <style type="text/css">.set_display_none{display: none;}</style>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;0,300;0,400;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div style="width: 800px; margin: auto; background: #fff; border: 1px solid #ccc; font-family: 'Nunito'; box-sizing: border-box; font-weight: 400; line-height: 1.5;">
+      <table width="100%" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">
+        <tbody>
+          <tr>
+            <td valign="top" style="padding: 5px 15px;">
+              <h3 style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
+                INVOICE Detail
+              </h3>
+              <p style="line-height: 15px; font-weight: 400;">
+                <b>Invoice Id</b>:- <b>{{invoice_data.invoice_id}}</b> <br>
+                <b>Invoice Month</b>:- {{invoice_month}} <br>
+                <b>Created At</b>:- {{invoice_data.created.date}}<br>       
+              </p>
+            </td>
+            <td valign="top" style="padding: 5px 15px;">
+              <h3 style=" margin: 0px; background: #fff; padding: 2px 5px; text-align: center; color: #000; text-transform: uppercase;">
+                User Detail
+              </h3>
+              <p style=" line-height: 15px; font-weight: 400;">
+                Name:- {{invoice_data.user.name}} <br>
+                Email:- {{invoice_data.user.email}}<br>
+                Mobile Number: {{mobile_number}}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style=" border-collapse: collapse; width: 100%;">
+                <tbody>
+                  <tr>
+                    <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">S. No.</th>
+                    <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">Created</th>
+                    <th align="left" style="margin: 0px; width: 180px; background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">Point</th>
+                    <th align="left" style="margin: 0px; width: 180px;background: #fff;padding:2px 5px;text-align: center;border-right: 1px solid #e7c77e;color: #000;">Amount</th>
+                  </tr>
+                  {% if history_data %}
+                    {% for item in history_data %}
+                      <tr>   
+                        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">{{forloop.counter}}</td>
+                        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">{{item.created.date}} {{item.created.time}}</td>
+                        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">{{item.points}}</td>
+                        <td align="left" style="padding:2px 5px;font-weight: 400;border-right: 1px solid #ccc;">${{item.amount}}</td>
+                      </tr>
+                    {% endfor %}
+                    <tr>
+                      <td colspan="2" style=" padding:2px 10px; font-weight: 400; border-top: 1px solid #ccc;">
+                        &nbsp;
+                      </td>
+                      <td  colspan="2"  align="left" valign="top" style=" padding:2px 10px; font-weight: 400; border-top: 1px solid #ccc; border-left: 1px solid #ccc; line-height: 28px; text-transform: uppercase; color: #000; background: #fff; ">
+                        <span style="color: #000">
+                          Amount:<br>
+                          Discount:<br>
+                          <strong>Total Amount:</strong><br>
+                        </span>
+                      </td>
+                      <td align="right" valign="top" style=" padding:2px 10px; font-weight: 400; border-top: 1px solid #ccc; color: #000; background: #fff; line-height: 28px; ">
+                        ${{invoice_data.total}}<br>
+                        -${{invoice_data.discount}}<br>
+                        <strong>${{invoice_data.grand_total}}</strong>
+                      </td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
 </html>
