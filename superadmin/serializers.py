@@ -2265,31 +2265,11 @@ class InvoiceSerializers(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            'id', 'start_date', 'end_date', 'comment', 'total', 'discount', 'grand_total', 'points'
+            'id', 'start_date', 'end_date', 'total', 'discount', 
+            'grand_total', 'points', 'is_send'
         ]
         read_only_fields = ['id']
 
-    def save(self, user, total, discount, grand_total, points):
-        """
-        Create or update an Invoice instance with the provided data.
-
-        Args:
-            user (User): The user associated with the invoice.
-            total (Decimal): The total amount of the invoice.
-            discount (Decimal): The discount applied to the invoice.
-            grand_total (Decimal): The final amount after applying the discount.
-            points (int): The points associated with the invoice.
-
-        Returns:
-            Invoice: The saved Invoice instance.
-        """
-        
-        invoice_instance = super().save(
-            user=user, total=total, discount=discount,
-            grand_total=grand_total, points=points
-        )
-        return invoice_instance
-    
 
 class InvoiceDetailSerializers(serializers.ModelSerializer):
     """
@@ -2322,8 +2302,8 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            'id', 'start_date', 'end_date', 'comment', 'total', 'discount', 
-            'grand_total', 'points', 'detail'
+            'id', 'start_date', 'end_date', 'total', 'discount', 
+            'grand_total', 'points', 'is_send', 'detail'
         ]
         
     def get_detail(self, obj):
