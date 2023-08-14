@@ -1,10 +1,11 @@
 import csv, io, os, pathlib
+import calendar
 from datetime import datetime, date, timedelta
 
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.signals import request_finished
 from django.db.models import Exists, OuterRef, Q
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, HttpResponse
 from django_filters import rest_framework as django_filters
 from rest_framework import (
     status, generics, serializers,
@@ -61,6 +62,8 @@ from .serializers import (
     UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers
 )
 from .seeds import run_seed
+from .process import html_to_pdf
+from koor.config.common import Common
 
 class CountryView(generics.ListAPIView):
     """
@@ -5485,14 +5488,26 @@ class GenerateInvoiceView(generics.ListAPIView):
                 )
             
             end_date = self.request.GET.get('to', datetime.now())
-            
             # Apply filtering based on start_date and end_date
+            is_send = self.request.GET.get('send', None)
             if start_date:
-                queryset = queryset.filter(
-                    created__gte=start_date,
-                    created__lte=end_date,
-                    user=user_instance
-                )
+                if is_send:
+                    if is_send == "true" or is_send == "True":
+                        is_send = True
+                    else:
+                        is_send = False
+                    queryset = queryset.filter(
+                        created__gte=start_date,
+                        created__lte=end_date,
+                        user=user_instance,
+                        is_send=bool(is_send)
+                    )
+                else:
+                    queryset = queryset.filter(
+                        created__gte=start_date,
+                        created__lte=end_date,
+                        user=user_instance
+                    )
             
             page = self.paginate_queryset(queryset)
             
@@ -5507,73 +5522,6 @@ class GenerateInvoiceView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-
-    def post(self, request, userId):
-        """
-        Create a new recharge record for a user's recharge history.
-
-        This method handles the creation of a recharge record for a user's recharge history.
-        The user's authentication status is checked, and only staff users are allowed to perform this action.
-        The provided request data is validated using a serializer, and if valid, a recharge history entry is created.
-
-        Args:
-            self: The instance of the view class.
-            request: The HTTP request object containing the data for the recharge record creation.
-            userId: The ID of the user for whom the recharge history is being recorded.
-
-        Returns:
-            A Response object with relevant data and appropriate status code.
-
-        Raises:
-            ValidationError: If the serializer encounters invalid data.
-            Exception: If an unexpected error occurs during the recharge record creation process.
-        """
-        
-        context = dict()
-        serializer = self.get_serializer(data=request.data)
-        try:
-            if self.request.user.is_staff:
-                try:
-                    user_instance = User.objects.get(id=userId)
-                except User.DoesNotExist:
-                    return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
-
-                serializer.is_valid(raise_exception=True)
-                start_date = serializer.validated_data['start_date']
-                end_date = serializer.validated_data['end_date']
-                recharge_history_data = RechargeHistory.objects.filter(user=user_instance, created__gte=start_date, created__lte=end_date)
-                total = 0
-                discount = 0
-                points = 0
-                for recharge_history in recharge_history_data:
-                    total = total + recharge_history.amount
-                    points = points + recharge_history.points
-                discount = total
-                grand_total = total - discount
-                serializer.save(user_instance, total, discount, grand_total, points)
-                context["data"] = serializer.data
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            context['message'] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
 
 class InvoiceDetailView(generics.GenericAPIView):
     """
@@ -5641,7 +5589,7 @@ class InvoiceDetailView(generics.GenericAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
-# ----------------------------------------------------------------------------------------------------------------------
+
 def GenerateInvoice():
 
     # Get the current date
@@ -5689,4 +5637,92 @@ def GenerateInvoice():
                     )
     return HttpResponse("Invoice Generated")
 
-# ----------------------------------------------------------------------------------------------------------------------
+
+class InvoiceSendView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, invoiceId):
+        """
+        Retrieve detailed information about the specified invoice.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            invoiceId (int): The ID of the invoice to retrieve information for.
+
+        Returns:
+            Response: An HTTP response containing serialized invoice data if successful, or an error message with an
+                        appropriate status code if unsuccessful.
+        """
+        
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                if invoiceId:
+                    invoice_data = Invoice.objects.get(id=invoiceId)
+                    user_email = []
+                    if invoice_data.user:
+                        if invoice_data.user.email:
+                            user_email.append(invoice_data.user.email)
+                    if user_email:
+                        email_context = dict()
+                        if invoice_data.user:
+                            if invoice_data.user.name:
+                                user_name = invoice_data.user.name
+                            else:
+                                user_name = user_email[0]
+                        elif invoice_data.company:
+                            user_name = invoice_data.company
+                        else:
+                            user_name = user_email[0]
+                        email_context["yourname"] = user_name
+                        email_context["username"] = invoice_data
+                        email_context["resume_link"] = Common.BASE_URL  + "/api/v1/admin/invoice/download?invoice-id=" + str(invoiceId)
+                        email_context["notification_type"] = "Invoice"
+                        email_context["job_instance"] = invoice_data
+                        get_email_object(
+                            subject=f'Mail for Invoice',
+                            email_template_name='email-templates/mail-for-apply-job.html',
+                            context=email_context,
+                            to_email=user_email
+                        )
+                        print(invoice_data.user.email, 'invoice_data.user.email')
+                context["message"]="Invoice sent successfully."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class DownloadInvoiceView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+
+        response_context = dict()
+        downloaded_file = ""
+        if 'invoice-id' in request.GET:
+            # --------------------------------------------------------------------------------------------------------------
+            Page_title = "KOOR INVOICE"
+            invoice_data = Invoice.objects.get(id=request.GET['invoice-id'])
+            invoice_month = calendar.month_name[invoice_data.start_date.month]
+            # --------------------------------------------------------------------------------------------------------------
+            pdf = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
+                                                                    'Page_title': Page_title, 'invoice_month':invoice_month,
+                                                                }
+                            )
+            # rendering the template
+            return HttpResponse(pdf, content_type='application/pdf')
