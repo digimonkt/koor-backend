@@ -43,7 +43,7 @@ class Common(Configuration):
     CRONJOBS = [
     ('59 23 * * *', 'notification.views.ExpiredSavedJobs'),
     ('50 23 * * 7', 'job_seekers.views.RemoveAvailability'),
-    ('* * * * *', 'superadmin.views.GenerateInvoice'),
+    ('1 1 * * *', 'superadmin.views.GenerateInvoice'),
     ]
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/

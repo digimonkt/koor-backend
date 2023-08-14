@@ -5643,15 +5643,7 @@ class InvoiceDetailView(generics.GenericAPIView):
 
 # ----------------------------------------------------------------------------------------------------------------------
 def GenerateInvoice():
-    context ={}
-    context["yourname"] = "user.email"
-    context["otp"] = "otp"
-    get_email_object(
-        subject=f'OTP for Verification',
-        email_template_name='email-templates/send-forget-password-otp.html',
-        context=context,
-        to_email=['praveen.vaidhya@digimonk.in', ]
-    )
+
     # Get the current date
     current_date = datetime.now()
 
@@ -5695,7 +5687,6 @@ def GenerateInvoice():
                         discount=discount, grand_total=grand_total, points=points,
                         user=user_instance
                     )
-
     return HttpResponse("Invoice Generated")
 
 # ----------------------------------------------------------------------------------------------------------------------
