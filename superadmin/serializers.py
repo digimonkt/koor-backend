@@ -2267,7 +2267,7 @@ class InvoiceSerializers(serializers.ModelSerializer):
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date','invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'user'
+            'grand_total', 'points', 'is_send', 'created', 'user'
         ]
         read_only_fields = ['id']
         
@@ -2323,7 +2323,7 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date', 'invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'user', 'detail'
+            'grand_total', 'points', 'is_send', 'created', 'user', 'detail'
         ]
         
         
