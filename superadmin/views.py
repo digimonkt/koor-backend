@@ -5471,6 +5471,9 @@ class GenerateInvoiceView(generics.ListAPIView):
         if self.request.user.is_staff:
             queryset = self.filter_queryset(self.get_queryset())
             userId = self.request.GET.get('userId', None)
+            invoiceId = self.request.GET.get('invoiceId', None)
+            if invoiceId:
+                queryset = queryset.filter(invoice_id=invoiceId)
             if userId:
                 try:
                     user_instance = User.objects.get(id=userId)
