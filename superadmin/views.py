@@ -5735,8 +5735,7 @@ class InvoiceSendView(generics.GenericAPIView):
                             context=email_context,
                             to_email=user_email
                         )
-                        print(invoice_data.user.email, 'invoice_data.user.email')
-
+                        Invoice.objects.filter(invoice_id=invoiceId).update(is_send=True)
                 context["message"] = "Invoice sent successfully."
                 return response.Response(
                     data=context,
