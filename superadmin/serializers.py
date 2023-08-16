@@ -2262,13 +2262,32 @@ class InvoiceSerializers(serializers.ModelSerializer):
         serializers.ModelSerializer: The base serializer class for model-based serializers.
     """
 
+    user = serializers.SerializerMethodField()
     class Meta:
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date','invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send'
+            'grand_total', 'points', 'is_send', 'user'
         ]
         read_only_fields = ['id']
+        
+    def get_user(self, obj):
+        """
+        Retrieves the serialized data for the user related to a Invoice object.
+
+        Args:
+            obj: The Invoice object to retrieve the user data for.
+
+        Returns:
+            A dictionary containing the serialized user data.
+
+        """
+
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
 
 
 class InvoiceDetailSerializers(serializers.ModelSerializer):
@@ -2298,14 +2317,34 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
     """
     
     detail = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
     
     class Meta:
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date', 'invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'detail'
+            'grand_total', 'points', 'is_send', 'user', 'detail'
         ]
         
+        
+    def get_user(self, obj):
+        """
+        Retrieves the serialized data for the user related to a Invoice object.
+
+        Args:
+            obj: The Invoice object to retrieve the user data for.
+
+        Returns:
+            A dictionary containing the serialized user data.
+
+        """
+
+        context = {}
+        get_data = UserSerializer(obj.user)
+        if get_data.data:
+            context = get_data.data
+        return context
+    
     def get_detail(self, obj):
         """
         Fetches and serializes related RechargeHistory instances associated with the provided Invoice object within the
