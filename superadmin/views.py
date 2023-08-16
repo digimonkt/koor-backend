@@ -5569,7 +5569,7 @@ class InvoiceDetailView(generics.GenericAPIView):
         if self.request.user.is_staff:
             try:
                 if invoiceId:
-                    invoice_data = Invoice.objects.get(id=invoiceId)
+                    invoice_data = Invoice.objects.get(invoice_id=invoiceId)
                     get_data = self.serializer_class(invoice_data)
                     context = get_data.data
                 return response.Response(
@@ -5698,7 +5698,7 @@ class InvoiceSendView(generics.GenericAPIView):
             try:
                 if invoiceId:
                     # Retrieve invoice data from the database
-                    invoice_data = Invoice.objects.get(id=invoiceId)
+                    invoice_data = Invoice.objects.get(invoice_id=invoiceId)
                     invoice_month = calendar.month_name[invoice_data.start_date.month]
                     user_email = []
 
