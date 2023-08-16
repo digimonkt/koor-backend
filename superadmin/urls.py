@@ -118,8 +118,8 @@ urlpatterns = [
     
     path('/set-points', SetPointsView.as_view(), name="set_points"),
     
+    path('/invoice', GenerateInvoiceView.as_view(), name="generate_invoice"),
     path('/invoice/download', DownloadInvoiceView.as_view(), name='download_invoice'),
-    path('/invoice/<str:userId>', GenerateInvoiceView.as_view(), name="generate_invoice"),
     path('/invoice/<str:invoiceId>/detail', InvoiceDetailView.as_view(), name="invoice_detail"),
     path('/invoice/<str:invoiceId>/send', InvoiceSendView.as_view(), name="invoice_send"),
     

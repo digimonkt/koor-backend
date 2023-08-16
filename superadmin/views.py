@@ -5444,7 +5444,7 @@ class GenerateInvoiceView(generics.ListAPIView):
     ]
     pagination_class = CustomPagination
 
-    def list(self, request, userId):
+    def list(self, request):
         """
         Retrieve a list of records based on filtering criteria.
 
@@ -5469,13 +5469,15 @@ class GenerateInvoiceView(generics.ListAPIView):
         
         # Check if the requesting user is a staff member
         if self.request.user.is_staff:
-            try:
-                user_instance = User.objects.get(id=userId)
-            except User.DoesNotExist:
-                return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
-            
             queryset = self.filter_queryset(self.get_queryset())
-            
+            userId = self.request.GET.get('userId', None)
+            if userId:
+                try:
+                    user_instance = User.objects.get(id=userId)
+                    queryset = queryset.filter(user=user_instance)
+                except User.DoesNotExist:
+                    return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+                            
             # Retrieve start_date and end_date from request parameters
             start_date = self.request.GET.get('from', None)
             
@@ -5499,14 +5501,12 @@ class GenerateInvoiceView(generics.ListAPIView):
                     queryset = queryset.filter(
                         created__gte=start_date,
                         created__lte=end_date,
-                        user=user_instance,
                         is_send=bool(is_send)
                     )
                 else:
                     queryset = queryset.filter(
                         created__gte=start_date,
-                        created__lte=end_date,
-                        user=user_instance
+                        created__lte=end_date
                     )
             
             page = self.paginate_queryset(queryset)
