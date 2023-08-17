@@ -1959,22 +1959,12 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
 
 class RechargeHistorySerializers(serializers.ModelSerializer):
     
-    user = serializers.SerializerMethodField()
-    
     class Meta:
         model = RechargeHistory
         fields = [
             'id', 'user', 'points', 'amount', 'created'
         ]
         read_only_fields = ['id', 'user', 'created']
-        
-    def get_user(self, obj):
-
-        context = {}
-        get_data = UserSerializer(obj.user)
-        if get_data.data:
-            context = get_data.data
-        return context
 
 
 class PackageSerializers(serializers.ModelSerializer):
