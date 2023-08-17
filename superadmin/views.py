@@ -5796,7 +5796,7 @@ class DownloadInvoiceView(generics.GenericAPIView):
         downloaded_file = ""
         if 'invoice-id' in request.GET:
             Page_title = "KOOR INVOICE"
-            invoice_data = Invoice.objects.get(id=request.GET['invoice-id'])
+            invoice_data = Invoice.objects.get(invoice_id=request.GET['invoice-id'])
             invoice_month = calendar.month_name[invoice_data.start_date.month]
             smtp_setting = SMTPSetting.objects.last()
             mobile_number = invoice_data.user.mobile_number
