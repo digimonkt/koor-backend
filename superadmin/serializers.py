@@ -1962,7 +1962,7 @@ class RechargeHistorySerializers(serializers.ModelSerializer):
     class Meta:
         model = RechargeHistory
         fields = [
-            'id', 'user', 'points', 'amount', 'created'
+            'id', 'user', 'points', 'note', 'amount', 'created'
         ]
         read_only_fields = ['id', 'user', 'created']
 
