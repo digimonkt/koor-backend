@@ -55,7 +55,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
                 from_email=host_user,
                 to=to_email
             )
-            email_msg.attach(kwargs['filename'], kwargs['file'].read(), 'application/pdf')
+            email_msg.attach(kwargs['filename'], kwargs['file'], 'application/pdf')
         else:
             email_msg = mail.EmailMessage(
                 subject=subject,
