@@ -72,6 +72,9 @@ class CreateUserSerializers(serializers.ModelSerializer):
     def validate(self, data):
         country_code = data.get("country_code")
         mobile_number = data.get("mobile_number")
+        email = data.get("email")
+        if email in [None] and mobile_number in [None]:
+            raise serializers.ValidationError({'message': 'Please enter mobile number or email.'})
         if mobile_number and country_code in ["", None]:
             raise serializers.ValidationError({'country_code': 'country code can not be blank'})
         return data
