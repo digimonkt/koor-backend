@@ -4784,7 +4784,7 @@ class NewsletterUserView(generics.ListAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             role = 'user'
-            if self.request.user:
+            if self.request.user.is_authenticated :
                 if self.request.user.role != 'admin':
                     role = self.request.user.role
             serializer.is_valid(raise_exception=True)
