@@ -694,12 +694,6 @@ class Invoice(BaseModel, TimeStampedModel, models.Model):
         blank=True,
         db_column='end_date',
     )
-    comment = models.TextField(
-        verbose_name=_('Comment'),
-        db_column="comment",
-        null=True,
-        blank=True,
-    )
     points = models.BigIntegerField(
         null=True,
         blank=True,

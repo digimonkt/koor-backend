@@ -40,7 +40,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
         host_password = smtp_setting.smtp_password
         host_port = smtp_setting.smtp_port
         context.update({
-            'FOOTER': 'Koor Admin, Thank5',
+            'FOOTER': 'Koor Admin, Thanks',
             'LOGO': Common.BASE_URL + smtp_setting.logo.url
         })
         mail_obj = EmailBackend(host=host, port=host_port, password=host_password, username=host_user, use_tls=True,
@@ -55,7 +55,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
                 from_email=host_user,
                 to=to_email
             )
-            email_msg.attach(kwargs['filename'], kwargs['file'].read(), 'application/pdf')
+            email_msg.attach(kwargs['filename'], kwargs['file'], 'application/pdf')
         else:
             email_msg = mail.EmailMessage(
                 subject=subject,

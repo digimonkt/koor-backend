@@ -1,10 +1,11 @@
 import csv, io, os, pathlib
+import calendar
 from datetime import datetime, date, timedelta
 
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.signals import request_finished
 from django.db.models import Exists, OuterRef, Q
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, HttpResponse
 from django_filters import rest_framework as django_filters
 from rest_framework import (
     status, generics, serializers,
@@ -14,6 +15,7 @@ from uuid import UUID
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
+from core.emails import get_email_object
 from employers.views import my_callback
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
@@ -39,7 +41,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    RechargeHistory, Packages, Invoice
+    RechargeHistory, Packages, Invoice, SMTPSetting
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -60,6 +62,8 @@ from .serializers import (
     UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers
 )
 from .seeds import run_seed
+from .process import html_to_pdf
+from koor.config.common import Common
 
 class CountryView(generics.ListAPIView):
     """
@@ -4780,7 +4784,7 @@ class NewsletterUserView(generics.ListAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             role = 'user'
-            if self.request.user:
+            if self.request.user.is_authenticated :
                 if self.request.user.role != 'admin':
                     role = self.request.user.role
             serializer.is_valid(raise_exception=True)
@@ -5352,7 +5356,8 @@ class PackageView(generics.ListAPIView):
         - The 'Packages' model should be defined in the Django app for this function to work correctly.
         - The 'request' object should contain a list of packages under the key 'data'.
         - Each package in the list should have an 'id' field that corresponds to the primary key of the Packages model.
-        - The 'benefit', 'price', and 'credit' fields are updated only if the corresponding fields are present in the package.
+        - The 'benefit', 'price', and 'credit' fields are updated only if the corresponding fields are present in the
+        package.
 
         Example:
         If you send a PATCH request to this view with the following JSON data:
@@ -5440,7 +5445,7 @@ class GenerateInvoiceView(generics.ListAPIView):
     ]
     pagination_class = CustomPagination
 
-    def list(self, request, userId):
+    def list(self, request):
         """
         Retrieve a list of records based on filtering criteria.
 
@@ -5465,13 +5470,18 @@ class GenerateInvoiceView(generics.ListAPIView):
         
         # Check if the requesting user is a staff member
         if self.request.user.is_staff:
-            try:
-                user_instance = User.objects.get(id=userId)
-            except User.DoesNotExist:
-                return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
-            
             queryset = self.filter_queryset(self.get_queryset())
-            
+            userId = self.request.GET.get('userId', None)
+            invoiceId = self.request.GET.get('invoiceId', None)
+            if invoiceId:
+                queryset = queryset.filter(invoice_id=invoiceId)
+            if userId:
+                try:
+                    user_instance = User.objects.get(id=userId)
+                    queryset = queryset.filter(user=user_instance)
+                except User.DoesNotExist:
+                    return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
+                            
             # Retrieve start_date and end_date from request parameters
             start_date = self.request.GET.get('from', None)
             
@@ -5484,14 +5494,24 @@ class GenerateInvoiceView(generics.ListAPIView):
                 )
             
             end_date = self.request.GET.get('to', datetime.now())
-            
             # Apply filtering based on start_date and end_date
+            is_send = self.request.GET.get('send', None)
             if start_date:
-                queryset = queryset.filter(
-                    created__gte=start_date,
-                    created__lte=end_date,
-                    user=user_instance
-                )
+                if is_send:
+                    if is_send == "true" or is_send == "True":
+                        is_send = True
+                    else:
+                        is_send = False
+                    queryset = queryset.filter(
+                        created__gte=start_date,
+                        created__lte=end_date,
+                        is_send=bool(is_send)
+                    )
+                else:
+                    queryset = queryset.filter(
+                        created__gte=start_date,
+                        created__lte=end_date
+                    )
             
             page = self.paginate_queryset(queryset)
             
@@ -5506,73 +5526,6 @@ class GenerateInvoiceView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-
-    def post(self, request, userId):
-        """
-        Create a new recharge record for a user's recharge history.
-
-        This method handles the creation of a recharge record for a user's recharge history.
-        The user's authentication status is checked, and only staff users are allowed to perform this action.
-        The provided request data is validated using a serializer, and if valid, a recharge history entry is created.
-
-        Args:
-            self: The instance of the view class.
-            request: The HTTP request object containing the data for the recharge record creation.
-            userId: The ID of the user for whom the recharge history is being recorded.
-
-        Returns:
-            A Response object with relevant data and appropriate status code.
-
-        Raises:
-            ValidationError: If the serializer encounters invalid data.
-            Exception: If an unexpected error occurs during the recharge record creation process.
-        """
-        
-        context = dict()
-        serializer = self.get_serializer(data=request.data)
-        try:
-            if self.request.user.is_staff:
-                try:
-                    user_instance = User.objects.get(id=userId)
-                except User.DoesNotExist:
-                    return response.Response(data={"userId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
-
-                serializer.is_valid(raise_exception=True)
-                start_date = serializer.validated_data['start_date']
-                end_date = serializer.validated_data['end_date']
-                recharge_history_data = RechargeHistory.objects.filter(user=user_instance, created__gte=start_date, created__lte=end_date)
-                total = 0
-                discount = 0
-                points = 0
-                for recharge_history in recharge_history_data:
-                    total = total + recharge_history.amount
-                    points = points + recharge_history.points
-                discount = total
-                grand_total = total - discount
-                serializer.save(user_instance, total, discount, grand_total, points)
-                context["data"] = serializer.data
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_201_CREATED
-                )
-            else:
-                context['message'] = "You do not have permission to perform this action."
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_401_UNAUTHORIZED
-                )
-        except serializers.ValidationError:
-            return response.Response(
-                data=serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except Exception as e:
-            context['message'] = str(e)
-            return response.Response(
-                data=context,
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
 
 class InvoiceDetailView(generics.GenericAPIView):
     """
@@ -5620,7 +5573,7 @@ class InvoiceDetailView(generics.GenericAPIView):
         if self.request.user.is_staff:
             try:
                 if invoiceId:
-                    invoice_data = Invoice.objects.get(id=invoiceId)
+                    invoice_data = Invoice.objects.get(invoice_id=invoiceId)
                     get_data = self.serializer_class(invoice_data)
                     context = get_data.data
                 return response.Response(
@@ -5639,3 +5592,335 @@ class InvoiceDetailView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+def GenerateInvoice():
+    """
+    Generates invoices for eligible employers based on recharge history within the previous month.
+
+    This function calculates the first and last days of the previous month, then retrieves recharge history data for
+    eligible employers within that time frame. For each employer, it calculates the total recharge amount, points
+    earned, and applicable discount. An invoice is created for each employer with relevant details.
+
+    Returns:
+        HttpResponse: A response indicating successful invoice generation.
+
+    Usage:
+        Call this function to generate invoices for eligible employers based on their recharge history within the
+        previous month.
+
+    Notes:
+        - Requires the 'User' and 'RechargeHistory' models to be defined and accessible in the current scope.
+        - The current implementation focuses on generating invoices for employers on the first day of the current month.
+        If executed on other days, the function won't generate invoices.
+
+    Example:
+        GenerateInvoice()
+    """
+
+    # Get the current date
+    current_date = datetime.now()
+
+    # Calculate the first day of the current month
+    first_day_of_current_month = current_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    # Calculate the last day of the last month
+    last_day_of_last_month = first_day_of_current_month - timedelta(days=1)
+
+    # Calculate the first day of the last month
+    first_day_of_last_month = last_day_of_last_month.replace(day=1)
+
+    # Calculate the end date of the last month
+    end_date_of_last_month = last_day_of_last_month.replace(hour=23, minute=59, second=59)
+
+    # Format the dates
+    start_date_formatted = first_day_of_last_month.strftime('%Y-%m-%d %H:%M:%S')
+    end_date_formatted = end_date_of_last_month.strftime('%Y-%m-%d %H:%M:%S')
+    start_date = first_day_of_last_month.strftime('%Y-%m-%d')
+    end_date = end_date_of_last_month.strftime('%Y-%m-%d')
+
+    # Check if the current date is the first day of the month
+    if current_date.date() == first_day_of_current_month.date():
+        user_data = User.objects.filter(role='employer')
+        for user_instance in user_data:
+            recharge_history_data = RechargeHistory.objects.filter(
+                user=user_instance, created__gte=start_date_formatted, created__lte=end_date_formatted
+            )
+            if recharge_history_data:
+                total = 0
+                discount = 0
+                points = 0
+                for recharge_history in recharge_history_data:
+                    total = total + recharge_history.amount
+                    points = points + recharge_history.points
+                discount = total
+                grand_total = total - discount
+                if Invoice.objects.filter(user=user_instance, start_date=start_date, end_date=end_date).exists():
+                    pass
+                else:
+                    invoice_instance = Invoice.objects.create(
+                        start_date=start_date, end_date=end_date, total=total, 
+                        discount=discount, grand_total=grand_total, points=points,
+                        user=user_instance
+                    )
+                    if invoice_instance.invoiceId:
+                        # Retrieve invoice data from the database
+                        invoice_data = Invoice.objects.get(invoice_id=invoice_instance.invoiceId)
+                        invoice_month = calendar.month_name[invoice_data.start_date.month]
+                        user_email = []
+
+                        # Get the user's email address
+                        if invoice_data.user:
+                            if invoice_data.user.email:
+                                user_email.append(invoice_data.user.email)
+
+                        if user_email:
+                            email_context = dict()
+
+                            # Determine user name for email context
+                            if invoice_data.user:
+                                if invoice_data.user.name:
+                                    user_name = invoice_data.user.name
+                                else:
+                                    user_name = user_email[0]
+                            elif invoice_data.company:
+                                user_name = invoice_data.company
+                            else:
+                                user_name = user_email[0]
+
+                            # Populate email context
+                            email_context["invoice_month"] = invoice_month
+                            # Send the email
+                            pdf = generate_pdf_file(invoice_instance.invoiceId)
+                            get_email_object(
+                                subject=f'Mail for Invoice',
+                                email_template_name='email-templates/mail-for-invoice.html',
+                                context=email_context,
+                                to_email=user_email,
+                                type="attachment",
+                                filename="Invoice.pdf", 
+                                file=pdf
+                            )
+                            Invoice.objects.filter(invoice_id=invoice_instance.invoiceId).update(is_send=True)
+    return HttpResponse("Invoice Generated")
+
+
+class InvoiceSendView(generics.GenericAPIView):
+    """
+    A view to send an invoice via email to a user.
+
+    This view is used to send an invoice to a user's email address. It checks if the requesting user
+    is a staff member, retrieves the specified invoice data, and sends an email containing the invoice
+    information. If successful, a success message is returned; otherwise, an error message is returned.
+
+    Requires authentication.
+
+    Attributes:
+        permission_classes (list): A list of permission classes that define the access permissions
+            for this view. Requires the requesting user to be authenticated.
+
+    Methods:
+        get(request, invoiceId):
+            Send the invoice via email to the user associated with the invoice.
+
+    Raises:
+        Exception: If an error occurs during the process of sending the invoice.
+
+    Returns:
+        Response: A response indicating the outcome of the operation, along with a message.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, invoiceId):
+        """
+        Send the invoice via email to the user associated with the invoice.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+            invoiceId (int): The ID of the invoice to be sent.
+
+        Returns:
+            Response: A response indicating the outcome of the operation, along with a message.
+        """
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                if invoiceId:
+                    # Retrieve invoice data from the database
+                    invoice_data = Invoice.objects.get(invoice_id=invoiceId)
+                    invoice_month = calendar.month_name[invoice_data.start_date.month]
+                    user_email = []
+
+                    # Get the user's email address
+                    if invoice_data.user:
+                        if invoice_data.user.email:
+                            user_email.append(invoice_data.user.email)
+
+                    if user_email:
+                        email_context = dict()
+
+                        # Determine user name for email context
+                        if invoice_data.user:
+                            if invoice_data.user.name:
+                                user_name = invoice_data.user.name
+                            else:
+                                user_name = user_email[0]
+                        elif invoice_data.company:
+                            user_name = invoice_data.company
+                        else:
+                            user_name = user_email[0]
+
+                        # Populate email context
+                        email_context["invoice_month"] = invoice_month
+                        # Send the email
+                        pdf = generate_pdf_file(invoiceId)
+                        get_email_object(
+                            subject=f'Mail for Invoice',
+                            email_template_name='email-templates/mail-for-invoice.html',
+                            context=email_context,
+                            to_email=user_email,
+                            type="attachment",
+                            filename="Invoice.pdf", 
+                            file=pdf
+                        )
+                        Invoice.objects.filter(invoice_id=invoiceId).update(is_send=True)
+                context["message"] = "Invoice sent successfully."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class DownloadInvoiceView(generics.GenericAPIView):
+    """
+    A view class that generates and serves PDF invoices for download based on invoice ID.
+
+    This view is intended for allowing anyone (with or without authentication) to download PDF invoices
+    corresponding to a specified invoice ID. It fetches invoice details, user information, and recharge history,
+    then generates a PDF representation of the invoice using an HTML template.
+
+    Attributes:
+        permission_classes (list): A list of permission classes that control access to this view. In this case,
+                                  it allows any user to access the view.
+
+    Methods:
+        get(self, request): Processes the GET request, generates the PDF invoice, and serves it as a response.
+
+    Usage:
+        Make a GET request to this view with the 'invoice-id' parameter in the query string to download the
+        corresponding invoice PDF.
+    """
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        """
+        Generate and serve a PDF invoice for download.
+
+        This method handles the GET request to generate a PDF invoice based on the specified 'invoice-id' parameter.
+        It retrieves invoice data, user information, recharge history, and SMTP settings. Then, it generates a PDF
+        using an HTML template and serves it as an HTTP response.
+
+        Args:
+            request (HttpRequest): The HTTP GET request object.
+
+        Returns:
+            HttpResponse: An HTTP response containing the generated PDF invoice with 'application/pdf' content type.
+        """
+
+        context = dict()
+        downloaded_file = ""
+        if 'invoice-id' in request.GET:
+            Page_title = "KOOR INVOICE"
+            invoice_data = Invoice.objects.get(invoice_id=request.GET['invoice-id'])
+            invoice_month = calendar.month_name[invoice_data.start_date.month]
+            smtp_setting = SMTPSetting.objects.last()
+            mobile_number = invoice_data.user.mobile_number
+            new_mobile_number = " "
+            for i in range(0, len(mobile_number), 5):
+                new_mobile_number += mobile_number[i:i + 5] + " "
+            if new_mobile_number:
+                new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
+            history_data = RechargeHistory.objects.filter(
+                user=invoice_data.user, created__gte=invoice_data.start_date,
+                created__lte=invoice_data.end_date
+            )
+            file_response = html_to_pdf(
+                'email-templates/pdf-invoice.html', {
+                    'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
+                    'invoice_month':invoice_month, 'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                    'mobile_number':new_mobile_number, 'history_data':history_data
+                }
+            )
+            return file_response
+        else:
+            context['message'] = "Invoice id is required"
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+def generate_pdf_file(invoice_id):
+    """
+    Generate a PDF invoice file based on the provided invoice ID.
+
+    This function retrieves relevant data from the database and generates a PDF invoice file using an HTML template.
+    The generated file includes information about the invoice, user details, and recharge history.
+
+    Parameters:
+    - invoice_id (int): The ID of the invoice for which the PDF is to be generated.
+
+    Returns:
+    - file_response (bytes): A byte stream containing the generated PDF invoice file.
+
+    Note:
+    - This function requires access to the Invoice, SMTPSetting, and RechargeHistory models.
+    - The HTML template used for PDF generation is 'email-templates/pdf-invoice.html'.
+    - The invoice data is fetched from the Invoice model based on the provided invoice ID.
+    - User's mobile number is formatted and displayed along with the country code.
+    - Recharge history data is fetched for the user within the invoice date range.
+    - The PDF generation is done using the 'html_to_pdf' function with the provided template
+      and relevant data.
+
+    Example usage:
+    >>> invoice_id = 123
+    >>> pdf_file = generate_pdf_file(invoice_id)
+    >>> with open('invoice.pdf', 'wb') as file:
+    ...     file.write(pdf_file)
+
+    """
+    Page_title = "KOOR INVOICE"
+    invoice_data = Invoice.objects.get(invoice_id=invoice_id)
+    invoice_month = calendar.month_name[invoice_data.start_date.month]
+    smtp_setting = SMTPSetting.objects.last()
+    mobile_number = invoice_data.user.mobile_number
+    new_mobile_number = " "
+    for i in range(0, len(mobile_number), 5):
+        new_mobile_number += mobile_number[i:i + 5] + " "
+    if new_mobile_number:
+        new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
+    history_data = RechargeHistory.objects.filter(
+        user=invoice_data.user, created__gte=invoice_data.start_date,
+        created__lte=invoice_data.end_date
+    )
+    file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
+                                                            'Page_title': Page_title, 'invoice_month':invoice_month,
+                                                            'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'mobile_number':new_mobile_number,
+                                                            'history_data':history_data
+                                                        }, raw=True
+                    )
+    return file_response
+    

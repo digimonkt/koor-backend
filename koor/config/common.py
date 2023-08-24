@@ -43,6 +43,7 @@ class Common(Configuration):
     CRONJOBS = [
     ('59 23 * * *', 'notification.views.ExpiredSavedJobs'),
     ('50 23 * * 7', 'job_seekers.views.RemoveAvailability'),
+    ('1 1 * * *', 'superadmin.views.GenerateInvoice'),
     ]
 
     # https://docs.djangoproject.com/en/2.0/topics/http/middleware/
@@ -304,8 +305,8 @@ class Common(Configuration):
     CORS_ALLOW_ALL_ORIGINS = True  # For Development settings
     
     CORS_ALLOW_HEADERS = [
-    '*',
-]
+        '*',
+    ]
     
     CORS_EXPOSE_HEADERS = [
         "*",
@@ -314,4 +315,3 @@ class Common(Configuration):
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
     ATOMIC_REQUESTS = True
-
