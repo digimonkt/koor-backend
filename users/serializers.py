@@ -1290,7 +1290,7 @@ class SocialLoginSerializers(serializers.ModelSerializer):
     )
     class Meta:
         model = User
-        fields = ['id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code', 'display_image', 'is_online']
+        fields = ['id', 'social_login_id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code', 'display_image', 'is_online']
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
