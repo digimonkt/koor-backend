@@ -600,25 +600,46 @@ class SocialLoginView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
-            if User.objects.filter(email=serializer.validated_data['email']).exists():
-                user = User.objects.get(email=serializer.validated_data['email'])
+            if serializer.validated_data['source'] == 'facebook':
+                if User.objects.filter(social_login_id=serializer.validated_data['social_login_id']).exists():
+                    user = User.objects.get(social_login_id=serializer.validated_data['social_login_id'])
+                else:
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    user = User.objects.get(id=serializer.data['id'])
+                    if user.role == "job_seeker":
+                        JobSeekerProfile.objects.create(user=user)
+                    elif user.role == "employer":
+                        EmployerProfile.objects.create(user=user)
+                    elif user.role == "vendor":
+                        VendorProfile.objects.create(user=user)
+                if user.role != serializer.validated_data['role']:
+                    context["message"] = ["Account already registered with another role."]
+                    context["role"] = [user.role]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
             else:
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                user = User.objects.get(id=serializer.data['id'])
-                if user.role == "job_seeker":
-                    JobSeekerProfile.objects.create(user=user)
-                elif user.role == "employer":
-                    EmployerProfile.objects.create(user=user)
-                elif user.role == "vendor":
-                    VendorProfile.objects.create(user=user)
-            if user.role != serializer.validated_data['role']:
-                context["message"] = ["Email already registered with another role."]
-                context["role"] = [user.role]
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_404_NOT_FOUND
-                )
+                if User.objects.filter(email=serializer.validated_data['email']).exists():
+                    user = User.objects.get(email=serializer.validated_data['email'])
+                else:
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
+                    user = User.objects.get(id=serializer.data['id'])
+                    if user.role == "job_seeker":
+                        JobSeekerProfile.objects.create(user=user)
+                    elif user.role == "employer":
+                        EmployerProfile.objects.create(user=user)
+                    elif user.role == "vendor":
+                        VendorProfile.objects.create(user=user)
+                if user.role != serializer.validated_data['role']:
+                    context["message"] = ["Email already registered with another role."]
+                    context["role"] = [user.role]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
             user_session = create_user_session(request, user)
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
