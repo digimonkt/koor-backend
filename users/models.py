@@ -69,6 +69,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         null=True,
         db_column="name"
     )
+    social_login_id = models.CharField(
+        verbose_name=_('Social Login Id'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="social_login_id"
+    )
     role = models.CharField(
         verbose_name=_('Role'),
         max_length=250,

@@ -1014,7 +1014,8 @@ class PopularJobCategoryView(generics.ListAPIView):
         job_categories = []
 
         # Retrieve the popular job categories and their counts
-        most_used_categories = JobDetails.objects.values('job_category__id', 'job_category__title').annotate(
+        most_used_categories = JobDetails.objects.filter(deadline__gte=date.today(), is_removed=False, status="active"
+                        ).values('job_category__id', 'job_category__title').annotate(
             category_count=Count('job_category')).order_by('-category_count')
 
         # Prepare the job categories list with title and count information
