@@ -372,8 +372,15 @@ class SendOtpView(generics.GenericAPIView):
         try:
             otp = unique_otp_generator()
             user_email = request.GET.get('email', None)
+            user_role = request.GET.get('role', None)
+            print(user_role)
             try:
                 user_instance = User.objects.get(email__iexact=user_email)
+                if user_instance.role != user_role:
+                    return response.Response(
+                        data={"email": "User not exist as " + str(user_role)},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 context["yourname"] = user_email
                 context["otp"] = otp
                 get_email_object(
