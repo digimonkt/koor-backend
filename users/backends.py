@@ -17,7 +17,7 @@ class MobileOrEmailBackend(BaseBackend):
 
     """
 
-    def authenticate(self, identifier=None, password=None, role=None, **kwargs):
+    def authenticate(self, identifier=None, password=None, role='admin', **kwargs):
         try:
 
             # Try to fetch the user by searching the username or email field
