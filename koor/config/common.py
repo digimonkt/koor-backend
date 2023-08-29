@@ -311,6 +311,7 @@ class Common(Configuration):
     CORS_EXPOSE_HEADERS = [
         "*",
     ]
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS').split(",")
 
     # https://docs.djangoproject.com/en/4.1/ref/settings/#atomic-requests
 
