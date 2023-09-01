@@ -16,7 +16,7 @@ from .views import (
     TestimonialView, NewsletterUserView, SetPointsView,
     TestimonialDetailView, JobsCreateView, TenderCreateView,
     PackageView, GenerateInvoiceView, InvoiceDetailView,
-    InvoiceSendView, DownloadInvoiceView
+    InvoiceSendView, DownloadInvoiceView, ResourcesMoreView
 )
 
 app_name = "superadmin"
@@ -99,6 +99,7 @@ urlpatterns = [
     
     path('/resources', ResourcesView.as_view(), name="resources"),
     path('/resources/<str:resourcesId>', ResourcesView.as_view(), name="resources"),
+    path('/resources/<str:resourcesId>/more', ResourcesMoreView.as_view(), name="resources_more"),
     path('/resources/<str:resourcesId>/detail', ResourcesDetailView.as_view(), name="resources_detail"),
         
     path('/links', LinksView.as_view(), name="links"),
