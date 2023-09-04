@@ -314,7 +314,7 @@ class CityView(generics.ListAPIView):
         if self.request.user.is_staff:
             try:
                 City.objects.get(id=cityId).delete()
-                context['message'] = "Deleted Successfully"
+                context['message'] = ["Deleted Successfully"]
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -331,7 +331,7 @@ class CityView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            context['message'] = "You do not have permission to perform this action."
+            context['message'] = ["You do not have permission to perform this action."]
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
@@ -413,7 +413,7 @@ class JobCategoryView(generics.ListAPIView):
                     status=status.HTTP_201_CREATED
                 )
             else:
-                context['message'] = "You do not have permission to perform this action."
+                context['message'] = ["You do not have permission to perform this action."]
                 return response.Response(
                     data=context,
                     status=status.HTTP_401_UNAUTHORIZED
@@ -424,7 +424,7 @@ class JobCategoryView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            context['message'] = str(e)
+            context['message'] = [str(e)]
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
@@ -444,7 +444,7 @@ class JobCategoryView(generics.ListAPIView):
         if self.request.user.is_staff:
             try:
                 JobCategory.objects.get(id=jobCategoryId).delete()
-                context['message'] = "Deleted Successfully"
+                context['message'] = ["Deleted Successfully"]
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -461,7 +461,7 @@ class JobCategoryView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            context['message'] = "You do not have permission to perform this action."
+            context['message'] = ["You do not have permission to perform this action."]
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
@@ -492,7 +492,7 @@ class JobCategoryView(generics.ListAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(job_category_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
+                    context['message'] = ["Updated Successfully"]
                     return response.Response(
                         data=context,
                         status=status.HTTP_200_OK
@@ -758,7 +758,7 @@ class LanguageView(generics.ListAPIView):
                     status=status.HTTP_201_CREATED
                 )
             else:
-                context['message'] = "You do not have permission to perform this action."
+                context['message'] = ["You do not have permission to perform this action."]
                 return response.Response(
                     data=context,
                     status=status.HTTP_401_UNAUTHORIZED
@@ -769,7 +769,7 @@ class LanguageView(generics.ListAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         except Exception as e:
-            context['message'] = str(e)
+            context['message'] = [str(e)]
             return response.Response(
                 data=context,
                 status=status.HTTP_400_BAD_REQUEST
@@ -789,7 +789,7 @@ class LanguageView(generics.ListAPIView):
         if self.request.user.is_staff:
             try:
                 Language.objects.get(id=languageId).delete()
-                context['message'] = "Deleted Successfully"
+                context['message'] = ["Deleted Successfully"]
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -800,13 +800,13 @@ class LanguageView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
-                context["message"] = e
+                context["message"] = [e]
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            context['message'] = "You do not have permission to perform this action."
+            context['message'] = ["You do not have permission to perform this action."]
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
@@ -838,7 +838,7 @@ class LanguageView(generics.ListAPIView):
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(language_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
+                    context['message'] = ["Updated Successfully"]
                     return response.Response(
                         data=context,
                         status=status.HTTP_200_OK
@@ -4315,6 +4315,26 @@ class ResourcesDetailView(generics.GenericAPIView):
             )
 
 
+class ResourcesMoreView(generics.ListAPIView):
+    serializer_class = ResourcesSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = ResourcesContent.objects.all().order_by('-created')
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request, resourcesId):
+        context = dict()
+        queryset = self.filter_queryset(self.get_queryset().exclude(id=resourcesId))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+        
+
+
 class UploadLogo(generics.ListAPIView):
     """
     A view for uploading logos.
@@ -5871,6 +5891,7 @@ class DownloadInvoiceView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
 
 def generate_pdf_file(invoice_id):
     """
