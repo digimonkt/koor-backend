@@ -606,9 +606,13 @@ class TenderApplicationsView(generics.ListAPIView):
                 tender_instance = TenderDetails.objects.get(id=tenderId, user=request.user)
                 filters = Q(tender=tender_instance)
                 filter_list = self.request.GET.getlist('filter')
+                blacklisted_user_list = []
+                for data in BlackList.objects.all():
+                    blacklisted_user_list.append(data.blacklisted_user)
                 for filter_data in filter_list:
                     if filter_data == "rejected": filters = filters & ~Q(rejected_at=None)
                     if filter_data == "shortlisted": filters = filters & ~Q(shortlisted_at=None)
+                    if filter_data == "blacklisted": filters = filters & Q(user__in=blacklisted_user_list)
                 queryset = self.filter_queryset(AppliedTender.objects.filter(filters))
                 page = self.paginate_queryset(queryset)
                 if page is not None:
@@ -618,6 +622,13 @@ class TenderApplicationsView(generics.ListAPIView):
                         ~Q(rejected_at=None)).count()
                     serialized_response.data['shortlisted_count'] = AppliedTender.objects.filter(tender=tender_instance).filter(
                         ~Q(shortlisted_at=None)).count()
+                    user_list = []
+                    for data in AppliedTender.objects.filter(tender=tender_instance):
+                        user_list.append(data.user)
+                    serialized_response.data['blacklisted_count'] = BlackList.objects.filter(
+                        blacklisted_user__in=user_list).order_by('blacklisted_user').distinct(
+                        'blacklisted_user').count()
+                        
                     return response.Response(data=serialized_response.data, status=status.HTTP_200_OK)
                 serializer = self.get_serializer(queryset, many=True, context={"request": request})
                 return response.Response(serializer.data)
@@ -627,7 +638,7 @@ class TenderApplicationsView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
-                context["message"] = e
+                context["message"] = str(e)
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
