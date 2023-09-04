@@ -623,7 +623,7 @@ class TenderApplicationsView(generics.ListAPIView):
                     serialized_response.data['shortlisted_count'] = AppliedTender.objects.filter(tender=tender_instance).filter(
                         ~Q(shortlisted_at=None)).count()
                     user_list = []
-                    for data in AppliedTender.objects.filter(job=tender_instance):
+                    for data in AppliedTender.objects.filter(tender=tender_instance):
                         user_list.append(data.user)
                     serialized_response.data['blacklisted_count'] = BlackList.objects.filter(
                         blacklisted_user__in=user_list).order_by('blacklisted_user').distinct(
@@ -638,7 +638,7 @@ class TenderApplicationsView(generics.ListAPIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
             except Exception as e:
-                context["message"] = e
+                context["message"] = str(e)
                 return response.Response(
                     data=context,
                     status=status.HTTP_404_NOT_FOUND
