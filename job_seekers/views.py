@@ -21,6 +21,7 @@ from jobs.models import JobDetails, JobSubCategory, JobCategory
 from koor.config.common import Common
 from user_profile.models import JobSeekerProfile
 from users.models import User
+from employers.models import BlackList
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
     JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
@@ -775,9 +776,19 @@ class JobsApplyView(generics.ListAPIView):
         """
 
         context = dict()
+        blacklisted_user = []
         if request.user.role == "job_seeker":
             try:
                 job_instance = JobDetails.objects.get(id=jobId)
+                blacklisted_list = BlackList.objects.filter(user=job_instance.user)
+                for blacklisted_data in blacklisted_list:
+                    blacklisted_user.append(blacklisted_data.blacklisted_user)
+                if request.user in blacklisted_user:
+                    context["message"] = ["You are blacklisted for this job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 try:
                     if AppliedJob.objects.get(job=job_instance, user=request.user):
                         context["message"] = "You are already applied"
