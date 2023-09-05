@@ -21,6 +21,7 @@ from jobs.models import JobDetails, JobSubCategory, JobCategory
 from koor.config.common import Common
 from user_profile.models import JobSeekerProfile
 from users.models import User
+from employers.models import BlackList
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
     JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
@@ -318,7 +319,7 @@ class LanguageView(generics.GenericAPIView):
                 try:
                     if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'],
                                                                 user=request.user):
-                        context['language'] = 'Language already in use.'
+                        context['language'] = ['Language already in use.']
                         return response.Response(
                             data=context,
                             status=status.HTTP_400_BAD_REQUEST
@@ -775,9 +776,19 @@ class JobsApplyView(generics.ListAPIView):
         """
 
         context = dict()
+        blacklisted_user = []
         if request.user.role == "job_seeker":
             try:
                 job_instance = JobDetails.objects.get(id=jobId)
+                blacklisted_list = BlackList.objects.filter(user=job_instance.user)
+                for blacklisted_data in blacklisted_list:
+                    blacklisted_user.append(blacklisted_data.blacklisted_user)
+                if request.user in blacklisted_user:
+                    context["message"] = ["You are blacklisted for this job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 try:
                     if AppliedJob.objects.get(job=job_instance, user=request.user):
                         context["message"] = "You are already applied"
@@ -786,19 +797,25 @@ class JobsApplyView(generics.ListAPIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
                 except AppliedJob.DoesNotExist:
-                    serializer = AppliedJobSerializers(data=request.data)
-                    try:
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save(user=request.user, job_instance=job_instance)
-                        context["message"] = "Applied Successfully"
+                    if request.user.name and request.user.user_profile_jobseekerprofile_user.gender and request.user.user_profile_jobseekerprofile_user.dob and request.user.user_profile_jobseekerprofile_user.employment_status and request.user.user_profile_jobseekerprofile_user.country and request.user.user_profile_jobseekerprofile_user.city and request.user.user_profile_jobseekerprofile_user.highest_education:
+                        serializer = AppliedJobSerializers(data=request.data)
+                        try:
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save(user=request.user, job_instance=job_instance)
+                            context["message"] = "Applied Successfully"
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_200_OK
+                            )
+                        except serializers.ValidationError:
+                            return response.Response(
+                                data=str(serializer.errors),
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                    else:
                         return response.Response(
-                            data=context,
-                            status=status.HTTP_200_OK
-                        )
-                    except serializers.ValidationError:
-                        return response.Response(
-                            data=str(serializer.errors),
-                            status=status.HTTP_400_BAD_REQUEST
+                            data={"message": ["Please complete your profile."]},
+                            status=status.HTTP_404_NOT_FOUND
                         )
             except JobDetails.DoesNotExist:
                 return response.Response(
