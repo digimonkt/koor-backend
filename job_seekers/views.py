@@ -319,7 +319,7 @@ class LanguageView(generics.GenericAPIView):
                 try:
                     if JobSeekerLanguageProficiency.objects.get(language__title=serializer.validated_data['language'],
                                                                 user=request.user):
-                        context['language'] = 'Language already in use.'
+                        context['language'] = ['Language already in use.']
                         return response.Response(
                             data=context,
                             status=status.HTTP_400_BAD_REQUEST
