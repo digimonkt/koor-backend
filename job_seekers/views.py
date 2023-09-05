@@ -786,19 +786,25 @@ class JobsApplyView(generics.ListAPIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
                 except AppliedJob.DoesNotExist:
-                    serializer = AppliedJobSerializers(data=request.data)
-                    try:
-                        serializer.is_valid(raise_exception=True)
-                        serializer.save(user=request.user, job_instance=job_instance)
-                        context["message"] = "Applied Successfully"
+                    if request.user.name and request.user.user_profile_jobseekerprofile_user.gender and request.user.user_profile_jobseekerprofile_user.dob and request.user.user_profile_jobseekerprofile_user.employment_status and request.user.user_profile_jobseekerprofile_user.country and request.user.user_profile_jobseekerprofile_user.city and request.user.user_profile_jobseekerprofile_user.highest_education:
+                        serializer = AppliedJobSerializers(data=request.data)
+                        try:
+                            serializer.is_valid(raise_exception=True)
+                            serializer.save(user=request.user, job_instance=job_instance)
+                            context["message"] = "Applied Successfully"
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_200_OK
+                            )
+                        except serializers.ValidationError:
+                            return response.Response(
+                                data=str(serializer.errors),
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                    else:
                         return response.Response(
-                            data=context,
-                            status=status.HTTP_200_OK
-                        )
-                    except serializers.ValidationError:
-                        return response.Response(
-                            data=str(serializer.errors),
-                            status=status.HTTP_400_BAD_REQUEST
+                            data={"message": ["Please complete your profile."]},
+                            status=status.HTTP_404_NOT_FOUND
                         )
             except JobDetails.DoesNotExist:
                 return response.Response(
