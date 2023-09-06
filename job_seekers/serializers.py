@@ -46,11 +46,11 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_blank=False
     )
-    email = serializers.CharField(
-        style={"input_type": "text"},
-        write_only=True,
-        allow_blank=False
-    )
+    # email = serializers.CharField(
+    #     style={"input_type": "text"},
+    #     write_only=True,
+    #     allow_blank=False
+    # )
     mobile_number = serializers.CharField(
         style={"input_type": "text"},
         write_only=True,
@@ -66,7 +66,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         model = JobSeekerProfile
         fields = ['gender', 'dob', 'employment_status', 'description',
                   'market_information_notification', 'job_notification',
-                  'full_name', 'email', 'mobile_number', 'country_code',
+                  'full_name', 'mobile_number', 'country_code',
                   'highest_education', 'country', 'city', 'experience'
                   ]
 
@@ -79,11 +79,11 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError('mobile_number can not be blank', code='mobile_number')
 
-    def validate_email(self, email):
-        if email != '':
-            return email
-        else:
-            raise serializers.ValidationError('email can not be blank', code='email')
+    # def validate_email(self, email):
+    #     if email != '':
+    #         return email
+    #     else:
+    #         raise serializers.ValidationError('email can not be blank', code='email')
 
     def validate(self, data):
         country_code = data.get("country_code")
@@ -97,9 +97,9 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         if 'full_name' in validated_data:
             instance.user.name = validated_data['full_name']
             instance.user.save()
-        if 'email' in validated_data:
-            instance.user.email = validated_data['email']
-            instance.user.save()
+        # if 'email' in validated_data:
+        #     instance.user.email = validated_data['email']
+        #     instance.user.save()
         if 'mobile_number' in validated_data:
             instance.user.mobile_number = validated_data['mobile_number']
             instance.user.country_code = validated_data['country_code']
