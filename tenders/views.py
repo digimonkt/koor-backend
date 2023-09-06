@@ -525,6 +525,29 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             application_status.shortlisted_at = None
                             application_status.rejected_at = datetime.now()
                             application_status.save()
+                            
+                            if application_status.user.get_notification:
+                                Notification.objects.create(
+                                    user=application_status.user, tender_application=application_status,
+                                    notification_type='rejected', created_by=request.user
+                                )
+                                if application_status.user.email:
+                                    email_context = dict()
+                                    if application_status.user.name:
+                                        user_name = application_status.user.name
+                                    else:
+                                        user_name = application_status.user.email
+                                    email_context["yourname"] = user_name
+                                    email_context["notification_type"] = "rejected tender"
+                                    email_context["job_instance"] = application_status.rejected_at
+                                    if application_status.user.get_email:
+                                        get_email_object(
+                                            subject=f'Notification for rejected tender',
+                                            email_template_name='email-templates/send-notification.html',
+                                            context=email_context,
+                                            to_email=[application_status.user.email, ]
+                                        )
+                    
                     elif action == "blacklisted":
                         if 'reason' in request.data:
                             if BlackList.objects.filter(user=request.user, blacklisted_user=application_status.user):
