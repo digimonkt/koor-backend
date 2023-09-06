@@ -537,7 +537,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                 )
                         else:
                             return response.Response(
-                                data={"message": "Please enter a reason"},
+                                data={"message": ["Please enter a reason"]},
                                 status=status.HTTP_400_BAD_REQUEST
                             )
                     context['message'] = str(message) + str(action)
@@ -546,7 +546,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         status=status.HTTP_200_OK
                     )
                 else:
-                    context['message'] = "You do not have permission to perform this action."
+                    context['message'] = ["You do not have permission to perform this action."]
                     return response.Response(
                         data=context,
                         status=status.HTTP_401_UNAUTHORIZED
