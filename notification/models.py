@@ -42,6 +42,7 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('applied_tender', "Applied Tender"),
         ('password_update', "Password Updated"),
         ('shortlisted', "Shortlisted"),
+        ('rejected', "Rejected"),
         ('planned_interviews', "Planned Interviews"),
         ('message', "Message"),
         ('advance_filter', "Advance Filter"),
