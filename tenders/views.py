@@ -500,7 +500,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             if application_status.user.get_notification:
                                 Notification.objects.create(
                                     user=application_status.user, tender_application=application_status,
-                                    notification_type='shortlisted', created_by=request.user
+                                    notification_type='shortlisted', created_by=request.user, tender=application_status.tender
                                 )
                                 if application_status.user.email:
                                     email_context = dict()
@@ -529,7 +529,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             if application_status.user.get_notification:
                                 Notification.objects.create(
                                     user=application_status.user, tender_application=application_status,
-                                    notification_type='rejected', created_by=request.user
+                                    notification_type='rejected', created_by=request.user, tender=application_status.tender
                                 )
                                 if application_status.user.email:
                                     email_context = dict()

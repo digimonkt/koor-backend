@@ -261,7 +261,9 @@ class ChatConsumer(BaseConsumer):
             # if chat_user != self.get_user() and chat_user.is_online == False
             if chat_user != self.get_user():
                 Notification.objects.create(
-                    user=chat_user, notification_type='message', message=message
+                    user=chat_user, notification_type='message', 
+                    message=message, message_sender=str(self.get_user().id),
+                    conversation_id=str(self.conversation.id)
                 )
 
         if content_type != "text":
