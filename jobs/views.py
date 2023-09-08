@@ -412,7 +412,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             if application_status.user.get_notification:
                                 Notification.objects.create(
                                     user=application_status.user, application=application_status,
-                                    notification_type='shortlisted', created_by=request.user
+                                    notification_type='shortlisted', created_by=request.user, job=application_status.job
                                 )
                                 if application_status.user.email:
                                     email_context = dict()
@@ -441,7 +441,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                             if application_status.user.get_notification:
                                 Notification.objects.create(
                                     user=application_status.user, application=application_status,
-                                    notification_type='rejected', created_by=request.user
+                                    notification_type='rejected', created_by=request.user, job=application_status.job
                                 )
                                 if application_status.user.email:
                                     email_context = dict()
@@ -488,7 +488,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                     if application_status.user.get_notification:
                                         Notification.objects.create(
                                             user=application_status.user, application=application_status,
-                                            notification_type='planned_interviews', created_by=request.user
+                                            notification_type='planned_interviews', created_by=request.user, job=application_status.job
                                         )
                                         if application_status.user.email:
                                             email_context = dict()
