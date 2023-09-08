@@ -69,6 +69,20 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="message",
     )
+    message_sender = models.CharField(
+        verbose_name=_('Message Sender'),
+        max_length=255,
+        null=True,
+        blank=True,
+        db_column="message_sender",
+    )
+    conversation_id = models.CharField(
+        verbose_name=_('Conversation Id'),
+        max_length=255,
+        null=True,
+        blank=True,
+        db_column="conversation_id",
+    )
     application = models.ForeignKey(
         AppliedJob,
         verbose_name=_('Application'),
