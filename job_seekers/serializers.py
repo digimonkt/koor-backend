@@ -356,7 +356,7 @@ class AppliedJobSerializers(serializers.ModelSerializer):
             if job_instance.user.get_notification:
                 Notification.objects.create(
                     user=job_instance.user, application=applied_job_instance,
-                    notification_type='applied', created_by=user
+                    notification_type='applied', created_by=user, job=job_instance
                 )
                 user_email = []
                 if job_instance.user.email:
