@@ -13,7 +13,7 @@ from users.models import (
     TimeStampedModel, User
 
 )
-from vendors.models import AppliedTender
+from vendors.models import AppliedTender, TenderDetails
 
 
 class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
@@ -109,6 +109,15 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="job",
         related_name='%(app_label)s_%(class)s_jobs'
+    )
+    tender = models.ForeignKey(
+        TenderDetails,
+        verbose_name=_('Tender'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="tender",
+        related_name='%(app_label)s_%(class)s_tenders'
     )
     job_filter = models.ForeignKey(
         JobFilters,

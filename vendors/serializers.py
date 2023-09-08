@@ -399,7 +399,7 @@ class AppliedTenderSerializers(serializers.ModelSerializer):
         if tender_instace.user.get_notification:
             Notification.objects.create(
                 user=tender_instace.user, tender_application=applied_tender_instance,
-                notification_type='applied_tender', created_by=user
+                notification_type='applied_tender', created_by=user, tender=tender_instace
             )
             if tender_instace.user.email:
                 email_context = dict()
