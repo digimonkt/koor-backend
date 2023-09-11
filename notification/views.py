@@ -185,3 +185,28 @@ class NotificationSettingsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class GetNotificationSettingsView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        
+        context = dict()
+        try:
+            user = self.request.user
+            user_instance = User.objects.get(id=request.user.id)
+            context['email'] = user_instance.get_email
+            context['notification'] = user_instance.get_notification
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
