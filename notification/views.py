@@ -63,7 +63,12 @@ class NotificationView(generics.ListAPIView):
             - 'previous': A URL for the previous page of results, or None if there is no previous page.
             - 'results': A list of notification objects, serialized as JSON.
         """
-        queryset = Notification.objects.filter(user=self.request.user)
+        notification_type = self.request.GET.get('type', None)
+        created = self.request.GET.get('created', None)
+        if created:
+            queryset = Notification.objects.filter(notification_type=notification_type,created__date__lte=created, user=self.request.user)
+        else:
+            queryset = Notification.objects.filter(user=self.request.user)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={"request": request})
@@ -181,3 +186,28 @@ class NotificationSettingsView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+class GetNotificationSettingsView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        
+        context = dict()
+        try:
+            user = self.request.user
+            user_instance = User.objects.get(id=request.user.id)
+            context['email'] = user_instance.get_email
+            context['notification'] = user_instance.get_notification
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
