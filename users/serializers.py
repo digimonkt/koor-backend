@@ -466,15 +466,23 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     languages = serializers.SerializerMethodField()
     skills = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    profile_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
             'education_record', 'work_experience', 'resume', 'languages', 'skills', 'job_preferences',
-            'is_online'
+            'is_online', 'profile_completed'
         ]
 
+    def get_profile_completed(self, obj):
+        context = False
+        if obj.name and obj.user_profile_jobseekerprofile_user.gender and obj.user_profile_jobseekerprofile_user.experience and obj.user_profile_jobseekerprofile_user.dob and obj.user_profile_jobseekerprofile_user.employment_status and obj.user_profile_jobseekerprofile_user.country and obj.user_profile_jobseekerprofile_user.city and obj.user_profile_jobseekerprofile_user.highest_education:
+            if JobSeekerSkill.objects.filter(user=obj).exists():
+                context = True
+        return context
+    
     def get_image(self, obj):
         context = dict()
         if obj.image:
