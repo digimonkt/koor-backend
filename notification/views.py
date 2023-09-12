@@ -68,8 +68,10 @@ class NotificationView(generics.ListAPIView):
         queryset = Notification.objects.filter(user=self.request.user)
         if created:
             queryset = queryset.filter(created__date__lte=created)
-        if notification_type:
-            queryset = queryset.filter(notification_type=notification_type)
+        if notification_type == "message":
+            queryset = queryset.filter(notification_type='message')
+        elif notification_type == "jobs":
+            queryset = queryset.exclude(notification_type='message')
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True, context={"request": request})
