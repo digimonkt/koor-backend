@@ -63,9 +63,10 @@ class NotificationView(generics.ListAPIView):
             - 'previous': A URL for the previous page of results, or None if there is no previous page.
             - 'results': A list of notification objects, serialized as JSON.
         """
+        notification_type = self.request.GET.get('type', None)
         created = self.request.GET.get('created', None)
         if created:
-            queryset = Notification.objects.filter(created__date__lte=created, user=self.request.user)
+            queryset = Notification.objects.filter(notification_type=notification_type,created__date__lte=created, user=self.request.user)
         else:
             queryset = Notification.objects.filter(user=self.request.user)
         page = self.paginate_queryset(queryset)

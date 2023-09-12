@@ -55,8 +55,6 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     
     def get_job(self, obj):
         if obj.job:
-            print(obj.job)
-            print(obj.job.title)
             user = dict()
             user['id'] = obj.job.user.id
             user['name'] = obj.job.user.name
