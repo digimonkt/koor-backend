@@ -1,6 +1,6 @@
 from django.urls import path
 
-from notification.views import NotificationView, NotificationSettingsView
+from notification.views import NotificationView, NotificationSettingsView, GetNotificationSettingsView
 from .views import (
     UserView, CreateSessionView, DeleteSessionView,
     DisplayImageView, SendOtpView, ChangePasswordView,
@@ -32,6 +32,7 @@ urlpatterns = [
     path('/get-location', GetLocationView.as_view(), name="get_location"),
     
     path('/notification', NotificationView.as_view(), name="get_notification"),
+    path('/notification/settings', GetNotificationSettingsView.as_view(), name="get_notification_settings"),
     path('/notification/settings/<str:notificationType>', NotificationSettingsView.as_view(), name="notification_settings"),
     
     path('/email-verification/<str:otp>', VerificationView.as_view(), name="verification"),
