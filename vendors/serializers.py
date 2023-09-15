@@ -766,3 +766,79 @@ class VendorTagSerializers(serializers.ModelSerializer):
             for remove in tag_remove:
                 VendorTag.objects.filter(id=remove).delete()
         return tag_add
+
+
+class GetAppliedTenderNotificationSerializers(serializers.ModelSerializer):
+    """
+    A serializer class for the AppliedTender model that returns details of applied tenders.
+
+    This serializer includes the following fields:
+        - id (int): The ID of the applied tender.
+        - shortlisted_at (datetime): The date and time when the tender was shortlisted.
+        - rejected_at (datetime): The date and time when the tender was rejected.
+        - short_letter (str): The short letter submitted with the tender application.
+        - attachments (list): A list of URLs for any attachments submitted with the tender application.
+        - tender (dict): A dictionary containing details of the tender posting.
+
+    The 'tender' field is a serialized representation of the related JobDetails object, and is populated
+    using the `get_tender` method of the GetAppliedTenderSerializers class.
+    """
+
+    tender = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AppliedTender
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'short_letter', 'attachments', 'tender', 'user']
+
+    def get_attachments(self, obj):
+        """Get the serialized attachment data for a AppliedTender object.
+
+        This method uses the AppliedTenderAttachmentsItem model to retrieve the attachments associated with a AppliedTender
+        object. It then uses the AppliedTenderAttachmentsSerializer to serialize the attachment data. If the serializer
+        returns data, the first attachment in the list is extracted and added to a list, which is then returned.
+
+        Args:
+            obj: A AppliedTender object whose attachment data will be serialized.
+
+        Returns:
+            A list containing the first serialized attachment data, or an empty list if the serializer did
+            not return any data.
+
+        """
+
+        context = []
+        attachments_data = AppliedTenderAttachmentsItem.objects.filter(applied_tender=obj)
+        get_data = AppliedTenderAttachmentsSerializer(attachments_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+
+    def get_tender(self, obj):
+
+        return {"id": obj.tender.id, "title": obj.tender.title}
+
+    def get_user(self, obj):
+        """Get the serialized user data for a AppliedTender object.
+
+        This method uses the UserSerializer to serialize the users associated with a AppliedTender
+        object. If the serializer returns data, it is assigned to a dictionary and returned.
+
+        Args:
+            obj: A AppliedTender object whose user data will be serialized.
+
+        Returns:
+            A dictionary containing the serialized user data, or an empty dictionary if the
+            serializer did not return any data.
+
+        """
+
+        context = {}
+        if obj.user:
+            get_data = UserSerializer(obj.user)
+            if get_data.data:
+                context = get_data.data
+        return context
+
+
