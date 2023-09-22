@@ -103,8 +103,8 @@ class GetConversationView(generics.GenericAPIView):
 
         try:
             user_instance = User.objects.get(id=userId)
-            conversation = Conversation.objects.get(chat_user=self.request.user and user_instance)
-            context['conversation_id'] = conversation.id
+            conversation = Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).last()
+            context['conversation_id'] = conversation.id if conversation else ""
             return response.Response(data=context, status=status.HTTP_200_OK)
 
         except Conversation.DoesNotExist:
