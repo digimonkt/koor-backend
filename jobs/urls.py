@@ -4,7 +4,7 @@ from .views import (
     JobSearchView, JobDetailView, JobApplicationsView,
     RecentApplicationsView, ApplicationsDetailView, JobSuggestionView,
     JobFilterView, JobShareView, JobCategoryView,
-    PopularJobCategoryView
+    PopularJobCategoryView, download_image
 )
 
 app_name = "jobs"
@@ -12,6 +12,8 @@ app_name = "jobs"
 urlpatterns = [
 
     path('', JobSearchView.as_view(), name="job_search"),
+    
+    path('/download-image', download_image, name='download_image'),
     
     path('/applications', RecentApplicationsView.as_view(), name="recent_applications"),
     
