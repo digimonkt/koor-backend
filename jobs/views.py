@@ -1056,3 +1056,25 @@ class PopularJobCategoryView(generics.ListAPIView):
             status=status.HTTP_200_OK
         )
         
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
+from koor.config.common import Common
+import base64
+
+
+class DownloadImage(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        context = dict()
+        file_path = request.GET.get('file_path', None)
+        file_path = file_path.split("media")
+        new_file_path = Common.MEDIA_ROOT + file_path[1]
+        encoded_string = ""
+        with open(new_file_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+        context['base_image'] = encoded_string
+        return response.Response(
+            data=context,
+            status=status.HTTP_200_OK
+        )
