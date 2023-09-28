@@ -815,12 +815,12 @@ class JobsApplyView(generics.ListAPIView):
                                 )
                         else:
                             return response.Response(
-                                data={"message": ["Please complete your profile."]},
+                                data={"message": ["Your Profile information is not enough to apply for a job, Please complete your profile."]},
                                 status=status.HTTP_404_NOT_FOUND
                             )
                     else:
                         return response.Response(
-                            data={"message": ["Please complete your profile."]},
+                            data={"message": ["Your Profile information is not enough to apply for a job, Please complete your profile."]},
                             status=status.HTTP_404_NOT_FOUND
                         )
             except JobDetails.DoesNotExist:

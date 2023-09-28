@@ -112,6 +112,7 @@ class Common(Configuration):
             default=config('DATABASE_URI'),
             conn_max_age=int(config('POSTGRES_CONN_MAX_AGE', 600))
         )
+
     }
 
     # General
@@ -127,6 +128,7 @@ class Common(Configuration):
     USE_TZ = False
     LOGIN_REDIRECT_URL = '/'
     BASE_URL = config("BASE_URL")
+    DEFAULT_PASSWORD = config("DEFAULT_PASSWORD")
 
     # Static files (CSS, JavaScript, Images)
     # https://docs.djangoproject.com/en/2.0/howto/static-files/

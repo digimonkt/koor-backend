@@ -182,6 +182,7 @@ class ChatUserSerializer(serializers.ModelSerializer):
 
     image = serializers.SerializerMethodField()
     is_blacklisted = serializers.SerializerMethodField()
+    blacklisted = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -190,7 +191,8 @@ class ChatUserSerializer(serializers.ModelSerializer):
             'name',
             'email',
             'image',
-            'is_blacklisted'
+            'is_blacklisted',
+            'blacklisted'
         )
 
     def get_image(self, obj):
@@ -229,6 +231,12 @@ class ChatUserSerializer(serializers.ModelSerializer):
 
         return BlackList.objects.filter(blacklisted_user=obj).exists()
 
+    def get_blacklisted(self, obj):
+        user = self.context.get('user')
+        if user:
+            return BlackList.objects.filter(user=obj).filter(blacklisted_user=user).exists()
+        return None
+
 
 class ConversationSerializer(serializers.ModelSerializer):
     chat_user = serializers.SerializerMethodField()
@@ -258,7 +266,7 @@ class ConversationSerializer(serializers.ModelSerializer):
         if user:
             user_data = obj.chat_user.exclude(id=user.id)
             if user_data.exists():
-                return ChatUserSerializer(user_data, many=True).data
+                return ChatUserSerializer(user_data, many=True, context={'user': user}).data
         return []
 
 
