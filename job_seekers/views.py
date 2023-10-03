@@ -791,7 +791,7 @@ class JobsApplyView(generics.ListAPIView):
                     )
                 try:
                     if AppliedJob.objects.get(job=job_instance, user=request.user):
-                        context["message"] = "You are already applied"
+                        context["message"] = ["You are already applied"]
                         return response.Response(
                             data=context,
                             status=status.HTTP_400_BAD_REQUEST
@@ -803,7 +803,7 @@ class JobsApplyView(generics.ListAPIView):
                             try:
                                 serializer.is_valid(raise_exception=True)
                                 serializer.save(user=request.user, job_instance=job_instance)
-                                context["message"] = "Applied Successfully"
+                                context["message"] = ["Applied Successfully"]
                                 return response.Response(
                                     data=context,
                                     status=status.HTTP_200_OK
