@@ -1196,11 +1196,13 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     description = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     is_blacklisted = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
-                  'languages', 'skills', 'is_blacklisted', 'is_online']
+                  'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online']
     
     def get_image(self, obj):
         context = {}
@@ -1263,6 +1265,28 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+    
+    def get_country(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.country:
+                    return jobseeker_data.country.title
+            except JobSeekerProfile.DoesNotExist:
+                pass 
+        return None
+    
+    def get_city(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.city:
+                    return jobseeker_data.city.title
+            except JobSeekerProfile.DoesNotExist:
+                pass 
+        return None
 
 
 class SocialLoginSerializers(serializers.ModelSerializer):
