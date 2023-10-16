@@ -904,3 +904,46 @@ class ActiveJobsView(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True, context={"user": user_instance})
         return response.Response(serializer.data)
+
+
+class UnblockUserView(generics.GenericAPIView):
+    
+    serializer_class = UpdateAboutSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, userId):
+        
+        context = dict()
+        if request.user.role == "employer":
+            try:
+                user_instance = User.objects.get(id=userId)
+                try:
+                    blacklisted_instance = BlackList.objects.get(blacklisted_user=user_instance, user=request.user)
+                    blacklisted_instance.delete(soft=False)
+                    context['message'] = "User unblocked."
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                except BlackList.DoesNotExist:
+                    return response.Response(
+                        data={"message": ["This user not block by you."]},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except BlackList.DoesNotExist:
+                return response.Response(
+                    data={"message": ["Invalid user id."]},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
