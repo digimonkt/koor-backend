@@ -1,5 +1,6 @@
 import logging
 from bs4 import BeautifulSoup
+from django.shortcuts import get_object_or_404
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
@@ -247,11 +248,16 @@ class ChatConsumer(BaseConsumer):
         Creates a new chat message object.
         """
         content_type = content.get("content_type", "text")
+        reply_to = content.get("reply_to", None)
+        message_instance = None
+        if reply_to:
+            message_instance = get_object_or_404(ChatMessage, id=reply_to)
         chat_message = ChatMessage.objects.create(
             user=self.get_user(),
             conversation=self.conversation,
             message=content.get("message", ""),
             content_type=content_type,
+            reply_to=message_instance
         )
         # Assuming you have a list of related objects you want to add
         related_objects = [self.get_user()]  # Replace with your own objects
