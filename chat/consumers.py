@@ -1,9 +1,11 @@
 import logging
+from bs4 import BeautifulSoup
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import JsonWebsocketConsumer
 from django.contrib.auth.models import AnonymousUser
 from django.db.models import Q, F
+
 
 from project_meta.models import Media
 from users.models import UserSession, User
@@ -255,7 +257,18 @@ class ChatConsumer(BaseConsumer):
         related_objects = [self.get_user()]  # Replace with your own objects
         chat_message.read_by.add(*related_objects)
         print(self.conversation)
-        message = str(self.get_user().name) + ' is send you a message : ' + str(content.get("message", "")[:10])
+        substring_length = 10
+        description = content.get("message", "")
+        # Parse the HTML content
+        soup = BeautifulSoup(description, 'html.parser')
+
+        # Get the plain text content within the HTML tags
+        plain_text = soup.get_text()
+
+        # Extract the substring while preserving the HTML structure
+        substring = str(soup)[:substring_length]
+
+        message = str(self.get_user().name) + ' is send you a message : ' + str(substring)
         for chat_user in self.conversation.chat_user.all():
             print(chat_user)
             # if chat_user != self.get_user() and chat_user.is_online == False
