@@ -268,14 +268,14 @@ class ChatConsumer(BaseConsumer):
         # Extract the substring while preserving the HTML structure
         substring = str(soup)[:substring_length]
 
-        message = str(self.get_user().name) + ' is send you a message : ' + str(substring)
+        message = str(self.get_user().name) + ' is send you a message : ' + str(substring) + "..."
         for chat_user in self.conversation.chat_user.all():
             print(chat_user)
             # if chat_user != self.get_user() and chat_user.is_online == False
             if chat_user != self.get_user():
                 Notification.objects.create(
                     user=chat_user, notification_type='message', 
-                    message=message, message_sender=str(self.get_user().id),
+                    message=message, message_id=chat_message.id, message_sender=str(self.get_user().id),
                     conversation_id=str(self.conversation.id)
                 )
 
