@@ -257,7 +257,7 @@ class ChatConsumer(BaseConsumer):
         related_objects = [self.get_user()]  # Replace with your own objects
         chat_message.read_by.add(*related_objects)
         print(self.conversation)
-        substring_length = 10
+        substring_length = 35
         description = content.get("message", "")
         # Parse the HTML content
         soup = BeautifulSoup(description, 'html.parser')
