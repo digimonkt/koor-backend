@@ -69,6 +69,13 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="message",
     )
+    message_id = models.CharField(
+        verbose_name=_('Message Id'),
+        max_length=255,
+        null=True,
+        blank=True,
+        db_column="message_id",
+    )
     message_sender = models.CharField(
         verbose_name=_('Message Sender'),
         max_length=255,

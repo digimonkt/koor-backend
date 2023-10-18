@@ -275,7 +275,7 @@ class ChatConsumer(BaseConsumer):
             if chat_user != self.get_user():
                 Notification.objects.create(
                     user=chat_user, notification_type='message', 
-                    message=message, message_sender=str(self.get_user().id),
+                    message=message, message_id=chat_message.id, message_sender=str(self.get_user().id),
                     conversation_id=str(self.conversation.id)
                 )
 
