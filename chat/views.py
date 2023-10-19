@@ -103,7 +103,12 @@ class GetConversationView(generics.GenericAPIView):
 
         try:
             user_instance = User.objects.get(id=userId)
-            conversation = Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).last()
+            if Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).exists():
+                conversation = Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).last()
+            else:
+                conversation = Conversation.objects.create()
+                conversation.chat_user.add(self.request.user, user_instance)
+                conversation.save()
             context['conversation_id'] = conversation.id if conversation else ""
             return response.Response(data=context, status=status.HTTP_200_OK)
 
