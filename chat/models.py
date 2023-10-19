@@ -107,6 +107,15 @@ class ChatMessage(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="message",
     )
+    reply_to = models.ForeignKey(
+        'self',
+        verbose_name=_('Reply To'),
+        on_delete=models.SET_NULL,
+        db_column="reply_to",
+        null=True,
+        blank=True,
+        related_name='%(app_label)s_%(class)s_reply_to'
+    )
     attachment = models.OneToOneField(
         Media,
         verbose_name=_('Attachment'),
