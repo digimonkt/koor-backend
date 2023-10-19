@@ -103,7 +103,12 @@ class GetConversationView(generics.GenericAPIView):
 
         try:
             user_instance = User.objects.get(id=userId)
-            conversation = Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).last()
+            if Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).exists():
+                conversation = Conversation.objects.filter(chat_user=self.request.user).filter(chat_user=user_instance).last()
+            else:
+                conversation = Conversation.objects.create()
+                conversation.chat_user.add(self.request.user, user_instance)
+                conversation.save()
             context['conversation_id'] = conversation.id if conversation else ""
             return response.Response(data=context, status=status.HTTP_200_OK)
 
@@ -210,3 +215,69 @@ class Attachment(generics.GenericAPIView):
                 data=serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+
+class MessageView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def put(self, request, messageId):
+    
+        context = dict()
+        try:
+            message_instance = ChatMessage.objects.get(id=messageId)
+            if request.user == message_instance.user:
+                ChatMessage.objects.filter(id=messageId).update(is_edited=True, message=request.data['message'])
+                context['message'] = ["Message Updated Successfully"]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except ChatMessage.DoesNotExist:
+            return response.Response(
+                data={"messageId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    
+    def delete(self, request, messageId):
+    
+        context = dict()
+        try:
+            message_instance = ChatMessage.objects.get(id=messageId)
+            if request.user == message_instance.user:
+                ChatMessage.objects.filter(id=messageId).delete()
+                context['message'] = ["Message deleted."]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except ChatMessage.DoesNotExist:
+            return response.Response(
+                data={"messageId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+

@@ -36,7 +36,7 @@ class GetNotificationSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'notification_type', 'message', 'application', 'job', 
             'tender_application', 'tender', 'job_filter', 'seen', 'created', 
-            'message_sender', 'conversation_id'
+            'message_sender', 'message_id', 'conversation_id'
         ]
 
     def get_application(self, obj):
