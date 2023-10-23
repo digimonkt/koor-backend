@@ -2,7 +2,7 @@ from django.urls import path
 
 from .views import (
     UpdateAboutView, JobsView,
-    TendersView, JobsStatusView,
+    TendersView, JobsStatusView, JobApplicationView,
     TendersStatusView, ActivityView,
     JobAnalysisView, BlacklistedUserView,
     ShareCountView, ActiveJobsView, UnblockUserView
@@ -30,4 +30,6 @@ urlpatterns = [
     path('/unblock-user/<str:userId>', UnblockUserView.as_view(), name="unblock_user"), 
     
     path('/active-jobs/<str:employerId>', ActiveJobsView.as_view(), name="active_jobs"), 
+    
+    path('/job-application/<str:jobSeekerId>', JobApplicationView.as_view(), name="job_application"), 
 ]
