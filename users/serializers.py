@@ -483,7 +483,6 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         ready_for_chat_record = False
         if 'user' in self.context:
             user = self.context['user']
-            print(user)
             if self.context['user'].is_authenticated:
                 ready_for_chat_record = AppliedJob.objects.filter(
                     job__user=user,

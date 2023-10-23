@@ -382,7 +382,6 @@ class SendOtpView(generics.GenericAPIView):
             otp = unique_otp_generator()
             user_email = request.GET.get('email', None)
             user_role = request.GET.get('role', None)
-            print(user_role)
             try:
                 user_instance = User.objects.get(email__iexact=user_email)
                 if user_instance.role != user_role:
