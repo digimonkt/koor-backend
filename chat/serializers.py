@@ -147,10 +147,12 @@ class ChatMessageSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     conversation = GetConversationSerializer()
     attachment = AttachmentSerializer()
+    reply_to = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatMessage
         fields = [
+            'reply_to',
             'user',
             'conversation',
             'message',
@@ -160,6 +162,27 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             'id',
             'created'
         ]
+        
+    def get_reply_to(self, obj):
+        if obj.reply_to:
+            attachment = None
+            if obj.reply_to.attachment:
+                attachment = {
+                              'id': obj.reply_to.attachment.id,
+                              'title': obj.reply_to.attachment.title,
+                              'path': obj.reply_to.attachment.file_path.url,
+                              'type': obj.reply_to.attachment.media_type
+                            }
+            return {
+                'id': obj.reply_to.id,
+                'message': obj.reply_to.message,
+                'attachment': attachment,
+                'user_id': obj.reply_to.user.id,
+                'user_name': obj.reply_to.user.name,
+                'created': obj.reply_to.created,
+            }
+        else:
+            return {}
 
 
 class ChatUserSerializer(serializers.ModelSerializer):
