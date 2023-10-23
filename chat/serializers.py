@@ -167,7 +167,12 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         if obj.reply_to:
             attachment = None
             if obj.reply_to.attachment:
-                attachment = obj.reply_to.attachment.file_path.url
+                attachment = {
+                              'id': obj.reply_to.attachment.id,
+                              'title': obj.reply_to.attachment.title,
+                              'path': obj.reply_to.attachment.file_path.url,
+                              'type': obj.reply_to.attachment.media_type
+                            }
             return {
                 'id': obj.reply_to.id,
                 'message': obj.reply_to.message,
