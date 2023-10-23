@@ -168,7 +168,8 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             return {
                 'id': obj.reply_to.id,
                 'message': obj.reply_to.message,
-                'user': obj.reply_to.user,
+                'user_id': obj.reply_to.user.id,
+                'user_name': obj.reply_to.user.name,
                 'created': obj.reply_to.created,
             }
         else:
