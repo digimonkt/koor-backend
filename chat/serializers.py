@@ -165,9 +165,13 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         
     def get_reply_to(self, obj):
         if obj.reply_to:
+            attachment = None
+            if obj.reply_to.attachment:
+                attachment = obj.reply_to.attachment.file_path.url
             return {
                 'id': obj.reply_to.id,
                 'message': obj.reply_to.message,
+                'attachment': attachment,
                 'user_id': obj.reply_to.user.id,
                 'user_name': obj.reply_to.user.name,
                 'created': obj.reply_to.created,
