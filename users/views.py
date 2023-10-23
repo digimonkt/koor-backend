@@ -155,6 +155,15 @@ class UserView(generics.GenericAPIView):
                 session_id=user_session.id
             )
             response_context["message"] = "User Created Successfully"
+            
+            # context["yourname"] = user.email
+            # context["otp"] = otp
+            # get_email_object(
+            #     subject=f'OTP for Verification',
+            #     email_template_name='email-templates/new/activate-your-account.html',
+            #     context=context,
+            #     to_email=[user.email, ]
+            # )
             return response.Response(
                 data=response_context,
                 headers={"x-access": token.access_token, "x-refresh": token},
@@ -769,6 +778,9 @@ class SearchView(generics.ListAPIView):
             - `results`: list of dicts, the serialized representations of the candidates matching the 
                 filter/search criteria
         """
+        emp_context = dict()
+        if self.request.user:
+            emp_context = {"user": self.request.user}
         if role == 'job_seeker':
             queryset = self.filter_queryset(self.get_queryset().filter(role=role).filter(job_seekers_jobpreferences_user__display_in_search=True))
         else:
@@ -820,9 +832,9 @@ class SearchView(generics.ListAPIView):
         elif role == "vendor":
             get_serializer = VendorDetailSerializers
         if page is not None:
-            serializer = get_serializer(page, many=True)
+            serializer = get_serializer(page, many=True, context=emp_context)
             return self.get_paginated_response(serializer.data)
-        serializer = get_serializer(queryset, many=True)
+        serializer = get_serializer(queryset, many=True, context=emp_context)
         return response.Response(serializer.data)
 
 
