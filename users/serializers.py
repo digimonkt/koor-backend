@@ -3,7 +3,7 @@ from rest_framework import serializers
 from job_seekers.models import (
     EducationRecord, EmploymentRecord, 
     Resume, JobSeekerLanguageProficiency, 
-    JobSeekerSkill,
+    JobSeekerSkill, AppliedJob,
     JobPreferences
 )
 
@@ -467,14 +467,28 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     skills = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     profile_completed = serializers.SerializerMethodField()
+    ready_for_chat = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
             'education_record', 'work_experience', 'resume', 'languages', 'skills', 'job_preferences',
-            'is_online', 'profile_completed'
+            'is_online', 'profile_completed', 'ready_for_chat'
         ]
+        
+    
+    def get_ready_for_chat(self, obj):
+    
+        ready_for_chat_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if self.context['user'].is_authenticated:
+                ready_for_chat_record = AppliedJob.objects.filter(
+                    job__user=user,
+                    user=obj
+                ).exists()
+        return ready_for_chat_record
 
     def get_profile_completed(self, obj):
         context = False
@@ -962,14 +976,28 @@ class VendorDetailSerializers(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     sector = serializers.SerializerMethodField()
     tag = serializers.SerializerMethodField()
+    ready_for_chat = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 'get_notification', 
-            'profile', 'sector', 'tag', 'is_online'
+            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat'
         ]
+        
+    
+    def get_ready_for_chat(self, obj):
+    
+        ready_for_chat_record = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if self.context['user'].is_authenticated:
+                ready_for_chat_record = AppliedJob.objects.filter(
+                    job__user=user,
+                    user=obj
+                ).exists()
+        return ready_for_chat_record
         
     def get_image(self, obj):
         context = dict()
