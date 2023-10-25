@@ -969,7 +969,7 @@ class JobApplicationView(generics.ListAPIView):
         context = dict()
         if self.request.user.role == 'employer':
             user_instance = User.objects.get(id=jobSeekerId)
-            queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance))
+            queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance).filter(job__user=self.request.user))
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context={"user": self.request.user})
