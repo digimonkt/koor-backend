@@ -41,6 +41,8 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
         host_port = smtp_setting.smtp_port
         context.update({
             'FOOTER': 'Koor Admin, Thanks',
+            'FOOTER_TEXT': 'Unsubscribe from the newsletter',
+            'BASE_URL': Common.BASE_URL,
             'LOGO': Common.BASE_URL + smtp_setting.logo.url
         })
         mail_obj = EmailBackend(host=host, port=host_port, password=host_password, username=host_user, use_tls=True,

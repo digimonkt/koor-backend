@@ -156,14 +156,13 @@ class UserView(generics.GenericAPIView):
             )
             response_context["message"] = "User Created Successfully"
             
-            # context["yourname"] = user.email
-            # context["otp"] = otp
-            # get_email_object(
-            #     subject=f'OTP for Verification',
-            #     email_template_name='email-templates/new/activate-your-account.html',
-            #     context=context,
-            #     to_email=[user.email, ]
-            # )
+            context["yourname"] = user.email
+            get_email_object(
+                subject=f'Welcome to KOOR',
+                email_template_name='email-templates/new/activate-your-account.html',
+                context=context,
+                to_email=[user.email, ]
+            )
             return response.Response(
                 data=response_context,
                 headers={"x-access": token.access_token, "x-refresh": token},
