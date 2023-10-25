@@ -214,6 +214,7 @@ class ChatUserSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'email',
+            'role',
             'image',
             'is_blacklisted',
             'blacklisted'
