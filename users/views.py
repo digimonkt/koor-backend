@@ -127,7 +127,8 @@ class UserView(generics.GenericAPIView):
                 context["otp"] = otp
                 get_email_object(
                     subject=f'OTP for Verification',
-                    email_template_name='email-templates/send-forget-password-otp.html',
+                    email_template_name='email-templates/new/new-login-detected.html',
+                    # email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
                     to_email=[user.email, ]
                 )
@@ -392,7 +393,8 @@ class SendOtpView(generics.GenericAPIView):
                 context["otp"] = otp
                 get_email_object(
                     subject=f'OTP for Verification',
-                    email_template_name='email-templates/send-forget-password-otp.html',
+                    email_template_name='email-templates/new/new-login-detected.html',
+                    # email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
                     to_email=[user_email, ]
                 )
