@@ -26,7 +26,7 @@ from employers.models import BlackList
 from .backends import MobileOrEmailBackend as cb
 from .models import User
 
-from vendors.models import VendorSector, VendorTag
+from vendors.models import VendorSector, VendorTag, AppliedTender
 
 
 class CreateUserSerializers(serializers.ModelSerializer):
