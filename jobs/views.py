@@ -478,8 +478,14 @@ class ApplicationsDetailView(generics.GenericAPIView):
                     elif action == "planned_interviews":
                         if application_status.rejected_at is None:
                             if 'interview_at' in request.data:
-                                if application_status.interview_at:
-                                    message = "Already "
+                                interview_at_str = request.data['interview_at']
+                                interview_at_datetime = datetime.strptime(interview_at_str, '%Y-%m-%dT%H:%M:%S')
+                                current_datetime = datetime.now()
+                                if interview_at_datetime < current_datetime:
+                                    return response.Response(
+                                        data={"message": ["Interview date in invalid."]},
+                                        status=status.HTTP_400_BAD_REQUEST
+                                    )
                                 else:
                                     if application_status.shortlisted_at is None:
                                         application_status.shortlisted_at = datetime.now()
@@ -502,7 +508,8 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                             if application_status.user.get_email:
                                                 get_email_object(
                                                     subject=f'Notification for interview planned',
-                                                    email_template_name='email-templates/send-notification.html',
+                                                    email_template_name='email-templates/new/notification.html',
+                                                    # email_template_name='email-templates/send-notification.html',
                                                     context=email_context,
                                                     to_email=[application_status.user.email, ]
                                                 )

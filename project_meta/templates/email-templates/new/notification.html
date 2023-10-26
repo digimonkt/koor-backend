@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>notification</title>
+  <style>
+    td,
+    th {
+      text-align: left;
+      padding: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <table
+    style="width: 600px; margin: auto; border-collapse: collapse; font-family: arial, sans-serif; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;background: #FFFFFF; border-radius: 5px;">
+    <!-- TABLE HEADER START -->
+    <thead style="height: 93px;">
+      <tr>
+        <th colspan="2" style="padding-left: 30px;">
+          <img src="{{LOGO}}" alt="">
+        </th>
+
+        <th style="text-align: end; padding-right: 30px;">
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/facebook.png">
+          </a>
+          <a href="#" style="margin: 0 10px; text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/instagram.png">
+          </a>
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/linkedine.png">
+          </a>
+        </th>
+      </tr>
+    </thead>
+    <!-- TABLE HEADER EXIT -->
+
+    <!-- TABLE BODY START -->
+    <tbody>
+      <tr>
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <h2 style="font-size: 27px; font-weight: 600; margin: 0;">Notification for interview planned
+          </h2>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            Hello {{yourname}},</p>
+
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+              You got a notificaiton for <b>{{job_instance.title}}.</b></p>
+        </td>
+      </tr>
+
+      {% comment %} <tr style="border-bottom: 1px solid #CACACA;">
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <p style="color: #121212; font-size: 16px; line-height: 24px; font-weight: 600; margin-top:  5px;">
+          Block No 5 Software Technology Parks of India (IT Parkm Morena Link Rdm Gwaliorm Madhya Pradesh 474005)</p>
+        </td>
+      </tr> {% endcomment %}
+
+    </tbody>
+    <!-- TABLE BODY EXIT -->
+
+    <!-- TABLE FOOTER START -->
+    <tfoot style="height: 128px;">
+      <tr>
+        <th colspan="3" style="text-align: center; padding-left: 30px; padding-right: 30px; padding-bottom: 0;">
+          <p style="font-size: 16px; font-weight: 400; line-height: 24px; color: #CACACA; margin: 0;">Unsubscribe from
+            the
+            newsletter</p>
+        </th>
+      </tr>
+
+      <tr>
+        <th colspan="3" style="text-align: center; padding-left: 30px; padding-right: 30px; padding-top: 0;">
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/graytwitter.png">
+          </a>
+          <a href="#" style="text-decoration: none; margin: 0 10px;">
+            <img src="{{BASE_URL}}/static/image_for_mail/grayinsta.png">
+          </a>
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/graylinkedin.png">
+          </a>
+        </th>
+      </tr>
+
+    </tfoot>
+    <!-- TABLE FOOTER EXIT -->
+
+  </table>
+</body>
+
+</html>
