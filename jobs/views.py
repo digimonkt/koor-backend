@@ -479,7 +479,12 @@ class ApplicationsDetailView(generics.GenericAPIView):
                         if application_status.rejected_at is None:
                             if 'interview_at' in request.data:
                                 interview_at_str = request.data['interview_at']
-                                interview_at_datetime = datetime.strptime(interview_at_str, '%Y-%m-%dT%H:%M:%S')
+                                interview_at_str = "2023-10-31T16:59"  # Sample interview_at string
+                                current_datetime = datetime.now()
+                                try:
+                                    interview_at_datetime = datetime.strptime(interview_at_str, '%Y-%m-%dT%H:%M:%S')
+                                except ValueError:
+                                    interview_at_datetime = datetime.strptime(interview_at_str, '%Y-%m-%dT%H:%M')
                                 current_datetime = datetime.now()
                                 if interview_at_datetime < current_datetime:
                                     return response.Response(
