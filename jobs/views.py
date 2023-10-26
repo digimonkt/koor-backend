@@ -476,10 +476,7 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                 status=status.HTTP_400_BAD_REQUEST
                             )
                     elif action == "planned_interviews":
-                        print('test')
                         if application_status.rejected_at is None:
-                            print(datetime.now().date())
-                            print(request.data['interview_at'])
                             if 'interview_at' in request.data:
                                 interview_at_str = request.data['interview_at']
                                 interview_at_datetime = datetime.strptime(interview_at_str, '%Y-%m-%dT%H:%M:%S')
