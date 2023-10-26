@@ -993,8 +993,8 @@ class VendorDetailSerializers(serializers.ModelSerializer):
         if 'user' in self.context:
             user = self.context['user']
             if self.context['user'].is_authenticated:
-                ready_for_chat_record = AppliedJob.objects.filter(
-                    job__user=user,
+                ready_for_chat_record = AppliedTender.objects.filter(
+                    tender__user=user,
                     user=obj
                 ).exists()
         return ready_for_chat_record
