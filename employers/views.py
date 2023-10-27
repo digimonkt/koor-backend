@@ -1001,9 +1001,9 @@ class TenderApplicationView(generics.ListAPIView):
             queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance).filter(tender__user=self.request.user))
             page = self.paginate_queryset(queryset)
             if page is not None:
-                serializer = self.get_serializer(page, many=True, context={"user": self.request.user})
+                serializer = self.get_serializer(page, many=True, context={"request": request})
                 return self.get_paginated_response(serializer.data)
-            serializer = self.get_serializer(queryset, many=True, context={"user": self.request.user})
+            serializer = self.get_serializer(queryset, many=True, context={"request": request})
             return response.Response(serializer.data)
         else:
             context['message'] = "You do not have permission to perform this action."
