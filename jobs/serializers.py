@@ -282,6 +282,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
             'budget_pay_period', 'country', 'city', 'is_full_time', 'is_part_time',
             'has_contract', 'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date',
             'created', 'is_applied', 'is_saved', 'is_shortlisted', 'is_rejected', 'interview_at', 'user',
+            'apply_through_koor', 'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link',
             'company', 'company_logo'
         ]
 
@@ -544,7 +545,9 @@ class GetJobsDetailSerializers(serializers.ModelSerializer):
             'highest_education', 'language', 'skill', 'duration', 'experience', 'status', 
             'applicant', 'deadline', 'start_date', 'created', 'user', 'attachments',
             'is_applied', 'application', 'is_saved', 'is_editable', 'is_rejected', 
-            'is_shortlisted', 'interview_at', 'company', 'company_logo'
+            'apply_through_koor', 'apply_through_email', 'apply_through_website', 
+            'application_instruction', 'website_link', 'is_shortlisted', 'interview_at', 
+            'company', 'company_logo'
 
         ]
     def get_company_logo(self, obj):
