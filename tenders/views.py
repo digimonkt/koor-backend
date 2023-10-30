@@ -48,7 +48,7 @@ class TenderSearchView(generics.ListAPIView):
 
     serializer_class = TendersSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = TenderDetails.objects.filter(deadline__gte=date.today(), status='active')
+    queryset = None
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = TenderDetailsFilter
     search_fields = [
@@ -97,6 +97,41 @@ class TenderSearchView(generics.ListAPIView):
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True, context=context)
         return response.Response(serializer.data)
+
+
+    def get_queryset(self, **kwargs):
+        
+        order_by = None
+        if 'search_by' in self.request.GET:
+            search_by = self.request.GET['search_by']
+            if search_by == 'salary':
+                order_by = 'budget_amount'
+            elif search_by == 'expiration':
+                order_by = 'deadline'
+            elif search_by == 'created_at':
+                order_by = 'created'
+            if order_by:
+                if 'order_by' in self.request.GET:
+                    if 'descending' in self.request.GET['order_by']:
+                        return TenderDetails.objects.filter(
+                            deadline__gte=date.today(), 
+                            status='active'
+                        ).order_by("-" + str(order_by))
+                    else:
+                        return TenderDetails.objects.filter(
+                            deadline__gte=date.today(), 
+                            status='active'
+                        ).order_by(str(order_by))
+                else:
+                    return TenderDetails.objects.filter(
+                        deadline__gte=date.today(), 
+                        status='active'
+                    ).order_by(str(order_by))
+        return TenderDetails.objects.filter(
+            deadline__gte=date.today(), 
+            status='active'
+        )
+
 
 
 class TenderDetailView(generics.GenericAPIView):
