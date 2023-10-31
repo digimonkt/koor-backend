@@ -33,7 +33,7 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
     CategoryLogo, Testimonial, NewsletterUser,
-    RechargeHistory, Packages, Invoice
+    RechargeHistory, Packages, Invoice, GoogleAddSenseCode
 )
 
 
@@ -2354,3 +2354,16 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+class GoogleAddSenseCodeSerializers(serializers.ModelSerializer):
+
+    class Meta:
+        model = GoogleAddSenseCode
+        fields = ['id', 'page_title', 'code']
+        read_only_fields = ['id']
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        return instance
+    
