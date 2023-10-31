@@ -41,7 +41,8 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
-    RechargeHistory, Packages, Invoice, SMTPSetting
+    RechargeHistory, Packages, Invoice, SMTPSetting,
+    GoogleAddSenseCode
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -59,7 +60,8 @@ from .serializers import (
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
     RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers,
-    UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers
+    UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers,
+    GoogleAddSenseCodeSerializers
 )
 from .seeds import run_seed
 from .process import html_to_pdf
@@ -5944,4 +5946,115 @@ def generate_pdf_file(invoice_id):
                                                         }, raw=True
                     )
     return file_response
+
+
+  
+class GoogleAddSenseCodeView(generics.ListAPIView):
     
+    permission_classes = [permissions.AllowAny]
+    serializer_class = GoogleAddSenseCodeSerializers
+    queryset = GoogleAddSenseCode.objects.all().order_by('created')
+
+    def list(self, request):
+        page_title = request.GET.get('page_title', None)
+        if page_title:
+            queryset = self.filter_queryset(self.get_queryset().filter(page_title=page_title))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
+
+    def post(self, request):
+        
+        context = dict()
+        serializer = self.serializer_class(data=request.data)
+        try:
+            if self.request.user.is_staff:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                context["data"] = serializer.data
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                context['message'] = "You do not have permission to perform this action."
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            context['message'] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def put(self, request, codeId):
+        
+        context = dict()
+        try:
+            code_instance = GoogleAddSenseCode.objects.get(id=codeId)
+            serializer = self.serializer_class(data=request.data, instance=code_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(code_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except GoogleAddSenseCode.DoesNotExist:
+            return response.Response(
+                data={"codeId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def delete(self, request, codeId):
+        
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                GoogleAddSenseCode.objects.get(id=codeId).delete()
+                context['message'] = "Deleted Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except GoogleAddSenseCode.DoesNotExist:
+                return response.Response(
+                    data={"codeId": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = e
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
