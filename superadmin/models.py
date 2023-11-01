@@ -831,3 +831,22 @@ def pre_save_create_invoice_id(sender, instance, *args, **kwargs):
 
 
 pre_save.connect(pre_save_create_invoice_id, sender=Invoice)
+
+
+class GoogleAddSenseCode(BaseModel, TimeStampedModel, models.Model):
+    page_title = models.CharField(
+        verbose_name=_('Page Title'),
+        max_length=255,
+        db_column="page_title",
+    )
+    code = models.TextField(
+        verbose_name=_('Code'),
+        db_column="code",
+    )
+
+    def __str__(self):
+        return self.code
+
+    class Meta:
+        verbose_name_plural = "Google Add Sense Code"
+

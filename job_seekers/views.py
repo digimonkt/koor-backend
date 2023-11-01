@@ -17,6 +17,7 @@ from rest_framework import (
 )
 
 from core.pagination import CustomPagination
+from core.emails import get_email_object
 from jobs.models import JobDetails, JobSubCategory, JobCategory
 from koor.config.common import Common
 from user_profile.models import JobSeekerProfile
@@ -1010,6 +1011,122 @@ class JobsApplyView(generics.ListAPIView):
             job__is_removed=False
         )
 
+
+class JobsApplyByEmailView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, jobId):
+        
+        context = dict()
+        blacklisted_user = []
+        if request.user.role == "job_seeker":
+            try:
+                job_instance = JobDetails.objects.get(id=jobId)
+                blacklisted_list = BlackList.objects.filter(user=job_instance.user)
+                for blacklisted_data in blacklisted_list:
+                    blacklisted_user.append(blacklisted_data.blacklisted_user)
+                if request.user in blacklisted_user:
+                    context["message"] = ["You are blacklisted for this job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                try:
+                    if AppliedJob.objects.get(job=job_instance, user=request.user):
+                        context["message"] = ["You are already applied"]
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except AppliedJob.DoesNotExist:
+                    if request.user.name and request.user.user_profile_jobseekerprofile_user.gender and request.user.user_profile_jobseekerprofile_user.experience and request.user.user_profile_jobseekerprofile_user.dob and request.user.user_profile_jobseekerprofile_user.employment_status and request.user.user_profile_jobseekerprofile_user.country and request.user.user_profile_jobseekerprofile_user.city and request.user.user_profile_jobseekerprofile_user.highest_education:
+                        if JobSeekerSkill.objects.filter(user=request.user).exists():
+                            if job_instance.apply_through_email:
+                                # serializer = AppliedJobSerializers(data=request.data)
+                                # try:
+                                #     serializer.is_valid(raise_exception=True)
+                                #     serializer.save(user=request.user, job_instance=job_instance)
+                                user_email = []
+                                if job_instance.user:
+                                    if job_instance.user.email:
+                                        user_email.append(job_instance.user.email)
+                                if job_instance.contact_email:
+                                    user_email.append(job_instance.contact_email)
+                                if job_instance.cc1:
+                                    user_email.append(job_instance.cc1)
+                                if job_instance.cc2:
+                                    user_email.append(job_instance.cc2)
+                                if user_email:
+                                    email_context = dict()
+                                    if job_instance.user:
+                                        if job_instance.user.name:
+                                            user_name = job_instance.user.name
+                                        else:
+                                            user_name = user_email[0]
+                                    elif job_instance.company:
+                                        user_name = job_instance.company
+                                    else:
+                                        user_name = user_email[0]
+                                    email_context["yourname"] = user_name
+                                    email_context["username"] = request.user
+                                    email_context["resume_link"] = Common.BASE_URL  + "/api/v1/users/job-seeker/resume/user-id?user-id=" + str(request.user.id)
+                                    email_context["notification_type"] = "applied job"
+                                    email_context["job_instance"] = job_instance
+                                    get_email_object(
+                                        subject=f'Applied job through email',
+                                        email_template_name='email-templates/mail-for-apply-job.html',
+                                        context=email_context,
+                                        to_email=user_email
+                                    )
+                                    context["message"] = ["Applied Successfully"]
+                                    return response.Response(
+                                        data=context,
+                                        status=status.HTTP_200_OK
+                                    )
+                                else:
+                                    context["message"] = ["Employer email not detected."]
+                                    return response.Response(
+                                        data=context,
+                                        status=status.HTTP_400_BAD_REQUEST
+                                    )
+                                
+                            else:
+                                context["message"] = ["Employer not active apply through email."]
+                                return response.Response(
+                                    data=context,
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                            
+                            
+                        else:
+                            return response.Response(
+                                data={"message": ["Your Profile information is not enough to apply for a job, Please complete your profile."]},
+                                status=status.HTTP_404_NOT_FOUND
+                            )
+                    else:
+                        return response.Response(
+                            data={"message": ["Your Profile information is not enough to apply for a job, Please complete your profile."]},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
 class JobsSaveView(generics.ListAPIView):
     """

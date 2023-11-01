@@ -289,6 +289,41 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         related_name='%(app_label)s_%(class)s_company_logo'
     )
     
+    apply_through_koor = models.BooleanField(
+        verbose_name=_('Apply Through Koor'),
+        null=True,
+        blank=True,
+        db_column="apply_through_koor",
+        default=False
+    )    
+    apply_through_email = models.BooleanField(
+        verbose_name=_('Apply Through Email'),
+        null=True,
+        blank=True,
+        db_column="apply_through_email",
+        default=False
+    )
+    apply_through_website = models.BooleanField(
+        verbose_name=_('Apply Through Website'),
+        null=True,
+        blank=True,
+        db_column="apply_through_website",
+        default=False
+    )
+    application_instruction = models.TextField(
+        verbose_name=_('Application Instruction'),
+        null=True,
+        blank=True,
+        db_column="application_instruction",
+    )
+    website_link = models.CharField(
+        verbose_name=_('Website Link'),
+        null=True,
+        blank=True,
+        max_length=450,
+        db_column="website_link",
+    )
+    
 
     def __str__(self):
         return str(self.title)
