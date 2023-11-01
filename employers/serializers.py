@@ -212,7 +212,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'company_logo_item'
+            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'company_logo_item'
         ]
 
     def validate_job_category(self, job_category):
@@ -330,6 +331,15 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'job_category': 'This field is required.'})
         if not job_sub_category:
             raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
+        
+        apply_through_website = data.get("apply_through_website")
+        website_link = data.get("website_link")
+        application_instruction = data.get("application_instruction")
+        if not application_instruction:
+            raise serializers.ValidationError({'application_instruction': 'This field is required.'})
+        if apply_through_website and website_link in ["", None]:
+            raise serializers.ValidationError({'website_link': 'Website link can not be blank'})
+        
         return data
 
     def save(self, user):
@@ -487,6 +497,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
             'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date',
+            'apply_through_koor', 'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link',
             'company', 'company_logo_item'
         ]
 
@@ -547,6 +558,14 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError({'job_category': 'This field is required.'})
         if not job_sub_category:
             raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
+        
+        apply_through_website = data.get("apply_through_website")
+        website_link = data.get("website_link")
+        application_instruction = data.get("application_instruction")
+        if not application_instruction:
+            raise serializers.ValidationError({'application_instruction': 'This field is required.'})
+        if apply_through_website and website_link in ["", None]:
+            raise serializers.ValidationError({'website_link': 'Website link can not be blank'})
         return data
 
     def update(self, instance, validated_data):

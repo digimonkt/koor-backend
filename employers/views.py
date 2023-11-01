@@ -17,11 +17,13 @@ from core.emails import get_email_object
 from superadmin.models import PointDetection
 
 from jobs.models import JobDetails, JobFilters
-from jobs.serializers import GetJobsSerializers, AppliedJobSerializers
+from vendors.models import AppliedTender
+from vendors.serializers import AppliedTenderSerializers, GetAppliedTenderSerializers
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import (
-    GetAppliedJobsSerializers, JobCategorySerializer
+    GetAppliedJobsSerializers, JobCategorySerializer,
+    GetJobsSerializers, AppliedJobSerializers
 )
 
 from notification.models import Notification
@@ -969,7 +971,7 @@ class JobApplicationView(generics.ListAPIView):
         context = dict()
         if self.request.user.role == 'employer':
             user_instance = User.objects.get(id=jobSeekerId)
-            queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance))
+            queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance).filter(job__user=self.request.user))
             page = self.paginate_queryset(queryset)
             if page is not None:
                 serializer = self.get_serializer(page, many=True, context={"user": self.request.user})
@@ -982,3 +984,31 @@ class JobApplicationView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+class TenderApplicationView(generics.ListAPIView):
+
+    serializer_class = GetAppliedTenderSerializers
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = AppliedTender.objects.filter(tender__deadline__gte=date.today()).order_by('-created')
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title']
+    pagination_class = CustomPagination
+
+    def list(self, request, vendorId):
+        context = dict()
+        if self.request.user.role == 'employer':
+            user_instance = User.objects.get(id=vendorId)
+            queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance).filter(tender__user=self.request.user))
+            page = self.paginate_queryset(queryset)
+            if page is not None:
+                serializer = self.get_serializer(page, many=True, context={"request": request})
+                return self.get_paginated_response(serializer.data)
+            serializer = self.get_serializer(queryset, many=True, context={"request": request})
+            return response.Response(serializer.data)
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
