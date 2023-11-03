@@ -65,9 +65,12 @@ class NotificationView(generics.ListAPIView):
         """
         notification_type = self.request.GET.get('type', None)
         created = self.request.GET.get('created', None)
+        exact_date = self.request.GET.get('exact_date', None)
         queryset = Notification.objects.filter(user=self.request.user)
         if created:
             queryset = queryset.filter(created__date__lte=created)
+        if exact_date:
+            queryset = queryset.filter(created__date=exact_date)
         if notification_type == "message":
             queryset = queryset.filter(notification_type='message')
         elif notification_type == "jobs":
