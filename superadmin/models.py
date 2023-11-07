@@ -842,6 +842,8 @@ class GoogleAddSenseCode(BaseModel, TimeStampedModel, models.Model):
     code = models.TextField(
         verbose_name=_('Code'),
         db_column="code",
+        null=True,
+        blank=True
     )
 
     def __str__(self):
