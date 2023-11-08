@@ -745,7 +745,7 @@ class JobAnalysisView(generics.GenericAPIView):
         context = dict()
         if self.request.user.role == "employer":
             try:
-                order_counts = JobDetails.objects.annotate(
+                order_counts = JobDetails.objects.filter(user=self.request.user).annotate(
                     month=TruncMonth('created')
                 ).values('month').annotate(count=Count('id'))
                 data = {'order_counts': list(order_counts)}
