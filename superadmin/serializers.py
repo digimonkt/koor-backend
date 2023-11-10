@@ -1523,7 +1523,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'company_logo_item'
+            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'company_logo_item'
         ]
 
     def validate_job_category(self, job_category):
