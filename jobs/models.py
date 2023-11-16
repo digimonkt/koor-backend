@@ -50,6 +50,21 @@ class JobSubCategory(SlugBaseModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Job Sub Categories"
         db_table = "JobSubCategory"
         ordering = ['title']
+        
+    def save(self, *args, **kwargs):
+        if not self.slug or self.title != self._original_title:
+            base_slug = slugify(self.title) + "-" + slugify(self.category.title)
+            unique_slug = base_slug
+            counter = 1
+            while ServicePackages.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        return super().save(*args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_title = self.title
 
 
 class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
