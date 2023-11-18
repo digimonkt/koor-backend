@@ -2,7 +2,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from random import randint
-
+from django.template.defaultfilters import slugify
 from core.models import (
     SlugBaseModel, BaseModel, SoftDeleteModel
 )
@@ -56,7 +56,7 @@ class JobSubCategory(SlugBaseModel, TimeStampedModel, models.Model):
             base_slug = slugify(self.title) + "-" + slugify(self.category.title)
             unique_slug = base_slug
             counter = 1
-            while ServicePackages.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
+            while JobSubCategory.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
                 unique_slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = unique_slug
