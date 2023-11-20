@@ -482,29 +482,46 @@ class UserCountSerializers(serializers.Serializer):
             'total_jobs', 'active_jobs', 'total_user', 'job_seekers',
             'employers', 'vendors', 'active_user'
         ]
-
+        
     def get_active_jobs(self, obj):
-        return JobDetails.objects.filter(status='active', start_date__lte=date.today(),
-                                         deadline__gte=date.today()).count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return JobDetails.objects.filter(status='active', start_date__lte=end_date,
+                                         deadline__gte=start_date).count()
 
     def get_total_jobs(self, obj):
-        return JobDetails.objects.count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return JobDetails.objects.filter(start_date__lte=end_date,
+                                         deadline__gte=start_date).count()
 
     def get_total_user(self, obj):
-        return User.objects.filter(~Q(role='admin')).count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(~Q(role='admin')).filter(date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
     def get_active_user(self, obj):
-        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None).order_by('user').distinct(
-            'user').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None, 
+                                                                         user__date_joined__gte=start_date, 
+                                                                         user__date_joined__lte=end_date,
+                                                                         ).order_by('user').distinct('user').count()
 
     def get_job_seekers(self, obj):
-        return User.objects.filter(role='job_seeker').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(role='job_seeker', date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
     def get_employers(self, obj):
-        return User.objects.filter(role='employer').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(role='employer', date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
     def get_vendors(self, obj):
-        return User.objects.filter(role='vendor').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(role='vendor', date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
 
 class DashboardCountSerializers(serializers.Serializer):
@@ -1523,7 +1540,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
-            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'company_logo_item'
+            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'company_logo_item'
         ]
 
     def validate_job_category(self, job_category):
@@ -1919,6 +1937,8 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             attachments = self.validated_data.pop('attachments')
         if 'attachments_remove' in self.validated_data:
             attachments_remove = self.validated_data.pop('attachments_remove')
+        if 'company_logo_item' in self.validated_data:
+            company_logo_item = self.validated_data.pop('company_logo_item')
 
         super().update(instance, validated_data)
         if attachments_remove:
@@ -2069,9 +2089,11 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'budget_pay_period', 'description', 'country',
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
-            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'language_remove',
-            'skill', 'duration', 'experience', 'status', 'attachments', 'attachments_remove', 'deadline', 'start_date',
-            'company', 'company_logo_item'
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill', 'language_remove',
+            'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 'status', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'attachments_remove', 
+            'company_logo_item'
+    
         ]
 
     def validate_job_category(self, job_category):
