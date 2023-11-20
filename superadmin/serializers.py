@@ -482,29 +482,46 @@ class UserCountSerializers(serializers.Serializer):
             'total_jobs', 'active_jobs', 'total_user', 'job_seekers',
             'employers', 'vendors', 'active_user'
         ]
-
+        
     def get_active_jobs(self, obj):
-        return JobDetails.objects.filter(status='active', start_date__lte=date.today(),
-                                         deadline__gte=date.today()).count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return JobDetails.objects.filter(status='active', start_date__lte=end_date,
+                                         deadline__gte=start_date).count()
 
     def get_total_jobs(self, obj):
-        return JobDetails.objects.count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return JobDetails.objects.filter(start_date__lte=end_date,
+                                         deadline__gte=start_date).count()
 
     def get_total_user(self, obj):
-        return User.objects.filter(~Q(role='admin')).count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(~Q(role='admin')).filter(date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
     def get_active_user(self, obj):
-        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None).order_by('user').distinct(
-            'user').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None, 
+                                                                         user__date_joined__gte=start_date, 
+                                                                         user__date_joined__lte=end_date,
+                                                                         ).order_by('user').distinct('user').count()
 
     def get_job_seekers(self, obj):
-        return User.objects.filter(role='job_seeker').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(role='job_seeker', date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
     def get_employers(self, obj):
-        return User.objects.filter(role='employer').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(role='employer', date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
     def get_vendors(self, obj):
-        return User.objects.filter(role='vendor').count()
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return User.objects.filter(role='vendor', date_joined__gte=start_date, date_joined__lte=end_date,).count()
 
 
 class DashboardCountSerializers(serializers.Serializer):
