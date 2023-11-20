@@ -1965,24 +1965,57 @@ class UsersCountView(generics.GenericAPIView):
 
     def get(self, request):
         context = dict()
+        response_context = dict()
         if self.request.user.is_staff:
             try:
+                if 'period' in self.request.GET and 'start-date' in self.request.GET:
+                    response_context['message'] = "Please select one eighter 'period' or 'start and end dates'."
+                    return response.Response(
+                        data=response_context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                period = self.request.GET.get('period', None)
+                start_date = self.request.GET.get('start-date', date.today())
+                end_date = self.request.GET.get('end-date', date.today())
+                if period == "this week":
+                    start_date = start_date - timedelta(days=start_date.weekday())
+                elif period == "last week":
+                    last_week = date.today() + timedelta(days=-2)
+                    start_date = last_week - timedelta(days=last_week.weekday())
+                    end_date = start_date + timedelta(days=6)
+                elif period == "this month":
+                    start_date = date(start_date.year, start_date.month, 1)
+                elif period == "last month":
+                    start_date = date(start_date.year, start_date.month, 1)
+                    end_date = start_date + timedelta(days=-1)
+                    start_date = date(end_date.year, end_date.month, 1)
+                elif period == "this year":
+                    start_date = date(start_date.year, 1, 1)
+                elif period == "last year":
+                    start_date = date(start_date.year, 1, 1)
+                    end_date = start_date + timedelta(days=-1)
+                    start_date = date(end_date.year, 1, 1)
+                context = {
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+                
                 queryset = User.objects.all()
-                serializer = self.get_serializer(queryset)
+                serializer = self.get_serializer(queryset, context=context)
                 return response.Response(
                     data=serializer.data,
                     status=status.HTTP_200_OK
                 )
             except Exception as e:
-                context['message'] = str(e)
+                response_context['message'] = str(e)
                 return response.Response(
-                    data=context,
+                    data=response_context,
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:
-            context['message'] = "You do not have permission to perform this action."
+            response_context['message'] = "You do not have permission to perform this action."
             return response.Response(
-                data=context,
+                data=response_context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
