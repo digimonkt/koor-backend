@@ -1920,6 +1920,8 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             attachments = self.validated_data.pop('attachments')
         if 'attachments_remove' in self.validated_data:
             attachments_remove = self.validated_data.pop('attachments_remove')
+        if 'company_logo_item' in self.validated_data:
+            company_logo_item = self.validated_data.pop('company_logo_item')
 
         super().update(instance, validated_data)
         if attachments_remove:
