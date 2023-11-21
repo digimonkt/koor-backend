@@ -5049,7 +5049,7 @@ class JobsCreateView(generics.ListAPIView):
                 if user_instance.role == "employer" and employer_profile_instance.is_verified:
                     serializer.is_valid(raise_exception=True)
                     if employer_profile_instance.points < point_data.points:
-                        context["message"] = "You do not have enough points to create a new job."
+                        context["message"] = "This company have not enough points to create a new job."
                         return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
                     serializer.save(user_instance)
@@ -5062,7 +5062,7 @@ class JobsCreateView(generics.ListAPIView):
                     request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
                     return response.Response(data=context, status=status.HTTP_201_CREATED)
                 else:
-                    context['message'] = "You do not have permission to perform this action."
+                    context['message'] = "This company have not permission to create a new job."
                     return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             else:
                 serializer = CreateJobsSerializers(data=request.data)
@@ -5126,6 +5126,10 @@ class JobsCreateView(generics.ListAPIView):
         context = dict()
         try:
             job_instance = JobDetails.objects.get(id=jobId)
+            if 'employer_id' in request.data:
+                employerId = request.data['employer_id']
+                user_instance = User.objects.get(id=employerId)
+                JobDetails.objects.filter(id=jobId).update(user=user_instance)
             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
@@ -5267,7 +5271,6 @@ class TenderCreateView(generics.ListAPIView):
                 - `HTTP_201_CREATED`: The tender was created successfully.
                 - `HTTP_400_BAD_REQUEST`: The request data was invalid or there was an error saving the tender.
                 - `HTTP_401_UNAUTHORIZED`: The user does not have permission to create a tender.
-
         """
 
         context = dict()
@@ -5315,6 +5318,10 @@ class TenderCreateView(generics.ListAPIView):
         context = dict()
         try:
             tender_instance = TenderDetails.objects.get(id=tenderId)
+            if 'employer_id' in request.data:
+                employerId = request.data['employer_id']
+                user_instance = User.objects.get(id=employerId)
+                TenderDetails.objects.filter(id=tenderId).update(user=user_instance)
             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
