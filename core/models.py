@@ -83,7 +83,7 @@ class SlugBaseModel(BaseModel, SoftDeleteModel, models.Model):
     )
     slug = models.SlugField(
         unique=True,
-        max_length=255,
+        max_length=455,
         null=True,
         blank=True,
         db_column="slug",
