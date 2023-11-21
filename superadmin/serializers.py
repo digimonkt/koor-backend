@@ -1,7 +1,6 @@
 import json
 from datetime import date
-
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 from rest_framework import serializers
 from django.template.defaultfilters import slugify
 
@@ -556,17 +555,66 @@ class DashboardCountSerializers(serializers.Serializer):
     def get_jobs(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return JobDetails.objects.filter(
+        user_analytics = JobDetails.objects.filter(start_date__lte=date.today(), deadline__gte=date.today(),
+            created__gte=start_date, created__lte=end_date,status='active').order_by('-created')
+        data_by_month = user_analytics.values('created__year', 'created__month').annotate(total_count=Count('id')).order_by('-created__year', '-created__month')
+        
+        # Get aggregated counts by month and year
+        aggregated_data = {}
+        for entry in data_by_month:
+            year = entry['created__year']
+            month = entry['created__month']
+            count = entry['total_count']
+            key = (year, month)
+            if key in aggregated_data:
+                aggregated_data[key] += count
+            else:
+                aggregated_data[key] = count
+                
+        # Format the aggregated data
+        total_jobs =JobDetails.objects.filter(
             start_date__lte=date.today(), deadline__gte=date.today(),
             created__gte=start_date, created__lte=end_date,
             status='active').count()
+        final = {'total':total_jobs}
+        formatted_data = [
+            {'year': year, 'month': month, 'count': count}
+            for (year, month), count in aggregated_data.items()
+        ]
+        final['detail'] = formatted_data
+        return final
+    
 
     def get_employers(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return User.objects.filter(
+        
+        user_analytics = User.objects.filter(date_joined__gte=start_date, date_joined__lte=end_date, role='employer').order_by('-date_joined')
+        data_by_month = user_analytics.values('date_joined__year', 'date_joined__month').annotate(total_count=Count('id')).order_by('-date_joined__year', '-date_joined__month')
+        
+        # Get aggregated counts by month and year
+        aggregated_data = {}
+        for entry in data_by_month:
+            year = entry['date_joined__year']
+            month = entry['date_joined__month']
+            count = entry['total_count']
+            key = (year, month)
+            if key in aggregated_data:
+                aggregated_data[key] += count
+            else:
+                aggregated_data[key] = count
+                
+        # Format the aggregated data
+        total_employer = User.objects.filter(
             date_joined__gte=start_date, date_joined__lte=end_date,
             role='employer').count()
+        final = {'total':total_employer}
+        formatted_data = [
+            {'year': year, 'month': month, 'count': count}
+            for (year, month), count in aggregated_data.items()
+        ]
+        final['detail'] = formatted_data
+        return final
 
 
 class TenderCategorySerializers(serializers.ModelSerializer):
