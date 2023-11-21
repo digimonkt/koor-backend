@@ -5049,7 +5049,7 @@ class JobsCreateView(generics.ListAPIView):
                 if user_instance.role == "employer" and employer_profile_instance.is_verified:
                     serializer.is_valid(raise_exception=True)
                     if employer_profile_instance.points < point_data.points:
-                        context["message"] = "You do not have enough points to create a new job."
+                        context["message"] = "This company have not enough points to create a new job."
                         return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
                     serializer.save(user_instance)
@@ -5062,7 +5062,7 @@ class JobsCreateView(generics.ListAPIView):
                     request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
                     return response.Response(data=context, status=status.HTTP_201_CREATED)
                 else:
-                    context['message'] = "You do not have permission to perform this action."
+                    context['message'] = "This company have not permission to create a new job."
                     return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
             else:
                 serializer = CreateJobsSerializers(data=request.data)
