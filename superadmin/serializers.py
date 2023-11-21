@@ -25,7 +25,7 @@ from tenders.models import TenderCategory, TenderDetails, TenderAttachmentsItem
 from tenders.serializers import TenderCategorySerializer
 
 from users.backends import MobileOrEmailBackend as cb
-from users.models import User, UserSession
+from users.models import User, UserSession, VisitorLog
 from users.serializers import UserSerializer
 
 from .models import (
@@ -474,12 +474,13 @@ class UserCountSerializers(serializers.Serializer):
     active_user = serializers.SerializerMethodField()
     total_jobs = serializers.SerializerMethodField()
     active_jobs = serializers.SerializerMethodField()
+    total_visitor = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'total_jobs', 'active_jobs', 'total_user', 'job_seekers',
-            'employers', 'vendors', 'active_user'
+            'employers', 'vendors', 'active_user', 'total_visitor'
         ]
         
     def get_active_jobs(self, obj):
@@ -521,6 +522,11 @@ class UserCountSerializers(serializers.Serializer):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
         return User.objects.filter(role='vendor', date_joined__gte=start_date, date_joined__lte=end_date,).count()
+
+    def get_total_visitor(self, obj):
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return VisitorLog.objects.filter(created_at__gte=start_date, created_at__lte=end_date).count()
 
 
 class DashboardCountSerializers(serializers.Serializer):

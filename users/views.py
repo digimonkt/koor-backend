@@ -1154,4 +1154,26 @@ class AnalyticView(generics.GenericAPIView):
         user_analytics = UserAnalytic.objects.filter(user=user_instance).filter(date__year=year).order_by('-date')
         data_by_month = user_analytics.values('date__year', 'date__month').annotate(total_count=Sum('count'))
         return data_by_month
+
+
+class VisitorsView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    def post(self, request):
+        context = dict()
+        IPAddr = request.data['ip']
+        if VisitorLog.objects.filter(ip_address=IPAddr, created_at=date.today()).exists():
+            pass
+        else:
+            log_data = VisitorLog.objects.create(
+                ip_address=IPAddr,
+                created_at=date.today()
+            )
+            log_data.save()
+        return response.Response(
+            status=status.HTTP_201_CREATED
+        )
+            
+
+
+            
             
