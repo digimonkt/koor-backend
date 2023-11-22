@@ -2442,4 +2442,44 @@ class GoogleAddSenseCodeSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         return instance
+
+
+
+class FinancialCountSerializers(serializers.Serializer):
+
+    total_credits = serializers.SerializerMethodField()
+    gold = serializers.SerializerMethodField()
+    silver = serializers.SerializerMethodField()
+    copper = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = RechargeHistory
+        fields = [
+            'total_credits', 'gold', 'silver', 'copper'
+        ]
+        
+    def get_total_credits(self, obj):
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return RechargeHistory.objects.filter(created__lte=end_date,
+                                         created__gte=start_date).count()
+
+    def get_gold(self, obj):
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return RechargeHistory.objects.filter(package='gold', created__lte=end_date,
+                                         created__gte=start_date).count()
+
+    def get_silver(self, obj):
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return RechargeHistory.objects.filter(package='silver', created__lte=end_date,
+                                         created__gte=start_date).count()
+
+    def get_copper(self, obj):
+        start_date = self.context['start_date']
+        end_date = self.context['end_date']
+        return RechargeHistory.objects.filter(package='copper', created__lte=end_date,
+                                         created__gte=start_date).count()
+
     
