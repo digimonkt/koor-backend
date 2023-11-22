@@ -5125,11 +5125,12 @@ class JobsCreateView(generics.ListAPIView):
         """
         context = dict()
         try:
-            job_instance = JobDetails.objects.get(id=jobId)
+            
             if 'employer_id' in request.data:
                 employerId = request.data['employer_id']
                 user_instance = User.objects.get(id=employerId)
                 JobDetails.objects.filter(id=jobId).update(user=user_instance)
+            job_instance = JobDetails.objects.get(id=jobId)
             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
@@ -5317,11 +5318,11 @@ class TenderCreateView(generics.ListAPIView):
         """
         context = dict()
         try:
-            tender_instance = TenderDetails.objects.get(id=tenderId)
             if 'employer_id' in request.data:
                 employerId = request.data['employer_id']
                 user_instance = User.objects.get(id=employerId)
                 TenderDetails.objects.filter(id=tenderId).update(user=user_instance)
+            tender_instance = TenderDetails.objects.get(id=tenderId)
             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
