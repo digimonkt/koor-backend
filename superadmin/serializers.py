@@ -498,30 +498,30 @@ class UserCountSerializers(serializers.Serializer):
     def get_total_user(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return User.objects.filter(~Q(role='admin')).filter(date_joined__gte=start_date, date_joined__lte=end_date,).count()
+        return User.objects.filter(~Q(role='admin')).filter(date_joined__date__gte=start_date, date_joined__date__lte=end_date,).count()
 
     def get_active_user(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
         return UserSession.objects.filter(~Q(user__role='admin')).filter(expire_at=None, 
-                                                                         user__date_joined__gte=start_date, 
-                                                                         user__date_joined__lte=end_date,
+                                                                         user__date_joined__date__gte=start_date, 
+                                                                         user__date_joined__date__lte=end_date,
                                                                          ).order_by('user').distinct('user').count()
 
     def get_job_seekers(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return User.objects.filter(role='job_seeker', date_joined__gte=start_date, date_joined__lte=end_date,).count()
+        return User.objects.filter(role='job_seeker', date_joined__date__gte=start_date, date_joined__date__lte=end_date,).count()
 
     def get_employers(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return User.objects.filter(role='employer', date_joined__gte=start_date, date_joined__lte=end_date,).count()
+        return User.objects.filter(role='employer', date_joined__date__gte=start_date, date_joined__date__lte=end_date,).count()
 
     def get_vendors(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return User.objects.filter(role='vendor', date_joined__gte=start_date, date_joined__lte=end_date,).count()
+        return User.objects.filter(role='vendor', date_joined__date__gte=start_date, date_joined__date__lte=end_date,).count()
 
     def get_total_visitor(self, obj):
         start_date = self.context['start_date']
@@ -562,7 +562,7 @@ class DashboardCountSerializers(serializers.Serializer):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
         user_analytics = JobDetails.objects.filter(start_date__lte=date.today(), deadline__gte=date.today(),
-            created__gte=start_date, created__lte=end_date,status='active').order_by('-created')
+            created__date__gte=start_date, created__date__lte=end_date,status='active').order_by('-created')
         data_by_month = user_analytics.values('created__year', 'created__month').annotate(total_count=Count('id')).order_by('-created__year', '-created__month')
         
         # Get aggregated counts by month and year
@@ -580,7 +580,7 @@ class DashboardCountSerializers(serializers.Serializer):
         # Format the aggregated data
         total_jobs =JobDetails.objects.filter(
             start_date__lte=date.today(), deadline__gte=date.today(),
-            created__gte=start_date, created__lte=end_date,
+            created__date__gte=start_date, created__date__lte=end_date,
             status='active').count()
         final = {'total':total_jobs}
         formatted_data = [
@@ -595,7 +595,7 @@ class DashboardCountSerializers(serializers.Serializer):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
         
-        user_analytics = User.objects.filter(date_joined__gte=start_date, date_joined__lte=end_date, role='employer').order_by('-date_joined')
+        user_analytics = User.objects.filter(date_joined__date__gte=start_date, date_joined__date__lte=end_date, role='employer').order_by('-date_joined')
         data_by_month = user_analytics.values('date_joined__year', 'date_joined__month').annotate(total_count=Count('id')).order_by('-date_joined__year', '-date_joined__month')
         
         # Get aggregated counts by month and year
@@ -612,7 +612,7 @@ class DashboardCountSerializers(serializers.Serializer):
                 
         # Format the aggregated data
         total_employer = User.objects.filter(
-            date_joined__gte=start_date, date_joined__lte=end_date,
+            date_joined__date__gte=start_date, date_joined__date__lte=end_date,
             role='employer').count()
         final = {'total':total_employer}
         formatted_data = [
@@ -2425,7 +2425,7 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
         """
 
         context = []
-        data = RechargeHistory.objects.filter(user=obj.user, created__gte=obj.start_date, created__lte=obj.end_date)
+        data = RechargeHistory.objects.filter(user=obj.user, created__date__gte=obj.start_date, created__date__lte=obj.end_date)
         get_data = RechargeHistorySerializers(data, many=True)
         if get_data.data:
             context = get_data.data
@@ -2461,25 +2461,24 @@ class FinancialCountSerializers(serializers.Serializer):
     def get_total_credits(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return RechargeHistory.objects.filter(created__lte=end_date,
-                                         created__gte=start_date).count()
+        return RechargeHistory.objects.filter(created__date__lte=end_date,
+                                         created__date__gte=start_date).count()
 
     def get_gold(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return RechargeHistory.objects.filter(package='gold', created__lte=end_date,
-                                         created__gte=start_date).count()
+        return RechargeHistory.objects.filter(package='gold', created__date__lte=end_date, created__date__gte=start_date).count()
 
     def get_silver(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return RechargeHistory.objects.filter(package='silver', created__lte=end_date,
-                                         created__gte=start_date).count()
+        return RechargeHistory.objects.filter(package='silver', created__date__lte=end_date,
+                                         created__date__gte=start_date).count()
 
     def get_copper(self, obj):
         start_date = self.context['start_date']
         end_date = self.context['end_date']
-        return RechargeHistory.objects.filter(package='copper', created__lte=end_date,
-                                         created__gte=start_date).count()
+        return RechargeHistory.objects.filter(package='copper', created__date__lte=end_date,
+                                         created__date__gte=start_date).count()
 
     
