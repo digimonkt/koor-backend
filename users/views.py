@@ -125,13 +125,13 @@ class UserView(generics.GenericAPIView):
                 otp = unique_otp_generator()
                 context["yourname"] = user.email
                 context["otp"] = otp
-                get_email_object(
-                    subject=f'New Registration for Koor Jobs',
-                    email_template_name='email-templates/new/new-login-detected.html',
-                    # email_template_name='email-templates/send-forget-password-otp.html',
-                    context=context,
-                    to_email=[user.email, ]
-                )
+                # get_email_object(
+                #     subject=f'New Registration for Koor Jobs',
+                #     email_template_name='email-templates/new/new-login-detected.html',
+                #     # email_template_name='email-templates/send-forget-password-otp.html',
+                #     context=context,
+                #     to_email=[user.email, ]
+                # )
                 user.otp = otp
                 user.otp_created_at = datetime.now()
                 user.is_verified = True
