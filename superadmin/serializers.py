@@ -1862,8 +1862,6 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             if len(tag) > limit:
                 raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
             return tag
-        else:
-            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
         
     def validate(self, data):
         apply_through_website = data.get("apply_through_website")
@@ -1986,8 +1984,6 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             if len(tag) > limit:
                 raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
             return tag
-        else:
-            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
 
     def validate(self, data):
         apply_through_website = data.get("apply_through_website")
