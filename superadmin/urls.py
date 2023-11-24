@@ -17,7 +17,7 @@ from .views import (
     TestimonialDetailView, JobsCreateView, TenderCreateView,
     PackageView, GenerateInvoiceView, InvoiceDetailView,
     InvoiceSendView, DownloadInvoiceView, ResourcesMoreView,
-    GoogleAddSenseCodeView
+    GoogleAddSenseCodeView, FinancialCountView
 )
 
 app_name = "superadmin"
@@ -69,7 +69,7 @@ urlpatterns = [
     path('/jobs/<str:jobId>/revert', JobsRevertView.as_view(), name="jobs_revert"),
 
     path('/users-count', UsersCountView.as_view(), name="users_count"),
-
+    path('/financial-count', FinancialCountView.as_view(), name="financial_count"),
     path('/dashboard', DashboardView.as_view(), name="dashboard"),
 
     path('/tender-category', TenderCategoryView.as_view(), name="tender_category"),

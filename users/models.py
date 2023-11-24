@@ -250,6 +250,7 @@ class VisitorLog(BaseModel, models.Model):
     agent = models.JSONField(
         verbose_name=_('Agent'),
         null=True,
+        blank=True,
         db_column="agent"
     )
     created_at = models.DateField(

@@ -125,13 +125,13 @@ class UserView(generics.GenericAPIView):
                 otp = unique_otp_generator()
                 context["yourname"] = user.email
                 context["otp"] = otp
-                get_email_object(
-                    subject=f'OTP for Verification',
-                    email_template_name='email-templates/new/new-login-detected.html',
-                    # email_template_name='email-templates/send-forget-password-otp.html',
-                    context=context,
-                    to_email=[user.email, ]
-                )
+                # get_email_object(
+                #     subject=f'New Registration for Koor Jobs',
+                #     email_template_name='email-templates/new/new-login-detected.html',
+                #     # email_template_name='email-templates/send-forget-password-otp.html',
+                #     context=context,
+                #     to_email=[user.email, ]
+                # )
                 user.otp = otp
                 user.otp_created_at = datetime.now()
                 user.is_verified = True
@@ -393,7 +393,7 @@ class SendOtpView(generics.GenericAPIView):
                 context["otp"] = otp
                 get_email_object(
                     subject=f'OTP for Verification',
-                    email_template_name='email-templates/new/new-login-detected.html',
+                    email_template_name='email-templates/new/otp-verification.html',
                     # email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
                     to_email=[user_email, ]
@@ -1154,4 +1154,26 @@ class AnalyticView(generics.GenericAPIView):
         user_analytics = UserAnalytic.objects.filter(user=user_instance).filter(date__year=year).order_by('-date')
         data_by_month = user_analytics.values('date__year', 'date__month').annotate(total_count=Sum('count'))
         return data_by_month
+
+
+class VisitorsView(generics.GenericAPIView):
+    permission_classes = [permissions.AllowAny]
+    def post(self, request):
+        context = dict()
+        IPAddr = request.data['ip']
+        if VisitorLog.objects.filter(ip_address=IPAddr, created_at=date.today()).exists():
+            pass
+        else:
+            log_data = VisitorLog.objects.create(
+                ip_address=IPAddr,
+                created_at=date.today()
+            )
+            log_data.save()
+        return response.Response(
+            status=status.HTTP_201_CREATED
+        )
+            
+
+
+            
             

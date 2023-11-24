@@ -549,7 +549,12 @@ class RechargeHistory(BaseModel, TimeStampedModel, models.Model):
         verbose_name_plural (str): Plural name for the model in human-readable format.
         db_table (str): Name of the database table for this model.
     """
-
+    PACKAGE_TYPE_CHOICE = (
+        ('none', "None"),
+        ('gold', "Gold"),
+        ('silver', "Silver"),
+        ('copper', "Copper"),
+    )
     user = models.ForeignKey(
         User,
         verbose_name=_('User'),
@@ -570,6 +575,15 @@ class RechargeHistory(BaseModel, TimeStampedModel, models.Model):
         default=5,
         verbose_name=_('Points'),
         db_column="points",
+    )
+    package = models.CharField(
+        verbose_name=_('Package'),
+        max_length=250,
+        db_column="package",
+        default='none',
+        null=True,
+        blank=True,
+        choices=PACKAGE_TYPE_CHOICE
     )
     amount = models.BigIntegerField(
         null=True,
