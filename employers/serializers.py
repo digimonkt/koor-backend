@@ -729,7 +729,10 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
             'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
-            'start_date', 'address', 'company', 'company_logo_item'
+            'start_date', 'address', 'company', 'company_logo_item',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 
+            'website_link',
         ]
 
     def validate_tender_category(self, tender_category):
@@ -747,8 +750,16 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             if len(tag) > limit:
                 raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
             return tag
-        else:
-            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
+        
+    def validate(self, data):
+        apply_through_website = data.get("apply_through_website")
+        website_link = data.get("website_link")
+        application_instruction = data.get("application_instruction")
+        if not application_instruction:
+            raise serializers.ValidationError({'application_instruction': 'This field is required.'})
+        if apply_through_website and website_link in ["", None]:
+            raise serializers.ValidationError({'website_link': 'Website link can not be blank'})
+        return data
 
     def save(self, user):
         attachments = None
@@ -842,7 +853,10 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         fields = [
             'title', 'budget_currency', 'budget_amount', 'description', 'country', 'city',
             'tender_category', 'tender_type', 'sector', 'tag', 'attachments', 'deadline',
-            'start_date', 'attachments_remove', 'address', 'company', 'company_logo_item'
+            'start_date', 'attachments_remove', 'address', 'company', 'company_logo_item',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 
+            'website_link',
         ]
 
     def validate_tender_category(self, tender_category):
@@ -860,16 +874,15 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             if len(tag) > limit:
                 raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
             return tag
-        else:
-            raise serializers.ValidationError({'tag': 'Tag can not be blank.'})
 
     def validate(self, data):
-        tender_category = data.get("tender_category")
-        tag = data.get("tag")
-        if not tender_category:
-            raise serializers.ValidationError({'tender_category': 'This field is required.'})
-        if not tag:
-            raise serializers.ValidationError({'tag': 'This field is required.'})
+        apply_through_website = data.get("apply_through_website")
+        website_link = data.get("website_link")
+        application_instruction = data.get("application_instruction")
+        if not application_instruction:
+            raise serializers.ValidationError({'application_instruction': 'This field is required.'})
+        if apply_through_website and website_link in ["", None]:
+            raise serializers.ValidationError({'website_link': 'Website link can not be blank'})
         return data
 
     def update(self, instance, validated_data):

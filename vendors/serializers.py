@@ -391,12 +391,11 @@ class AppliedTenderSerializers(serializers.ModelSerializer):
             AppliedTenderSerializers.
 
         """
-
         attachments = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
         applied_tender_instance = super().save(user=user, tender=tender_instace)
-        if tender_instance.user:
+        if tender_instace.user:
             if tender_instace.user.get_notification:
                 Notification.objects.create(
                     user=tender_instace.user, tender_application=applied_tender_instance,

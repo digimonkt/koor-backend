@@ -276,7 +276,10 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'id', 'title', 'tender_id', 'budget_currency', 'budget_amount', 'description',
             'country', 'city', 'tag', 'tender_category', 'tender_type', 'sector', 'deadline',
             'start_date', 'status', 'user', 'attachments', 'created', 'vendor',
-            'is_applied', 'is_saved', 'is_editable', 'application', 'address', 'company', 'company_logo'
+            'is_applied', 'is_saved', 'is_editable', 'application', 'address', 'company', 'company_logo',
+            'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
+            'apply_through_email', 'apply_through_website', 'application_instruction', 
+            'website_link',
 
         ]
     def get_company_logo(self, obj):

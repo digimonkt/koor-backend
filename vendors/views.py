@@ -731,3 +731,102 @@ class TagView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
+
+class TenderApplyByEmailView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, tenderId):
+        
+        context = dict()
+        blacklisted_user = []
+        if request.user.role == "vendor":
+            try:
+                tender_instance = TenderDetails.objects.get(id=tenderId)
+                blacklisted_list = BlackList.objects.filter(user=tender_instance.user)
+                for blacklisted_data in blacklisted_list:
+                    blacklisted_user.append(blacklisted_data.blacklisted_user)
+                if request.user in blacklisted_user:
+                    context["message"] = ["You are blacklisted for this Tender."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                try:
+                    if AppliedTender.objects.get(tender=tender_instance, user=request.user):
+                        context["message"] = ["You are already applied"]
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except AppliedTender.DoesNotExist:
+                    if tender_instance.apply_through_email:
+                        user_email = []
+                        if tender_instance.user:
+                            if tender_instance.user.email:
+                                user_email.append(tender_instance.user.email)
+                        if tender_instance.contact_email:
+                            user_email.append(tender_instance.contact_email)
+                        if tender_instance.cc1:
+                            user_email.append(tender_instance.cc1)
+                        if tender_instance.cc2:
+                            user_email.append(tender_instance.cc2)
+                        if user_email:
+                            email_context = dict()
+                            if tender_instance.user:
+                                if tender_instance.user.name:
+                                    user_name = tender_instance.user.name
+                                else:
+                                    user_name = user_email[0]
+                            elif tender_instance.company:
+                                user_name = tender_instance.company
+                            else:
+                                user_name = user_email[0]
+                            email_context["yourname"] = user_name
+                            email_context["username"] = request.user
+                            email_context["resume_link"] = Common.BASE_URL
+                            email_context["notification_type"] = "applied tender"
+                            email_context["tender_instance"] = tender_instance
+                            get_email_object(
+                                subject=f'Applied tender through email',
+                                email_template_name='email-templates/mail-for-apply-tender.html',
+                                context=email_context,
+                                to_email=user_email
+                            )
+                            context["message"] = ["Applied Successfully"]
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_200_OK
+                            )
+                        else:
+                            context["message"] = ["Employer email not detected."]
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        
+                    else:
+                        context["message"] = ["Employer not active apply through email."]
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            except TenderDetails.DoesNotExist:
+                return response.Response(
+                    data={"tender": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
