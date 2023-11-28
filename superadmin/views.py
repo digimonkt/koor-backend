@@ -362,17 +362,13 @@ class JobCategoryView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = JobCategorySerializers
-    queryset = JobCategory.objects.annotate(
-        has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id'))))
+    queryset = JobCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
 
     def list(self, request):
-        if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset())
-        else:
-            queryset = self.filter_queryset(self.get_queryset().filter(has_subcategory=True))
+        queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
