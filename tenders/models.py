@@ -194,6 +194,66 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         db_column="company_logo",
         related_name='%(app_label)s_%(class)s_company_logo'
     )
+    
+    contact_email = models.EmailField(
+        verbose_name=_('Contact Email'),
+        null=True,
+        blank=True,
+        db_column="contact_email",
+    )
+    cc1 = models.EmailField(
+        verbose_name=_('CC Email 1'),
+        null=True,
+        blank=True,
+        db_column="cc1",
+    )
+    cc2 = models.EmailField(
+        verbose_name=_('CC Email 2'),
+        null=True,
+        blank=True,
+        db_column="cc2",
+    )
+    contact_whatsapp = models.CharField(
+        verbose_name=_('Contact Whatsapp'),
+        null=True,
+        blank=True,
+        max_length=15,
+        db_column="contact_whatsapp",
+    )
+    apply_through_koor = models.BooleanField(
+        verbose_name=_('Apply Through Koor'),
+        null=True,
+        blank=True,
+        db_column="apply_through_koor",
+        default=False
+    )    
+    apply_through_email = models.BooleanField(
+        verbose_name=_('Apply Through Email'),
+        null=True,
+        blank=True,
+        db_column="apply_through_email",
+        default=False
+    )
+    apply_through_website = models.BooleanField(
+        verbose_name=_('Apply Through Website'),
+        null=True,
+        blank=True,
+        db_column="apply_through_website",
+        default=False
+    )
+    application_instruction = models.TextField(
+        verbose_name=_('Application Instruction'),
+        null=True,
+        blank=True,
+        db_column="application_instruction",
+    )
+    website_link = models.CharField(
+        verbose_name=_('Website Link'),
+        null=True,
+        blank=True,
+        max_length=450,
+        db_column="website_link",
+    )
 
     def __str__(self):
         return str(self.title)
