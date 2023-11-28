@@ -1856,12 +1856,6 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         else:
             raise serializers.ValidationError({'tender_category': 'Tender category can not be blank.'})
 
-    def validate_tag(self, tag):
-        if tag not in [None, ""]:
-            limit = 3
-            if len(tag) > limit:
-                raise serializers.ValidationError({'tag': 'Choices limited to ' + str(limit)})
-            return tag
         
     def validate(self, data):
         apply_through_website = data.get("apply_through_website")
