@@ -261,9 +261,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             if len(job_sub_category) > limit:
                 raise serializers.ValidationError({'job_sub_category': 'Choices limited to ' + str(limit)})
             return job_sub_category
-        else:
-            raise serializers.ValidationError({'job_sub_category': 'Job sub category can not be blank.'})
-
+        
     def validate_language(self, language):
         """
         validate_language - A function to validate the language for a job instance.
@@ -516,9 +514,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             if len(job_sub_category) > limit:
                 raise serializers.ValidationError({'job_sub_category': 'Choices limited to ' + str(limit)})
             return job_sub_category
-        else:
-            raise serializers.ValidationError({'job_sub_category': 'Job sub category can not be blank.'})
-
+        
     def validate_language(self, language):
         if language not in [""]:
             limit = 3
