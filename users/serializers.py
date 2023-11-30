@@ -147,22 +147,19 @@ class CreateSessionSerializers(serializers.Serializer):
         user = None
         user_instance = None
         identifier = None
-        try:
-            if email:
-                user_instance = User.objects.filter(email__iexact=email).filter(is_active=False)
-                identifier = email
-            elif mobile_number:
-                user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_active=False)
-                identifier = mobile_number
-            if user_instance.exists():
-                raise serializers.ValidationError({'message': 'User not activate.'})
-            else:
-                user = cb.authenticate(self, identifier=identifier, password=password, role=role)
-            if user:
-                return user
-            else:
-                raise serializers.ValidationError({'message': 'Invalid login credentials.'})
-        except:
+        if email:
+            user_instance = User.objects.filter(email__iexact=email).filter(is_verified=False)
+            identifier = email
+        elif mobile_number:
+            user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_verified=False)
+            identifier = mobile_number
+        if user_instance.exists():
+            raise serializers.ValidationError({'message': 'User not verified.'})
+        else:
+            user = cb.authenticate(self, identifier=identifier, password=password, role=role)
+        if user:
+            return user
+        else:
             raise serializers.ValidationError({'message': 'Invalid login credentials.'})
 
 

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>account verification</title>
+  <style>
+    td,
+    th {
+      text-align: left;
+      padding: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <table
+    style="width: 600px; margin: auto; border-collapse: collapse; font-family: arial, sans-serif; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;background: #FFFFFF; border-radius: 5px;">
+    <!-- TABLE HEADER START -->
+    <thead style="height: 93px;">
+      <tr>
+        <th colspan="2" style="padding-left: 30px;">
+          <img src="{{LOGO}}" style="width:200px;">
+        </th>
+
+        <th style="text-align: end; padding-right: 30px;">
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/facebook.png">
+          </a>
+          <a href="#" style="margin: 0 10px; text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/instagram.png">
+          </a>
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/linkedine.png">
+          </a>
+        </th>
+      </tr>
+    </thead>
+    <!-- TABLE HEADER EXIT -->
+
+    <!-- TABLE BODY START -->
+    <tbody>
+      <tr>
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <h2 style="font-size: 27px; font-weight: 600; margin: 0;">Do you want to verify your account?
+          </h2>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            We've noticed you're having trouble accessing your Koor account. No worries - we're here to help you get back on track!</p>
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+                To ensure the security of your account, please use the following One-Time Password (OTP) to reset password proces:</p>
+        </td>
+      </tr>
+
+      <tr style="border-bottom: 1px solid #CACACA;">
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <h2 style="font-size: 27px; font-weight: 600; margin: 0; text-align: center;">
+            {{otp}}
+          </h2>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          If you didn't request this otp, please ignore this email.</p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            Remember to keep your account safe by not sharing this OTP with anyone. If you have any concerns or questions, don't
+            hesitate to contact our support team.</p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          If you continue to experience issues or have any questions, feel free to reach out to our support team at support@koorjobs.com. We're happy to assist you.</p>
+        </td>
+      </tr>
+
+    </tbody>
+    <!-- TABLE BODY EXIT -->
+
+    <!-- TABLE FOOTER START -->
+    <tfoot style="height: 128px;">
+      <tr>
+        <th colspan="3" style="text-align: center; padding-left: 30px; padding-right: 30px; padding-bottom: 0;">
+          <p style="font-size: 16px; font-weight: 400; line-height: 24px; color: #CACACA; margin: 0;">Unsubscribe from
+            the
+            newsletter</p>
+        </th>
+      </tr>
+
+      <tr>
+        <th colspan="3" style="text-align: center; padding-left: 30px; padding-right: 30px; padding-top: 0;">
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/graytwitter.png">
+          </a>
+          <a href="#" style="text-decoration: none; margin: 0 10px;">
+            <img src="{{BASE_URL}}/static/image_for_mail/grayinsta.png">
+          </a>
+          <a href="#" style="text-decoration: none;">
+            <img src="{{BASE_URL}}/static/image_for_mail/graylinkedin.png">
+          </a>
+        </th>
+      </tr>
+
+    </tfoot>
+    <!-- TABLE FOOTER EXIT -->
+
+  </table>
+</body>
+
+</html>
