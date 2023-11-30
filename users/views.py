@@ -125,16 +125,16 @@ class UserView(generics.GenericAPIView):
                 otp = unique_otp_generator()
                 context["yourname"] = user.email
                 context["otp"] = otp
-                # get_email_object(
-                #     subject=f'New Registration for Koor Jobs',
-                #     email_template_name='email-templates/new/new-login-detected.html',
-                #     # email_template_name='email-templates/send-forget-password-otp.html',
-                #     context=context,
-                #     to_email=[user.email, ]
-                # )
+                get_email_object(
+                    subject=f'New Registration for Koor Jobs',
+                    email_template_name='email-templates/new/new-login-detected.html',
+                    # email_template_name='email-templates/send-forget-password-otp.html',
+                    context=context,
+                    to_email=[user.email, ]
+                )
                 user.otp = otp
                 user.otp_created_at = datetime.now()
-                user.is_verified = True
+                # user.is_verified = True
                 user.save()
                 otp_token = PasswordResetTokenObtainPairSerializer.get_token(
                     user=user,
@@ -142,7 +142,7 @@ class UserView(generics.GenericAPIView):
                 )
                 response_context['token'] = str(otp_token)
             else:
-                user.is_verified = True
+                # user.is_verified = True
                 user.save()
             if user.role == "job_seeker":
                 JobSeekerProfile.objects.create(user=user)
@@ -391,9 +391,13 @@ class SendOtpView(generics.GenericAPIView):
                     )
                 context["yourname"] = user_email
                 context["otp"] = otp
+                if user_instance.is_verified:
+                    email_template_name='email-templates/new/otp-verification.html'
+                else:
+                    email_template_name='email-templates/new/account-verification.html'
                 get_email_object(
                     subject=f'OTP for Verification',
-                    email_template_name='email-templates/new/otp-verification.html',
+                    email_template_name=email_template_name,
                     # email_template_name='email-templates/send-forget-password-otp.html',
                     context=context,
                     to_email=[user_email, ]
@@ -503,7 +507,7 @@ class ChangePasswordView(generics.GenericAPIView):
             user_instance.otp = None
             user_instance.otp_created_at = None
             user_instance.set_password(password)
-            user_instance.is_verified = True
+            # user_instance.is_verified = True
             user_instance.save()
             Notification.objects.create(
                 user=user_instance, notification_type='password_update',
@@ -619,6 +623,8 @@ class SocialLoginView(generics.GenericAPIView):
             if serializer.validated_data['source'] == 'facebook':
                 if User.objects.filter(social_login_id=serializer.validated_data['social_login_id']).exists():
                     user = User.objects.get(social_login_id=serializer.validated_data['social_login_id'])
+                    user.is_verified = True
+                    user.save()
                 else:
                     serializer.is_valid(raise_exception=True)
                     serializer.save()
