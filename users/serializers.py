@@ -156,9 +156,9 @@ class CreateSessionSerializers(serializers.Serializer):
             # user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_verified=False)
             identifier = mobile_number
         if user_instance.exists():
-            raise serializers.ValidationError({'message': 'User not verified.'})
-        else:
             user = cb.authenticate(self, identifier=identifier, password=password, role=role)
+        else:
+            raise serializers.ValidationError({'message': 'User not verified.'})
         if user:
             return user
         else:
