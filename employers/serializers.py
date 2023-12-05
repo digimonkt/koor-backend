@@ -327,8 +327,6 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         job_sub_category = data.get("job_sub_category")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not job_sub_category:
-            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
         
         apply_through_website = data.get("apply_through_website")
         website_link = data.get("website_link")
@@ -552,8 +550,6 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         job_sub_category = data.get("job_sub_category")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not job_sub_category:
-            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
         
         apply_through_website = data.get("apply_through_website")
         website_link = data.get("website_link")

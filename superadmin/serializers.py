@@ -1709,8 +1709,6 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         job_sub_category = data.get("job_sub_category")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not job_sub_category:
-            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
         return data
 
     def save(self, user):
@@ -2205,8 +2203,6 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         job_sub_category = data.get("job_sub_category")
         if not job_category:
             raise serializers.ValidationError({'job_category': 'This field is required.'})
-        if not job_sub_category:
-            raise serializers.ValidationError({'job_sub_category': 'This field is required.'})
         return data
 
     def update(self, instance, validated_data):
