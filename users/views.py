@@ -121,13 +121,15 @@ class UserView(generics.GenericAPIView):
             serializer.save()
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
-            # -----------------------------------
-            user_email = user.email + str(datetime.now())
-            result = hashlib.md5(user_email.encode())
-            hash_url = Common.BASE_URL + "/api/v1/users/account-verification/" + str(result.hexdigest())
-            user.verification_token = str(result.hexdigest())
-            user.otp_created_at = datetime.now()
-            # -----------------------------------
+            if user.role != "employer":
+                user_email = user.email + str(datetime.now())
+                result = hashlib.md5(user_email.encode())
+                hash_url = Common.FRONTEND_BASE_URL + "/activation?verify-token=" + str(result.hexdigest())
+                user.verification_token = str(result.hexdigest())
+                user.otp_created_at = datetime.now()
+            else:
+                user.is_verified = True
+            # # -----------------------------------
             user.save()
             # if user.email:
             #     otp = unique_otp_generator()
@@ -162,22 +164,37 @@ class UserView(generics.GenericAPIView):
             elif user.role == "vendor":
                 VendorProfile.objects.create(user=user)
             user_session = create_user_session(request, user)
-            
-            
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
                 session_id=user_session.id
             )
             response_context["message"] = "User Created Successfully"
             
-            context["yourname"] = user.email
-            context["hash_url"] = hash_url
+
             if user.role != 'employer':
+                context["yourname"] = user.email
+                context["hash_url"] = hash_url
                 get_email_object(
                     subject=f'Welcome to KOOR',
                     email_template_name='email-templates/new/activate-your-account.html',
                     context=context,
                     to_email=[user.email, ]
+                )
+            else:
+                admin_email = []
+                admin_data = User.objects.filter(role='admin')
+                for get_admin in admin_data:
+                    if get_admin.email:
+                        admin_email.append(get_admin.email)
+                context["user_name"] = user.name
+                context["user_email"] = str(user.email)
+                if user.country_code:
+                    context["user_mobile_number"] = str(user.country_code) + "-" + str(user.mobile_number)
+                get_email_object(
+                    subject=f'New Employer Registration: Action Required',
+                    email_template_name='email-templates/new/employer-registration.html',
+                    context=context,
+                    to_email=admin_email
                 )
             return response.Response(
                 data=response_context,
@@ -1216,10 +1233,20 @@ class AccountVerificationView(generics.GenericAPIView):
                     user_instance.otp_created_at = None
                     user_instance.is_verified = True
                     user_instance.save()
-                    context['message'] = "Your account is verified."
+                    user_session = create_user_session(request, user_instance)
+                    token = SessionTokenObtainPairSerializer.get_token(
+                        user=user_instance,
+                        session_id=user_session.id
+                    )
+                    context["message"] = "Your account is verified."
+                    return response.Response(
+                        data=context,
+                        headers={"x-access": token.access_token, "x-refresh": token},
+                        status=status.HTTP_201_CREATED
+                    )
             return response.Response(
                 data=context,
-                status=status.HTTP_200_OK
+                status=status.HTTP_404_NOT_FOUND
             )
         except User.DoesNotExist:
             return response.Response(
@@ -1247,7 +1274,7 @@ class ResendVerificationView(generics.GenericAPIView):
             else:
                 user_email = user_instance.email + str(datetime.now())
                 result = hashlib.md5(user_email.encode())
-                hash_url = Common.BASE_URL + "/api/v1/users/account-verification/" + str(result.hexdigest())
+                hash_url = Common.FRONTEND_BASE_URL + "/activation?verify-token=" + str(result.hexdigest())
                 user_instance.verification_token = str(result.hexdigest())
                 user_instance.otp_created_at = datetime.now()
                 user_instance.save()

@@ -128,6 +128,7 @@ class Common(Configuration):
     USE_TZ = False
     LOGIN_REDIRECT_URL = '/'
     BASE_URL = config("BASE_URL")
+    FRONTEND_BASE_URL = config("CORS_ORIGIN_WHITELIST")
     DEFAULT_PASSWORD = config("DEFAULT_PASSWORD")
 
     # Static files (CSS, JavaScript, Images)
