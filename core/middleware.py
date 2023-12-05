@@ -79,14 +79,15 @@ class JWTMiddleware(MiddlewareMixin):
                 access_token_payload = self.decode_token(access_token)
                 get_session = self.get_session(access_token_payload)
                 # Return the response to respective endpoint
-                if get_session.user.is_verified:
-                    return response
-                else:
-                    response.status_code = 401
-                    res = '{"message": "Email is not verified", "email":"'+ get_session.user.email +'"}'
-                    response.headers.setdefault(self.access_token_lookup, access_token)
-                    response.content = bytes(res, encoding="UTF8")
-                    return response
+                # if get_session.user.is_verified:
+                #     return response
+                # else:
+                #     response.status_code = 401
+                #     res = '{"message": "Email is not verified", "email":"'+ get_session.user.email +'"}'
+                #     response.headers.setdefault(self.access_token_lookup, access_token)
+                #     response.content = bytes(res, encoding="UTF8")
+                #     return response
+                return response
 
             except jwt.ExpiredSignatureError:
                 # If the access token expired then we process the refresh token
@@ -102,13 +103,14 @@ class JWTMiddleware(MiddlewareMixin):
                             response = self.get_response(request)
                             if inspect.iscoroutine(response):
                                 response = async_to_sync(self.async_function)(response)
-                            if session.user.is_verified:
-                                response.headers.setdefault(self.access_token_lookup, new_access_token)
-                            else:
-                                response.status_code = 401
-                                res = '{"message": "Email is not verified", "email":"'+ session.user.email +'"}'
-                                response.headers.setdefault(self.access_token_lookup, new_access_token)
-                                response.content = bytes(res, encoding="UTF8")
+                            # if session.user.is_verified:
+                            #     response.headers.setdefault(self.access_token_lookup, new_access_token)
+                            # else:
+                            #     response.status_code = 401
+                            #     res = '{"message": "Email is not verified", "email":"'+ session.user.email +'"}'
+                            #     response.headers.setdefault(self.access_token_lookup, new_access_token)
+                            #     response.content = bytes(res, encoding="UTF8")
+                            response.headers.setdefault(self.access_token_lookup, new_access_token)
                         return response
                     response.status_code = 403
                     return response
