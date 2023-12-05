@@ -2266,6 +2266,29 @@ class DashboardView(generics.GenericAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+class CoreUpdateView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        response_context = dict()
+        user_context = dict()
+        try:
+            employer = User.objects.filter(role='employer', user_profile_employerprofile_user__is_verified=True).count()
+            jobs = JobDetails.objects.filter(status='active', created__date=date.today()).count()
+            tenders = TenderDetails.objects.filter(status='active', deadline__gte=date.today()).count()
+            employer = User.objects.filter(role='employer', user_profile_employerprofile_user__is_verified=True).count()
+            return response.Response(
+                data={'jobs':jobs, 'employer':employer, 'tenders':tenders},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
 
 class TenderCategoryView(generics.ListAPIView):
     """
