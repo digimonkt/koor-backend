@@ -4,8 +4,9 @@ from django.db.models import (
 import json, jwt
 import requests
 from datetime import datetime, date
+from django.utils import timezone
 import uuid
-
+import hashlib
 from django_filters import rest_framework as django_filters
 from django.db.models import Sum
 
@@ -120,30 +121,40 @@ class UserView(generics.GenericAPIView):
             serializer.save()
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
+            # -----------------------------------
+            user_email = user.email + str(datetime.now())
+            result = hashlib.md5(user_email.encode())
+            hash_url = Common.BASE_URL + "/api/v1/users/account-verification/" + str(result.hexdigest())
+            user.verification_token = str(result.hexdigest())
+            user.otp_created_at = datetime.now()
+            # -----------------------------------
             user.save()
-            if user.email:
-                otp = unique_otp_generator()
-                context["yourname"] = user.email
-                context["otp"] = otp
-                get_email_object(
-                    subject=f'New Registration for Koor Jobs',
-                    email_template_name='email-templates/new/new-login-detected.html',
-                    # email_template_name='email-templates/send-forget-password-otp.html',
-                    context=context,
-                    to_email=[user.email, ]
-                )
-                user.otp = otp
-                user.otp_created_at = datetime.now()
-                # user.is_verified = True
-                user.save()
-                otp_token = PasswordResetTokenObtainPairSerializer.get_token(
-                    user=user,
-                    user_id=user.id
-                )
-                response_context['token'] = str(otp_token)
-            else:
-                # user.is_verified = True
-                user.save()
+            # if user.email:
+            #     otp = unique_otp_generator()
+            #     context["yourname"] = user.email
+            #     context["otp"] = otp
+            #     get_email_object(
+            #         subject=f'New Registration for Koor Jobs',
+            #         email_template_name='email-templates/new/new-login-detected.html',
+            #         # email_template_name='email-templates/send-forget-password-otp.html',
+            #         context=context,
+            #         to_email=[user.email, ]
+            #     )
+            #     user.otp = otp
+            #     user.otp_created_at = datetime.now()
+            #     # user.is_verified = True
+            #     user.save()
+            #     otp_token = PasswordResetTokenObtainPairSerializer.get_token(
+            #         user=user,
+            #         user_id=user.id
+            #     )
+            #     response_context['token'] = str(otp_token)
+            # else:
+            #     # user.is_verified = True
+            #     user.save()
+            # !!!!!!!!!!!!!!!!!!!!!!!!!! EMAIL CODE SENT START !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            
+            
             if user.role == "job_seeker":
                 JobSeekerProfile.objects.create(user=user)
             elif user.role == "employer":
@@ -151,6 +162,8 @@ class UserView(generics.GenericAPIView):
             elif user.role == "vendor":
                 VendorProfile.objects.create(user=user)
             user_session = create_user_session(request, user)
+            
+            
             token = SessionTokenObtainPairSerializer.get_token(
                 user=user,
                 session_id=user_session.id
@@ -158,12 +171,14 @@ class UserView(generics.GenericAPIView):
             response_context["message"] = "User Created Successfully"
             
             context["yourname"] = user.email
-            get_email_object(
-                subject=f'Welcome to KOOR',
-                email_template_name='email-templates/new/activate-your-account.html',
-                context=context,
-                to_email=[user.email, ]
-            )
+            context["hash_url"] = hash_url
+            if user.role != 'employer':
+                get_email_object(
+                    subject=f'Welcome to KOOR',
+                    email_template_name='email-templates/new/activate-your-account.html',
+                    context=context,
+                    to_email=[user.email, ]
+                )
             return response.Response(
                 data=response_context,
                 headers={"x-access": token.access_token, "x-refresh": token},
@@ -1178,8 +1193,86 @@ class VisitorsView(generics.GenericAPIView):
         return response.Response(
             status=status.HTTP_201_CREATED
         )
-            
 
 
-            
-            
+class AccountVerificationView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, hash_code):
+
+        context = dict()
+        try:
+            user_instance = User.objects.get(verification_token=hash_code)
+            if user_instance.is_verified == True:
+                context['message'] = "Your account already verified."
+            else:
+                now = timezone.now()
+                time_difference = now - user_instance.otp_created_at
+                if time_difference.total_seconds() > 24 * 3600:  # 24 hours in seconds
+                    context['message'] = "Verification link is expired."
+                else:
+                    user_instance.verification_token = None
+                    user_instance.otp_created_at = None
+                    user_instance.is_verified = True
+                    user_instance.save()
+                    context['message'] = "Your account is verified."
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"message": "Invalid Verification Link"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+class ResendVerificationView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        context = dict()
+        response_context = dict()
+        try:
+            user_instance = User.objects.get(email=request.data['email'])
+            if user_instance.is_verified == True:
+                response_context['message'] = ["Your account already verified."]
+            else:
+                user_email = user_instance.email + str(datetime.now())
+                result = hashlib.md5(user_email.encode())
+                hash_url = Common.BASE_URL + "/api/v1/users/account-verification/" + str(result.hexdigest())
+                user_instance.verification_token = str(result.hexdigest())
+                user_instance.otp_created_at = datetime.now()
+                user_instance.save()
+                context["yourname"] = user_instance.email
+                context["hash_url"] = hash_url
+                if user_instance.role != 'employer':
+                    get_email_object(
+                        subject=f'Welcome to KOOR',
+                        email_template_name='email-templates/new/activate-your-account.html',
+                        context=context,
+                        to_email=[user_instance.email, ]
+                    )
+                response_context['message'] = ["Verification link send to " + str(user_instance.email) + "."]
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"message": ["Email address not registered"]},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["error"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
