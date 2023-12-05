@@ -148,10 +148,12 @@ class CreateSessionSerializers(serializers.Serializer):
         user_instance = None
         identifier = None
         if email:
-            user_instance = User.objects.filter(email__iexact=email).filter(is_verified=False)
+            user_instance = User.objects.filter(email__iexact=email)
+            # user_instance = User.objects.filter(email__iexact=email).filter(is_verified=False)
             identifier = email
         elif mobile_number:
-            user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_verified=False)
+            user_instance = User.objects.filter(mobile_number=mobile_number)
+            # user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_verified=False)
             identifier = mobile_number
         if user_instance.exists():
             raise serializers.ValidationError({'message': 'User not verified.'})
