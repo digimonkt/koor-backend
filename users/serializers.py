@@ -471,7 +471,7 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
             'education_record', 'work_experience', 'resume', 'languages', 'skills', 'job_preferences',
-            'is_online', 'profile_completed', 'ready_for_chat'
+            'is_online', 'profile_completed', 'ready_for_chat', 'is_verified'
         ]
         
     
@@ -700,7 +700,7 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 
-            'get_notification', 'profile', 'is_online'
+            'get_notification', 'profile', 'is_online', 'is_verified'
         ]
         
     def get_image(self, obj):
@@ -980,7 +980,7 @@ class VendorDetailSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 'get_notification', 
-            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat'
+            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat', 'is_verified'
         ]
         
     
@@ -1153,6 +1153,7 @@ class UserSerializer(serializers.ModelSerializer):
             'image',
             'description',
             'is_blacklisted',
+            'is_verified',
             'is_online'
         )
 
@@ -1227,7 +1228,7 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
-                  'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online']
+                  'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online', 'is_verified']
     
     def get_image(self, obj):
         context = {}
@@ -1347,7 +1348,7 @@ class SocialLoginSerializers(serializers.ModelSerializer):
     )
     class Meta:
         model = User
-        fields = ['id', 'social_login_id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code', 'display_image', 'is_online']
+        fields = ['id', 'social_login_id', 'email', 'mobile_number', 'source', 'name', 'role', 'country_code', 'display_image', 'is_online', 'is_verified']
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
@@ -1623,7 +1624,7 @@ class SearchUserSerializers(serializers.ModelSerializer):
         model = User
         fields = ['id', 'role', 'name', 'email', 'image', 
                   'description', 'skills','country', 'city', 
-                  'highest_education', 'is_online'
+                  'highest_education', 'is_online', 'is_verified'
                   ]
 
     def get_image(self, obj):
