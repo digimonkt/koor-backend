@@ -147,22 +147,21 @@ class CreateSessionSerializers(serializers.Serializer):
         user = None
         user_instance = None
         identifier = None
-        try:
-            if email:
-                user_instance = User.objects.filter(email__iexact=email).filter(is_active=False)
-                identifier = email
-            elif mobile_number:
-                user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_active=False)
-                identifier = mobile_number
-            if user_instance.exists():
-                raise serializers.ValidationError({'message': 'User not activate.'})
-            else:
-                user = cb.authenticate(self, identifier=identifier, password=password, role=role)
-            if user:
-                return user
-            else:
-                raise serializers.ValidationError({'message': 'Invalid login credentials.'})
-        except:
+        if email:
+            user_instance = User.objects.filter(email__iexact=email)
+            # user_instance = User.objects.filter(email__iexact=email).filter(is_verified=False)
+            identifier = email
+        elif mobile_number:
+            user_instance = User.objects.filter(mobile_number=mobile_number)
+            # user_instance = User.objects.filter(mobile_number=mobile_number).filter(is_verified=False)
+            identifier = mobile_number
+        if user_instance.exists():
+            user = cb.authenticate(self, identifier=identifier, password=password, role=role)
+        else:
+            raise serializers.ValidationError({'message': 'User not verified.'})
+        if user:
+            return user
+        else:
             raise serializers.ValidationError({'message': 'Invalid login credentials.'})
 
 
@@ -181,6 +180,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
     highest_education = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    is_verified = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerProfile
         fields = (
@@ -193,8 +193,12 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'highest_education',
             'country',
             'city',
-            'experience'
+            'experience',
+            'is_verified',
         )
+    
+    def get_is_verified(self, obj):
+        return obj.user.is_verified
     
     def get_highest_education(self, obj):
         context = {}
@@ -605,7 +609,6 @@ class EmployerProfileSerializer(serializers.ModelSerializer):
             'website',
             'country',
             'city',
-            'is_verified',
             'points'
         )
 
@@ -857,6 +860,7 @@ class VendorProfileSerializer(serializers.ModelSerializer):
     organization_type = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    is_verified = serializers.SerializerMethodField()
 
     class Meta:
         model = VendorProfile
@@ -874,8 +878,13 @@ class VendorProfileSerializer(serializers.ModelSerializer):
             'other_notification',
             'address',
             'country',
-            'city'
+            'city',
+            'is_verified'
         )
+        
+    def get_is_verified(self, obj):
+        return obj.user.is_verified
+
 
     def get_organization_type(self, obj):
         """

@@ -96,6 +96,13 @@ class User(AbstractUser, BaseModel, SoftDeleteModel):
         null=True,
         db_column="otp"
     )
+    verification_token = models.CharField(
+        verbose_name=_('Verification Token'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="verification_token"
+    )
     otp_created_at = models.DateTimeField(
         verbose_name=_('OTP Created At'),
         blank=True,

@@ -169,7 +169,9 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     city = models.ForeignKey(
         City,
         verbose_name=_('City'),
-        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         db_column="city",
         related_name='%(app_label)s_%(class)s_city'
     )

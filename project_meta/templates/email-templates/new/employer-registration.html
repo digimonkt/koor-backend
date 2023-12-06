@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Activate your account</title>
+  <title>Employer Registration</title>
   <style>
     td,
     th {
@@ -45,31 +45,42 @@
         </td>
       </tr>
 
-      <tr>
+      {% comment %} <tr>
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
           <h2 style="font-size: 27px; font-weight: 600; margin: 0;">Welcome to Koor - simply better way to find a job!
           </h2>
         </td>
-      </tr>
+      </tr> {% endcomment %}
  
       <tr>
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
           <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;">
-            Welcome to Koor, your launchpad to incredible career opportunities! We're thrilled to have you on board.
-            Koor is all
-            about turning your career dreams into reality. Dive in, explore, and uncover your perfect job match.</p>
+            Dear Koor Admin,</p>
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;">
+                I wanted to bring to your attention that a new employer registration has been initiated on our platform. 
+                The individual registering as an employer goes by {% if user_name %}the name of {{user_name}}{% elif user_email %}the email of {{user_email}}{% else %}the mobile number of {{user_mobile_number}}{% endif %}.</p>
+        
           <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;">
-            To start your journey, simply activate your newly created account by clicking the link below:</p>
+            Their registration details are as follows:</p>
+            {% if user_name %}
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;">Name: {{user_name}}</p>
+            {% endif %}
+            {% if user_email %}
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;">Email: {{user_email}}</p>
+            {% endif %}
+            {% if user_mobile_number %}
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;">Mobile Number: {{user_mobile_number}}</p>
+            {% endif %}
         </td>
       </tr>
 
-      <tr style="border-bottom: 1px solid #CACACA;">
+        {% comment %} <tr style="border-bottom: 1px solid #CACACA;">
         <td colspan="3" style="text-align: center; padding-left: 30px; padding-right: 30px; padding-bottom: 30px;">
           <a href="{{hash_url}}"
             style="background: #EEA23D; width: 223px; height: 48px; padding: 12px 24px 12px 24px; border-radius: 75px; border: none;font-size: 16px; font-weight: 600; line-height: 24px; color: #FFFFFF; box-shadow: 0px 1px 2px -1px #110C2214;">Activate
             your account</a>
         </td>
-      </tr>
+      </tr> {% endcomment %}
 
     </tbody>
     <!-- TABLE BODY EXIT -->
