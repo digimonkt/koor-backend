@@ -1227,7 +1227,24 @@ class AccountVerificationView(generics.GenericAPIView):
                 now = timezone.now()
                 time_difference = now - user_instance.otp_created_at
                 if time_difference.total_seconds() > 24 * 3600:  # 24 hours in seconds
-                    context['message'] = "Verification link is expired."
+                    # ------------------------------------------
+                    user_email = user_instance.email + str(datetime.now())
+                    result = hashlib.md5(user_email.encode())
+                    hash_url = Common.FRONTEND_BASE_URL + "/activation?verify-token=" + str(result.hexdigest())
+                    user_instance.verification_token = str(result.hexdigest())
+                    user_instance.otp_created_at = datetime.now()
+                    user_instance.save()
+                    context["yourname"] = user_instance.email
+                    context["hash_url"] = hash_url
+                    if user_instance.role != 'employer':
+                        get_email_object(
+                            subject=f'Welcome to KOOR',
+                            email_template_name='email-templates/new/activate-your-account.html',
+                            context=context,
+                            to_email=[user_instance.email, ]
+                        )
+                    response_context['message'] = ["Verification link send to " + str(user_instance.email) + "."]
+                    # ---------------------------------
                 else:
                     user_instance.verification_token = None
                     user_instance.otp_created_at = None
