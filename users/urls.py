@@ -6,7 +6,8 @@ from .views import (
     DisplayImageView, SendOtpView, ChangePasswordView,
     GetLocationView, SocialLoginView, OtpVerificationView,
     VerificationView, SearchView, UserFilterView,
-    VisitorLogView, AnalyticView, VisitorsView
+    VisitorLogView, AnalyticView, VisitorsView,
+    AccountVerificationView, ResendVerificationView
     )
 
 app_name = "users"
@@ -16,6 +17,8 @@ urlpatterns = [
     path('', UserView.as_view(), name="get_user"),
     
     path('/social-login', SocialLoginView.as_view(), name="social_login"),
+    path('/account-verification/<str:hash_code>', AccountVerificationView.as_view(), name="account_verification"),
+    path('/resend-verification', ResendVerificationView.as_view(), name="resend_verification"),
 
     path('/session', CreateSessionView.as_view(), name="create_session"),
     

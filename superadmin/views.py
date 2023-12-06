@@ -362,17 +362,13 @@ class JobCategoryView(generics.ListAPIView):
 
     permission_classes = [permissions.AllowAny]
     serializer_class = JobCategorySerializers
-    queryset = JobCategory.objects.annotate(
-        has_subcategory=Exists(JobSubCategory.objects.filter(category_id=OuterRef('id'))))
+    queryset = JobCategory.objects.all()
     filter_backends = [filters.SearchFilter]
     search_fields = ['title']
     pagination_class = CustomPagination
 
     def list(self, request):
-        if self.request.user.is_staff:
-            queryset = self.filter_queryset(self.get_queryset())
-        else:
-            queryset = self.filter_queryset(self.get_queryset().filter(has_subcategory=True))
+        queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -1702,27 +1698,36 @@ class EmployerListView(generics.ListAPIView):
         except EmployerProfile.DoesNotExist:
             return response.Response(data={"employerId": "Does Not Exist"}, status=status.HTTP_404_NOT_FOUND)
 
-        context = {'message': ''}
+        response_context = {'message': ''}
+        context = dict()
         if action == 'verify':
             if not self.request.user.is_staff:
-                context = {'message': "You do not have permission to perform this action."}
-                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+                response_context = {'message': "You do not have permission to perform this action."}
+                return response.Response(data=response_context, status=status.HTTP_401_UNAUTHORIZED)
             if employer_instance.is_verified:
-                context['message'] = "Employer is already verified"
+                response_context['message'] = "Employer is already verified"
             else:
                 employer_instance.is_verified = True
                 employer_instance.save()
-                context['message'] = "Employer verified."
+                context["user_name"] = employer_instance.user.name
+                context["user_email"] = str(employer_instance.user.email)
+                get_email_object(
+                    subject=f'Account Verification Completed: Welcome to KOOR!',
+                    email_template_name='email-templates/new/admin-verify-employer-account.html',
+                    context=context,
+                    to_email=[employer_instance.user.email, ]
+                )
+                response_context['message'] = "Employer verified."
         elif action == 'unverify':
             if not self.request.user.is_staff:
-                context = {'message': "You do not have permission to perform this action."}
-                return response.Response(data=context, status=status.HTTP_401_UNAUTHORIZED)
+                response_context = {'message': "You do not have permission to perform this action."}
+                return response.Response(data=response_context, status=status.HTTP_401_UNAUTHORIZED)
             if not employer_instance.is_verified:
-                context['message'] = "Employer is not verified"
+                response_context['message'] = "Employer is not verified"
             else:
                 employer_instance.is_verified = False
                 employer_instance.save()
-                context['message'] = "Employer unverified."
+                response_context['message'] = "Employer unverified."
         elif action == 'recharge':
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
@@ -1733,11 +1738,11 @@ class EmployerListView(generics.ListAPIView):
                 note=request.data.get('note', ''),
                 package=request.data.get('package', 'none')
                 )
-            context['message'] = "Point credited."
+            response_context['message'] = "Point credited."
         else:
-            context['message'] = "Invalid action"
+            response_context['message'] = "Invalid action"
 
-        return response.Response(data=context, status=status.HTTP_200_OK)
+        return response.Response(data=response_context, status=status.HTTP_200_OK)
 
 
 class JobsListView(generics.ListAPIView):
@@ -2261,6 +2266,29 @@ class DashboardView(generics.GenericAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+class CoreUpdateView(generics.GenericAPIView):
+    
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        response_context = dict()
+        user_context = dict()
+        try:
+            employer = User.objects.filter(role='employer', user_profile_employerprofile_user__is_verified=True).count()
+            jobs = JobDetails.objects.filter(status='active', created__date=date.today()).count()
+            tenders = TenderDetails.objects.filter(status='active', deadline__gte=date.today()).count()
+            employer = User.objects.filter(role='employer', user_profile_employerprofile_user__is_verified=True).count()
+            return response.Response(
+                data={'jobs':jobs, 'employer':employer, 'tenders':tenders},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            response_context['message'] = str(e)
+            return response.Response(
+                data=response_context,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
 
 class TenderCategoryView(generics.ListAPIView):
     """

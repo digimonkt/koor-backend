@@ -146,12 +146,16 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     tender_type = models.ManyToManyField(
         to=OpportunityType,
         verbose_name=_('Tender Type'),
+        null=True,
+        blank=True,
         db_column="tender_type",
         related_name='%(app_label)s_%(class)s_tender_type'
     )
     sector = models.ManyToManyField(
         to=Choice,
         verbose_name=_('Sector'),
+        null=True,
+        blank=True,
         db_column="sector",
         related_name='%(app_label)s_%(class)s_sectors'
     )
