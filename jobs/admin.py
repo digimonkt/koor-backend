@@ -7,7 +7,18 @@ from .models import (
     JobShare
     )
 
-admin.site.register(JobDetails)
+class JobDetailsAdmin(admin.ModelAdmin):
+    list_display = ('title','display_job_category', 'deadline', 'status')
+    
+    
+    def display_job_category(self, obj):
+        return ", ".join([job_category.title for job_category in obj.job_category.all()])
+
+
+
+admin.site.register(JobDetails, JobDetailsAdmin)
+
+# admin.site.register(JobDetails)
 admin.site.register(JobCategory)
 admin.site.register(JobSubCategory)
 admin.site.register(JobAttachmentsItem)
