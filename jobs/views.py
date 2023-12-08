@@ -1052,17 +1052,20 @@ class PopularJobCategoryView(generics.ListAPIView):
         most_used_categories = JobDetails.objects.filter(deadline__gte=date.today(), is_removed=False, status="active"
                         ).values('job_category__id', 'job_category__title').annotate(
             category_count=Count('job_category')).order_by('-category_count')
-
         # Prepare the job categories list with title and count information
+        all_job_category_id = []
+        job_category = JobCategory.objects.all()
+        for cat_id in job_category:
+            all_job_category_id.append(cat_id.id)
         for category in most_used_categories:
-            job_categories.append(
-                {
-                    "id": category['job_category__id'],
-                    "title": category['job_category__title'],
-                    "count": category['category_count']
-                }
-            )
-
+            if category['job_category__id'] in all_job_category_id:
+                job_categories.append(
+                    {
+                        "id": category['job_category__id'],
+                        "title": category['job_category__title'],
+                        "count": category['category_count']
+                    }
+                )
         return response.Response(
             data=job_categories,
             status=status.HTTP_200_OK
