@@ -563,7 +563,7 @@ class JobSuggestionView(generics.ListAPIView):
         queryset = self.filter_queryset(self.get_queryset())
         try:
             job_instance = JobDetails.objects.get(id=jobId)
-            annotated_job_details = JobDetails.objects.filter(~Q(id=job_instance.id)).annotate(
+            annotated_job_details = JobDetails.objects.filter(deadline__gte=date.today(), is_removed=False, status="active").filter(~Q(id=job_instance.id)).annotate(
                 matches=Value(0)
             ).annotate(
                 matches=Case(
