@@ -549,7 +549,8 @@ class ApplicationsDetailView(generics.GenericAPIView):
 class JobSuggestionView(generics.ListAPIView):
     serializer_class = GetJobsSerializers
     permission_classes = [permissions.AllowAny]
-    queryset = JobDetails.objects.all()
+    # queryset = JobDetails.objects.all()
+    queryset = JobDetails.objects.filter(deadline__gte=date.today(), is_removed=False, status="active")
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = ['title']
