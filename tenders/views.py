@@ -114,21 +114,21 @@ class TenderSearchView(generics.ListAPIView):
                 if 'order_by' in self.request.GET:
                     if 'descending' in self.request.GET['order_by']:
                         return TenderDetails.objects.filter(
-                            deadline__gte=date.today(), 
+                            # deadline__gte=date.today(), 
                             status='active'
                         ).order_by("-" + str(order_by))
                     else:
                         return TenderDetails.objects.filter(
-                            deadline__gte=date.today(), 
+                            # deadline__gte=date.today(), 
                             status='active'
                         ).order_by(str(order_by))
                 else:
                     return TenderDetails.objects.filter(
-                        deadline__gte=date.today(), 
+                        # deadline__gte=date.today(), 
                         status='active'
                     ).order_by(str(order_by))
         return TenderDetails.objects.filter(
-            deadline__gte=date.today(), 
+            # deadline__gte=date.today(), 
             status='active'
         )
 
