@@ -169,9 +169,11 @@ class UserView(generics.GenericAPIView):
                 session_id=user_session.id
             )
             response_context["message"] = "User Created Successfully"
-            
-
             if user.role != 'employer':
+                if user.role == 'job_seeker':
+                    context['product'] = 'job'
+                elif user.role == 'vendor':
+                    context['product'] = 'tender'
                 context["yourname"] = user.email
                 context["hash_url"] = hash_url
                 get_email_object(
@@ -181,6 +183,16 @@ class UserView(generics.GenericAPIView):
                     to_email=[user.email, ]
                 )
             else:
+                if user.role == 'employer':
+                    context['product'] = 'job'
+                    context["yourname"] = user.email
+                    context["hash_url"] = hash_url
+                    get_email_object(
+                        subject=f'Welcome to KOOR',
+                        email_template_name='email-templates/new/activate-employer-account.html',
+                        context=context,
+                        to_email=[user.email, ]
+                    )
                 admin_email = []
                 admin_data = User.objects.filter(role='admin')
                 for get_admin in admin_data:
