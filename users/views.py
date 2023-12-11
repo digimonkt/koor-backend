@@ -186,7 +186,6 @@ class UserView(generics.GenericAPIView):
                 if user.role == 'employer':
                     context['product'] = 'job'
                     context["yourname"] = user.email
-                    context["hash_url"] = hash_url
                     get_email_object(
                         subject=f'Welcome to KOOR',
                         email_template_name='email-templates/new/activate-employer-account.html',
