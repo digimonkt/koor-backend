@@ -179,8 +179,11 @@ class CountryView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                Country.objects.get(id=countryId).delete()
-                context['message'] = "Deleted Successfully"
+                if JobDetails.objects.filter(country__id=countryId).exists():
+                    context['message'] = ["This country already used in job."]
+                else:
+                    Country.objects.get(id=countryId).delete()
+                    context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -315,8 +318,11 @@ class CityView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                City.objects.get(id=cityId).delete()
-                context['message'] = ["Deleted Successfully"]
+                if JobDetails.objects.filter(city__id=cityId).exists():
+                    context['message'] = ["This city already used in job."]
+                else:
+                    City.objects.get(id=cityId).delete()
+                    context['message'] = ["Deleted Successfully"]
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -441,8 +447,11 @@ class JobCategoryView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                JobCategory.objects.get(id=jobCategoryId).delete()
-                context['message'] = ["Deleted Successfully"]
+                if JobDetails.objects.filter(job_category__id=jobCategoryId).exists():
+                    context['message'] = ["This category already used in job."]
+                else:
+                    JobCategory.objects.get(id=jobCategoryId).delete()
+                    context['message'] = ["Deleted Successfully"]
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -614,8 +623,11 @@ class EducationLevelView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                EducationLevel.objects.get(id=educationLevelId).delete()
-                context['message'] = "Deleted Successfully"
+                if JobDetails.objects.filter(highest_education__id=educationLevelId).exists():
+                    context['message'] = ["This education already used in job."]
+                else:
+                    EducationLevel.objects.get(id=educationLevelId).delete()
+                    context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -961,8 +973,11 @@ class SkillView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                Skill.objects.get(id=skillId).delete()
-                context['message'] = "Deleted Successfully"
+                if JobDetails.objects.filter(skill__id=skillId).exists():
+                    context['message'] = ["This skill already used in job."]
+                else:
+                    Skill.objects.get(id=skillId).delete()
+                    context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK
@@ -2718,8 +2733,11 @@ class JobSubCategoryView(generics.ListAPIView):
         context = dict()
         if self.request.user.is_staff:
             try:
-                JobSubCategory.objects.get(id=jobSubCategoryId).delete()
-                context['message'] = "Deleted Successfully"
+                if JobDetails.objects.filter(job_sub_category__id=jobSubCategoryId).exists():
+                    context['message'] = ["This subcategory already used in job."]
+                else:
+                    JobSubCategory.objects.get(id=jobSubCategoryId).delete()
+                    context['message'] = "Deleted Successfully"
                 return response.Response(
                     data=context,
                     status=status.HTTP_200_OK

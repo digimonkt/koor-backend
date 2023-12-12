@@ -8,13 +8,7 @@ from .models import (
     )
 
 class JobDetailsAdmin(admin.ModelAdmin):
-    list_display = ('title','display_job_category', 'deadline', 'status')
-    
-    
-    def display_job_category(self, obj):
-        return ", ".join([job_category.title for job_category in obj.job_category.all()])
-
-
+    list_display = ('title','user', 'company', 'status')
 
 admin.site.register(JobDetails, JobDetailsAdmin)
 

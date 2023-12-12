@@ -162,24 +162,24 @@ class JobSearchView(generics.ListAPIView):
                 if 'order_by' in self.request.GET:
                     if 'descending' in self.request.GET['order_by']:
                         return JobDetails.objects.filter(
-                            deadline__gte=date.today(),
+                            # deadline__gte=date.today(),
                             is_removed=False,
                             status="active"
                         ).order_by("-" + str(order_by))
                     else:
                         return JobDetails.objects.filter(
-                            deadline__gte=date.today(),
+                            # deadline__gte=date.today(),
                             is_removed=False,
                             status="active"
                         ).order_by(str(order_by))
                 else:
                     return JobDetails.objects.filter(
-                        deadline__gte=date.today(),
+                        # deadline__gte=date.today(),
                         is_removed=False,
                         status="active"
                     ).order_by(str(order_by))
         return JobDetails.objects.filter(
-            deadline__gte=date.today(),
+            # deadline__gte=date.today(),
             is_removed=False,
             status="active"
         )
