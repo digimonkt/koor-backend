@@ -129,6 +129,9 @@ class UserView(generics.GenericAPIView):
                 user.otp_created_at = datetime.now()
             else:
                 user.is_verified = True
+                if user.role == 'admin':
+                    user.is_staff = True
+                    user.is_superuser = True
             # # -----------------------------------
             user.save()
             # if user.email:

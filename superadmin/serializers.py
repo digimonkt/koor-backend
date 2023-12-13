@@ -292,19 +292,30 @@ class ChangePasswordSerializers(serializers.Serializer):
     )
     password = serializers.CharField(
         style={"input_type": "text"},
-        write_only=True
+        write_only=True,
+        required=False
+    )
+    email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False
     )
 
     def validate(self, data):
         old_password = data.get("old_password", "")
         password = data.get("password", "")
+        email = data.get("email", "")
         user_data = self.context['user']
         user = None
         try:
             user = cb.authenticate(self, identifier=user_data.email, password=old_password, role="admin")
             if user:
-                user.set_password(password)
-                user.save()
+                if email:
+                    user.email = email
+                    user.save()
+                if password:
+                    user.set_password(password)
+                    user.save()
                 return user
             else:
                 raise serializers.ValidationError({'message': 'Invalid login credentials.'})
