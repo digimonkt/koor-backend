@@ -1068,7 +1068,8 @@ class PopularJobCategoryView(generics.ListAPIView):
                 )
         total_jobs = JobDetails.objects.filter(is_removed=False, status="active").count()
         return response.Response(
-            data= {"total_jobs":total_jobs , 'job_categories':job_categories} ,
+            data= job_categories,
+            # data= {"total_jobs":total_jobs , 'job_categories':job_categories} ,
             status=status.HTTP_200_OK
         )
         
