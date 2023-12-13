@@ -16,6 +16,11 @@ from uuid import UUID
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
 from core.emails import get_email_object
+from core.tokens import (
+    SessionTokenObtainPairSerializer,
+    PasswordResetTokenObtainPairSerializer,
+    PasswordChangeTokenObtainPairSerializer
+)
 from employers.views import my_callback
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
@@ -35,7 +40,7 @@ from tenders.serializers import TendersSerializers
 from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
-
+from users.views import create_user_session
 from .filters import InvoiceDetailsFilter
 from .models import (
     Content, ResourcesContent, SocialUrl,
@@ -1258,10 +1263,18 @@ class ChangePasswordView(generics.GenericAPIView):
                 refresh_token = request.headers.get('x-refresh')
                 payload = JWTMiddleware.decode_token(refresh_token)
                 UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
+                
+                user_session = create_user_session(request, serializer.validated_data)
+                token = SessionTokenObtainPairSerializer.get_token(
+                    user=serializer.validated_data,
+                    session_id=user_session.id
+                )
+
                 response_context["message"] = "Password update successfully."
                 return response.Response(
                     data=response_context,
-                    status=status.HTTP_200_OK
+                    headers={"x-access": token.access_token, "x-refresh": token},
+                    status=status.HTTP_201_CREATED
                 )
             else:
                 response_context['message'] = "You do not have permission to perform this action."
