@@ -16,6 +16,11 @@ from uuid import UUID
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
 from core.emails import get_email_object
+from core.tokens import (
+    SessionTokenObtainPairSerializer,
+    PasswordResetTokenObtainPairSerializer,
+    PasswordChangeTokenObtainPairSerializer
+)
 from employers.views import my_callback
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
@@ -35,7 +40,7 @@ from tenders.serializers import TendersSerializers
 from user_profile.models import EmployerProfile
 from users.filters import UsersFilter
 from users.models import UserSession, User
-
+from users.views import create_user_session
 from .filters import InvoiceDetailsFilter
 from .models import (
     Content, ResourcesContent, SocialUrl,
@@ -181,6 +186,10 @@ class CountryView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(country__id=countryId).exists():
                     context['message'] = ["This country already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     Country.objects.get(id=countryId).delete()
                     context['message'] = "Deleted Successfully"
@@ -320,6 +329,10 @@ class CityView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(city__id=cityId).exists():
                     context['message'] = ["This city already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     City.objects.get(id=cityId).delete()
                     context['message'] = ["Deleted Successfully"]
@@ -449,6 +462,10 @@ class JobCategoryView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(job_category__id=jobCategoryId).exists():
                     context['message'] = ["This category already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     JobCategory.objects.get(id=jobCategoryId).delete()
                     context['message'] = ["Deleted Successfully"]
@@ -625,6 +642,10 @@ class EducationLevelView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(highest_education__id=educationLevelId).exists():
                     context['message'] = ["This education already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     EducationLevel.objects.get(id=educationLevelId).delete()
                     context['message'] = "Deleted Successfully"
@@ -975,6 +996,10 @@ class SkillView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(skill__id=skillId).exists():
                     context['message'] = ["This skill already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     Skill.objects.get(id=skillId).delete()
                     context['message'] = "Deleted Successfully"
@@ -1258,10 +1283,18 @@ class ChangePasswordView(generics.GenericAPIView):
                 refresh_token = request.headers.get('x-refresh')
                 payload = JWTMiddleware.decode_token(refresh_token)
                 UserSession.objects.filter(id=payload.get('session_id')).update(expire_at=datetime.now())
+                
+                user_session = create_user_session(request, serializer.validated_data)
+                token = SessionTokenObtainPairSerializer.get_token(
+                    user=serializer.validated_data,
+                    session_id=user_session.id
+                )
+
                 response_context["message"] = "Password update successfully."
                 return response.Response(
                     data=response_context,
-                    status=status.HTTP_200_OK
+                    headers={"x-access": token.access_token, "x-refresh": token},
+                    status=status.HTTP_201_CREATED
                 )
             else:
                 response_context['message'] = "You do not have permission to perform this action."
@@ -2735,6 +2768,10 @@ class JobSubCategoryView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(job_sub_category__id=jobSubCategoryId).exists():
                     context['message'] = ["This subcategory already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     JobSubCategory.objects.get(id=jobSubCategoryId).delete()
                     context['message'] = "Deleted Successfully"

@@ -129,6 +129,9 @@ class UserView(generics.GenericAPIView):
                 user.otp_created_at = datetime.now()
             else:
                 user.is_verified = True
+                if user.role == 'admin':
+                    user.is_staff = True
+                    user.is_superuser = True
             # # -----------------------------------
             user.save()
             # if user.email:
@@ -258,6 +261,8 @@ class UserView(generics.GenericAPIView):
                 get_data = VendorDetailSerializers(user_data)
                 context = get_data.data
             context['session_id'] = session_id.id if session_id else ''
+            if user_data.role == "admin":
+                context['email'] = user_data.email
             return response.Response(
                 data=context,
                 status=status.HTTP_200_OK
