@@ -186,6 +186,10 @@ class CountryView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(country__id=countryId).exists():
                     context['message'] = ["This country already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     Country.objects.get(id=countryId).delete()
                     context['message'] = "Deleted Successfully"
@@ -325,6 +329,10 @@ class CityView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(city__id=cityId).exists():
                     context['message'] = ["This city already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     City.objects.get(id=cityId).delete()
                     context['message'] = ["Deleted Successfully"]
@@ -454,6 +462,10 @@ class JobCategoryView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(job_category__id=jobCategoryId).exists():
                     context['message'] = ["This category already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     JobCategory.objects.get(id=jobCategoryId).delete()
                     context['message'] = ["Deleted Successfully"]
@@ -630,6 +642,10 @@ class EducationLevelView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(highest_education__id=educationLevelId).exists():
                     context['message'] = ["This education already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     EducationLevel.objects.get(id=educationLevelId).delete()
                     context['message'] = "Deleted Successfully"
@@ -980,6 +996,10 @@ class SkillView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(skill__id=skillId).exists():
                     context['message'] = ["This skill already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     Skill.objects.get(id=skillId).delete()
                     context['message'] = "Deleted Successfully"
@@ -2748,6 +2768,10 @@ class JobSubCategoryView(generics.ListAPIView):
             try:
                 if JobDetails.objects.filter(job_sub_category__id=jobSubCategoryId).exists():
                     context['message'] = ["This subcategory already used in job."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
                 else:
                     JobSubCategory.objects.get(id=jobSubCategoryId).delete()
                     context['message'] = "Deleted Successfully"
