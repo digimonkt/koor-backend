@@ -186,6 +186,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
         fields = (
             'gender',
             'dob',
+            'profile_title',
             'employment_status',
             'description',
             'market_information_notification',
@@ -1235,11 +1236,14 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     is_blacklisted = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    profile_title = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
-                  'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online']
+                  'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online', 
+                  'profile_title'
+                ]
     
     def get_image(self, obj):
         context = {}
@@ -1267,6 +1271,16 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
             try:
                 jobseeker_data = JobSeekerProfile.objects.get(user=obj)
                 return jobseeker_data.description
+            except JobSeekerProfile.DoesNotExist:
+                pass  
+        return None
+    
+    def get_profile_title(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.profile_title
             except JobSeekerProfile.DoesNotExist:
                 pass  
         return None
@@ -1630,12 +1644,13 @@ class SearchUserSerializers(serializers.ModelSerializer):
     highest_education = serializers.SerializerMethodField()
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
+    profile_title = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = ['id', 'role', 'name', 'email', 'image', 
                   'description', 'skills','country', 'city', 
-                  'highest_education', 'is_online'
+                  'highest_education', 'is_online', 'profile_title'
                   ]
 
     def get_image(self, obj):
@@ -1665,6 +1680,22 @@ class SearchUserSerializers(serializers.ModelSerializer):
                 return vendor_data.description
             except VendorProfile.DoesNotExist:
                 pass 
+        return None    
+    
+    def get_profile_title(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            try:
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.profile_title
+            except JobSeekerProfile.DoesNotExist:
+                pass            
+        # elif obj.role == 'vendor':
+        #     try:
+        #         vendor_data = VendorProfile.objects.get(user=obj)
+        #         return vendor_data.description
+        #     except VendorProfile.DoesNotExist:
+        #         pass 
         return None    
     
     def get_highest_education(self, obj):

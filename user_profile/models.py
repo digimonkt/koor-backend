@@ -55,6 +55,13 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         db_column="gender",
         choices=GENDER_CHOICE,
     )
+    profile_title = models.CharField(
+        verbose_name=_('Profile Title'),
+        max_length=255,
+        db_column="profile_title",
+        null=True,
+        blank=True
+    )
     dob = models.DateField(
         verbose_name=_('Date of Birth'),
         blank=True,

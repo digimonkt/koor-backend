@@ -30,13 +30,14 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     tender = serializers.SerializerMethodField()
     job = serializers.SerializerMethodField()
     job_filter = serializers.SerializerMethodField()
+    sender = serializers.SerializerMethodField()
     
     class Meta:
         model = Notification
         fields = [
             'id', 'notification_type', 'message', 'application', 'job', 
             'tender_application', 'tender', 'job_filter', 'seen', 'created', 
-            'message_sender', 'message_id', 'conversation_id'
+            'message_sender', 'message_id', 'conversation_id', 'sender'
         ]
 
     def get_application(self, obj):
@@ -100,21 +101,24 @@ class GetNotificationSerializers(serializers.ModelSerializer):
                     user['image'] = str(obj.job.user.image.file_path)
                 else:
                     user['image'] = obj.job.user.image.file_path.url
-            return {"id": obj.job.id, "title": obj.job.title, 'user': user}
+            company_logo = None
+            if obj.job.company_logo:
+                company_logo = obj.job.company_logo.file_path.url
+            return {"id": obj.job.id, "title": obj.job.title, "company": obj.job.company, "company_logo": company_logo, 'user': user}
         return None
-        
-    def get_job(self, obj):
-        if obj.job:
+    
+    def get_sender(self, obj):
+        if obj.user:
             user = dict()
-            user['id'] = obj.job.user.id
-            user['name'] = obj.job.user.name
-            user['email'] = obj.job.user.email
-            if obj.job.user.image:
-                if obj.job.user.image.title == "profile image":
-                    user['image'] = str(obj.job.user.image.file_path)
+            user['id'] = obj.user.id
+            user['name'] = obj.user.name
+            user['email'] = obj.user.email
+            if obj.user.image:
+                if obj.user.image.title == "profile image":
+                    user['image'] = str(obj.user.image.file_path)
                 else:
-                    user['image'] = obj.job.user.image.file_path.url
-            return {"id": obj.job.id, "title": obj.job.title, 'user': user}
+                    user['image'] = obj.user.image.file_path.url
+            return user
         return None
     
     def get_job_filter(self, obj):
