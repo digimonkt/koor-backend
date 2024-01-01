@@ -360,7 +360,7 @@ class RecentApplicationsView(generics.ListAPIView):
 
         """
         job_data = JobDetails.objects.filter(user=self.request.user.id)
-        filter_by = request.GET.get('filterBy', None)
+        filter_by = self.request.GET.get('filterBy', None)
         if filter_by:
             if filter_by == "shortlisted":
                 return AppliedJob.objects.filter(job__in=job_data).filter(~Q(shortlisted_at=None))
