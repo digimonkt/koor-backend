@@ -16,7 +16,13 @@ admin.site.register(SMTPSetting)
 admin.site.register(Content)
 admin.site.register(GooglePlaceApi)
 admin.site.register(AllCountry)
-admin.site.register(AllCity)
+
+class AllCityAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title')
+
+admin.site.register(AllCity, AllCityAdmin)
+
+# admin.site.register(AllCity)
 admin.site.register(Media)
 admin.site.register(ResourcesContent)
 admin.site.register(SocialUrl)
