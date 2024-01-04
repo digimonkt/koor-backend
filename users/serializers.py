@@ -10,7 +10,7 @@ from job_seekers.models import (
 from jobs.models import JobSubCategory, JobCategory
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
-    UserFilters, VendorProfile
+    UserFilters, VendorProfile, Reference
 )
 
 from project_meta.models import Media, EducationLevel
@@ -181,6 +181,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     is_verified = serializers.SerializerMethodField()
+    references = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerProfile
         fields = (
@@ -196,8 +197,22 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'city',
             'experience',
             'is_verified',
+            'job_title', 'short_summary', 'home_address', 'personal_website', 'references',
         )
     
+    
+    def get_references(self, obj):
+        context = dict()
+        try:
+            user_data = Reference.objects.get(user=obj)
+            get_data = ReferenceSerializer(user_data, many=True)
+            if get_data.data:
+                context = get_data.data
+        except Reference.DoesNotExist:
+            pass
+        finally:
+            return context
+        
     def get_is_verified(self, obj):
         return obj.user.is_verified
     
@@ -789,6 +804,18 @@ class VendorSectorSerializer(serializers.ModelSerializer):
         return context
 
 
+class ReferenceSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Reference
+        fields = (
+            'id',
+            'email',
+            'mobile_number',
+            'country_code'
+            'name'
+        )
+        
 class VendorTagSerializer(serializers.ModelSerializer):
     """
     Serializer for VendorTag model, used to serialize and deserialize data.

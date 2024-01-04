@@ -32,7 +32,8 @@ from .serializers import (
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
     UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
-    CategoriesSerializers, ModifyCategoriesSerializers, UpdateAppliedJobSerializers
+    CategoriesSerializers, ModifyCategoriesSerializers, UpdateAppliedJobSerializers,
+    UpdateResumeDataSerializers
 )
 
 
@@ -77,6 +78,37 @@ class UpdateAboutView(generics.GenericAPIView):
                                 data=context,
                                 status=status.HTTP_400_BAD_REQUEST
                             )
+                if serializer.update(profile_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UpdateResumeDataView(generics.GenericAPIView):
+
+    serializer_class = UpdateResumeDataSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
                 if serializer.update(profile_instance, serializer.validated_data):
                     context['message'] = "Updated Successfully"
                     return response.Response(

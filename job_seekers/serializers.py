@@ -23,6 +23,36 @@ from .models import (
 )
 
 
+class UpdateResumeDataSerializers(serializers.ModelSerializer):
+    reference = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = ['job_title', 'short_summary', 'home_address',
+                  'personal_website',
+                  'reference'
+                  ]
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        reference = data.get("reference")
+        if reference:
+            for get_reference in reference:
+                Reference.objects.create(
+                    user=instance.user, 
+                    email=get_reference['email'], 
+                    mobile_number=get_reference['mobile_number'], 
+                    country_code=get_reference['country_code'], 
+                    name=get_reference['name']
+                )
+                
+        return instance
+
+
 class UpdateAboutSerializers(serializers.ModelSerializer):
     """
     A serializer for updating JobSeekerProfile instances, including the name of the associated User.
