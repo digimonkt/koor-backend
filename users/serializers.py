@@ -202,7 +202,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
     
     
     def get_references(self, obj):
-        context = dict()
+        context = []
         try:
             user_data = Reference.objects.get(user=obj)
             get_data = ReferenceSerializer(user_data, many=True)
