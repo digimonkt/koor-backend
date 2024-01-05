@@ -84,22 +84,28 @@ class CoverLetterSerializers(serializers.ModelSerializer):
             raise serializers.ValidationError('Invalid signature.', code='signature_file')
 
     def save(self, user, job_instance):
+        profile_title = None
+        if 'profile_title' in self.validated_data:
+            profile_title = self.validated_data.pop('profile_title')
+        signature_file = None
+        if 'signature_file' in self.validated_data:
+            signature_file = self.validated_data.pop('signature_file')
         instance = super().save(user=user, job=job_instance)
-        if 'profile_title' in validated_data:
-            JobSeekerProfile.objects.filter(user=user).update(profile_title=validated_data['profile_title'])
-        if 'signature_file' in validated_data:
+        if profile_title:
+            JobSeekerProfile.objects.filter(user=user).update(profile_title=profile_title)
+        if signature_file:
             # Get media type from upload license file
-            content_type = str(validated_data['signature_file'].content_type).split("/")
+            content_type = str(signature_file.content_type).split("/")
             if content_type[0] not in ["video", "image"]:
                 media_type = 'document'
             else:
                 media_type = content_type[0]
             # save media file into media table and get instance of saved data.
-            media_instance = Media(title=validated_data['signature_file'].name,
-                                   file_path=validated_data['signature_file'], media_type=media_type)
+            media_instance = Media(title=signature_file.name,
+                                   file_path=signature_file, media_type=media_type)
             media_instance.save()
             # save media instance into license id file into employer profile table.
-            instance.image = media_instance
+            instance.signature = media_instance
             instance.save()
         return self
 
