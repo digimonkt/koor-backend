@@ -33,7 +33,7 @@ from .serializers import (
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
     UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
     CategoriesSerializers, ModifyCategoriesSerializers, UpdateAppliedJobSerializers,
-    UpdateResumeDataSerializers
+    UpdateResumeDataSerializers, CoverLetterSerializers
 )
 
 
@@ -115,6 +115,38 @@ class UpdateResumeDataView(generics.GenericAPIView):
                         data=context,
                         status=status.HTTP_200_OK
                     )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class CoverLetterView(generics.GenericAPIView):
+
+    serializer_class = CoverLetterSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, jobId):
+        context = dict()
+        job_instance = JobDetails.objects.get(id=jobId)
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user=request.user, job_instance=job_instance)
+                context["message"] = ["Create cover letter successfully."]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
             except serializers.ValidationError:
                 return response.Response(
                     data=serializer.errors,

@@ -19,7 +19,7 @@ from notification.models import Notification
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob, JobPreferences, Categories
+    SavedJob, JobPreferences, Categories, CoverLetter
 )
 
 
@@ -32,14 +32,15 @@ class UpdateResumeDataSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = JobSeekerProfile
-        fields = ['job_title', 'short_summary', 'home_address',
+        fields = ['profile_title', 'short_summary', 'home_address',
                   'personal_website',
                   'reference'
                   ]
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
-        reference = data.get("reference")
+        reference = validated_data.get("reference")
+        print(reference)
         if reference:
             for get_reference in reference:
                 Reference.objects.create(
@@ -51,6 +52,57 @@ class UpdateResumeDataSerializers(serializers.ModelSerializer):
                 )
                 
         return instance
+
+
+class CoverLetterSerializers(serializers.ModelSerializer):
+    
+    profile_title = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    signature_file = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = CoverLetter
+        fields = ['signature_file', 'profile_title', 'name_or_address',
+                  'cover_letter'
+                  ]
+    
+    def validate_signature_file(self, signature_file):
+
+        if signature_file in ["", None]:
+            raise serializers.ValidationError('Signature can not be blank.', code='signature_file')
+        content_type = str(signature_file.content_type).split("/")
+        if content_type[0] == "image":
+            return signature_file
+        else:
+            raise serializers.ValidationError('Invalid signature.', code='signature_file')
+
+    def save(self, user, job_instance):
+        instance = super().save(user=user, job=job_instance)
+        if 'profile_title' in validated_data:
+            JobSeekerProfile.objects.filter(user=user).update(profile_title=validated_data['profile_title'])
+        if 'signature_file' in validated_data:
+            # Get media type from upload license file
+            content_type = str(validated_data['signature_file'].content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=validated_data['signature_file'].name,
+                                   file_path=validated_data['signature_file'], media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.image = media_instance
+            instance.save()
+        return self
+
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):

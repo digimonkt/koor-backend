@@ -125,13 +125,6 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         db_column="experience",
     )
     
-    job_title = models.CharField(
-        verbose_name=_('Job Title'),
-        max_length=255,
-        db_column="job_title",
-        null=True,
-        blank=True
-    )
     short_summary = models.TextField(
         verbose_name=_('Short Summary'),
         null=True,
