@@ -531,3 +531,51 @@ class Categories(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name_plural = "Categories"
         db_table = "Categories"
         ordering = ['-created']
+
+
+class CoverLetter(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.CASCADE,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
+    )
+    signature = models.OneToOneField(
+        Media,
+        verbose_name=_('Signature'),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        db_column="signature",
+        related_name='%(app_label)s_%(class)s_signature'
+    )
+    name_or_address = models.CharField(
+        verbose_name=_('Name or Address'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="name_or_address"
+    )
+    cover_letter = models.TextField(
+        verbose_name=_('Cover Letter'),
+        null=True,
+        blank=True,
+        db_column="cover_letter",
+    )
+
+    def __str__(self):
+        return str(self.user)
+
+    class Meta:
+        verbose_name = "Cover Letter"
+        verbose_name_plural = "Cover Letters"
+        db_table = "CoverLetter"
