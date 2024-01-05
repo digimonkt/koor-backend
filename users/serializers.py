@@ -197,7 +197,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'city',
             'experience',
             'is_verified',
-            'job_title', 'short_summary', 'home_address', 'personal_website', 'references',
+            'short_summary', 'home_address', 'personal_website', 'references',
         )
     
     
