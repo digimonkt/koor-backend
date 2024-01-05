@@ -25,7 +25,7 @@ from users.models import User
 from employers.models import BlackList
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
+    JobSeekerSkill, AppliedJob, SavedJob, JobPreferences, CoverLetter
 )
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
@@ -141,6 +141,12 @@ class CoverLetterView(generics.GenericAPIView):
             serializer = self.serializer_class(data=request.data)
             try:
                 serializer.is_valid(raise_exception=True)
+                if CoverLetter.objects.filter(user=request.user, job=job_instance).exists():
+                    context["message"] = ["Cover letter already added."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
                 serializer.save(user=request.user, job_instance=job_instance)
                 context["message"] = ["Create cover letter successfully."]
                 return response.Response(
