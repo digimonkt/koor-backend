@@ -8,7 +8,7 @@ from project_meta.models import (
     Media, Language
 
 )
-from user_profile.models import JobSeekerProfile
+from user_profile.models import JobSeekerProfile, Reference
 
 from users.serializers import ApplicantDetailSerializers
 
@@ -40,15 +40,27 @@ class UpdateResumeDataSerializers(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
         reference = validated_data.get("reference")
-        print(reference)
+
         if reference:
             for get_reference in reference:
+                email = None
+                if 'email' in get_reference:
+                    email = get_reference['email']
+                mobile_number = None
+                if 'mobile_number' in get_reference:
+                    mobile_number = get_reference['mobile_number']
+                country_code = None
+                if 'country_code' in get_reference:
+                    country_code = get_reference['country_code']
+                name = None
+                if 'name' in get_reference:
+                    name = get_reference['name']
                 Reference.objects.create(
                     user=instance.user, 
-                    email=get_reference['email'], 
-                    mobile_number=get_reference['mobile_number'], 
-                    country_code=get_reference['country_code'], 
-                    name=get_reference['name']
+                    email=email, 
+                    mobile_number=mobile_number, 
+                    country_code=country_code, 
+                    name=name
                 )
                 
         return instance
