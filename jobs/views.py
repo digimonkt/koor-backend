@@ -985,8 +985,11 @@ class JobCategoryView(generics.ListAPIView):
         ).order_by('-category_count')[:5]
         # Retrieve the top job categories and their counts of associated talents
         all_talents = JobCategory.objects.annotate(
-            category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
-            filter=Q(jobs_jobsubcategory_categories__job_seekers_categories_categories__display_in_search=True)
+            category_count=Count(
+                'jobs_jobsubcategory_categories__job_seekers_categories_categories',
+                distinct=True,
+                filter=Q(jobs_jobsubcategory_categories__job_seekers_categories_categories__display_in_search=True)
+            )
         ).order_by('-category_count')[:5]
 
         # Retrieve the top tenders categories and their counts of associated tender
