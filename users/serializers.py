@@ -372,13 +372,12 @@ class ResumeSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'file_path',
-            'created_at'
         )
 
     def get_file_path(self, obj):
         context = {}
         if obj.file_path:
-            context['title'] = obj.attachment.title
+            context['title'] = obj.file_path.title
             context['path'] = obj.file_path.file_path.url
             context['type'] = obj.file_path.media_type
             return context

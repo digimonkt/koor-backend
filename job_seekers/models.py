@@ -127,7 +127,7 @@ class EmploymentRecord(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         ordering = ['-created']
 
 
-class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+class Resume(BaseModel, TimeStampedModel, models.Model):
     """
     This Django model class represents the resume for a job seeker. The fields are as follows:
 
@@ -152,6 +152,8 @@ class Resume(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         verbose_name=_('File Path'),
         on_delete=models.CASCADE,
         db_column="file_path",
+        null=True,
+        blank=True,
         related_name='%(app_label)s_%(class)s_file_path'
     )
 

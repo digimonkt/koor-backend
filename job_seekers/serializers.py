@@ -19,7 +19,7 @@ from notification.models import Notification
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob, JobPreferences, Categories, CoverLetter
+    SavedJob, JobPreferences, Categories, CoverLetter, Resume
 )
 
 
@@ -64,6 +64,44 @@ class UpdateResumeDataSerializers(serializers.ModelSerializer):
                 )
                 
         return instance
+
+
+class UploadResumeSerializers(serializers.ModelSerializer):
+    resume = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = Resume
+        fields = ['id', 'resume']
+
+    
+    def save(self, user):
+        resume = None
+        if 'resume' in self.validated_data:
+            resume = self.validated_data.pop('resume')
+        if Resume.objects.filter(user=user).exists():
+            instance = Resume.objects.filter(user=user).last()
+        else:
+            instance = Resume(user=user)
+            instance.save()
+        if resume:
+            # Get media type from upload license file
+            content_type = str(resume.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=resume.name,
+                                   file_path=resume, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.file_path = media_instance
+            instance.save()
+        return self
 
 
 class CoverLetterSerializers(serializers.ModelSerializer):
