@@ -5,7 +5,7 @@ from .views import (
     WorkExperiencesView, SkillsView, JobsApplyView,
     JobsSaveView, UpdateJobPreferencesView, AdditionalParameterView,
     CategoryView, ResumeView, ResumeUseridView, JobsApplyByEmailView,
-    UpdateResumeDataView, CoverLetterView
+    UpdateResumeDataView, CoverLetterView, UploadResumeView
 )
 
 app_name = "job_seekers"
@@ -13,6 +13,7 @@ app_name = "job_seekers"
 urlpatterns = [
 
     path('/about-me', UpdateAboutView.as_view(), name="update_about"),
+    path('/upload-resume', UploadResumeView.as_view(), name="upload_resume"),
     path('/resume-data', UpdateResumeDataView.as_view(), name="update_resume_data"),
     path('/cover-letter/<str:jobId>', CoverLetterView.as_view(), name="update_cover_letter"),
     
