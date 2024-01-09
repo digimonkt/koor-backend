@@ -156,9 +156,8 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
 
 
 class Reference(models.Model):
-
-    user = models.OneToOneField(
-        to=User,
+    user = models.ForeignKey(
+        User,
         verbose_name=_('User'),
         on_delete=models.CASCADE,
         db_column="user",
