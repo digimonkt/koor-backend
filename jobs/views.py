@@ -983,7 +983,6 @@ class JobCategoryView(generics.ListAPIView):
                 filter=Q(jobs_jobdetails_job_category__is_removed=False, jobs_jobdetails_job_category__status="active")
             )
         ).order_by('-category_count')[:5]
-
         # Retrieve the top job categories and their counts of associated talents
         all_talents = JobCategory.objects.annotate(
             category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
