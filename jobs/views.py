@@ -980,7 +980,7 @@ class JobCategoryView(generics.ListAPIView):
             category_count=Count(
                 'jobs_jobdetails_job_category',
                 distinct=True,
-                filter=Q(jobs_jobdetails_job_category__is_removed=False)
+                filter=Q(jobs_jobdetails_job_category__is_removed=False, jobs_jobdetails_job_category__status="active")
             )
         ).order_by('-category_count')[:5]
 
