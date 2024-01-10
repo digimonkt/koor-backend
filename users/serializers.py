@@ -1177,6 +1177,11 @@ class UserSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     is_blacklisted = serializers.SerializerMethodField()
+    
+    profile_title = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -1189,8 +1194,20 @@ class UserSerializer(serializers.ModelSerializer):
             'image',
             'description',
             'is_blacklisted',
-            'is_online'
+            'is_online',
+            'profile_title',
+            'country',
+            'city',
+            'skills',
         )
+    
+    def get_skills(self, obj):
+        context = []
+        skills_data = JobSeekerSkill.objects.filter(user=obj)
+        get_data = JobSeekerSkillSerializer(skills_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
 
     def get_image(self, obj):
         context = {}
@@ -1213,6 +1230,38 @@ class UserSerializer(serializers.ModelSerializer):
                 return jobseeker_data.description
         return None
     
+    def get_profile_title(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.profile_title
+        return None
+        
+    def get_country(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.country:
+                    get_data = CountrySerializer(jobseeker_data.country)
+                    if get_data.data:
+                        context = get_data.data
+                return context
+        return None
+        
+    def get_city(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.city:
+                    get_data = CitySerializer(jobseeker_data.city)
+                    if get_data.data:
+                        context = get_data.data
+                    return context
+        return None
+        
     def get_is_blacklisted(self, obj):
         is_blacklisted_record = False
         is_blacklisted_record = BlackList.objects.filter(
