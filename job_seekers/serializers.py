@@ -104,6 +104,28 @@ class UploadResumeSerializers(serializers.ModelSerializer):
         return self
 
 
+class GetCoverLetterSerializers(serializers.ModelSerializer):
+
+    signature = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CoverLetter
+        fields = (
+            'id',
+            'name_or_address',
+            'cover_letter',
+            'signature',
+        )
+
+    def get_signature(self, obj):
+        context = {}
+        if obj.signature:
+            context['title'] = obj.signature.title
+            context['path'] = obj.signature.file_path.url
+            context['type'] = obj.signature.media_type
+            return context
+        return None
+
 class CoverLetterSerializers(serializers.ModelSerializer):
     
     profile_title = serializers.CharField(
