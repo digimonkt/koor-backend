@@ -989,7 +989,10 @@ class JobCategoryView(generics.ListAPIView):
                 'jobs_jobsubcategory_categories__job_seekers_categories_categories__user',
                 distinct=True,
                 filter=Q(
-                    jobs_jobsubcategory_categories__job_seekers_categories_categories__user__job_seekers_jobpreferences_user__display_in_search=True
+                    jobs_jobsubcategory_categories__job_seekers_categories_categories__user__job_seekers_jobpreferences_user__display_in_search=True,
+                    jobs_jobsubcategory_categories__job_seekers_categories_categories__user__is_active=True,
+                    jobs_jobsubcategory_categories__is_removed=False,
+                    jobs_jobsubcategory_categories__isnull=False,
                 )
             )
         ).order_by('-category_count')[:5]
