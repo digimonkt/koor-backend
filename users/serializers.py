@@ -165,6 +165,19 @@ class CreateSessionSerializers(serializers.Serializer):
             raise serializers.ValidationError({'message': 'Invalid login credentials.'})
 
 
+class ReferenceSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Reference
+        fields = (
+            'id',
+            'email',
+            'mobile_number',
+            'country_code',
+            'name'
+        )
+
+
 class JobSeekerProfileSerializer(serializers.ModelSerializer):
     """
     JobSeekerProfileSerializer is a serializer class that serializes and deserializes the JobSeekerProfile model into
@@ -203,15 +216,11 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
     
     def get_references(self, obj):
         context = []
-        try:
-            user_data = Reference.objects.get(user=obj)
-            get_data = ReferenceSerializer(user_data, many=True)
-            if get_data.data:
-                context = get_data.data
-        except Reference.DoesNotExist:
-            pass
-        finally:
-            return context
+        user_data = Reference.objects.filter(user=obj.user)
+        get_data = ReferenceSerializer(user_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
         
     def get_is_verified(self, obj):
         return obj.user.is_verified
@@ -802,19 +811,7 @@ class VendorSectorSerializer(serializers.ModelSerializer):
             context = get_data.data
         return context
 
-
-class ReferenceSerializer(serializers.ModelSerializer):
     
-    class Meta:
-        model = Reference
-        fields = (
-            'id',
-            'email',
-            'mobile_number',
-            'country_code'
-            'name'
-        )
-        
 class VendorTagSerializer(serializers.ModelSerializer):
     """
     Serializer for VendorTag model, used to serialize and deserialize data.
