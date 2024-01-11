@@ -29,20 +29,32 @@ class UpdateResumeDataSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_null=False
     )
+    reference_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
 
     class Meta:
         model = JobSeekerProfile
         fields = ['profile_title', 'short_summary', 'home_address',
                   'personal_website',
-                  'reference'
+                  'reference', 'reference_remove'
                   ]
 
     def update(self, instance, validated_data):
         super().update(instance, validated_data)
-        reference = validated_data.get("reference")
-
+        reference = validated_data.get("reference", None)
+        reference_remove = validated_data.get("reference_remove", None)
+        if reference_remove:
+            for remove in reference_remove:
+                Reference.objects.filter(id=remove).delete()
+                
         if reference:
             for get_reference in reference:
+                id = None
+                if 'id' in get_reference:
+                    id = get_reference['id']
                 email = None
                 if 'email' in get_reference:
                     email = get_reference['email']
@@ -55,14 +67,21 @@ class UpdateResumeDataSerializers(serializers.ModelSerializer):
                 name = None
                 if 'name' in get_reference:
                     name = get_reference['name']
-                Reference.objects.create(
-                    user=instance.user, 
-                    email=email, 
-                    mobile_number=mobile_number, 
-                    country_code=country_code, 
-                    name=name
-                )
-                
+                if id:
+                    Reference.objects.filter(id=id).update(
+                        email=email, 
+                        mobile_number=mobile_number, 
+                        country_code=country_code, 
+                        name=name    
+                    )
+                else:
+                    Reference.objects.create(
+                        user=instance.user, 
+                        email=email, 
+                        mobile_number=mobile_number, 
+                        country_code=country_code, 
+                        name=name
+                    )
         return instance
 
 
