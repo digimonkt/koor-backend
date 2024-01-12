@@ -1126,3 +1126,56 @@ class UpdateAppliedJobSerializers(serializers.ModelSerializer):
                 attachments_instance.save()
 
         return instance
+
+class UpdateCoverLetterSerializers(serializers.ModelSerializer):
+    
+    profile_title = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )    
+    signature_file = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = CoverLetter
+        fields = ['signature_file', 'name_or_address', 'cover_letter', 'profile_title']
+        
+    def validate_signature_file(self, signature_file):
+
+        if signature_file in ["", None]:
+            raise serializers.ValidationError('Signature can not be blank.', code='signature_file')
+        content_type = str(signature_file.content_type).split("/")
+        if content_type[0] == "image":
+            return signature_file
+        else:
+            raise serializers.ValidationError('Invalid signature.', code='signature_file')
+
+    def update(self, instance, validated_data):
+        signature_file = None
+        if 'signature_file' in self.validated_data:
+            signature_file = self.validated_data.pop('signature_file')
+        profile_title = None
+        if 'profile_title' in self.validated_data:
+            profile_title = self.validated_data.pop('profile_title')
+        instance = super().update(instance, validated_data)
+        if profile_title:
+            JobSeekerProfile.objects.filter(user=instance.user).update(profile_title=profile_title)
+        if signature_file:
+            # Get media type from upload license file
+            content_type = str(signature_file.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=signature_file.name,
+                                   file_path=signature_file, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.signature = media_instance
+            instance.save()
+        return self
