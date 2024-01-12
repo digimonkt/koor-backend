@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
-
+from model_utils.fields import AutoCreatedField
 from core.models import (
     BaseModel, SoftDeleteModel
 )
@@ -572,6 +572,10 @@ class CoverLetter(models.Model):
         null=True,
         blank=True,
         db_column="cover_letter",
+    )
+    created = AutoCreatedField(
+        verbose_name=_('Created'),
+        db_column='created'
     )
 
     def __str__(self):
