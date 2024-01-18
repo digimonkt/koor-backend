@@ -1309,13 +1309,28 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     profile_title = serializers.SerializerMethodField()
+    references = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
                   'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online', 
-                  'profile_title'
+                  'profile_title', 'references'
                 ]
+        
+            
+    def get_references(self, obj):
+        if obj.role == 'job_seeker':
+            try:
+                context = []
+                user_data = Reference.objects.filter(user=obj)
+                get_data = ReferenceSerializer(user_data, many=True)
+                if get_data.data:
+                    context = get_data.data
+                return context
+            except Reference.DoesNotExist:
+                pass
+        return None        
     
     def get_image(self, obj):
         context = {}
