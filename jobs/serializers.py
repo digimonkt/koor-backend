@@ -10,7 +10,8 @@ from jobs.models import (
 
 from job_seekers.models import (
     AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJobAttachmentsItem, SavedJob
+    JobSeekerSkill, AppliedJobAttachmentsItem, SavedJob,
+    CoverLetter
 )
 
 from project_meta.serializers import (
