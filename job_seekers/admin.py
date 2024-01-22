@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob, JobPreferences, Categories
+    SavedJob, JobPreferences, Categories, Resume
 )
 
 admin.site.register(EducationRecord)
@@ -14,3 +14,4 @@ admin.site.register(AppliedJobAttachmentsItem)
 admin.site.register(SavedJob)
 admin.site.register(JobPreferences)
 admin.site.register(Categories)
+admin.site.register(Resume)

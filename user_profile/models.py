@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
+from django.core.validators import RegexValidator
 
 from core.models import (
     BaseModel, SoftDeleteModel
@@ -123,6 +124,26 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         verbose_name=_('Experience'),
         db_column="experience",
     )
+    
+    short_summary = models.TextField(
+        verbose_name=_('Short Summary'),
+        null=True,
+        blank=True,
+        db_column="short_summary",
+    )
+    home_address = models.TextField(
+        verbose_name=_('Home Address'),
+        null=True,
+        blank=True,
+        db_column="home_address",
+    )
+    personal_website = models.TextField(
+        verbose_name=_('Personal Website'),
+        null=True,
+        blank=True,
+        db_column="personal_website",
+    )
+    
 
     def __str__(self):
         return str(self.user)
@@ -133,6 +154,54 @@ class JobSeekerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Mode
         db_table = "JobSeekerProfile"
         ordering = ['created']
 
+
+class Reference(models.Model):
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    email = models.EmailField(
+        verbose_name=_('Email Address'),
+        blank=True,
+        null=True,
+        db_column="email"
+    )
+    mobile_number = models.CharField(
+        verbose_name=_('Mobile Number'),
+        max_length=13,
+        blank=True,
+        null=True,
+        db_column="mobile_number"
+    )
+    country_code = models.CharField(
+        verbose_name=_('Country Code'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="country_code",
+        validators=[
+            RegexValidator(
+                regex='^\+[1-9]\d{0,2}$',
+                message='Invalid country code',
+            ),
+        ]
+    )
+    name = models.CharField(
+        verbose_name=_('Name'),
+        max_length=250,
+        blank=True,
+        null=True,
+        db_column="name"
+    )
+
+    class Meta:
+        verbose_name = "Reference"
+        verbose_name_plural = "References"
+        db_table = "Reference"
+        
 
 class EmployerProfile(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     """
