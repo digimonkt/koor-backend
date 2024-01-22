@@ -25,14 +25,17 @@ from users.models import User
 from employers.models import BlackList
 from .models import (
     EducationRecord, EmploymentRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJob, SavedJob, JobPreferences
+    JobSeekerSkill, AppliedJob, SavedJob, JobPreferences, CoverLetter,
+    Resume
 )
 from .serializers import (
     UpdateAboutSerializers, EducationSerializers, JobSeekerLanguageProficiencySerializers,
     EmploymentRecordSerializers, JobSeekerSkillSerializers, AppliedJobSerializers,
     GetAppliedJobsSerializers, GetSavedJobsSerializers, SavedJobSerializers,
     UpdateJobPreferencesSerializers, AdditionalParameterSerializers,
-    CategoriesSerializers, ModifyCategoriesSerializers, UpdateAppliedJobSerializers
+    CategoriesSerializers, ModifyCategoriesSerializers, UpdateAppliedJobSerializers,
+    UpdateResumeDataSerializers, CoverLetterSerializers, UploadResumeSerializers,
+    GetCoverLetterSerializers, UpdateCoverLetterSerializers
 )
 
 
@@ -83,6 +86,197 @@ class UpdateAboutView(generics.GenericAPIView):
                         data=context,
                         status=status.HTTP_200_OK
                     )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class UpdateResumeDataView(generics.GenericAPIView):
+
+    serializer_class = UpdateResumeDataSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request):
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if serializer.update(profile_instance, serializer.validated_data):
+                    context['message'] = "Updated Successfully"
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class CoverLetterView(generics.GenericAPIView):
+
+    serializer_class = CoverLetterSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, jobId):
+        context = dict()
+        job_instance = JobDetails.objects.get(id=jobId)
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                if CoverLetter.objects.filter(user=request.user, job=job_instance).exists():
+                    context["message"] = ["Cover letter already added."]
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
+                serializer.save(user=request.user, job_instance=job_instance)
+                context["message"] = ["Create cover letter successfully."]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except serializers.ValidationError:
+                return response.Response(
+                    data=serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+    def put(self, request, jobId):
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            serializer = UpdateCoverLetterSerializers(data=request.data)
+            try:
+                job_instance = JobDetails.objects.get(id=jobId)
+                try:
+                    cover_letter_instance = CoverLetter.objects.get(user=request.user, job=job_instance)
+                    if cover_letter_instance.created.date() < date.today():
+                        context['message'] = "You cannot update this cover letter."
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                    else:
+                        serializer.is_valid(raise_exception=True)
+                        if serializer.update(cover_letter_instance, serializer.validated_data):
+                            context['message'] = "Updated Successfully"
+                            return response.Response(
+                                data=context,
+                                status=status.HTTP_200_OK
+                            )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                except CoverLetter.DoesNotExist:
+                    return response.Response(
+                        data={"cover_letter": "Does Not Exist"},
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+            except JobDetails.DoesNotExist:
+                return response.Response(
+                    data={"job": "Does Not Exist"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+            
+
+class GetCoverLetterView(generics.GenericAPIView):
+
+    serializer_class = GetCoverLetterSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        context = dict()
+        profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+        try:
+            if CoverLetter.objects.filter(user=request.user).exists():
+                if 'jobId' in request.GET:
+                    job_instance = JobDetails.objects.get(id=request.GET['jobId'])
+                    if CoverLetter.objects.filter(user=request.user, job=job_instance).exists():
+                        cover_letter_instance = CoverLetter.objects.filter(user=request.user, job=job_instance).last()
+                    else:
+                        cover_letter_instance = CoverLetter.objects.filter(user=request.user).last()
+                else:   
+                    cover_letter_instance = CoverLetter.objects.filter(user=request.user).last()
+                get_data = self.serializer_class(cover_letter_instance)
+                return response.Response(
+                    data=get_data.data,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                return response.Response(
+                    data={},
+                    status=status.HTTP_200_OK
+                )        
+        except JobDetails.DoesNotExist:
+            return response.Response(
+                data={"job": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class UploadResumeView(generics.GenericAPIView):
+
+    serializer_class = UploadResumeSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        context = dict()
+        if self.request.user.role == "job_seeker":
+            profile_instance = get_object_or_404(JobSeekerProfile, user=request.user)
+            serializer = self.serializer_class(data=request.data)
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save(user=request.user)
+                context["message"] = ["Resume upload successfully."]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
             except serializers.ValidationError:
                 return response.Response(
                     data=serializer.errors,

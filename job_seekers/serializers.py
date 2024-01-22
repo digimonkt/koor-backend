@@ -8,7 +8,7 @@ from project_meta.models import (
     Media, Language
 
 )
-from user_profile.models import JobSeekerProfile
+from user_profile.models import JobSeekerProfile, Reference
 
 from users.serializers import ApplicantDetailSerializers
 
@@ -19,8 +19,187 @@ from notification.models import Notification
 from .models import (
     EducationRecord, JobSeekerLanguageProficiency, EmploymentRecord,
     JobSeekerSkill, AppliedJob, AppliedJobAttachmentsItem,
-    SavedJob, JobPreferences, Categories
+    SavedJob, JobPreferences, Categories, CoverLetter, Resume
 )
+
+
+class UpdateResumeDataSerializers(serializers.ModelSerializer):
+    reference = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+    reference_remove = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = JobSeekerProfile
+        fields = ['profile_title', 'short_summary', 'home_address',
+                  'personal_website',
+                  'reference', 'reference_remove'
+                  ]
+
+    def update(self, instance, validated_data):
+        super().update(instance, validated_data)
+        reference = validated_data.get("reference", None)
+        reference_remove = validated_data.get("reference_remove", None)
+        if reference_remove:
+            for remove in reference_remove:
+                Reference.objects.filter(id=remove).delete()
+                
+        if reference:
+            for get_reference in reference:
+                id = None
+                if 'id' in get_reference:
+                    id = get_reference['id']
+                email = None
+                if 'email' in get_reference:
+                    email = get_reference['email']
+                mobile_number = None
+                if 'mobile_number' in get_reference:
+                    mobile_number = get_reference['mobile_number']
+                country_code = None
+                if 'country_code' in get_reference:
+                    country_code = get_reference['country_code']
+                name = None
+                if 'name' in get_reference:
+                    name = get_reference['name']
+                if id:
+                    Reference.objects.filter(id=id).update(
+                        email=email, 
+                        mobile_number=mobile_number, 
+                        country_code=country_code, 
+                        name=name    
+                    )
+                else:
+                    Reference.objects.create(
+                        user=instance.user, 
+                        email=email, 
+                        mobile_number=mobile_number, 
+                        country_code=country_code, 
+                        name=name
+                    )
+        return instance
+
+
+class UploadResumeSerializers(serializers.ModelSerializer):
+    resume = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = Resume
+        fields = ['id', 'resume']
+
+    
+    def save(self, user):
+        resume = None
+        if 'resume' in self.validated_data:
+            resume = self.validated_data.pop('resume')
+        if Resume.objects.filter(user=user).exists():
+            instance = Resume.objects.filter(user=user).last()
+        else:
+            instance = Resume(user=user)
+            instance.save()
+        if resume:
+            # Get media type from upload license file
+            content_type = str(resume.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=resume.name,
+                                   file_path=resume, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.file_path = media_instance
+            instance.save()
+        return self
+
+
+class GetCoverLetterSerializers(serializers.ModelSerializer):
+
+    signature = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CoverLetter
+        fields = (
+            'id',
+            'name_or_address',
+            'cover_letter',
+            'signature',
+        )
+
+    def get_signature(self, obj):
+        context = {}
+        if obj.signature:
+            context['title'] = obj.signature.title
+            context['path'] = obj.signature.file_path.url
+            context['type'] = obj.signature.media_type
+            return context
+        return None
+
+class CoverLetterSerializers(serializers.ModelSerializer):
+    
+    profile_title = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
+    signature_file = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = CoverLetter
+        fields = ['signature_file', 'profile_title', 'name_or_address',
+                  'cover_letter'
+                  ]
+    
+    def validate_signature_file(self, signature_file):
+
+        if signature_file in ["", None]:
+            raise serializers.ValidationError('Signature can not be blank.', code='signature_file')
+        content_type = str(signature_file.content_type).split("/")
+        if content_type[0] == "image":
+            return signature_file
+        else:
+            raise serializers.ValidationError('Invalid signature.', code='signature_file')
+
+    def save(self, user, job_instance):
+        profile_title = None
+        if 'profile_title' in self.validated_data:
+            profile_title = self.validated_data.pop('profile_title')
+        signature_file = None
+        if 'signature_file' in self.validated_data:
+            signature_file = self.validated_data.pop('signature_file')
+        instance = super().save(user=user, job=job_instance)
+        if profile_title:
+            JobSeekerProfile.objects.filter(user=user).update(profile_title=profile_title)
+        if signature_file:
+            # Get media type from upload license file
+            content_type = str(signature_file.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=signature_file.name,
+                                   file_path=signature_file, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.signature = media_instance
+            instance.save()
+        return self
+
 
 
 class UpdateAboutSerializers(serializers.ModelSerializer):
@@ -947,3 +1126,56 @@ class UpdateAppliedJobSerializers(serializers.ModelSerializer):
                 attachments_instance.save()
 
         return instance
+
+class UpdateCoverLetterSerializers(serializers.ModelSerializer):
+    
+    profile_title = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )    
+    signature_file = serializers.FileField(
+        style={"input_type": "file"},
+        write_only=True,
+        allow_null=False
+    )
+
+    class Meta:
+        model = CoverLetter
+        fields = ['signature_file', 'name_or_address', 'cover_letter', 'profile_title']
+        
+    def validate_signature_file(self, signature_file):
+
+        if signature_file in ["", None]:
+            raise serializers.ValidationError('Signature can not be blank.', code='signature_file')
+        content_type = str(signature_file.content_type).split("/")
+        if content_type[0] == "image":
+            return signature_file
+        else:
+            raise serializers.ValidationError('Invalid signature.', code='signature_file')
+
+    def update(self, instance, validated_data):
+        signature_file = None
+        if 'signature_file' in self.validated_data:
+            signature_file = self.validated_data.pop('signature_file')
+        profile_title = None
+        if 'profile_title' in self.validated_data:
+            profile_title = self.validated_data.pop('profile_title')
+        instance = super().update(instance, validated_data)
+        if profile_title:
+            JobSeekerProfile.objects.filter(user=instance.user).update(profile_title=profile_title)
+        if signature_file:
+            # Get media type from upload license file
+            content_type = str(signature_file.content_type).split("/")
+            if content_type[0] not in ["video", "image"]:
+                media_type = 'document'
+            else:
+                media_type = content_type[0]
+            # save media file into media table and get instance of saved data.
+            media_instance = Media(title=signature_file.name,
+                                   file_path=signature_file, media_type=media_type)
+            media_instance.save()
+            # save media instance into license id file into employer profile table.
+            instance.signature = media_instance
+            instance.save()
+        return self

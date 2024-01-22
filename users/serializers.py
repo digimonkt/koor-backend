@@ -10,7 +10,7 @@ from job_seekers.models import (
 from jobs.models import JobSubCategory, JobCategory
 from user_profile.models import (
     JobSeekerProfile, EmployerProfile,
-    UserFilters, VendorProfile
+    UserFilters, VendorProfile, Reference
 )
 
 from project_meta.models import Media, EducationLevel
@@ -165,6 +165,19 @@ class CreateSessionSerializers(serializers.Serializer):
             raise serializers.ValidationError({'message': 'Invalid login credentials.'})
 
 
+class ReferenceSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Reference
+        fields = (
+            'id',
+            'email',
+            'mobile_number',
+            'country_code',
+            'name'
+        )
+
+
 class JobSeekerProfileSerializer(serializers.ModelSerializer):
     """
     JobSeekerProfileSerializer is a serializer class that serializes and deserializes the JobSeekerProfile model into
@@ -181,6 +194,7 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     is_verified = serializers.SerializerMethodField()
+    references = serializers.SerializerMethodField()
     class Meta:
         model = JobSeekerProfile
         fields = (
@@ -196,8 +210,18 @@ class JobSeekerProfileSerializer(serializers.ModelSerializer):
             'city',
             'experience',
             'is_verified',
+            'short_summary', 'home_address', 'personal_website', 'references',
         )
     
+    
+    def get_references(self, obj):
+        context = []
+        user_data = Reference.objects.filter(user=obj.user)
+        get_data = ReferenceSerializer(user_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
+        
     def get_is_verified(self, obj):
         return obj.user.is_verified
     
@@ -357,13 +381,12 @@ class ResumeSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'file_path',
-            'created_at'
         )
 
     def get_file_path(self, obj):
         context = {}
         if obj.file_path:
-            context['title'] = obj.attachment.title
+            context['title'] = obj.file_path.title
             context['path'] = obj.file_path.file_path.url
             context['type'] = obj.file_path.media_type
             return context
@@ -701,14 +724,23 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
 
     profile = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    profile_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 
-            'get_notification', 'profile', 'is_online'
+            'get_notification', 'profile', 'is_online', 'profile_completed'
         ]
+    
+    
+    def get_profile_completed(self, obj):
+        context = False
+        if obj.name and obj.user_profile_employerprofile_user.organization_type and obj.user_profile_employerprofile_user.description and obj.user_profile_employerprofile_user.license_id and obj.user_profile_employerprofile_user.license_id_file and obj.user_profile_employerprofile_user.address and obj.user_profile_employerprofile_user.country and obj.user_profile_employerprofile_user.city:
+            context = True
+        return context
+    
         
     def get_image(self, obj):
         context = dict()
@@ -788,7 +820,7 @@ class VendorSectorSerializer(serializers.ModelSerializer):
             context = get_data.data
         return context
 
-
+    
 class VendorTagSerializer(serializers.ModelSerializer):
     """
     Serializer for VendorTag model, used to serialize and deserialize data.
@@ -987,15 +1019,23 @@ class VendorDetailSerializers(serializers.ModelSerializer):
     sector = serializers.SerializerMethodField()
     tag = serializers.SerializerMethodField()
     ready_for_chat = serializers.SerializerMethodField()
+    profile_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 'get_notification', 
-            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat'
+            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat',
+            'profile_completed'
         ]
         
+    
+    def get_profile_completed(self, obj):
+        context = False
+        if obj.name and obj.user_profile_vendorprofile_users.organization_type and obj.user_profile_vendorprofile_users.description and obj.user_profile_vendorprofile_users.website  and obj.user_profile_vendorprofile_users.address  and obj.user_profile_vendorprofile_users.license_id  and obj.user_profile_vendorprofile_users.license_id_file  and obj.user_profile_vendorprofile_users.country  and obj.user_profile_vendorprofile_users.city:
+            context = True
+        return context
     
     def get_ready_for_chat(self, obj):
     
@@ -1154,6 +1194,11 @@ class UserSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     is_blacklisted = serializers.SerializerMethodField()
+    
+    profile_title = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
+    city = serializers.SerializerMethodField()
+    skills = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -1166,8 +1211,20 @@ class UserSerializer(serializers.ModelSerializer):
             'image',
             'description',
             'is_blacklisted',
-            'is_online'
+            'is_online',
+            'profile_title',
+            'country',
+            'city',
+            'skills',
         )
+    
+    def get_skills(self, obj):
+        context = []
+        skills_data = JobSeekerSkill.objects.filter(user=obj)
+        get_data = JobSeekerSkillSerializer(skills_data, many=True)
+        if get_data.data:
+            context = get_data.data
+        return context
 
     def get_image(self, obj):
         context = {}
@@ -1190,6 +1247,38 @@ class UserSerializer(serializers.ModelSerializer):
                 return jobseeker_data.description
         return None
     
+    def get_profile_title(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                return jobseeker_data.profile_title
+        return None
+        
+    def get_country(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.country:
+                    get_data = CountrySerializer(jobseeker_data.country)
+                    if get_data.data:
+                        context = get_data.data
+                return context
+        return None
+        
+    def get_city(self, obj):
+        context = {}
+        if obj.role == 'job_seeker':
+            if JobSeekerProfile.objects.filter(user=obj).exists():
+                jobseeker_data = JobSeekerProfile.objects.get(user=obj)
+                if jobseeker_data.city:
+                    get_data = CitySerializer(jobseeker_data.city)
+                    if get_data.data:
+                        context = get_data.data
+                    return context
+        return None
+        
     def get_is_blacklisted(self, obj):
         is_blacklisted_record = False
         is_blacklisted_record = BlackList.objects.filter(
@@ -1237,13 +1326,28 @@ class ApplicantDetailSerializers(serializers.ModelSerializer):
     country = serializers.SerializerMethodField()
     city = serializers.SerializerMethodField()
     profile_title = serializers.SerializerMethodField()
+    references = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'name', 'description', 'image', 'education_record', 'work_experience', 
                   'languages', 'skills', 'is_blacklisted', 'country', 'city', 'is_online', 
-                  'profile_title'
+                  'profile_title', 'references'
                 ]
+        
+            
+    def get_references(self, obj):
+        if obj.role == 'job_seeker':
+            try:
+                context = []
+                user_data = Reference.objects.filter(user=obj)
+                get_data = ReferenceSerializer(user_data, many=True)
+                if get_data.data:
+                    context = get_data.data
+                return context
+            except Reference.DoesNotExist:
+                pass
+        return None        
     
     def get_image(self, obj):
         context = {}

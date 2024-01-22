@@ -10,7 +10,8 @@ from jobs.models import (
 
 from job_seekers.models import (
     AppliedJob, EducationRecord, JobSeekerLanguageProficiency,
-    JobSeekerSkill, AppliedJobAttachmentsItem, SavedJob
+    JobSeekerSkill, AppliedJobAttachmentsItem, SavedJob,
+    CoverLetter
 )
 
 from project_meta.serializers import (
@@ -1043,10 +1044,11 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     job = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    signature = serializers.SerializerMethodField()
 
     class Meta:
         model = AppliedJob
-        fields = ['id', 'shortlisted_at', 'rejected_at', 'interview_at',  
+        fields = ['id', 'shortlisted_at', 'rejected_at', 'interview_at', 'signature',
                   'short_letter', 'created', 'attachments', 'job', 'user']
 
     def get_attachments(self, obj):
@@ -1093,6 +1095,21 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+    
+    def get_signature(self, obj):
+        context = {}
+        coverletter_instance = CoverLetter.objects.filter(user=obj.user, job=obj.job).last()
+        if coverletter_instance:
+            if coverletter_instance.signature:
+                context['id'] = coverletter_instance.signature.id
+                context['title'] = coverletter_instance.signature.title
+                if coverletter_instance.signature.title == "signature image":
+                    context['path'] = str(coverletter_instance.signature.file_path)
+                else:
+                    context['path'] = coverletter_instance.signature.file_path.url
+                context['type'] = coverletter_instance.signature.media_type
+                return context
+        return None
 
 
 class JobFiltersSerializers(serializers.ModelSerializer):

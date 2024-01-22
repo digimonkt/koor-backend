@@ -980,13 +980,21 @@ class JobCategoryView(generics.ListAPIView):
             category_count=Count(
                 'jobs_jobdetails_job_category',
                 distinct=True,
-                filter=Q(jobs_jobdetails_job_category__is_removed=False)
+                filter=Q(jobs_jobdetails_job_category__is_removed=False, jobs_jobdetails_job_category__status="active")
             )
         ).order_by('-category_count')[:5]
-
         # Retrieve the top job categories and their counts of associated talents
         all_talents = JobCategory.objects.annotate(
-            category_count=Count('jobs_jobsubcategory_categories__job_seekers_categories_categories')
+            category_count=Count(
+                'jobs_jobsubcategory_categories__job_seekers_categories_categories__user',
+                distinct=True,
+                filter=Q(
+                    jobs_jobsubcategory_categories__job_seekers_categories_categories__user__job_seekers_jobpreferences_user__display_in_search=True,
+                    jobs_jobsubcategory_categories__job_seekers_categories_categories__user__is_active=True,
+                    jobs_jobsubcategory_categories__is_removed=False,
+                    jobs_jobsubcategory_categories__isnull=False,
+                )
+            )
         ).order_by('-category_count')[:5]
 
         # Retrieve the top tenders categories and their counts of associated tender
@@ -994,7 +1002,7 @@ class JobCategoryView(generics.ListAPIView):
             category_count=Count(
                 'tenders_tenderdetails_tender_category',
                 distinct=True,
-                filter=Q(tenders_tenderdetails_tender_category__is_removed=False)
+                filter=Q(tenders_tenderdetails_tender_category__is_removed=False, tenders_tenderdetails_tender_category__status='active')
             )
         ).order_by('-category_count')[:5]
 
