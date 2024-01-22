@@ -724,14 +724,23 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
 
     profile = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
+    profile_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 
-            'get_notification', 'profile', 'is_online'
+            'get_notification', 'profile', 'is_online', 'profile_completed'
         ]
+    
+    
+    def get_profile_completed(self, obj):
+        context = False
+        if obj.name and obj.user_profile_employerprofile_user.organization_type and obj.user_profile_employerprofile_user.description and obj.user_profile_employerprofile_user.license_id and obj.user_profile_employerprofile_user.license_id_file and obj.user_profile_employerprofile_user.address and obj.user_profile_employerprofile_user.country and obj.user_profile_employerprofile_user.city:
+            context = True
+        return context
+    
         
     def get_image(self, obj):
         context = dict()
@@ -1010,15 +1019,23 @@ class VendorDetailSerializers(serializers.ModelSerializer):
     sector = serializers.SerializerMethodField()
     tag = serializers.SerializerMethodField()
     ready_for_chat = serializers.SerializerMethodField()
+    profile_completed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 'get_notification', 
-            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat'
+            'profile', 'sector', 'tag', 'is_online', 'ready_for_chat',
+            'profile_completed'
         ]
         
+    
+    def get_profile_completed(self, obj):
+        context = False
+        if obj.name and obj.user_profile_vendorprofile_users.organization_type and obj.user_profile_vendorprofile_users.description and obj.user_profile_vendorprofile_users.website  and obj.user_profile_vendorprofile_users.address  and obj.user_profile_vendorprofile_users.license_id  and obj.user_profile_vendorprofile_users.license_id_file  and obj.user_profile_vendorprofile_users.country  and obj.user_profile_vendorprofile_users.city:
+            context = True
+        return context
     
     def get_ready_for_chat(self, obj):
     
