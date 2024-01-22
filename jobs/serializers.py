@@ -1098,7 +1098,7 @@ class GetAppliedJobsSerializers(serializers.ModelSerializer):
     
     def get_signature(self, obj):
         context = {}
-        coverletter_instance = CoverLetter.objects.filter(obj.user, obj.job).last()
+        coverletter_instance = CoverLetter.objects.filter(user=obj.user, job=obj.job).last()
         if coverletter_instance:
             if coverletter_instance.signature:
                 context['id'] = coverletter_instance.signature.id
