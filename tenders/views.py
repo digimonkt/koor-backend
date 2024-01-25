@@ -15,7 +15,7 @@ from rest_framework import (
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
-from tenders.models import TenderDetails, TenderFilter
+from tenders.models import TenderDetails, TenderFilter, TenderCategory
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
     TendersSerializers, TendersDetailSerializers,
