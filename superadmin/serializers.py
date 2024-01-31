@@ -412,7 +412,7 @@ class JobListSerializers(serializers.ModelSerializer):
         model = JobDetails
         fields = [
             'id', 'job_id', 'title', 'address', 'city', 'country', 
-            'status', 'user', 'company', 'company_logo'
+            'status', 'user', 'company', 'company_logo', 'post_by_admin'
         ]
         read_only_fields = ['id']
     def get_company_logo(self, obj):
@@ -863,7 +863,7 @@ class TenderListSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'tender_id', 'title', 'tag', 'tender_category',
             'tender_type', 'sector', 'city', 'country', 'status', 'user', 'address',
-            'company', 'company_logo'
+            'company', 'company_logo', 'post_by_admin'
         ]
         read_only_fields = ['id']
 
