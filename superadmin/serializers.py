@@ -238,6 +238,16 @@ class SkillSerializers(serializers.ModelSerializer):
         fields = ['id', 'title']
         read_only_fields = ['id']
 
+    def validate_title(self, title):
+        if title != '':
+            try:
+                if Skill.objects.get(title__iexact=title):
+                    raise serializers.ValidationError('skill already exist.', code='title')                    
+            except Skill.DoesNotExist:
+                return title
+        else:
+            raise serializers.ValidationError('title can not be blank', code='title')
+
     def update(self, instance, validated_data):
         skill_instance = super().update(instance, validated_data)
         instance.slug = slugify(skill_instance.title)
