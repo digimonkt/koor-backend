@@ -56,11 +56,15 @@ class TenderSearchView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = TenderDetailsFilter
     search_fields = [
-        'title', 'description',
-        'tag__title', 'tender_type__title', 'sector__title',
-        'tender_category__title', 'country__title',
+        'title', 'country__title',
         'city__title'
     ]
+    # search_fields = [
+    #     'title', 'description',
+    #     'tag__title', 'tender_type__title', 'sector__title',
+    #     'tender_category__title', 'country__title',
+    #     'city__title'
+    # ]
     pagination_class = CustomPagination
 
     def list(self, request):
