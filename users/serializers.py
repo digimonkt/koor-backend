@@ -1033,8 +1033,9 @@ class VendorDetailSerializers(serializers.ModelSerializer):
     
     def get_profile_completed(self, obj):
         context = False
-        if obj.name and obj.user_profile_vendorprofile_users.organization_type and obj.user_profile_vendorprofile_users.description and obj.user_profile_vendorprofile_users.website  and obj.user_profile_vendorprofile_users.address  and obj.user_profile_vendorprofile_users.license_id  and obj.user_profile_vendorprofile_users.license_id_file  and obj.user_profile_vendorprofile_users.country  and obj.user_profile_vendorprofile_users.city:
-            context = True
+        if VendorProfile.objects.filter(user=obj).exists():
+            if obj.name and obj.user_profile_vendorprofile_users.organization_type and obj.user_profile_vendorprofile_users.description and obj.user_profile_vendorprofile_users.website  and obj.user_profile_vendorprofile_users.address  and obj.user_profile_vendorprofile_users.license_id  and obj.user_profile_vendorprofile_users.license_id_file  and obj.user_profile_vendorprofile_users.country  and obj.user_profile_vendorprofile_users.city:
+                context = True
         return context
     
     def get_ready_for_chat(self, obj):

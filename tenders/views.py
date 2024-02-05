@@ -1,4 +1,8 @@
-from django.db.models import Value, F, Case, When, IntegerField, Q
+from django.db.models import (
+    Value, F, Case, When, IntegerField, Q,
+    Count
+)
+
 from datetime import date, datetime
 
 from django_filters import rest_framework as django_filters
@@ -11,7 +15,7 @@ from rest_framework import (
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
-from tenders.models import TenderDetails, TenderFilter
+from tenders.models import TenderDetails, TenderFilter, TenderCategory
 from tenders.filters import TenderDetailsFilter
 from tenders.serializers import (
     TendersSerializers, TendersDetailSerializers,
@@ -52,11 +56,15 @@ class TenderSearchView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = TenderDetailsFilter
     search_fields = [
-        'title', 'description',
-        'tag__title', 'tender_type__title', 'sector__title',
-        'tender_category__title', 'country__title',
+        'title', 'country__title',
         'city__title'
     ]
+    # search_fields = [
+    #     'title', 'description',
+    #     'tag__title', 'tender_type__title', 'sector__title',
+    #     'tender_category__title', 'country__title',
+    #     'city__title'
+    # ]
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -773,4 +781,40 @@ class RecentApplicationsView(generics.ListAPIView):
         """
         tender_data = TenderDetails.objects.filter(user=self.request.user.id)
         return AppliedTender.objects.filter(tender__in=tender_data)
+
+
+class PopularTenderCategoryView(generics.ListAPIView):
+
+    permission_classes = [permissions.AllowAny]
+    queryset = None
+
+    def list(self, request):
+        
+        tender_categories = []
+
+        # Retrieve the popular job categories and their counts
+        most_used_categories = TenderDetails.objects.filter(is_removed=False, status="active"
+                        ).values('tender_category__id', 'tender_category__title').annotate(
+            category_count=Count('tender_category')).order_by('-category_count')
+        # Prepare the job categories list with title and count information
+        all_tender_category_id = []
+        tender_category = TenderCategory.objects.all()
+        for cat_id in tender_category:
+            all_tender_category_id.append(cat_id.id)
+        for category in most_used_categories:
+            if category['tender_category__id'] in all_tender_category_id:
+                tender_categories.append(
+                    {
+                        "id": category['tender_category__id'],
+                        "title": category['tender_category__title'],
+                        "count": category['category_count']
+                    }
+                )
+        total_tenders = TenderDetails.objects.filter(is_removed=False, status="active").count()
+        return response.Response(
+            # data= tender_categories,
+            data= {"total_tenders":total_tenders , 'tender_categories':tender_categories} ,
+            status=status.HTTP_200_OK
+        )
+     
 

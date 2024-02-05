@@ -238,6 +238,16 @@ class SkillSerializers(serializers.ModelSerializer):
         fields = ['id', 'title']
         read_only_fields = ['id']
 
+    def validate_title(self, title):
+        if title != '':
+            try:
+                if Skill.objects.get(title__iexact=title):
+                    raise serializers.ValidationError('skill already exist.', code='title')                    
+            except Skill.DoesNotExist:
+                return title
+        else:
+            raise serializers.ValidationError('title can not be blank', code='title')
+
     def update(self, instance, validated_data):
         skill_instance = super().update(instance, validated_data)
         instance.slug = slugify(skill_instance.title)
@@ -402,7 +412,7 @@ class JobListSerializers(serializers.ModelSerializer):
         model = JobDetails
         fields = [
             'id', 'job_id', 'title', 'address', 'city', 'country', 
-            'status', 'user', 'company', 'company_logo'
+            'status', 'user', 'company', 'company_logo', 'post_by_admin'
         ]
         read_only_fields = ['id']
     def get_company_logo(self, obj):
@@ -853,7 +863,7 @@ class TenderListSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'tender_id', 'title', 'tag', 'tender_category',
             'tender_type', 'sector', 'city', 'country', 'status', 'user', 'address',
-            'company', 'company_logo'
+            'company', 'company_logo', 'post_by_admin'
         ]
         read_only_fields = ['id']
 
