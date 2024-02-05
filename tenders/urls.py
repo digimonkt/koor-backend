@@ -3,7 +3,8 @@ from django.urls import path
 from .views import (
     TenderSearchView, TenderDetailView, TenderFilterView,
     TenderSuggestionView, ApplicationsDetailView,
-    TenderApplicationsView, RecentApplicationsView
+    TenderApplicationsView, RecentApplicationsView,
+    PopularTenderCategoryView
 )
 
 app_name = "tenders"
@@ -11,6 +12,8 @@ app_name = "tenders"
 urlpatterns = [
 
     path('', TenderSearchView.as_view(), name="tender_search"),
+    
+    path('/tender-categories', PopularTenderCategoryView.as_view(), name="popular_tender_category"),
     
     path('/applications', RecentApplicationsView.as_view(), name="recent_applications"),
     
