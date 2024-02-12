@@ -32,7 +32,8 @@ from .models import (
     Content, ResourcesContent, SocialUrl,
     AboutUs, FaqCategory, FAQ,
     CategoryLogo, Testimonial, NewsletterUser,
-    RechargeHistory, Packages, Invoice, GoogleAddSenseCode
+    RechargeHistory, Packages, Invoice, GoogleAddSenseCode,
+    Rights, UserSubRights, UserRights
 )
 
 
@@ -2502,4 +2503,74 @@ class FinancialCountSerializers(serializers.Serializer):
         return RechargeHistory.objects.filter(package='copper', created__date__lte=end_date,
                                          created__date__gte=start_date).count()
 
-    
+class SubRightsSerializer(serializers.ModelSerializer):
+
+    status = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserSubRights
+        fields = ['id', 'title', 'status']
+
+    def get_status(self, obj):
+        status = False
+        if 'user' in self.context:
+            user = self.context['user']
+            if Rights.objects.filter(user=user, rights=obj).exists():
+                status = True
+        return status
+
+
+class UserRightsSerializers(serializers.ModelSerializer):
+
+    sub_rights = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserRights
+        fields = ['id', 'title', 'sub_rights']
+
+    def get_sub_rights(self, obj):
+        context = []
+        if 'user' in self.context:
+            user = self.context['user']
+            rights_data = UserSubRights.objects.filter(rights=obj)
+            get_data = SubRightsSerializer(rights_data, many=True, context={'user': user})
+            if get_data.data:
+                context = get_data.data
+        return context
+
+
+class ModifyUserRightsSerializers(serializers.ModelSerializer):
+
+    rights = serializers.ListField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_null=False,
+        required=False
+    )
+
+    class Meta:
+        model = Rights
+        fields = ['id', 'rights']
+
+    def save(self, user):
+
+        rights_list = None
+        if 'rights' in self.validated_data:
+            rights_list = self.validated_data.pop('rights')
+        if rights_list:
+            updated_rights = UserSubRights.objects.filter(id__in=rights_list)
+            existing_jobseeker_rights = Rights.objects.filter(user=user).values('rights')
+            existing_rights = UserSubRights.objects.filter(id__in=existing_jobseeker_rights)
+            updated_qs = updated_rights.difference(existing_rights)
+            Rights.objects.bulk_create([
+                Rights(user=user, rights=rights) for rights in updated_qs
+            ])
+            existing_jobseeker_rights = Rights.objects.filter(user=user).values('rights')
+            existing_rights = UserSubRights.objects.filter(id__in=existing_jobseeker_rights)
+            remove_jobseeker_rights = existing_rights.difference(updated_rights)
+            for rights in remove_jobseeker_rights:
+                Rights.all_objects.filter(rights=rights, user=user).delete()
+        else:
+            Rights.all_objects.filter(user=user).delete()
+        return self
+
