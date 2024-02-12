@@ -47,7 +47,7 @@ from .models import (
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
     RechargeHistory, Packages, Invoice, SMTPSetting,
-    GoogleAddSenseCode
+    GoogleAddSenseCode, Rights, UserSubRights, UserRights
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -66,7 +66,8 @@ from .serializers import (
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
     RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers,
     UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers,
-    GoogleAddSenseCodeSerializers, FinancialCountSerializers
+    GoogleAddSenseCodeSerializers, FinancialCountSerializers,
+    UserRightsSerializers, ModifyUserRightsSerializers
 )
 from .seeds import run_seed
 from .process import html_to_pdf
@@ -6246,4 +6247,70 @@ class FinancialCountView(generics.GenericAPIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+
+
+class UserRightsView(generics.GenericAPIView):
+
+    serializer_class = ModifyUserRightsSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+
+        response_context = dict()
+        user_id = request.GET.get('userId', None)
+        try:
+            user_instance = User.objects.get(id=user_id)
+            if user_instance.role == "admin":
+                rights_data = UserRights.objects.filter(is_removed=False).annotate(
+                    has_subrights=Exists(UserSubRights.objects.filter(rights_id=OuterRef('id')))
+                ).filter(has_subrights=True)
+                get_data = UserRightsSerializers(rights_data, many=True, context={'user': user_instance})
+                return response.Response(
+                    data=get_data.data,
+                    status=status.HTTP_200_OK
+                )
+            else:
+                response_context['message'] = "This user has no permission to perform this action."
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"userId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    def put(self, request):
+
+        response_context = dict()
+        user_id = request.GET.get('userId', None)
+        try:
+            user_instance = User.objects.get(id=user_id)
+            if user_instance.role == "admin":
+                serializer = self.serializer_class(data=request.data)
+                try:
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save(user=user_instance)
+                    response_context['message'] = "Rights Updated Successfully"
+                    return response.Response(
+                        data=response_context,
+                        status=status.HTTP_200_OK
+                    )
+                except serializers.ValidationError:
+                    return response.Response(
+                        data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                response_context['message'] = "This user has no permission to perform this action."
+                return response.Response(
+                    data=response_context,
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+        except User.DoesNotExist:
+            return response.Response(
+                data={"userId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )    
 
