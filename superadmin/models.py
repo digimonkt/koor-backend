@@ -866,3 +866,71 @@ class GoogleAddSenseCode(BaseModel, TimeStampedModel, models.Model):
     class Meta:
         verbose_name_plural = "Google Add Sense Code"
 
+
+class UserRights(SlugBaseModel, TimeStampedModel, models.Model):
+
+    class Meta:
+        verbose_name = "User Rights"
+        verbose_name_plural = "User Rights"
+        db_table = "UserRights"
+        ordering = ['title']
+
+
+class UserSubRights(SlugBaseModel, TimeStampedModel, models.Model):
+
+    rights = models.ForeignKey(
+        UserRights,
+        verbose_name=_('Rights'),
+        on_delete=models.CASCADE,
+        db_column="rights",
+        related_name='%(app_label)s_%(class)s_rights'
+    )
+    
+    class Meta:
+        verbose_name = "User Sub Rights"
+        verbose_name_plural = "User Sub Rights"
+        db_table = "UserSubRights"
+        ordering = ['title']
+        
+    def save(self, *args, **kwargs):
+        if not self.slug or self.title != self._original_title:
+            base_slug = slugify(self.title) + "-" + slugify(self.rights.title)
+            unique_slug = base_slug
+            counter = 1
+            while UserSubRights.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        return super().save(*args, **kwargs)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_title = self.title
+
+
+class Rights(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+
+    user = models.ForeignKey(
+        User,
+        verbose_name=_('User'),
+        on_delete=models.CASCADE,
+        db_column="user",
+        related_name='%(app_label)s_%(class)s_user'
+    )
+    rights = models.ForeignKey(
+        UserSubRights,
+        verbose_name=_('Rights'),
+        on_delete=models.CASCADE,
+        db_column="rights",
+        related_name='%(app_label)s_%(class)s_rights'
+    )
+
+    def __str__(self):
+        return str(self.rights) + "(" + str(self.user) + ")"
+
+    class Meta:
+        verbose_name = "Rights"
+        verbose_name_plural = "Rights"
+        db_table = "Rights"
+        ordering = ['-created']
+
