@@ -7,6 +7,7 @@ from .models import (
     SMTPSetting, Content, GooglePlaceApi,
     ResourcesContent, SocialUrl, AboutUs,
     FaqCategory, PointDetection, RechargeHistory,
+    UserRights, UserSubRights, Rights,
     GoogleAddSenseCode
 )
 
@@ -31,3 +32,6 @@ admin.site.register(FaqCategory)
 admin.site.register(PointDetection)
 admin.site.register(RechargeHistory)
 admin.site.register(GoogleAddSenseCode)
+admin.site.register(UserRights)
+admin.site.register(UserSubRights)
+admin.site.register(Rights)
