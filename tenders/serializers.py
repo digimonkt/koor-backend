@@ -67,7 +67,7 @@ class TendersSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
-            'created', 'deadline', 'is_applied', 'is_saved', 'user', 'vendor',
+            'created', 'deadline','start_date', 'is_applied', 'is_saved', 'user', 'vendor',
             'status', 'address', 'company', 'company_logo'
         ]
         
