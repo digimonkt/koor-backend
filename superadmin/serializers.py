@@ -1880,8 +1880,8 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         apply_through_website = data.get("apply_through_website")
         website_link = data.get("website_link")
         application_instruction = data.get("application_instruction")
-        if not application_instruction:
-            raise serializers.ValidationError({'application_instruction': 'This field is required.'})
+       # if not application_instruction:
+        #    raise serializers.ValidationError({'application_instruction': 'This field is required.'})
         if apply_through_website and website_link in ["", None]:
             raise serializers.ValidationError({'website_link': 'Website link can not be blank'})
         return data
