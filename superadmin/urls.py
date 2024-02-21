@@ -17,7 +17,7 @@ from .views import (
     TestimonialDetailView, JobsCreateView, TenderCreateView,
     PackageView, GenerateInvoiceView, InvoiceDetailView,
     InvoiceSendView, DownloadInvoiceView, ResourcesMoreView,
-    GoogleAddSenseCodeView, FinancialCountView
+    GoogleAddSenseCodeView, FinancialCountView, ManageUserRightsView
 )
 
 app_name = "superadmin"
@@ -131,5 +131,5 @@ urlpatterns = [
     path('/google-add-sense-code', GoogleAddSenseCodeView.as_view(), name="google_add_sense_code"),
     path('/google-add-sense-code/<str:codeId>', GoogleAddSenseCodeView.as_view(), name="google_add_sense_code"),
 
-    path('/user-rights', UserRightsView.as_view(), name="user_rights"),
+    path('/manage-user-rights', ManageUserRightsView.as_view(), name="manage_user_rights"),
 ]
