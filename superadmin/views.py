@@ -6249,7 +6249,7 @@ class FinancialCountView(generics.GenericAPIView):
 
 
 
-class UserRightsView(generics.GenericAPIView):
+class ManageUserRightsView(generics.GenericAPIView):
 
     serializer_class = ModifyUserRightsSerializers
     permission_classes = [permissions.IsAuthenticated]
