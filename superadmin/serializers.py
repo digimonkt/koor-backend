@@ -368,7 +368,7 @@ class CandidatesSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'role', 'name', 'email', 'country_code', 'mobile_number',
+            'id', 'role', 'is_company', 'name', 'email', 'country_code', 'mobile_number',
             'is_active', 'verify', 'date_joined', 'points']
         read_only_fields = ['id']
 
@@ -1800,6 +1800,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             job_instance.company_logo = media_instance
             job_instance.save()
+            User.objects.filter(name=job_instance.company).update(image=media_instance)
         return self
 
 
@@ -1922,6 +1923,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             media_instance.save()
             # save media instance into license id file into employer profile table.
             tender_instance.company_logo = media_instance
+            User.objects.filter(name=tender_instance.company).update(image=media_instance)
             tender_instance.save()
         return self
 
@@ -2053,6 +2055,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.company_logo = media_instance
+            User.objects.filter(name=instance.company).update(image=media_instance)
             instance.save()
         return instance
 
@@ -2321,6 +2324,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.company_logo = media_instance
+            User.objects.filter(name=instance.company).update(image=media_instance)
             instance.save()
 
         return instance
