@@ -5162,6 +5162,12 @@ class JobsCreateView(generics.ListAPIView):
             else:
                 serializer = CreateJobsSerializers(data=request.data)
                 serializer.is_valid(raise_exception=True)
+                if 'company' in request.data:
+                    if User.objects.filter(name=request.data['company']).exists():
+                        pass
+                    else:
+                        company_instance = User.objects.create(role="employer", is_company=True, name=request.data['company'])
+                        EmployerProfile.objects.create(user=company_instance)
                 serializer.save(user_instance)
                 context["message"] = "Job added successfully."
                 return response.Response(data=context, status=status.HTTP_201_CREATED)
@@ -5225,6 +5231,13 @@ class JobsCreateView(generics.ListAPIView):
                 employerId = request.data['employer_id']
                 user_instance = User.objects.get(id=employerId)
                 JobDetails.objects.filter(id=jobId).update(user=user_instance)
+            else:
+                if 'company' in request.data:
+                    if User.objects.filter(name=request.data['company']).exists():
+                        pass
+                    else:
+                        company_instance = User.objects.create(role="employer", is_company=True, name=request.data['company'])
+                        EmployerProfile.objects.create(user=company_instance)
             job_instance = JobDetails.objects.get(id=jobId)
             serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
             try:
@@ -5376,6 +5389,13 @@ class TenderCreateView(generics.ListAPIView):
             if 'employer_id' in request.data:
                 employerId = request.data['employer_id']
                 user_instance = User.objects.get(id=employerId)
+            else:
+                if 'company' in request.data:
+                    if User.objects.filter(name=request.data['company']).exists():
+                        pass
+                    else:
+                        company_instance = User.objects.create(role="employer", is_company=True, name=request.data['company'])
+                        EmployerProfile.objects.create(user=company_instance)
             serializer = CreateTendersSerializers(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(user_instance)
@@ -5429,6 +5449,13 @@ class TenderCreateView(generics.ListAPIView):
                 employerId = request.data['employer_id']
                 user_instance = User.objects.get(id=employerId)
                 TenderDetails.objects.filter(id=tenderId).update(user=user_instance)
+            else:
+                if 'company' in request.data:
+                    if User.objects.filter(name=request.data['company']).exists():
+                        pass
+                    else:
+                        company_instance = User.objects.create(role="employer", is_company=True, name=request.data['company'])
+                        EmployerProfile.objects.create(user=company_instance)
             tender_instance = TenderDetails.objects.get(id=tenderId)
             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
             try:
