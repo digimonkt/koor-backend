@@ -5123,6 +5123,7 @@ class JobsCreateView(generics.ListAPIView):
             - `Exception`: If there is an unexpected error during job post creation.
         """
         context = {}
+        email_context = {}
         try:
             user_instance = None
             if 'employer_id' in request.data:
@@ -5369,6 +5370,7 @@ class TenderCreateView(generics.ListAPIView):
         """
 
         context = dict()
+        email_context = dict()
         try:
             user_instance = None
             if 'employer_id' in request.data:
