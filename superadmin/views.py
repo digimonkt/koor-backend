@@ -1674,7 +1674,7 @@ class EmployerListView(generics.ListAPIView):
     queryset = User.objects.all().order_by('-date_joined')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
-    search_fields = ['name']
+    search_fields = ['name', 'email']
     pagination_class = CustomPagination
 
     def list(self, request):
