@@ -1674,7 +1674,7 @@ class EmployerListView(generics.ListAPIView):
     queryset = User.objects.all().order_by('-date_joined')
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = UsersFilter
-    search_fields = ['name']
+    search_fields = ['name', 'email']
     pagination_class = CustomPagination
 
     def list(self, request):
@@ -5123,6 +5123,7 @@ class JobsCreateView(generics.ListAPIView):
             - `Exception`: If there is an unexpected error during job post creation.
         """
         context = {}
+        email_context = {}
         try:
             user_instance = None
             if 'employer_id' in request.data:
@@ -5141,7 +5142,16 @@ class JobsCreateView(generics.ListAPIView):
                     remaining_points = employer_profile_instance.points - point_data.points
                     employer_profile_instance.points = remaining_points
                     employer_profile_instance.save()
-
+                    email_context["yourname"] = employer_profile_instance.user.name
+                    email_context["type"] = 'job'
+                    email_context["title"] = request.data['title']
+                    if employer_profile_instance.user.email:
+                        get_email_object(
+                            subject=f'Koor jobs create a job for you',
+                            email_template_name='email-templates/create-jobs.html',
+                            context=email_context,
+                            to_email=[employer_profile_instance.user.email, ]
+                        )
                     context["message"] = "Job added successfully."
                     context["remaining_points"] = remaining_points
                     request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
@@ -5360,6 +5370,7 @@ class TenderCreateView(generics.ListAPIView):
         """
 
         context = dict()
+        email_context = dict()
         try:
             user_instance = None
             if 'employer_id' in request.data:
@@ -5368,6 +5379,17 @@ class TenderCreateView(generics.ListAPIView):
             serializer = CreateTendersSerializers(data=request.data)
             serializer.is_valid(raise_exception=True)
             serializer.save(user_instance)
+            if user_instance:
+                email_context["yourname"] = user_instance.name
+                email_context["type"] = 'tender'
+                email_context["title"] = request.data['title']
+                if user_instance.email:
+                    get_email_object(
+                        subject=f'Koor jobs create a tender for you',
+                        email_template_name='email-templates/create-jobs.html',
+                        context=email_context,
+                        to_email=[user_instance.email, ]
+                    )
             context["message"] = "Tender added successfully."
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:
