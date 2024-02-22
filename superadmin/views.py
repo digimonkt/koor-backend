@@ -5141,7 +5141,15 @@ class JobsCreateView(generics.ListAPIView):
                     remaining_points = employer_profile_instance.points - point_data.points
                     employer_profile_instance.points = remaining_points
                     employer_profile_instance.save()
-
+                    email_context["yourname"] = employer_profile_instance.user.name
+                    email_context["job_title"] = request.data['title']
+                    if employer_profile_instance.user.email:
+                        get_email_object(
+                            subject=f'Koor jobs create a job for you',
+                            email_template_name='email-templates/create-jobs.html',
+                            context=email_context,
+                            to_email=[employer_profile_instance.user.email, ]
+                        )
                     context["message"] = "Job added successfully."
                     context["remaining_points"] = remaining_points
                     request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
