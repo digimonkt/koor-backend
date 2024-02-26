@@ -368,7 +368,7 @@ class CandidatesSerializers(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'id', 'role', 'name', 'email', 'country_code', 'mobile_number',
+            'id', 'role', 'is_company', 'name', 'email', 'country_code', 'mobile_number',
             'is_active', 'verify', 'date_joined', 'points']
         read_only_fields = ['id']
 
@@ -1591,6 +1591,18 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         allow_null=True,
         required=False
     )
+    company_email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    company_about = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
     language = serializers.ListField(
         style={"input_type": "text"},
         write_only=True,
@@ -1617,7 +1629,8 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'city', 'address', 'job_category', 'job_sub_category', 'is_full_time', 'is_part_time', 'has_contract',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 
-            'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'company_logo_item'
+            'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'company_logo_item',
+            'company_email', 'company_about'
         ]
 
     def validate_job_category(self, job_category):
@@ -1755,6 +1768,10 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 
         if 'language' in self.validated_data:
             language = self.validated_data.pop('language')
+        if 'company_email' in self.validated_data:
+            company_email = self.validated_data.pop('company_email')
+        if 'company_about' in self.validated_data:
+            company_about = self.validated_data.pop('company_about')
         if 'company_logo_item' in self.validated_data:
             company_logo_item = self.validated_data.pop('company_logo_item')
         if 'attachments' in self.validated_data:
@@ -1800,6 +1817,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             # save media instance into license id file into employer profile table.
             job_instance.company_logo = media_instance
             job_instance.save()
+            User.objects.filter(name=job_instance.company).update(image=media_instance)
         return self
 
 
@@ -1854,6 +1872,18 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         allow_null=False,
         required=False
     )
+    company_email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    company_about = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
 
     class Meta:
         model = TenderDetails
@@ -1863,7 +1893,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             'start_date', 'address', 'company', 'company_logo_item',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 
-            'website_link',
+            'website_link', 'company_email', 'company_about'
         ]
 
     def validate_tender_category(self, tender_category):
@@ -1891,6 +1921,10 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         company_logo_item = None
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
+        if 'company_email' in self.validated_data:
+            company_email = self.validated_data.pop('company_email')
+        if 'company_about' in self.validated_data:
+            company_about = self.validated_data.pop('company_about')
         if 'company_logo_item' in self.validated_data:
             company_logo_item = self.validated_data.pop('company_logo_item')
         tender_instance = super().save(user=user, status='active', post_by_admin=True)
@@ -1922,6 +1956,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             media_instance.save()
             # save media instance into license id file into employer profile table.
             tender_instance.company_logo = media_instance
+            User.objects.filter(name=tender_instance.company).update(image=media_instance)
             tender_instance.save()
         return self
 
@@ -1970,6 +2005,18 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         allow_null=False,
         required=False
     )
+    company_email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    company_about = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
 
     class Meta:
         model = TenderDetails
@@ -1979,7 +2026,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             'start_date', 'attachments_remove', 'address', 'company', 'company_logo_item',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 
-            'website_link',
+            'website_link', 'company_email', 'company_about'
         ]
 
     def validate_tender_category(self, tender_category):
@@ -2017,6 +2064,10 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             attachments = self.validated_data.pop('attachments')
         if 'attachments_remove' in self.validated_data:
             attachments_remove = self.validated_data.pop('attachments_remove')
+        if 'company_email' in self.validated_data:
+            company_email = self.validated_data.pop('company_email')
+        if 'company_about' in self.validated_data:
+            company_about = self.validated_data.pop('company_about')
         if 'company_logo_item' in self.validated_data:
             company_logo_item = self.validated_data.pop('company_logo_item')
 
@@ -2053,6 +2104,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.company_logo = media_instance
+            User.objects.filter(name=instance.company).update(image=media_instance)
             instance.save()
         return instance
 
@@ -2163,6 +2215,18 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         allow_null=False,
         required=False
     )
+    company_email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    company_about = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
 
     class Meta:
         model = JobDetails
@@ -2172,8 +2236,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill', 'language_remove',
             'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 'status', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'attachments_remove', 
-            'company_logo_item'
-    
+            'company_logo_item', 'company_email', 'company_about'
         ]
 
     def validate_job_category(self, job_category):
@@ -2267,6 +2330,10 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             language = self.validated_data.pop('language')
         if 'language_remove' in self.validated_data:
             language_remove = self.validated_data.pop('language_remove')
+        if 'company_email' in self.validated_data:
+            company_email = self.validated_data.pop('company_email')
+        if 'company_about' in self.validated_data:
+            company_about = self.validated_data.pop('company_about')
         if 'company_logo_item' in self.validated_data:
             company_logo_item = self.validated_data.pop('company_logo_item')
         if 'attachments' in self.validated_data:
@@ -2321,6 +2388,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             media_instance.save()
             # save media instance into license id file into employer profile table.
             instance.company_logo = media_instance
+            User.objects.filter(name=instance.company).update(image=media_instance)
             instance.save()
 
         return instance
