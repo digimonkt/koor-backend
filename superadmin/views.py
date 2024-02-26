@@ -5173,36 +5173,37 @@ class JobsCreateView(generics.ListAPIView):
                     if User.objects.filter(email=request.data['company_email']).exists():
                         pass
                     else:
-                        company_instance = User.objects.create(
+                        user_instance = User.objects.create(
                             role="employer", is_company=True, is_verified=True, is_active=True, 
                             email=request.data['company_email'], name=request.data['company']
                         )
                         password = generate_random_password()
-                        company_instance.set_password(password)
-                        company_instance.save()
+                        user_instance.set_password(password)
+                        user_instance.save()
                         EmployerProfile.objects.create(
-                            user=company_instance, description=request.data['company_about']
+                            user=user_instance, description=request.data['company_about']
                         )
-                        email_context["yourname"] = company_instance.name
+                        email_context["yourname"] = user_instance.name
                         email_context["type"] = 'job'
                         email_context["title"] = request.data['title']
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
-                        if company_instance.email:
+                        if user_instance.email:
                             get_email_object(
                                 subject=f'Koor jobs create a job for you',
                                 email_template_name='email-templates/create-jobs.html',
                                 context=email_context,
-                                to_email=[company_instance.email, ]
+                                to_email=[user_instance.email, ]
                             )
                             get_email_object(
                                 subject=f'Koor jobs create account for you',
                                 email_template_name='email-templates/create-account.html',
                                 context=email_context,
-                                to_email=[company_instance.email, ]
+                                to_email=[user_instance.email, ]
                             )
                 
                 serializer.save(user_instance)
+                
                 context["message"] = "Job added successfully."
                 return response.Response(data=context, status=status.HTTP_201_CREATED)
             return response.Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
