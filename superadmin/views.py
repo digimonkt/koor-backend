@@ -5171,7 +5171,7 @@ class JobsCreateView(generics.ListAPIView):
                 serializer.is_valid(raise_exception=True)
                 if 'company_email' in request.data:
                     if User.objects.filter(email=request.data['company_email']).exists():
-                        pass
+                        user_instance = User.objects.get(email=request.data['company_email'])
                     else:
                         user_instance = User.objects.create(
                             role="employer", is_company=True, is_verified=True, is_active=True, 
@@ -5180,8 +5180,11 @@ class JobsCreateView(generics.ListAPIView):
                         password = generate_random_password()
                         user_instance.set_password(password)
                         user_instance.save()
+                        description = ""
+                        if 'company_about' in request.data:
+                            description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=user_instance, description=request.data['company_about']
+                            user=user_instance, description=description
                         )
                         email_context["yourname"] = user_instance.name
                         email_context["type"] = 'job'
@@ -5278,8 +5281,11 @@ class JobsCreateView(generics.ListAPIView):
                         password = generate_random_password()
                         company_instance.set_password(password)
                         company_instance.save()
+                        description = ""
+                        if 'company_about' in request.data:
+                            description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=company_instance, description=request.data['company_about']
+                            user=company_instance, description=description
                         )
                         email_context["yourname"] = company_instance.name
                         email_context["type"] = 'job'
@@ -5463,8 +5469,11 @@ class TenderCreateView(generics.ListAPIView):
                         password = generate_random_password()
                         company_instance.set_password(password)
                         company_instance.save()
+                        description = ""
+                        if 'company_about' in request.data:
+                            description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=company_instance, description=request.data['company_about']
+                            user=company_instance, description=description
                         )
                         email_context["yourname"] = company_instance.name
                         email_context["type"] = 'tender'
@@ -5544,8 +5553,11 @@ class TenderCreateView(generics.ListAPIView):
                         password = generate_random_password()
                         company_instance.set_password(password)
                         company_instance.save()
+                        description = ""
+                        if 'company_about' in request.data:
+                            description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=company_instance, description=request.data['company_about']
+                            user=company_instance, description=description
                         )
                         email_context["yourname"] = company_instance.name
                         email_context["type"] = 'tender'
