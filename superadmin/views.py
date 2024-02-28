@@ -5139,7 +5139,7 @@ class JobsCreateView(generics.ListAPIView):
                 user_instance = User.objects.get(id=employerId)
                 employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
                 point_data = PointDetection.objects.first()
-                if user_instance.role == "employer" and employer_profile_instance.is_verified:
+                if user_instance.role == "employer":
                     serializer.is_valid(raise_exception=True)
                     if employer_profile_instance.points < point_data.points:
                         context["message"] = "This company have not enough points to create a new job."
