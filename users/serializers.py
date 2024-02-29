@@ -1849,3 +1849,17 @@ class SearchUserSerializers(serializers.ModelSerializer):
                 pass 
         return None
 
+
+
+class AdminSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'name',
+            'email',
+            'country_code',
+            'mobile_number',
+        )
+

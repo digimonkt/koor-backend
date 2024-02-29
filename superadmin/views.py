@@ -28,6 +28,7 @@ from jobs.models import (
     JobSubCategory
 )
 from jobs.serializers import GetJobsSerializers
+from users.serializers import AdminSerializer
 from project_meta.models import (
     Country, City, EducationLevel,
     Language, Skill, Tag,
@@ -6485,4 +6486,23 @@ class ManageUserRightsView(generics.GenericAPIView):
                 data={"userId": "Does Not Exist"},
                 status=status.HTTP_404_NOT_FOUND
             )    
+
+
+class AdminListView(generics.ListAPIView):
+
+    permission_classes = [permissions.AllowAny]
+    serializer_class = AdminSerializer
+    queryset = User.objects.filter(role='admin')
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name', 'email']
+    pagination_class = CustomPagination
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return response.Response(serializer.data)
 
