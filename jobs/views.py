@@ -165,19 +165,19 @@ class JobSearchView(generics.ListAPIView):
                             # deadline__gte=date.today(),
                             is_removed=False,
                             status="active"
-                        ).order_by("-" + str(order_by))
+                        ).order_by("-" + str(order_by), '-created')
                     else:
                         return JobDetails.objects.filter(
                             # deadline__gte=date.today(),
                             is_removed=False,
                             status="active"
-                        ).order_by(str(order_by))
+                        ).order_by(str(order_by), 'created')
                 else:
                     return JobDetails.objects.filter(
                         # deadline__gte=date.today(),
                         is_removed=False,
                         status="active"
-                    ).order_by(str(order_by))
+                    ).order_by(str(order_by, 'created'))
         return JobDetails.objects.filter(
             # deadline__gte=date.today(),
             is_removed=False,
