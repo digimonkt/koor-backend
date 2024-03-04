@@ -124,17 +124,17 @@ class TenderSearchView(generics.ListAPIView):
                         return TenderDetails.objects.filter(
                             # deadline__gte=date.today(), 
                             status='active'
-                        ).order_by("-" + str(order_by))
+                        ).order_by("-" + str(order_by), '-created')
                     else:
                         return TenderDetails.objects.filter(
                             # deadline__gte=date.today(), 
                             status='active'
-                        ).order_by(str(order_by))
+                        ).order_by(str(order_by), 'created')
                 else:
                     return TenderDetails.objects.filter(
                         # deadline__gte=date.today(), 
                         status='active'
-                    ).order_by(str(order_by))
+                    ).order_by(str(order_by), 'created')
         return TenderDetails.objects.filter(
             # deadline__gte=date.today(), 
             status='active'
