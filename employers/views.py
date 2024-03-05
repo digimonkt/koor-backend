@@ -71,42 +71,54 @@ class UpdateAboutView(generics.GenericAPIView):
         context = dict()
         if self.request.user.role == "employer":
             profile_instance = get_object_or_404(EmployerProfile, user=request.user)
-            serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
-            try:
-                serializer.is_valid(raise_exception=True)
-                if 'email' in serializer.validated_data:
-                    if User.objects.filter(email__iexact=serializer.validated_data['email']).exists():
-                        if profile_instance.user.email__iexact != serializer.validated_data['email']:
-                            context['email'] = ["email already in use."]
-                            return response.Response(
-                                data=context,
-                                status=status.HTTP_400_BAD_REQUEST
-                            )
-                if 'mobile_number' in serializer.validated_data:
-                    if User.objects.filter(mobile_number=serializer.validated_data['mobile_number']).exists():
-                        if profile_instance.user.mobile_number != serializer.validated_data['mobile_number']:
-                            context['mobile_number'] = ["mobile number already in use."]
-                            return response.Response(
-                                data=context,
-                                status=status.HTTP_400_BAD_REQUEST
-                            )
-                if serializer.update(profile_instance, serializer.validated_data):
-                    context['message'] = "Updated Successfully"
-                    return response.Response(
-                        data=context,
-                        status=status.HTTP_200_OK
-                    )
-            except serializers.ValidationError:
+        elif self.request.user.role == "admin":
+            user_id = request.GET.get('userId', None)
+            if user_id:
+                user_instance = User.objects.get(id=user_id)
+                profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+            else:
+                context['message'] = "userId is required for update employer profile."
                 return response.Response(
-                    data=serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
+                    data=context,
+                    status=status.HTTP_401_UNAUTHORIZED
                 )
         else:
             context['message'] = "You do not have permission to perform this action."
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )        
+        serializer = self.serializer_class(data=request.data, instance=profile_instance, partial=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+            if 'email' in serializer.validated_data:
+                if User.objects.filter(email__iexact=serializer.validated_data['email']).exists():
+                    if profile_instance.user.email__iexact != serializer.validated_data['email']:
+                        context['email'] = ["email already in use."]
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            if 'mobile_number' in serializer.validated_data:
+                if User.objects.filter(mobile_number=serializer.validated_data['mobile_number']).exists():
+                    if profile_instance.user.mobile_number != serializer.validated_data['mobile_number']:
+                        context['mobile_number'] = ["mobile number already in use."]
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+            if serializer.update(profile_instance, serializer.validated_data):
+                context['message'] = "Updated Successfully"
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+        except serializers.ValidationError:
+            return response.Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
             )
+    
 
 
 class JobsView(generics.ListAPIView):
