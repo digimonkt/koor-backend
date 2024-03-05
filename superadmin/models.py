@@ -884,7 +884,13 @@ class UserRights(SlugBaseModel, TimeStampedModel, models.Model):
 
 
 class UserSubRights(SlugBaseModel, TimeStampedModel, models.Model):
-
+    subrights_value = models.CharField(
+        verbose_name=_('Subrights Value'),
+        max_length=255,
+        db_column="subrights_value",
+        null=True,
+        blank=True
+    )
     rights = models.ForeignKey(
         UserRights,
         verbose_name=_('Rights'),
