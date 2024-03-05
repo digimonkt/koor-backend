@@ -6430,7 +6430,7 @@ class ManageUserRightsView(generics.GenericAPIView):
     def get(self, request):
 
         response_context = dict()
-        user_id = request.GET.get('userId', None)
+        user_id = request.GET.get('userId', self.request.user.id)
         try:
             user_instance = User.objects.get(id=user_id)
             if user_instance.role == "admin":
@@ -6457,7 +6457,7 @@ class ManageUserRightsView(generics.GenericAPIView):
     def put(self, request):
 
         response_context = dict()
-        user_id = request.GET.get('userId', None)
+        user_id = request.GET.get('userId', self.request.user.id)
         try:
             user_instance = User.objects.get(id=user_id)
             if user_instance.role == "admin":
@@ -6498,7 +6498,10 @@ class AdminListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        if self.request.user.id:
+            queryset = self.filter_queryset(self.get_queryset().exclude(id=self.request.user.id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
