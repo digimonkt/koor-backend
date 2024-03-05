@@ -376,12 +376,30 @@ class DisplayImageView(generics.GenericAPIView):
         serializer = self.serializer_class(data=request.data, instance=request.user, partial=True)
         try:
             serializer.is_valid(raise_exception=True)
-            if serializer.update(request.user, serializer.validated_data):
-                context["image"] = str(request.user.image.file_path.url)
-                return response.Response(
-                    data=context,
-                    status=status.HTTP_200_OK
-                )
+            if request.user.role == "admin":
+                user_id = request.GET.get('userId', None)
+                if user_id:
+                    user_instance = User.objects.get(id=user_id)
+                    if serializer.update(user_instance, serializer.validated_data):
+                        user_instance = User.objects.get(id=user_id)
+                        context["image"] = str(user_instance.image.file_path.url)
+                        return response.Response(
+                            data=context,
+                            status=status.HTTP_200_OK
+                        )
+                else:
+                    context['message'] = "userId is required for update employer profile."
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+            else:
+                if serializer.update(request.user, serializer.validated_data):
+                    context["image"] = str(request.user.image.file_path.url)
+                    return response.Response(
+                        data=context,
+                        status=status.HTTP_200_OK
+                    )
         except serializers.ValidationError:
             return response.Response(
                 data=serializer.errors,
