@@ -6535,12 +6535,17 @@ class ManageUserRightsView(generics.GenericAPIView):
         try:
             user_instance = User.objects.get(id=user_id)
             if user_instance.role == "admin":
+                
                 rights_data = UserRights.objects.filter(is_removed=False).annotate(
                     has_subrights=Exists(UserSubRights.objects.filter(rights_id=OuterRef('id')))
                 ).filter(has_subrights=True)
                 get_data = UserRightsSerializers(rights_data, many=True, context={'user': user_instance})
+                
+                my_rights_data = Rights.objects.filter(is_removed=False, user=user_instance)
+                my_rights = ModifyUserRightsSerializers(my_rights_data, many=True, context={'user': user_instance})
+
                 return response.Response(
-                    data=get_data.data,
+                    data={'all_rights':get_data.data, 'my_rights': my_rights.data}
                     status=status.HTTP_200_OK
                 )
             else:
