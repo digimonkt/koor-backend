@@ -41,8 +41,8 @@ class Common(Configuration):
     )
     
     CRONJOBS = [
-    ('59 23 * * *', 'notification.views.ExpiredSavedJobs'),
-    ('50 23 * * 7', 'job_seekers.views.RemoveAvailability'),
+    # ('59 23 * * *', 'notification.views.ExpiredSavedJobs'),
+    # ('50 23 * * 7', 'job_seekers.views.RemoveAvailability'),
     ('1 1 * * *', 'superadmin.views.GenerateInvoice'),
     ]
 
