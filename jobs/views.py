@@ -150,6 +150,12 @@ class JobSearchView(generics.ListAPIView):
             order.
         """
         order_by = None
+        filters = Q(is_removed=False)
+        if 'filter_by' in self.request.GET:
+            filter_by = self.request.GET['filter_by']
+            if filter_by == "active": filters = filters & Q(deadline__gte=date.today())
+            if filter_by == 'expired': filters = filters & Q(deadline__lt=date.today())
+
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
@@ -163,26 +169,26 @@ class JobSearchView(generics.ListAPIView):
                     if 'descending' in self.request.GET['order_by']:
                         return JobDetails.objects.filter(
                             # deadline__gte=date.today(),
-                            is_removed=False,
+                            # is_removed=False,
                             status="active"
-                        ).order_by("-" + str(order_by), '-created')
+                        ).filter(filters).order_by("-" + str(order_by), '-created')
                     else:
                         return JobDetails.objects.filter(
                             # deadline__gte=date.today(),
-                            is_removed=False,
+                            # is_removed=False,
                             status="active"
-                        ).order_by(str(order_by), 'created')
+                        ).filter(filters).order_by(str(order_by), 'created')
                 else:
                     return JobDetails.objects.filter(
                         # deadline__gte=date.today(),
-                        is_removed=False,
+                        # is_removed=False,
                         status="active"
-                    ).order_by(str(order_by, 'created'))
+                    ).filter(filters).order_by(str(order_by, 'created'))
         return JobDetails.objects.filter(
             # deadline__gte=date.today(),
-            is_removed=False,
+            # is_removed=False,
             status="active"
-        )
+        ).filter(filters)
 
 
 class JobDetailView(generics.GenericAPIView):

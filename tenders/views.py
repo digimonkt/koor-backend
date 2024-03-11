@@ -110,6 +110,11 @@ class TenderSearchView(generics.ListAPIView):
     def get_queryset(self, **kwargs):
         
         order_by = None
+        filters = Q(status='active')
+        if 'filter_by' in self.request.GET:
+            filter_by = self.request.GET['filter_by']
+            if filter_by == "active": filters = filters & Q(deadline__gte=date.today())
+            if filter_by == 'expired': filters = filters & Q(deadline__lt=date.today())
         if 'search_by' in self.request.GET:
             search_by = self.request.GET['search_by']
             if search_by == 'salary':
@@ -121,24 +126,12 @@ class TenderSearchView(generics.ListAPIView):
             if order_by:
                 if 'order_by' in self.request.GET:
                     if 'descending' in self.request.GET['order_by']:
-                        return TenderDetails.objects.filter(
-                            # deadline__gte=date.today(), 
-                            status='active'
-                        ).order_by("-" + str(order_by), '-created')
+                        return TenderDetails.objects.filter(filters).order_by("-" + str(order_by), '-created')
                     else:
-                        return TenderDetails.objects.filter(
-                            # deadline__gte=date.today(), 
-                            status='active'
-                        ).order_by(str(order_by), 'created')
+                        return TenderDetails.objects.filter(filters).order_by(str(order_by), 'created')
                 else:
-                    return TenderDetails.objects.filter(
-                        # deadline__gte=date.today(), 
-                        status='active'
-                    ).order_by(str(order_by), 'created')
-        return TenderDetails.objects.filter(
-            # deadline__gte=date.today(), 
-            status='active'
-        )
+                    return TenderDetails.objects.filter(filters).order_by(str(order_by), 'created')
+        return TenderDetails.objects.filter(filters)
 
 
 
