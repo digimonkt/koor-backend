@@ -150,7 +150,6 @@ class CountryView(generics.ListAPIView):
                         is_removed=False)
                     country_instance = Country.all_objects.get(title__iexact=serializer.validated_data['title'],
                                                                is_removed=False)
-
                 else:
                     serializer.save()
                 context["data"] = serializer.data
@@ -223,6 +222,63 @@ class CountryView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    
+    def put(self, request, countryId):
+
+        context = dict()
+        try:
+            country_instance = Country.all_objects.get(id=countryId)
+            new_title = ""
+            error_message = {}
+            if 'title' in request.data:
+                new_title = request.data['title']
+            else:
+                error_message['title'] = "This field is required."
+            if 'currency_code' in request.data:
+                new_currency_code = request.data['currency_code']
+            else:
+                error_message['currency_code'] = "This field is required."
+            if 'country_code' in request.data:
+                new_country_code = request.data['country_code']
+            else:
+                error_message['country_code'] = "This field is required."
+            if 'iso_code2' in request.data:
+                new_iso_code2 = request.data['iso_code2']
+            else:
+                error_message['iso_code2'] = "This field is required."
+            if 'iso_code3' in request.data:
+                new_iso_code3 = request.data['iso_code3']
+            else:
+                error_message['iso_code3'] = "This field is required."
+            if error_message:
+                return response.Response(
+                    data=error_message,
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            if Country.all_objects.filter(title__iexact=new_title, currency_code=new_currency_code, country_code=new_country_code, iso_code2=new_iso_code2, iso_code3=new_iso_code3).exclude(id=countryId).exists():
+                return response.Response(
+                    data={"message": ['This country already exists.']},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            else:
+                Country.all_objects.filter(id=countryId).update(title__iexact=new_title, currency_code=new_currency_code, country_code=new_country_code, iso_code2=new_iso_code2, iso_code3=new_iso_code3)
+                context['message'] = ["Updated Successfully"]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+        except Country.DoesNotExist:
+            return response.Response(
+                data={"countryId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
 
 
@@ -366,6 +422,51 @@ class CityView(generics.ListAPIView):
             return response.Response(
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    def put(self, request, cityId):
+
+        context = dict()
+        try:
+            city_instance = City.all_objects.get(id=cityId)
+            new_title = ""
+            new_country_name = ""
+            if 'title' in request.data:
+                new_title = request.data['title']
+            else:
+                return response.Response(
+                    data={"title": "This field is required."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            if 'country_name' in request.data:
+                new_country_name = request.data['country_name']
+            else:
+                return response.Response(
+                    data={"country_name": "This field is required."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            if City.all_objects.filter(title__iexact=new_title, country__title=new_country_name).exclude(id=cityId).exists():
+                return response.Response(
+                    data={"message": ['This city already exists.']},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            else:
+                City.all_objects.filter(id=cityId).update(title=new_title, country=new_country_name)
+                context['message'] = ["Updated Successfully"]
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+        except City.DoesNotExist:
+            return response.Response(
+                data={"cityId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = e
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
             )
 
 
@@ -6430,7 +6531,7 @@ class ManageUserRightsView(generics.GenericAPIView):
     def get(self, request):
 
         response_context = dict()
-        user_id = request.GET.get('userId', None)
+        user_id = request.GET.get('userId', self.request.user.id)
         try:
             user_instance = User.objects.get(id=user_id)
             if user_instance.role == "admin":
@@ -6457,7 +6558,7 @@ class ManageUserRightsView(generics.GenericAPIView):
     def put(self, request):
 
         response_context = dict()
-        user_id = request.GET.get('userId', None)
+        user_id = request.GET.get('userId', self.request.user.id)
         try:
             user_instance = User.objects.get(id=user_id)
             if user_instance.role == "admin":
@@ -6498,7 +6599,10 @@ class AdminListView(generics.ListAPIView):
     pagination_class = CustomPagination
 
     def list(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
+        if self.request.user.id:
+            queryset = self.filter_queryset(self.get_queryset().exclude(id=self.request.user.id))
+        else:
+            queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

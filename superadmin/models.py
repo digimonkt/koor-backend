@@ -868,7 +868,14 @@ class GoogleAddSenseCode(BaseModel, TimeStampedModel, models.Model):
 
 
 class UserRights(SlugBaseModel, TimeStampedModel, models.Model):
-
+    rights_value = models.CharField(
+        verbose_name=_('Rights Value'),
+        max_length=255,
+        db_column="rights_value",
+        null=True,
+        blank=True
+    )
+    
     class Meta:
         verbose_name = "User Rights"
         verbose_name_plural = "User Rights"
@@ -877,7 +884,13 @@ class UserRights(SlugBaseModel, TimeStampedModel, models.Model):
 
 
 class UserSubRights(SlugBaseModel, TimeStampedModel, models.Model):
-
+    subrights_value = models.CharField(
+        verbose_name=_('Subrights Value'),
+        max_length=255,
+        db_column="subrights_value",
+        null=True,
+        blank=True
+    )
     rights = models.ForeignKey(
         UserRights,
         verbose_name=_('Rights'),
