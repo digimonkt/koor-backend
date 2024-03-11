@@ -6545,7 +6545,7 @@ class ManageUserRightsView(generics.GenericAPIView):
                 my_rights = ModifyUserRightsSerializers(my_rights_data, many=True, context={'user': user_instance})
 
                 return response.Response(
-                    data={'all_rights':get_data.data, 'my_rights': my_rights.data}
+                    data={'all_rights':get_data.data, 'my_rights': my_rights.data},
                     status=status.HTTP_200_OK
                 )
             else:
