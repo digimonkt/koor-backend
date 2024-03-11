@@ -2577,7 +2577,7 @@ class SubRightsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserSubRights
-        fields = ['id', 'title', 'status']
+        fields = ['id', 'title', 'subrights_value', 'status']
 
     def get_status(self, obj):
         status = False
@@ -2594,7 +2594,7 @@ class UserRightsSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = UserRights
-        fields = ['id', 'title', 'sub_rights']
+        fields = ['id', 'title', 'rights_value', 'sub_rights']
 
     def get_sub_rights(self, obj):
         context = []
