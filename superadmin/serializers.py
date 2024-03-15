@@ -546,8 +546,10 @@ class UserCountSerializers(serializers.Serializer):
         return User.objects.filter(role='vendor', date_joined__date__gte=start_date, date_joined__date__lte=end_date,).count()
 
     def get_total_visitor(self, obj):
-        start_date = self.context['start_date']
-        end_date = self.context['end_date']
+        # start_date = self.context['start_date']
+        # end_date = self.context['end_date']
+        start_date = date.today()
+        end_date = date.today()
         return VisitorLog.objects.filter(created_at__gte=start_date, created_at__lte=end_date).count()
 
 
