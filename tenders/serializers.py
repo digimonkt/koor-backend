@@ -68,7 +68,7 @@ class TendersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
             'created', 'deadline','start_date', 'is_applied', 'is_saved', 'user', 'vendor',
-            'status', 'address', 'company', 'company_logo'
+            'status', 'address', 'company', 'company_logo', 'post_by_admin'
         ]
         
     def get_company_logo(self, obj):
