@@ -284,7 +284,7 @@ class GetJobsSerializers(serializers.ModelSerializer):
             'has_contract', 'duration', 'experience', 'status', 'applicant', 'deadline', 'start_date',
             'created', 'is_applied', 'is_saved', 'is_shortlisted', 'is_rejected', 'interview_at', 'user',
             'apply_through_koor', 'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link',
-            'company', 'company_logo'
+            'company', 'company_logo', 'post_by_admin'
         ]
 
     def get_company_logo(self, obj):
