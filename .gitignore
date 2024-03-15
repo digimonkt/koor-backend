@@ -124,6 +124,7 @@ nohup.out
 .mypy_cache/
 .dmypy.json
 dmypy.json
+koor.json
 
 # Pyre type checker
 .pyre/
