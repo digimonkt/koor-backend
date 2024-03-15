@@ -1890,6 +1890,18 @@ class EmployerListView(generics.ListAPIView):
         elif action == 'recharge':
             employer_instance.points = employer_instance.points + int(request.data.get('points', 0))
             employer_instance.save()
+            email_context=dict()
+            email_context["yourname"] = employer_instance.user.name
+            email_context["recharge_point"] = int(request.data.get('points', 0))
+            email_context["current_point"] = employer_instance.points
+            email_context["recharge_amount"] = int(request.data.get('amount', 0))
+            if employer_instance.user.email:
+                get_email_object(
+                    subject=f'Your account recharge by Koor Jobs',
+                    email_template_name='email-templates/recharge-points.html',
+                    context=email_context,
+                    to_email=[employer_instance.user.email, ]
+                )
             RechargeHistory.objects.create(
                 user=employer_instance.user, 
                 points=int(request.data.get('points', 0)),
