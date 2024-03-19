@@ -5260,10 +5260,19 @@ class JobsCreateView(generics.ListAPIView):
                         context["message"] = "This company have not enough points to create a new job."
                         return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
-                    serializer.save(user_instance)
+                    job_instance = serializer.save(user_instance)
                     remaining_points = employer_profile_instance.points - point_data.points
                     employer_profile_instance.points = remaining_points
                     employer_profile_instance.save()
+                    
+                    total = float(point_data.points)
+                    discount = float(point_data.points)
+                    grand_total = float(point_data.points) - discount
+                
+                    invoice_instance = Invoice.objects.create(
+                        user=user_instance, job=job_instance, points=point_data.points,
+                        total=total, discount=discount, grand_total=grand_total
+                    )
                     email_context["yourname"] = employer_profile_instance.user.name
                     email_context["type"] = 'job'
                     email_context["title"] = request.data['title']
