@@ -1783,6 +1783,10 @@ class CreateJobsSerializers(serializers.ModelSerializer):
 
         if 'language' in self.validated_data:
             language = self.validated_data.pop('language')
+        if 'send_invoice_automatically' in self.validated_data:
+            send_invoice_automatically = self.validated_data.pop('send_invoice_automatically')
+        if 'send_email_automatically' in self.validated_data:
+            send_email_automatically = self.validated_data.pop('send_email_automatically')
         if 'company_email' in self.validated_data:
             company_email = self.validated_data.pop('company_email')
         if 'company_about' in self.validated_data:
@@ -1948,6 +1952,8 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             company_about = self.validated_data.pop('company_about')
         if 'company_logo_item' in self.validated_data:
             company_logo_item = self.validated_data.pop('company_logo_item')
+        if 'send_email_automatically' in self.validated_data:
+            send_email_automatically = self.validated_data.pop('send_email_automatically')
         tender_instance = super().save(user=user, status='active', post_by_admin=True)
 
         if attachments:
