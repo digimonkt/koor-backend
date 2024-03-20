@@ -1820,7 +1820,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             job_instance.company_logo = media_instance
             job_instance.save()
             User.objects.filter(name=job_instance.company).update(image=media_instance)
-        return self
+        return job_instance
 
 
 class CreateTendersSerializers(serializers.ModelSerializer):
