@@ -5248,6 +5248,12 @@ class JobsCreateView(generics.ListAPIView):
         email_context = {}
         try:
             user_instance = None
+            send_invoice_automatically= None
+            if 'send_invoice_automatically' in request.data:
+                send_invoice_automatically = request.data['send_invoice_automatically']
+            send_email_automatically= None
+            if 'send_email_automatically' in request.data:
+                send_email_automatically = request.data['send_email_automatically']
             if 'employer_id' in request.data:
                 employerId = request.data['employer_id']
                 serializer = CreateJobsSerializers(data=request.data)
@@ -5273,16 +5279,32 @@ class JobsCreateView(generics.ListAPIView):
                         user=user_instance, job=job_instance, points=point_data.points,
                         total=total, discount=discount, grand_total=grand_total
                     )
-                    email_context["yourname"] = employer_profile_instance.user.name
-                    email_context["type"] = 'job'
-                    email_context["title"] = request.data['title']
-                    if employer_profile_instance.user.email:
-                        get_email_object(
-                            subject=f'Koor jobs create a job for you',
-                            email_template_name='email-templates/create-jobs.html',
-                            context=email_context,
-                            to_email=[employer_profile_instance.user.email, ]
-                        )
+                    if send_email_automatically == 'True':
+                        email_context["yourname"] = employer_profile_instance.user.name
+                        email_context["type"] = 'job'
+                        email_context["title"] = request.data['title']
+                        if employer_profile_instance.user.email:
+                            get_email_object(
+                                subject=f'Koor jobs create a job for you',
+                                email_template_name='email-templates/create-jobs.html',
+                                context=email_context,
+                                to_email=[employer_profile_instance.user.email, ]
+                            )
+                    if send_invoice_automatically == 'True':
+                            invoice_month = calendar.month_name[datetime.now().month]
+                            email_context = dict()
+                            email_context["invoice_month"] = invoice_month
+                            # Send the email
+                            pdf = generate_pdf_file(invoice_instance.invoiceId)
+                            get_email_object(
+                                subject=f'Mail for Invoice',
+                                email_template_name='email-templates/mail-for-invoice.html',
+                                context=email_context,
+                                to_email=[employer_profile_instance.user.email, ],
+                                type="attachment",
+                                filename="Invoice.pdf", 
+                                file=pdf
+                            )
                     context["message"] = "Job added successfully."
                     context["remaining_points"] = remaining_points
                     request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
@@ -5578,6 +5600,9 @@ class TenderCreateView(generics.ListAPIView):
         email_context = dict()
         try:
             user_instance = None
+            send_email_automatically= None
+            if 'send_email_automatically' in request.data:
+                send_email_automatically = request.data['send_email_automatically']
             if 'employer_id' in request.data:
                 employerId = request.data['employer_id']
                 user_instance = User.objects.get(id=employerId)
@@ -5619,13 +5644,14 @@ class TenderCreateView(generics.ListAPIView):
                 email_context["yourname"] = user_instance.name
                 email_context["type"] = 'tender'
                 email_context["title"] = request.data['title']
-                if user_instance.email:
-                    get_email_object(
-                        subject=f'Koor jobs create a tender for you',
-                        email_template_name='email-templates/create-jobs.html',
-                        context=email_context,
-                        to_email=[user_instance.email, ]
-                    )
+                if send_email_automatically == 'True':
+                    if user_instance.email:
+                        get_email_object(
+                            subject=f'Koor jobs create a tender for you',
+                            email_template_name='email-templates/create-jobs.html',
+                            context=email_context,
+                            to_email=[user_instance.email, ]
+                        )
             context["message"] = "Tender added successfully."
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:

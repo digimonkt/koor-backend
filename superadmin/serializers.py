@@ -1623,6 +1623,19 @@ class CreateJobsSerializers(serializers.ModelSerializer):
         allow_null=False,
         required=False
     )
+    
+    send_email_automatically = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    send_invoice_automatically = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
 
     class Meta:
         model = JobDetails
@@ -1632,7 +1645,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill',
             'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'company_logo_item',
-            'company_email', 'company_about'
+            'company_email', 'company_about', 'send_email_automatically', 'send_invoice_automatically'
         ]
 
     def validate_job_category(self, job_category):
@@ -1886,6 +1899,12 @@ class CreateTendersSerializers(serializers.ModelSerializer):
         required=False,
         allow_blank=True
     )
+    send_email_automatically = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
 
     class Meta:
         model = TenderDetails
@@ -1895,7 +1914,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             'start_date', 'address', 'company', 'company_logo_item',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 
-            'website_link', 'company_email', 'company_about'
+            'website_link', 'company_email', 'company_about', 'send_email_automatically'
         ]
 
     def validate_tender_category(self, tender_category):
