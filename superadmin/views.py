@@ -5369,7 +5369,6 @@ class JobsCreateView(generics.ListAPIView):
                     email_context["yourname"] = user_instance.name
                     email_context["type"] = 'job'
                     email_context["title"] = request.data['title']
-                    email_context["password"] = password
                     email_context["youremail"] = request.data['company_email']
                     if user_instance.email:
                         get_email_object(
@@ -5450,6 +5449,7 @@ class JobsCreateView(generics.ListAPIView):
             does not have permission to update the job instance, an appropriate error response is returned.
         """
         context = dict()
+        email_context = dict()
         try:
             
             if 'employer_id' in request.data:
@@ -5727,6 +5727,7 @@ class TenderCreateView(generics.ListAPIView):
             user does not have permission to update the tender instance, an appropriate error response is returned.
         """
         context = dict()
+        email_context = dict()
         try:
             if 'employer_id' in request.data:
                 employerId = request.data['employer_id']
