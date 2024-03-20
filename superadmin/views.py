@@ -6421,8 +6421,9 @@ def generate_pdf_file(invoice_id):
     smtp_setting = SMTPSetting.objects.last()
     mobile_number = invoice_data.user.mobile_number
     new_mobile_number = " "
-    for i in range(0, len(mobile_number), 5):
-        new_mobile_number += mobile_number[i:i + 5] + " "
+    if mobile_number:
+        for i in range(0, len(mobile_number), 5):
+            new_mobile_number += mobile_number[i:i + 5] + " "
     if new_mobile_number:
         new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
     history_data = RechargeHistory.objects.filter(
