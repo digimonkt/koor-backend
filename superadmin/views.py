@@ -5291,9 +5291,9 @@ class JobsCreateView(generics.ListAPIView):
                                 to_email=[employer_profile_instance.user.email, ]
                             )
                     if send_invoice_automatically == 'True':
-                            invoice_month = calendar.month_name[datetime.now().month]
+                            # invoice_month = calendar.month_name[datetime.now().month]
                             email_context = dict()
-                            email_context["invoice_month"] = invoice_month
+                            # email_context["invoice_month"] = invoice_month
                             # Send the email
                             pdf = generate_pdf_file(invoice_instance.invoice_id)
                             get_email_object(
@@ -5379,9 +5379,9 @@ class JobsCreateView(generics.ListAPIView):
                         )
 
                 if send_invoice_automatically == 'True':
-                    invoice_month = calendar.month_name[datetime.now().month]
+                    # invoice_month = calendar.month_name[datetime.now().month]
                     email_context = dict()
-                    email_context["invoice_month"] = invoice_month
+                    # email_context["invoice_month"] = invoice_month
                     # Send the email
                     pdf = generate_pdf_file(invoice_instance.invoice_id)
                     get_email_object(
