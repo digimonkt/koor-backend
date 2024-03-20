@@ -5295,7 +5295,7 @@ class JobsCreateView(generics.ListAPIView):
                             email_context = dict()
                             email_context["invoice_month"] = invoice_month
                             # Send the email
-                            pdf = generate_pdf_file(invoice_instance.invoiceId)
+                            pdf = generate_pdf_file(invoice_instance.invoice_id)
                             get_email_object(
                                 subject=f'Mail for Invoice',
                                 email_template_name='email-templates/mail-for-invoice.html',
@@ -5384,7 +5384,7 @@ class JobsCreateView(generics.ListAPIView):
                     email_context = dict()
                     email_context["invoice_month"] = invoice_month
                     # Send the email
-                    pdf = generate_pdf_file(invoice_instance.invoiceId)
+                    pdf = generate_pdf_file(invoice_instance.invoice_id)
                     get_email_object(
                         subject=f'Mail for Invoice',
                         email_template_name='email-templates/mail-for-invoice.html',
@@ -6173,9 +6173,9 @@ def GenerateInvoice():
                         discount=discount, grand_total=grand_total, points=points,
                         user=user_instance
                     )
-                    if invoice_instance.invoiceId:
+                    if invoice_instance.invoice_id:
                         # Retrieve invoice data from the database
-                        invoice_data = Invoice.objects.get(invoice_id=invoice_instance.invoiceId)
+                        invoice_data = Invoice.objects.get(invoice_id=invoice_instance.invoice_id)
                         invoice_month = calendar.month_name[invoice_data.start_date.month]
                         user_email = []
 
@@ -6201,7 +6201,7 @@ def GenerateInvoice():
                             # Populate email context
                             email_context["invoice_month"] = invoice_month
                             # Send the email
-                            pdf = generate_pdf_file(invoice_instance.invoiceId)
+                            pdf = generate_pdf_file(invoice_instance.invoice_id)
                             get_email_object(
                                 subject=f'Mail for Invoice',
                                 email_template_name='email-templates/mail-for-invoice.html',
