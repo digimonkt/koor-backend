@@ -6421,15 +6421,17 @@ def generate_pdf_file(invoice_id):
     smtp_setting = SMTPSetting.objects.last()
     mobile_number = invoice_data.user.mobile_number
     new_mobile_number = " "
+    history_data = None
     if mobile_number:
         for i in range(0, len(mobile_number), 5):
             new_mobile_number += mobile_number[i:i + 5] + " "
         if new_mobile_number:
             new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
-    history_data = RechargeHistory.objects.filter(
-        user=invoice_data.user, created__gte=invoice_data.start_date,
-        created__lte=invoice_data.end_date
-    )
+    if invoice_data.start_date and invoice_data.end_date and invoice_data.user:
+        history_data = RechargeHistory.objects.filter(
+            user=invoice_data.user, created__gte=invoice_data.start_date,
+            created__lte=invoice_data.end_date
+        )
     file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
