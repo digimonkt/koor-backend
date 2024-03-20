@@ -6424,8 +6424,8 @@ def generate_pdf_file(invoice_id):
     if mobile_number:
         for i in range(0, len(mobile_number), 5):
             new_mobile_number += mobile_number[i:i + 5] + " "
-    if new_mobile_number:
-        new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
+        if new_mobile_number:
+            new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
     history_data = RechargeHistory.objects.filter(
         user=invoice_data.user, created__gte=invoice_data.start_date,
         created__lte=invoice_data.end_date
