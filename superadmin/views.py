@@ -6414,7 +6414,7 @@ def generate_pdf_file(invoice_id):
 
     """
     Page_title = "KOOR INVOICE"
-    invoice_month = None
+    invoice_month = calendar.month_name[datetime.now().month]
     invoice_data = Invoice.objects.get(invoice_id=invoice_id)
     if invoice_data.start_date:
         invoice_month = calendar.month_name[invoice_data.start_date.month]
