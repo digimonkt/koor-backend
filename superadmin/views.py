@@ -5339,20 +5339,61 @@ class JobsCreateView(generics.ListAPIView):
                         email_context["youremail"] = request.data['company_email']
                         if user_instance.email:
                             get_email_object(
-                                subject=f'Koor jobs create a job for you',
-                                email_template_name='email-templates/create-jobs.html',
-                                context=email_context,
-                                to_email=[user_instance.email, ]
-                            )
-                            get_email_object(
                                 subject=f'Koor jobs create account for you',
                                 email_template_name='email-templates/create-account.html',
                                 context=email_context,
                                 to_email=[user_instance.email, ]
                             )
-                
+                employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+                point_data = PointDetection.objects.first()
+                if user_instance.role == "employer":
+                    serializer.is_valid(raise_exception=True)
+                    if employer_profile_instance.points < point_data.points:
+                        context["message"] = "This company have not enough points to create a new job."
+                        return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+                                    
                 serializer.save(user_instance)
+                remaining_points = employer_profile_instance.points - point_data.points
+                employer_profile_instance.points = remaining_points
+                employer_profile_instance.save()
                 
+                total = float(point_data.points)
+                discount = float(point_data.points)
+                grand_total = float(point_data.points) - discount
+            
+                invoice_instance = Invoice.objects.create(
+                    user=user_instance, job=job_instance, points=point_data.points,
+                    total=total, discount=discount, grand_total=grand_total
+                )
+                if send_email_automatically == 'True':
+                    email_context["yourname"] = user_instance.name
+                    email_context["type"] = 'job'
+                    email_context["title"] = request.data['title']
+                    email_context["password"] = password
+                    email_context["youremail"] = request.data['company_email']
+                    if user_instance.email:
+                        get_email_object(
+                            subject=f'Koor jobs create a job for you',
+                            email_template_name='email-templates/create-jobs.html',
+                            context=email_context,
+                            to_email=[user_instance.email, ]
+                        )
+
+                if send_invoice_automatically == 'True':
+                    invoice_month = calendar.month_name[datetime.now().month]
+                    email_context = dict()
+                    email_context["invoice_month"] = invoice_month
+                    # Send the email
+                    pdf = generate_pdf_file(invoice_instance.invoiceId)
+                    get_email_object(
+                        subject=f'Mail for Invoice',
+                        email_template_name='email-templates/mail-for-invoice.html',
+                        context=email_context,
+                        to_email=[employer_profile_instance.user.email, ],
+                        type="attachment",
+                        filename="Invoice.pdf", 
+                        file=pdf
+                    )
                 context["message"] = "Job added successfully."
                 return response.Response(data=context, status=status.HTTP_201_CREATED)
             return response.Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
