@@ -2501,14 +2501,21 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
     
     # detail = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    job_title = serializers.SerializerMethodField()
     
     class Meta:
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date', 'invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'created', 'user'
+            'grand_total', 'points', 'is_send', 'created', 'user', 'job_title'
         ]
         
+    
+    def get_job_title(self, obj):
+        if obj.job:
+            return obj.job.title
+        return None
+    
         
     def get_user(self, obj):
         """
