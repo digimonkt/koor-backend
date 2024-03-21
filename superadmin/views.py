@@ -5345,7 +5345,13 @@ class JobsCreateView(generics.ListAPIView):
                                     context=email_context,
                                     to_email=[user_instance.email, ]
                                 )
-                employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+                if EmployerProfile.objects.filter(user=user_instance).exists():
+                    employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+                else:
+                    employer_profile_instance = EmployerProfile(
+                                        user=user_instance, description=description, is_verified=True
+                    )
+                    employer_profile_instance.save()
                 point_data = PointDetection.objects.first()
                 if user_instance.role == "employer":
                     serializer.is_valid(raise_exception=True)
@@ -5651,7 +5657,7 @@ class TenderCreateView(generics.ListAPIView):
             else:
                 if 'company_email' in request.data:
                     if User.objects.filter(email=request.data['company_email']).exists():
-                        pass
+                        user_instance = User.objects.get(email=request.data['company_email'])
                     else:
                         company_instance = User.objects.create(
                             role="employer", is_company=True, is_verified=True, is_active=True, 
