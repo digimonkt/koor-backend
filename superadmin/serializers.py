@@ -2499,14 +2499,14 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
         serialized_data = serializer.data
     """
     
-    detail = serializers.SerializerMethodField()
+    # detail = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
     
     class Meta:
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date', 'invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'created', 'user', 'detail'
+            'grand_total', 'points', 'is_send', 'created', 'user'
         ]
         
         
@@ -2528,25 +2528,25 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
             context = get_data.data
         return context
     
-    def get_detail(self, obj):
-        """
-        Fetches and serializes related RechargeHistory instances associated with the provided Invoice object within the
-        specified date range.
+    # def get_detail(self, obj):
+    #     """
+    #     Fetches and serializes related RechargeHistory instances associated with the provided Invoice object within the
+    #     specified date range.
 
-        Args:
-            obj (Invoice): The Invoice instance for which related RechargeHistory instances are to be fetched.
+    #     Args:
+    #         obj (Invoice): The Invoice instance for which related RechargeHistory instances are to be fetched.
 
-        Returns:
-            list: A list of serialized RechargeHistory data associated with the Invoice object, filtered by the date
-            range.
-        """
+    #     Returns:
+    #         list: A list of serialized RechargeHistory data associated with the Invoice object, filtered by the date
+    #         range.
+    #     """
 
-        context = []
-        data = RechargeHistory.objects.filter(user=obj.user, created__date__gte=obj.start_date, created__date__lte=obj.end_date)
-        get_data = RechargeHistorySerializers(data, many=True)
-        if get_data.data:
-            context = get_data.data
-        return context
+    #     context = []
+    #     data = RechargeHistory.objects.filter(user=obj.user, created__date__gte=obj.start_date, created__date__lte=obj.end_date)
+    #     get_data = RechargeHistorySerializers(data, many=True)
+    #     if get_data.data:
+    #         context = get_data.data
+    #     return context
 
 
 class GoogleAddSenseCodeSerializers(serializers.ModelSerializer):
