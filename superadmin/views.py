@@ -6712,3 +6712,17 @@ class AdminListView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return response.Response(serializer.data)
 
+
+class CityTitleModifyView(generics.GenericAPIView):
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        string = request.GET.get('title', None)
+        if string:
+            capitalized_string = string.title()
+            City.objects.filter(title=string).update(title=capitalized_string)
+        return response.Response(
+            data={"message":"title updated"},
+            status=status.HTTP_200_OK
+        )
