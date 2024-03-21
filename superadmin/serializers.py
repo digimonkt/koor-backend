@@ -1985,7 +1985,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             tender_instance.company_logo = media_instance
             User.objects.filter(name=tender_instance.company).update(image=media_instance)
             tender_instance.save()
-        return self
+        return tender_instance
 
 
 class UpdateTenderSerializers(serializers.ModelSerializer):
@@ -2044,6 +2044,13 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         required=False,
         allow_blank=True
     )
+    
+    send_email_automatically = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
 
     class Meta:
         model = TenderDetails
@@ -2053,7 +2060,7 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
             'start_date', 'attachments_remove', 'address', 'company', 'company_logo_item',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 
-            'website_link', 'company_email', 'company_about'
+            'website_link', 'company_email', 'company_about', 'send_email_automatically'
         ]
 
     def validate_tender_category(self, tender_category):
@@ -2086,6 +2093,10 @@ class UpdateTenderSerializers(serializers.ModelSerializer):
         attachments = None
         company_logo_item = None
         attachments_remove = None
+        send_email_automatically = None
+
+        if 'send_email_automatically' in self.validated_data:
+            send_email_automatically = self.validated_data.pop('send_email_automatically')
 
         if 'attachments' in self.validated_data:
             attachments = self.validated_data.pop('attachments')
@@ -2254,6 +2265,20 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         required=False,
         allow_blank=True
     )
+        
+    send_email_automatically = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    send_invoice_automatically = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+
 
     class Meta:
         model = JobDetails
@@ -2263,7 +2288,7 @@ class UpdateJobSerializers(serializers.ModelSerializer):
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'highest_education', 'language', 'skill', 'language_remove',
             'duration', 'experience', 'attachments', 'deadline', 'start_date', 'company', 'apply_through_koor', 'status', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 'website_link', 'attachments_remove', 
-            'company_logo_item', 'company_email', 'company_about'
+            'company_logo_item', 'company_email', 'company_about', 'send_email_automatically', 'send_invoice_automatically'
         ]
 
     def validate_job_category(self, job_category):
@@ -2352,6 +2377,13 @@ class UpdateJobSerializers(serializers.ModelSerializer):
         attachments_remove = None
         language = None
         language_remove = None
+        send_email_automatically = None
+        send_invoice_automatically = None
+
+        if 'send_email_automatically' in self.validated_data:
+            send_email_automatically = self.validated_data.pop('send_email_automatically')
+        if 'send_invoice_automatically' in self.validated_data:
+            send_invoice_automatically = self.validated_data.pop('send_invoice_automatically')
 
         if 'language' in self.validated_data:
             language = self.validated_data.pop('language')

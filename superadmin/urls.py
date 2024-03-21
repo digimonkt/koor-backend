@@ -18,7 +18,7 @@ from .views import (
     PackageView, GenerateInvoiceView, InvoiceDetailView,
     InvoiceSendView, DownloadInvoiceView, ResourcesMoreView,
     GoogleAddSenseCodeView, FinancialCountView, ManageUserRightsView,
-    AdminListView
+    AdminListView, CityTitleModifyView
 )
 
 app_name = "superadmin"
@@ -29,6 +29,7 @@ urlpatterns = [
     path('/country/<str:countryId>', CountryView.as_view(), name="country"),
 
     path('/city', CityView.as_view(), name="city"),
+    path('/city-title-modify', CityTitleModifyView.as_view(), name="city_title_modify"),
     path('/city/<str:cityId>', CityView.as_view(), name="city"),
 
     path('/job-category', JobCategoryView.as_view(), name="job_category"),
