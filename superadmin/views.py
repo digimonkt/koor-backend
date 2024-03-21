@@ -5338,12 +5338,13 @@ class JobsCreateView(generics.ListAPIView):
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
                         if user_instance.email:
-                            get_email_object(
-                                subject=f'Koor jobs create account for you',
-                                email_template_name='email-templates/create-account.html',
-                                context=email_context,
-                                to_email=[user_instance.email, ]
-                            )
+                            if send_email_automatically == 'True':
+                                get_email_object(
+                                    subject=f'Koor jobs create account for you',
+                                    email_template_name='email-templates/create-account.html',
+                                    context=email_context,
+                                    to_email=[user_instance.email, ]
+                                )
                 employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
                 point_data = PointDetection.objects.first()
                 if user_instance.role == "employer":
@@ -5671,12 +5672,13 @@ class TenderCreateView(generics.ListAPIView):
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
                         if company_instance.email:
-                            get_email_object(
-                                subject=f'Koor jobs create account for you',
-                                email_template_name='email-templates/create-account.html',
-                                context=email_context,
-                                to_email=[company_instance.email, ]
-                            )
+                            if send_email_automatically == 'True':
+                                get_email_object(
+                                    subject=f'Koor jobs create account for you',
+                                    email_template_name='email-templates/create-account.html',
+                                    context=email_context,
+                                    to_email=[company_instance.email, ]
+                                )
                 
             serializer = CreateTendersSerializers(data=request.data)
             serializer.is_valid(raise_exception=True)
