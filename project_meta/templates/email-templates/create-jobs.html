@@ -101,8 +101,26 @@
                 <td style="padding: 5px 10px 10px 10px;">Hello {{yourname}}</td>
             </tr>
             <tr>
-                <td style="padding:5px 10px 10px 10px;">Koor jobs create a {{type}} for You [{{title}}].</td>
+                <td style="padding:5px 10px 10px 10px;">Koor jobs create a {{type}}.</td>
             </tr>
+            <tr>
+                <td style="padding:5px 10px 10px 10px;">Here is your job details:</td>
+            </tr>
+            {% if job_id %}
+            <tr>
+                <td style="padding:5px 10px 10px 10px;">{{Ctype}} Id: <b>{{job_id}}</b></td>
+            </tr>
+            {% endif %}
+            {% if title %}
+            <tr>
+                <td style="padding:5px 10px 10px 10px;">{{Ctype}} Title: <b>{{title}}</b></td>
+            </tr>
+            {% endif %}
+            {% if discription %}
+            <tr>
+                <td style="padding:5px 10px 10px 10px;">{{Ctype}} Description: {{discription}}...</td>
+            </tr>
+            {% endif %}
         </table>
                   <table style="background-color: #f2f2f2; font-size: 20px;border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;">
             <tr>
