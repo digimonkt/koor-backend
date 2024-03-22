@@ -5492,22 +5492,22 @@ class JobsCreateView(generics.ListAPIView):
             else:
                 if 'company_email' in request.data:
                     if User.objects.filter(email=request.data['company_email']).exists():
-                        pass
+                        user_instance = User.objects.get(email=request.data['company_email'])
                     else:
-                        company_instance = User.objects.create(
+                        user_instance = User.objects.create(
                             role="employer", is_company=True, is_verified=True, is_active=True, 
                             email=request.data['company_email'], name=request.data['company']
                         )
                         password = generate_random_password()
-                        company_instance.set_password(password)
-                        company_instance.save()
+                        user_instance.set_password(password)
+                        user_instance.save()
                         description = ""
                         if 'company_about' in request.data:
                             description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=company_instance, description=description, is_verified=True
+                            user=user_instance, description=description, is_verified=True
                         )
-                        email_context["yourname"] = company_instance.name
+                        email_context["yourname"] = user_instance.name
                         email_context["type"] = 'job'
                         email_context["title"] = request.data['title']
                         email_context["password"] = password
@@ -5516,25 +5516,34 @@ class JobsCreateView(generics.ListAPIView):
                         email_context["job_id"] = job_instance.job_id
                         email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
                         email_context["discription"] = process_description(job_instance.description)
-                        if company_instance.email:
+                        if user_instance.email:
                             if send_email_automatically == 'False':
-                                get_email_object(
-                                    subject=f'Koor jobs create a job for you',
-                                    email_template_name='email-templates/create-jobs.html',
-                                    context=email_context,
-                                    to_email=[company_instance.email, ]
-                                )
                                 get_email_object(
                                     subject=f'Koor jobs create account for you',
                                     email_template_name='email-templates/create-account.html',
                                     context=email_context,
-                                    to_email=[company_instance.email, ]
+                                    to_email=[user_instance.email, ]
                                 )
-                
-
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(job_instance, serializer.validated_data):
+                    JobDetails.objects.filter(id=jobId).update(user=user_instance)
+                    email_context["yourname"] = user_instance.name
+                    email_context["type"] = 'job'
+                    email_context["title"] = request.data['title']
+                    email_context["youremail"] = str(user_instance.email)
+                    email_context['Ctype'] = 'Job'
+                    email_context["job_id"] = job_instance.job_id
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                    email_context["discription"] = process_description(job_instance.description)
+                    if user_instance.email:
+                        if send_email_automatically == 'False':
+                            get_email_object(
+                                subject=f'Koor jobs update a job for you',
+                                email_template_name='email-templates/create-jobs.html',
+                                context=email_context,
+                                to_email=[user_instance.email, ]
+                            )
                     context['message'] = "Updated Successfully"
                     return response.Response(
                         data=context,
@@ -5689,31 +5698,31 @@ class TenderCreateView(generics.ListAPIView):
                     if User.objects.filter(email=request.data['company_email']).exists():
                         user_instance = User.objects.get(email=request.data['company_email'])
                     else:
-                        company_instance = User.objects.create(
+                        user_instance = User.objects.create(
                             role="employer", is_company=True, is_verified=True, is_active=True, 
                             email=request.data['company_email'], name=request.data['company']
                         )
                         password = generate_random_password()
-                        company_instance.set_password(password)
-                        company_instance.save()
+                        user_instance.set_password(password)
+                        user_instance.save()
                         description = ""
                         if 'company_about' in request.data:
                             description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=company_instance, description=description, is_verified=True
+                            user=user_instance, description=description, is_verified=True
                         )
-                        email_context["yourname"] = company_instance.name
+                        email_context["yourname"] = user_instance.name
                         email_context["type"] = 'tender'
                         email_context["title"] = request.data['title']
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
-                        if company_instance.email:
+                        if user_instance.email:
                             if send_email_automatically == 'False':
                                 get_email_object(
                                     subject=f'Koor jobs create account for you',
                                     email_template_name='email-templates/create-account.html',
                                     context=email_context,
-                                    to_email=[company_instance.email, ]
+                                    to_email=[user_instance.email, ]
                                 )
                 
             serializer = CreateTendersSerializers(data=request.data)
@@ -5785,20 +5794,20 @@ class TenderCreateView(generics.ListAPIView):
                     if User.objects.filter(email=request.data['company_email']).exists():
                         pass
                     else:
-                        company_instance = User.objects.create(
+                        user_instance = User.objects.create(
                             role="employer", is_company=True, is_verified=True, is_active=True, 
                             email=request.data['company_email'], name=request.data['company']
                         )
                         password = generate_random_password()
-                        company_instance.set_password(password)
-                        company_instance.save()
+                        user_instance.set_password(password)
+                        user_instance.save()
                         description = ""
                         if 'company_about' in request.data:
                             description=request.data['company_about']
                         EmployerProfile.objects.create(
-                            user=company_instance, description=description, is_verified=True
+                            user=user_instance, description=description, is_verified=True
                         )
-                        email_context["yourname"] = company_instance.name
+                        email_context["yourname"] = user_instance.name
                         email_context["type"] = 'tender'
                         email_context["title"] = request.data['title']
                         email_context['Ctype'] = 'Tender'
@@ -5807,24 +5816,35 @@ class TenderCreateView(generics.ListAPIView):
                         email_context["discription"] = process_description(tender_instance.description)
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
-                        if company_instance.email:
+                        if user_instance.email:
                             if send_email_automatically == 'False':
-                                get_email_object(
-                                    subject=f'Koor jobs create a tender for you',
-                                    email_template_name='email-templates/create-jobs.html',
-                                    context=email_context,
-                                    to_email=[company_instance.email, ]
-                                )
                                 get_email_object(
                                     subject=f'Koor jobs create account for you',
                                     email_template_name='email-templates/create-account.html',
                                     context=email_context,
-                                    to_email=[company_instance.email, ]
+                                    to_email=[user_instance.email, ]
                                 )
             
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(tender_instance, serializer.validated_data):
+                    TenderDetails.objects.filter(id=tenderId).update(user=user_instance)
+                    email_context["yourname"] = str(user_instance.name)
+                    email_context["type"] = 'tender'
+                    email_context["title"] = request.data['title']
+                    email_context['Ctype'] = 'Tender'
+                    email_context["job_id"] = tender_instance.tender_id
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                    email_context["discription"] = process_description(tender_instance.description)
+                    email_context["youremail"] = str(user_instance.email)
+                    if user_instance.email:
+                        if send_email_automatically == 'False':
+                            get_email_object(
+                                subject=f'Koor jobs create a tender for you',
+                                email_template_name='email-templates/create-jobs.html',
+                                context=email_context,
+                                to_email=[user_instance.email, ]
+                            )
                     context['message'] = "Updated Successfully"
                     return response.Response(
                         data=context,
