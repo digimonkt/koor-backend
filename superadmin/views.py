@@ -5480,6 +5480,8 @@ class JobsCreateView(generics.ListAPIView):
         context = dict()
         email_context = dict()
         try:
+            job_instance = JobDetails.objects.get(id=jobId)
+            serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
             send_email_automatically= None
             if 'send_email_automatically' in request.data:
                 send_email_automatically = request.data['send_email_automatically']
@@ -5529,8 +5531,7 @@ class JobsCreateView(generics.ListAPIView):
                                     to_email=[company_instance.email, ]
                                 )
                 
-            job_instance = JobDetails.objects.get(id=jobId)
-            serializer = UpdateJobSerializers(data=request.data, instance=job_instance, partial=True)
+
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(job_instance, serializer.validated_data):
@@ -5771,6 +5772,7 @@ class TenderCreateView(generics.ListAPIView):
         email_context = dict()
         try:
             tender_instance = TenderDetails.objects.get(id=tenderId)
+            serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
             send_email_automatically= None
             if 'send_email_automatically' in request.data:
                 send_email_automatically = request.data['send_email_automatically']
@@ -5819,7 +5821,7 @@ class TenderCreateView(generics.ListAPIView):
                                     context=email_context,
                                     to_email=[company_instance.email, ]
                                 )
-            serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
+            
             try:
                 serializer.is_valid(raise_exception=True)
                 if serializer.update(tender_instance, serializer.validated_data):
