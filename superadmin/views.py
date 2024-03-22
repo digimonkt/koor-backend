@@ -76,6 +76,19 @@ from koor.config.common import Common
 
 import random, string
 
+from django.utils.html import strip_tags
+
+def process_description(description):
+    # Remove HTML tags from the description
+    description = strip_tags(description)
+
+    # Check if description is greater than 30 characters
+    if len(description) > 30:
+        truncated_description = description[:30] + "..."  # Truncate the description
+        return truncated_description
+    else:
+        return description
+
 def generate_random_password():
     characters = string.ascii_letters + string.digits + string.punctuation
     password = ''.join(random.choice(characters) for _ in range(10))
@@ -5285,7 +5298,8 @@ class JobsCreateView(generics.ListAPIView):
                         email_context['Ctype'] = 'Job'
                         email_context["title"] = request.data['title']
                         email_context["job_id"] = job_instance.job_id
-                        email_context["discription"] = job_instance.description
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                        email_context["discription"] = process_description(job_instance.description)
                         
                         if employer_profile_instance.user.email:
                             get_email_object(
@@ -5383,7 +5397,8 @@ class JobsCreateView(generics.ListAPIView):
                     email_context['Ctype'] = 'Job'
                     email_context["title"] = request.data['title']
                     email_context["job_id"] = job_instance.job_id
-                    email_context["discription"] = job_instance.description
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                    email_context["discription"] = process_description(job_instance.description)
                     if user_instance.email:
                         get_email_object(
                             subject=f'Koor jobs create a job for you',
@@ -5497,7 +5512,8 @@ class JobsCreateView(generics.ListAPIView):
                         email_context["youremail"] = request.data['company_email']
                         email_context['Ctype'] = 'Job'
                         email_context["job_id"] = job_instance.job_id
-                        email_context["discription"] = job_instance.description
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                        email_context["discription"] = process_description(job_instance.description)
                         if company_instance.email:
                             if send_email_automatically == 'False':
                                 get_email_object(
@@ -5708,7 +5724,8 @@ class TenderCreateView(generics.ListAPIView):
                 email_context["title"] = request.data['title']
                 email_context['Ctype'] = 'Tender'
                 email_context["job_id"] = tender_instance.tender_id
-                email_context["discription"] = tender_instance.description
+                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                email_context["discription"] = process_description(tender_instance.description)
                 if send_email_automatically == 'False':
                     if user_instance.email:
                         get_email_object(
@@ -5753,6 +5770,7 @@ class TenderCreateView(generics.ListAPIView):
         context = dict()
         email_context = dict()
         try:
+            tender_instance = TenderDetails.objects.get(id=tenderId)
             send_email_automatically= None
             if 'send_email_automatically' in request.data:
                 send_email_automatically = request.data['send_email_automatically']
@@ -5781,6 +5799,10 @@ class TenderCreateView(generics.ListAPIView):
                         email_context["yourname"] = company_instance.name
                         email_context["type"] = 'tender'
                         email_context["title"] = request.data['title']
+                        email_context['Ctype'] = 'Tender'
+                        email_context["job_id"] = tender_instance.tender_id
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                        email_context["discription"] = process_description(tender_instance.description)
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
                         if company_instance.email:
@@ -5797,8 +5819,6 @@ class TenderCreateView(generics.ListAPIView):
                                     context=email_context,
                                     to_email=[company_instance.email, ]
                                 )
-                
-            tender_instance = TenderDetails.objects.get(id=tenderId)
             serializer = UpdateTenderSerializers(data=request.data, instance=tender_instance, partial=True)
             try:
                 serializer.is_valid(raise_exception=True)
