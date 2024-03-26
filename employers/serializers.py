@@ -405,7 +405,7 @@ class CreateJobsSerializers(serializers.ModelSerializer):
             job_instance.company_logo = media_instance
             job_instance.save()
 
-        return self
+        return job_instance
 
 
 class UpdateJobSerializers(serializers.ModelSerializer):
@@ -785,7 +785,7 @@ class CreateTendersSerializers(serializers.ModelSerializer):
             tender_instance.company_logo = media_instance
             tender_instance.save()
         
-        return self
+        return tender_instance
 
 
 class UpdateTenderSerializers(serializers.ModelSerializer):

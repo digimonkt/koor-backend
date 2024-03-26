@@ -17,11 +17,9 @@ from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
 from core.emails import get_email_object
 from core.tokens import (
-    SessionTokenObtainPairSerializer,
-    PasswordResetTokenObtainPairSerializer,
-    PasswordChangeTokenObtainPairSerializer
+    SessionTokenObtainPairSerializer
 )
-from employers.views import my_callback
+from employers.views import my_callback, process_description, generate_pdf_file
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
     JobCategory, JobDetails,
@@ -65,29 +63,16 @@ from .serializers import (
     FAQSerializers, CreateFAQSerializers, UploadLogoSerializers,
     LogoSerializers, TestimonialSerializers, GetTestimonialSerializers,
     NewsletterUserSerializers, CreateJobsSerializers, CreateTendersSerializers,
-    RechargeHistorySerializers, PackageSerializers, UpdateJobSerializers,
+    PackageSerializers, UpdateJobSerializers, ModifyUserRightsSerializers,
     UpdateTenderSerializers, InvoiceSerializers, InvoiceDetailSerializers,
     GoogleAddSenseCodeSerializers, FinancialCountSerializers,
-    UserRightsSerializers, ModifyUserRightsSerializers
+    UserRightsSerializers
 )
 from .seeds import run_seed
 from .process import html_to_pdf
 from koor.config.common import Common
 
 import random, string
-
-from django.utils.html import strip_tags
-
-def process_description(description):
-    # Remove HTML tags from the description
-    description = strip_tags(description)
-
-    # Check if description is greater than 30 characters
-    if len(description) > 30:
-        truncated_description = description[:30] + "..."  # Truncate the description
-        return truncated_description
-    else:
-        return description
 
 def generate_random_password():
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -5310,10 +5295,14 @@ class JobsCreateView(generics.ListAPIView):
                             )
                     if send_invoice_automatically == 'True':
                             # invoice_month = calendar.month_name[datetime.now().month]
-                            email_context = dict()
-                            # email_context["invoice_month"] = invoice_month
+                            if invoice_instance.start_date:
+                                invoice_month = calendar.month_name[invoice_instance.start_date.month]
+                            else:
+                                invoice_month = calendar.month_name[invoice_instance.created.month]
+                            email_context["invoice_month"] = invoice_month
                             # Send the email
                             pdf = generate_pdf_file(invoice_instance.invoice_id)
+                            # print("222", pdf)
                             get_email_object(
                                 subject=f'Mail for Invoice',
                                 email_template_name='email-templates/mail-for-invoice.html',
@@ -5409,7 +5398,11 @@ class JobsCreateView(generics.ListAPIView):
 
                 if send_invoice_automatically == 'True':
                     # invoice_month = calendar.month_name[datetime.now().month]
-                    email_context = dict()
+                    if invoice_instance.start_date:
+                        invoice_month = calendar.month_name[invoice_instance.start_date.month]
+                    else:
+                        invoice_month = calendar.month_name[invoice_instance.created.month]
+                    email_context["invoice_month"] = invoice_month
                     # email_context["invoice_month"] = invoice_month
                     # Send the email
                     pdf = generate_pdf_file(invoice_instance.invoice_id)
@@ -6247,7 +6240,11 @@ def GenerateInvoice():
                     if invoice_instance.invoice_id:
                         # Retrieve invoice data from the database
                         invoice_data = Invoice.objects.get(invoice_id=invoice_instance.invoice_id)
-                        invoice_month = calendar.month_name[invoice_data.start_date.month]
+                        if invoice_instance.start_date:
+                            invoice_month = calendar.month_name[invoice_instance.start_date.month]
+                        else:
+                            invoice_month = calendar.month_name[invoice_instance.created.month]
+                        email_context["invoice_month"] = invoice_month
                         user_email = []
 
                         # Get the user's email address
@@ -6270,7 +6267,7 @@ def GenerateInvoice():
                                 user_name = user_email[0]
 
                             # Populate email context
-                            email_context["invoice_month"] = invoice_month
+                            # email_context["invoice_month"] = invoice_month
                             # Send the email
                             pdf = generate_pdf_file(invoice_instance.invoice_id)
                             get_email_object(
@@ -6329,7 +6326,11 @@ class InvoiceSendView(generics.GenericAPIView):
                 if invoiceId:
                     # Retrieve invoice data from the database
                     invoice_data = Invoice.objects.get(invoice_id=invoiceId)
-                    invoice_month = calendar.month_name[invoice_data.start_date.month]
+                    if invoice_data.start_date:
+                        invoice_month = calendar.month_name[invoice_data.start_date.month]
+                    else:
+                        invoice_month = calendar.month_name[invoice_data.created.month]
+                    email_context["invoice_month"] = invoice_month
                     user_email = []
 
                     # Get the user's email address
@@ -6352,7 +6353,7 @@ class InvoiceSendView(generics.GenericAPIView):
                             user_name = user_email[0]
 
                         # Populate email context
-                        email_context["invoice_month"] = invoice_month
+                        # email_context["invoice_month"] = invoice_month
                         # Send the email
                         pdf = generate_pdf_file(invoiceId)
                         get_email_object(
@@ -6458,67 +6459,6 @@ class DownloadInvoiceView(generics.GenericAPIView):
                 data=context,
                 status=status.HTTP_401_UNAUTHORIZED
             )
-
-
-def generate_pdf_file(invoice_id):
-    """
-    Generate a PDF invoice file based on the provided invoice ID.
-
-    This function retrieves relevant data from the database and generates a PDF invoice file using an HTML template.
-    The generated file includes information about the invoice, user details, and recharge history.
-
-    Parameters:
-    - invoice_id (int): The ID of the invoice for which the PDF is to be generated.
-
-    Returns:
-    - file_response (bytes): A byte stream containing the generated PDF invoice file.
-
-    Note:
-    - This function requires access to the Invoice, SMTPSetting, and RechargeHistory models.
-    - The HTML template used for PDF generation is 'email-templates/pdf-invoice.html'.
-    - The invoice data is fetched from the Invoice model based on the provided invoice ID.
-    - User's mobile number is formatted and displayed along with the country code.
-    - Recharge history data is fetched for the user within the invoice date range.
-    - The PDF generation is done using the 'html_to_pdf' function with the provided template
-      and relevant data.
-
-    Example usage:
-    >>> invoice_id = 123
-    >>> pdf_file = generate_pdf_file(invoice_id)
-    >>> with open('invoice.pdf', 'wb') as file:
-    ...     file.write(pdf_file)
-
-    """
-    Page_title = "KOOR INVOICE"
-    invoice_month = calendar.month_name[datetime.now().month]
-    invoice_data = Invoice.objects.get(invoice_id=invoice_id)
-    if invoice_data.start_date:
-        invoice_month = calendar.month_name[invoice_data.start_date.month]
-    else:
-        invoice_month = calendar.month_name[invoice_data.created.month]
-    smtp_setting = SMTPSetting.objects.last()
-    mobile_number = invoice_data.user.mobile_number
-    new_mobile_number = " "
-    history_data = None
-    if mobile_number:
-        for i in range(0, len(mobile_number), 5):
-            new_mobile_number += mobile_number[i:i + 5] + " "
-        if new_mobile_number:
-            new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
-    if invoice_data.start_date and invoice_data.end_date and invoice_data.user:
-        history_data = RechargeHistory.objects.filter(
-            user=invoice_data.user, created__gte=invoice_data.start_date,
-            created__lte=invoice_data.end_date
-        )
-    file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
-                                                            'Page_title': Page_title, 'invoice_month':invoice_month,
-                                                            'LOGO': Common.BASE_URL + smtp_setting.logo.url,
-                                                            'mobile_number':new_mobile_number,
-                                                            'history_data':history_data
-                                                        }, raw=True
-                    )
-    return file_response
-
 
   
 class GoogleAddSenseCodeView(generics.ListAPIView):
