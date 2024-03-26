@@ -6321,6 +6321,7 @@ class InvoiceSendView(generics.GenericAPIView):
             Response: A response indicating the outcome of the operation, along with a message.
         """
         context = dict()
+        email_context = dict()
         if self.request.user.is_staff:
             try:
                 if invoiceId:
@@ -6339,8 +6340,6 @@ class InvoiceSendView(generics.GenericAPIView):
                             user_email.append(invoice_data.user.email)
 
                     if user_email:
-                        email_context = dict()
-
                         # Determine user name for email context
                         if invoice_data.user:
                             if invoice_data.user.name:
