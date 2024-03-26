@@ -22,7 +22,9 @@
               <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                 <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Bill To</b><br>
                 <b>Client Name</b>: {{invoice_data.user.name}} <br>
+                {% if mobile_number %}
                 <b>Mobile Number</b>: {{mobile_number}} <br>
+                {% endif %}
                 <b>Email</b>: {{invoice_data.user.email}} <br>
               </p>
             </td>
@@ -39,7 +41,8 @@
                   </tr>
                   {% if invoice_data %}
                       <tr>   
-                        <td align="left" style="padding:2px 15px;font-weight: 400;">{{invoice_data.created.date}} {{invoice_data.created.time}}</td>
+                        <td align="left" style="padding:2px 15px;font-weight: 400;">{{invoice_data.created.date}}</td>
+                        {% comment %} <td align="left" style="padding:2px 15px;font-weight: 400;">{{invoice_data.created.date}} {{invoice_data.created.time}}</td> {% endcomment %}
                         <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.job_id}}{% else %}N/A{% endif %}</td>
                         <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.title}}{% else %}N/A{% endif %}</td>
                         <td align="left" style="padding:2px 15px;font-weight: 400;">${{invoice_data.total}}</td>
