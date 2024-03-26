@@ -6,7 +6,7 @@ from django.template.defaultfilters import slugify
 from django.contrib.postgres.fields import ArrayField
 
 from random import randint
-
+from jobs.models import JobDetails
 from core.models import (
     BaseModel, SlugBaseModel, SoftDeleteModel, upload_directory_path
 )
@@ -688,6 +688,15 @@ class Invoice(BaseModel, TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         db_column="user",
         related_name='%(app_label)s_%(class)s_user'
+    )
+    job = models.ForeignKey(
+        JobDetails,
+        verbose_name=_('Job'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="job",
+        related_name='%(app_label)s_%(class)s_job'
     )
     invoice_id = models.CharField(
         verbose_name=_('Invoice Id'),

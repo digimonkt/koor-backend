@@ -14,15 +14,12 @@ from rest_framework import (
 from core.pagination import CustomPagination
 from core.emails import get_email_object
 
-from superadmin.models import PointDetection
-
 from jobs.models import JobDetails, JobFilters
 from vendors.models import AppliedTender
-from vendors.serializers import AppliedTenderSerializers, GetAppliedTenderSerializers
+from vendors.serializers import GetAppliedTenderSerializers
 
 from job_seekers.models import AppliedJob
 from jobs.serializers import (
-    GetAppliedJobsSerializers, JobCategorySerializer,
     GetJobsSerializers, AppliedJobSerializers
 )
 
@@ -33,6 +30,13 @@ from users.models import User
 
 from tenders.models import TenderDetails
 from tenders.serializers import TendersSerializers
+
+from superadmin.models import (
+    Invoice, PointDetection, 
+    SMTPSetting, RechargeHistory
+)
+from superadmin.process import html_to_pdf
+from koor.config.common import Common
 
 from .models import BlackList
 from .serializers import (
@@ -45,6 +49,84 @@ from .serializers import (
     BlacklistedUserSerializers,
     ShareCountSerializers
 )
+
+
+import calendar
+from django.utils.html import strip_tags
+
+def process_description(description):
+    # Remove HTML tags from the description
+    description = strip_tags(description)
+
+    # Check if description is greater than 30 characters
+    if len(description) > 30:
+        truncated_description = description[:30] + "..."  # Truncate the description
+        return truncated_description
+    else:
+        return description
+
+
+def generate_pdf_file(invoice_id):
+    """
+    Generate a PDF invoice file based on the provided invoice ID.
+
+    This function retrieves relevant data from the database and generates a PDF invoice file using an HTML template.
+    The generated file includes information about the invoice, user details, and recharge history.
+
+    Parameters:
+    - invoice_id (int): The ID of the invoice for which the PDF is to be generated.
+
+    Returns:
+    - file_response (bytes): A byte stream containing the generated PDF invoice file.
+
+    Note:
+    - This function requires access to the Invoice, SMTPSetting, and RechargeHistory models.
+    - The HTML template used for PDF generation is 'email-templates/pdf-invoice.html'.
+    - The invoice data is fetched from the Invoice model based on the provided invoice ID.
+    - User's mobile number is formatted and displayed along with the country code.
+    - Recharge history data is fetched for the user within the invoice date range.
+    - The PDF generation is done using the 'html_to_pdf' function with the provided template
+      and relevant data.
+
+    Example usage:
+    >>> invoice_id = 123
+    >>> pdf_file = generate_pdf_file(invoice_id)
+    >>> with open('invoice.pdf', 'wb') as file:
+    ...     file.write(pdf_file)
+
+    """
+    Page_title = "KOOR INVOICE"
+    print("333")
+    invoice_month = calendar.month_name[datetime.now().month]
+    invoice_data = Invoice.objects.get(invoice_id=invoice_id)
+    if invoice_data.start_date:
+        invoice_month = calendar.month_name[invoice_data.start_date.month]
+    else:
+        invoice_month = calendar.month_name[invoice_data.created.month]
+    print(invoice_month, 'invoice month')
+    smtp_setting = SMTPSetting.objects.last()
+    mobile_number = invoice_data.user.mobile_number
+    new_mobile_number = " "
+    history_data = None
+    if mobile_number:
+        for i in range(0, len(mobile_number), 5):
+            new_mobile_number += mobile_number[i:i + 5] + " "
+        if new_mobile_number:
+            new_mobile_number = invoice_data.user.country_code + " " + new_mobile_number
+    if invoice_data.start_date and invoice_data.end_date and invoice_data.user:
+        history_data = RechargeHistory.objects.filter(
+            user=invoice_data.user, created__gte=invoice_data.start_date,
+            created__lte=invoice_data.end_date
+        )
+    file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
+                                                            'Page_title': Page_title, 'invoice_month':invoice_month,
+                                                            'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'mobile_number':new_mobile_number,
+                                                            'history_data':history_data
+                                                        }, raw=True
+                    )
+    return file_response
+
 
 
 class UpdateAboutView(generics.GenericAPIView):
@@ -180,6 +262,7 @@ class JobsView(generics.ListAPIView):
             - `Exception`: If there is an unexpected error during job post creation.
         """
         context = {}
+        email_context = {}
         serializer = CreateJobsSerializers(data=request.data)
         employer_profile_instance = get_object_or_404(EmployerProfile, user=request.user)
         point_data = PointDetection.objects.first()
@@ -190,10 +273,45 @@ class JobsView(generics.ListAPIView):
                 context["message"] = "You do not have enough points to create a new job."
                 return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
 
-            serializer.save(request.user)
+            job_instance = serializer.save(request.user)
             remaining_points = employer_profile_instance.points - point_data.points
             employer_profile_instance.points = remaining_points
             employer_profile_instance.save()
+                        
+            total = float(point_data.points)
+            discount = float(point_data.points)
+            grand_total = float(point_data.points) - discount
+
+            invoice_instance = Invoice.objects.create(
+                user=request.user, job=job_instance, points=point_data.points,
+                total=total, discount=discount, grand_total=grand_total
+            )
+            email_context["yourname"] = employer_profile_instance.user.name
+            email_context["type"] = 'job'
+            email_context['Ctype'] = 'Job'
+            email_context["title"] = request.data['title']
+            email_context["job_id"] = job_instance.job_id
+            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+            email_context["discription"] = process_description(job_instance.description)
+            
+            if employer_profile_instance.user.email:
+                get_email_object(
+                    subject=f'Created a new job in Koor Jobs',
+                    email_template_name='email-templates/create-jobs.html',
+                    context=email_context,
+                    to_email=[employer_profile_instance.user.email, ]
+                )
+        
+                pdf = generate_pdf_file(invoice_instance.invoice_id)
+                get_email_object(
+                    subject=f'Mail for Invoice',
+                    email_template_name='email-templates/mail-for-invoice.html',
+                    context=email_context,
+                    to_email=[employer_profile_instance.user.email, ],
+                    type="attachment",
+                    filename="Invoice.pdf", 
+                    file=pdf
+                )
 
             context["message"] = "Job added successfully."
             context["remaining_points"] = remaining_points
@@ -475,12 +593,28 @@ class TendersView(generics.ListAPIView):
         """
 
         context = dict()
+        email_context = dict()
         serializer = CreateTendersSerializers(data=request.data)
         try:
             employer_profile_instance = get_object_or_404(EmployerProfile, user=self.request.user)
             if self.request.user.role == "employer" and employer_profile_instance.is_verified:
                 serializer.is_valid(raise_exception=True)
-                serializer.save(self.request.user)
+                tender_instance = serializer.save(self.request.user)
+                email_context["yourname"] = self.request.user.name
+                email_context["type"] = 'tender'
+                email_context["title"] = request.data['title']
+                email_context['Ctype'] = 'Tender'
+                email_context["job_id"] = tender_instance.tender_id
+                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                email_context["discription"] = process_description(tender_instance.description)
+                if self.request.user.email:
+                    get_email_object(
+                        subject=f'Created a new tender in Koor Jobs',
+                        email_template_name='email-templates/create-jobs.html',
+                        context=email_context,
+                        to_email=[self.request.user.email, ]
+                    )
+                
                 context["message"] = "Tender added successfully."
                 return response.Response(
                     data=context,
