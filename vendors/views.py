@@ -9,7 +9,7 @@ from rest_framework import (
 from core.pagination import CustomPagination
 
 from user_profile.models import VendorProfile
-
+from users.models import User
 from tenders.models import TenderDetails
 
 from .models import (
