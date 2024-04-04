@@ -21,11 +21,17 @@
               </p>
               <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                 <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Bill To</b><br>
+                
+                {% if  invoice_data.user.name  %}
                 <b>Client Name</b>: {{invoice_data.user.name}} <br>
-                {% if mobile_number %}
-                <b>Mobile Number</b>: {{mobile_number}} <br>
                 {% endif %}
+                {% if invoice_data.user.mobile_number %}
+                <b>Mobile Number</b>: {{invoice_data.user.mobile_number }} <br>
+                {% endif %}
+                {% if  invoice_data.user.email %}
                 <b>Email</b>: {{invoice_data.user.email}} <br>
+                {% endif %}
+                  
               </p>
             </td>
           </tr>
@@ -37,7 +43,7 @@
                     <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Date</th>
                     <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Job Id</th>
                     <th align="left" style="margin: 0px;width: 360px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Job Title</th>
-                    <th align="left" style="margin: 0px; width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Amount</th>
+                    <th align="left" style="margin: 0px; width: 110px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Amount</th>
                   </tr>
                   {% if invoice_data %}
                       <tr>   
@@ -76,9 +82,12 @@
                     <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Thank you for using Koor!</b>
                 </p>
               <p style=" text-align: left; line-height: 15px; font-weight: 400;">
-                <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Koor.com</b><br>
-                <b>contact@koor.com <br>
-                +27 97 87 878 83<br>
+                <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Koorjobs.com</b><br>
+                <b>admin@koorjobs.com
+                  <br>
+                  +25261611459000 or +25261611450002<br>
+                  Trepiano, Maka Almukarma road.
+                  <br>
                 Mogadishu, Kenya<br>
               </p>
             </td>

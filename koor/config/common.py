@@ -7,7 +7,7 @@ import dj_database_url
 from configurations import Configuration
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
+print(config("DJANGO_ALLOWED_HOSTS"))
 
 class Common(Configuration):
     INSTALLED_APPS = (
