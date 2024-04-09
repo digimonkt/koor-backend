@@ -19,7 +19,7 @@ from core.emails import get_email_object
 from core.tokens import (
     SessionTokenObtainPairSerializer
 )
-from employers.views import my_callback, process_description, generate_pdf_file
+from employers.views import my_callback, process_description, generate_pdf_file, generate_merge_pdf_file
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
     JobCategory, JobDetails,
@@ -5302,7 +5302,6 @@ class JobsCreateView(generics.ListAPIView):
                             email_context["invoice_month"] = invoice_month
                             # Send the email
                             pdf = generate_pdf_file(invoice_instance.invoice_id)
-                            # print("222", pdf)
                             get_email_object(
                                 subject=f'Mail for Invoice',
                                 email_template_name='email-templates/mail-for-invoice.html',
@@ -6735,3 +6734,61 @@ class CityTitleModifyView(generics.GenericAPIView):
             data={"message":"title updated"},
             status=status.HTTP_200_OK
         )
+
+
+class GenerateMergedInvoiceView(generics.GenericAPIView):
+    
+    serializer_class = InvoiceDetailSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                if 'invoiceId' in request.data:
+                    invoice_list = request.data.getlist('invoiceId')
+                    invoices = Invoice.objects.filter(invoice_id__in=invoice_list)
+                    employer_list = []
+                    for get_invoices in invoices:
+                        if get_invoices.user in employer_list:
+                            pass
+                        else:
+                            employer_list.append(get_invoices.user)
+                    email_context = dict()
+                    for employer_data in employer_list:
+                        invoices = Invoice.objects.filter(invoice_id__in=invoice_list).filter(user=employer_data).order_by('created')
+                        
+                        email_context["yourname"] = employer_data.name
+                        email_context["type"] = 'invoice'
+                        email_context['Ctype'] = 'Invoice'
+                        email_context["invoice_month"] = calendar.month_name[datetime.now().month]
+                        if employer_data.email:                    
+                            pdf = generate_merge_pdf_file(invoice_list, employer_data)
+                            get_email_object(
+                                subject=f'Mail for Invoice',
+                                email_template_name='email-templates/mail-for-invoice.html',
+                                context=email_context,
+                                to_email=[employer_data.email, ],
+                                type="attachment",
+                                filename="Invoice.pdf", 
+                                file=pdf
+                            )
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+

@@ -96,14 +96,12 @@ def generate_pdf_file(invoice_id):
 
     """
     Page_title = "KOOR INVOICE"
-    print("333")
     invoice_month = calendar.month_name[datetime.now().month]
     invoice_data = Invoice.objects.get(invoice_id=invoice_id)
     if invoice_data.start_date:
         invoice_month = calendar.month_name[invoice_data.start_date.month]
     else:
         invoice_month = calendar.month_name[invoice_data.created.month]
-    print(invoice_month, 'invoice month')
     smtp_setting = SMTPSetting.objects.last()
     mobile_number = invoice_data.user.mobile_number
     new_mobile_number = " "
@@ -123,6 +121,40 @@ def generate_pdf_file(invoice_id):
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
                                                             'mobile_number':new_mobile_number,
                                                             'history_data':history_data
+                                                        }, raw=True
+                    )
+    return file_response
+
+
+def generate_merge_pdf_file(invoice_list, employer_data):
+    invoices = Invoice.objects.filter(invoice_id__in=invoice_list).filter(user=employer_data).order_by('created')
+    Page_title = "KOOR INVOICE"
+    last_invoice = invoices.last()
+    invoice_month = calendar.month_name[datetime.now().month]
+    invoice_date = datetime.now().date
+    amount = 0.0
+    discount = 0.0
+    grand_total = 0.0
+    for get_invoices in invoices:
+        amount = amount + float(get_invoices.total)
+        
+    discount = amount
+    grand_total = amount - discount
+    smtp_setting = SMTPSetting.objects.last()
+    mobile_number = last_invoice.user.mobile_number
+    new_mobile_number = " "
+    history_data = None
+    if mobile_number:
+        for i in range(0, len(mobile_number), 5):
+            new_mobile_number += mobile_number[i:i + 5] + " "
+        if new_mobile_number:
+            new_mobile_number = last_invoice.user.country_code + " " + new_mobile_number
+    file_response = html_to_pdf('email-templates/merge-pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoices,
+                                                            'Page_title': Page_title, 'invoice_month':invoice_month,
+                                                            'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'mobile_number':new_mobile_number,'last_invoice':last_invoice,
+                                                            'history_data':history_data, 'invoice_date':invoice_date,
+                                                            'amount':amount, 'discount':discount, 'grand_total':grand_total,
                                                         }, raw=True
                     )
     return file_response
@@ -1051,7 +1083,6 @@ class ActiveJobsView(generics.ListAPIView):
     def list(self, request, employerId):
         context = dict()
         user_instance = User.objects.get(id=employerId)
-        print(user_instance, 'user_instance')
         queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance))
         page = self.paginate_queryset(queryset)
         if page is not None:
