@@ -105,7 +105,7 @@
         </table>
         <table style="color: #000;font-size: 20px;">
             <tr>
-                <td style="padding: 5px 10px 10px 10px;">Hello Employer,</td>
+                <td style="padding: 5px 10px 10px 10px;">Hello {% if yourname %}{{yourname}}{% else %}Employer{% endif %},</td>
             </tr>
             <tr>
                 <td style="padding:5px 10px 10px 10px;">You have receive your invoice for {{invoice_month}}.</td>

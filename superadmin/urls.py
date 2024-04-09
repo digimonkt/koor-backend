@@ -18,7 +18,7 @@ from .views import (
     PackageView, GenerateInvoiceView, InvoiceDetailView,
     InvoiceSendView, DownloadInvoiceView, ResourcesMoreView,
     GoogleAddSenseCodeView, FinancialCountView, ManageUserRightsView,
-    AdminListView, CityTitleModifyView
+    AdminListView, CityTitleModifyView, GenerateMergedInvoiceView
 )
 
 app_name = "superadmin"
@@ -124,6 +124,9 @@ urlpatterns = [
     path('/set-points', SetPointsView.as_view(), name="set_points"),
     
     path('/invoice', GenerateInvoiceView.as_view(), name="generate_invoice"),
+    
+    path('/merge-invoice', GenerateMergedInvoiceView.as_view(), name="generate_merged_invoice"),
+    
     path('/invoice/download', DownloadInvoiceView.as_view(), name='download_invoice'),
     path('/invoice/<str:invoiceId>/detail', InvoiceDetailView.as_view(), name="invoice_detail"),
     path('/invoice/<str:invoiceId>/send', InvoiceSendView.as_view(), name="invoice_send"),
