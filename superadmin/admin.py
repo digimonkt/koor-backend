@@ -8,7 +8,7 @@ from .models import (
     ResourcesContent, SocialUrl, AboutUs,
     FaqCategory, PointDetection, RechargeHistory,
     UserRights, UserSubRights, Rights,
-    GoogleAddSenseCode
+    GoogleAddSenseCode, Invoice
 )
 
 admin.site.register(EducationLevel)
@@ -35,3 +35,4 @@ admin.site.register(GoogleAddSenseCode)
 admin.site.register(UserRights)
 admin.site.register(UserSubRights)
 admin.site.register(Rights)
+admin.site.register(Invoice)

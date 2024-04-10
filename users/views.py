@@ -122,11 +122,18 @@ class UserView(generics.GenericAPIView):
             user = User.objects.get(id=serializer.data['id'])
             user.set_password(serializer.data['password'])
             if user.role != "employer":
-                user_email = user.email + str(datetime.now())
-                result = hashlib.md5(user_email.encode())
-                hash_url = Common.FRONTEND_BASE_URL + "/activation?verify-token=" + str(result.hexdigest())
-                user.verification_token = str(result.hexdigest())
-                user.otp_created_at = datetime.now()
+                if user.email:
+                    user_email = user.email + str(datetime.now())
+                    result = hashlib.md5(user_email.encode())
+                    hash_url = Common.FRONTEND_BASE_URL + "/activation?verify-token=" + str(result.hexdigest())
+                    user.verification_token = str(result.hexdigest())
+                    user.otp_created_at = datetime.now()
+                else:
+                    user_mobile_number = str(user.mobile_number)
+                    result = hashlib.md5(user_mobile_number.encode())
+                    hash_url = Common.FRONTEND_BASE_URL + "/activation?verify-token=" + str(result.hexdigest())
+                    user.verification_token = str(result.hexdigest())
+                    user.otp_created_at = datetime.now()
             else:
                 user.is_verified = True
                 if user.role == 'admin':
@@ -172,7 +179,7 @@ class UserView(generics.GenericAPIView):
                 session_id=user_session.id
             )
             response_context["message"] = "User Created Successfully"
-            if user.role != 'employer':
+            if user.role != 'employer' and user.email:
                 if user.role == 'job_seeker':
                     context['product'] = 'job'
                 elif user.role == 'vendor':
@@ -188,28 +195,30 @@ class UserView(generics.GenericAPIView):
             else:
                 if user.role == 'employer':
                     context['product'] = 'job'
-                    context["yourname"] = user.email
-                    get_email_object(
-                        subject=f'Welcome to KOOR',
-                        email_template_name='email-templates/new/activate-employer-account.html',
-                        context=context,
-                        to_email=[user.email, ]
-                    )
+                    if user.email:
+                        context["yourname"] = user.email
+                        get_email_object(
+                            subject=f'Welcome to KOOR',
+                            email_template_name='email-templates/new/activate-employer-account.html',
+                            context=context,
+                            to_email=[user.email, ]
+                        )
                 admin_email = []
                 admin_data = User.objects.filter(role='admin')
                 for get_admin in admin_data:
                     if get_admin.email:
                         admin_email.append(get_admin.email)
-                context["user_name"] = user.name
-                context["user_email"] = str(user.email)
-                if user.country_code:
-                    context["user_mobile_number"] = str(user.country_code) + "-" + str(user.mobile_number)
-                get_email_object(
-                    subject=f'New Employer Registration: Action Required',
-                    email_template_name='email-templates/new/employer-registration.html',
-                    context=context,
-                    to_email=admin_email
-                )
+                if user.email:
+                    context["user_name"] = user.name
+                    context["user_email"] = str(user.email)
+                    if user.country_code:
+                        context["user_mobile_number"] = str(user.country_code) + "-" + str(user.mobile_number)
+                    get_email_object(
+                        subject=f'New Employer Registration: Action Required',
+                        email_template_name='email-templates/new/employer-registration.html',
+                        context=context,
+                        to_email=admin_email
+                    )
             return response.Response(
                 data=response_context,
                 headers={"x-access": token.access_token, "x-refresh": token},
