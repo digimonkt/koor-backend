@@ -48,17 +48,15 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
         invoice_facebook = ""
         for invoice_data in invoice_icons:
             if invoice_data.type == 'x':
-                invoice_x = Common.BASE_URL + invoice_data.icon
-            elif invoice_data.type == 'youtube':
-                invoice_youtube = Common.BASE_URL + invoice_data.icon
-            elif invoice_data.type == 'instagram':
-                invoice_instagram = Common.BASE_URL + invoice_data.icon
-            elif invoice_data.type == 'linkedin':
-                invoice_linkedin = Common.BASE_URL + invoice_data.icon
-            elif invoice_data.type == 'facebook':
-                invoice_facebook = Common.BASE_URL + invoice_data.icon
-
-
+                invoice_x = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'youtube':
+                invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'instagram':
+                invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'linkedin':
+                invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'facebook':
+                invoice_facebook = Common.BASE_URL + invoice_data.icon.url
         context.update({
             'FOOTER': 'Koor Admin, Thanks',
             'FOOTER_TEXT': 'Unsubscribe from the newsletter',

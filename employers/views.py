@@ -33,7 +33,7 @@ from tenders.serializers import TendersSerializers
 
 from superadmin.models import (
     Invoice, PointDetection, 
-    SMTPSetting, RechargeHistory
+    SMTPSetting, RechargeHistory, InvoiceIcon
 )
 from superadmin.process import html_to_pdf
 from koor.config.common import Common
@@ -103,6 +103,7 @@ def generate_pdf_file(invoice_id):
     else:
         invoice_month = calendar.month_name[invoice_data.created.month]
     smtp_setting = SMTPSetting.objects.last()
+    invoice_icons = InvoiceIcon.objects.all()
     mobile_number = invoice_data.user.mobile_number
     new_mobile_number = ""
     history_data = None
@@ -116,9 +117,30 @@ def generate_pdf_file(invoice_id):
             user=invoice_data.user, created__gte=invoice_data.start_date,
             created__lte=invoice_data.end_date
         )
+    invoice_x = ""
+    invoice_youtube = ""
+    invoice_instagram = ""
+    invoice_linkedin = ""
+    invoice_facebook = ""
+    for invoice_data in invoice_icons:
+        if invoice_data.type == 'x':
+            invoice_x = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'youtube':
+            invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'instagram':
+            invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'linkedin':
+            invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'facebook':
+            invoice_facebook = Common.BASE_URL + invoice_data.icon.url
     file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'invoice_x':invoice_x,
+                                                            'invoice_youtube':invoice_youtube,
+                                                            'invoice_instagram':invoice_instagram,
+                                                            'invoice_linkedin':invoice_linkedin,
+                                                            'invoice_facebook':invoice_facebook,
                                                             'mobile_number':new_mobile_number,
                                                             'history_data':history_data
                                                         }, raw=True
@@ -141,6 +163,7 @@ def generate_merge_pdf_file(invoice_list, employer_data):
     discount = amount
     grand_total = amount - discount
     smtp_setting = SMTPSetting.objects.last()
+    invoice_icons = InvoiceIcon.objects.all()
     mobile_number = last_invoice.user.mobile_number
     new_mobile_number = ""
     history_data = None
@@ -149,9 +172,34 @@ def generate_merge_pdf_file(invoice_list, employer_data):
             new_mobile_number += mobile_number[i:i + 5] + " "
         if new_mobile_number:
             new_mobile_number = last_invoice.user.country_code + " " + new_mobile_number
+    
+    invoice_x = ""
+    invoice_youtube = ""
+    invoice_instagram = ""
+    invoice_linkedin = ""
+    invoice_facebook = ""
+    for invoice_data in invoice_icons:
+        if invoice_data.type == 'x':
+            invoice_x = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'youtube':
+            invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'instagram':
+            invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'linkedin':
+            invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+        if invoice_data.type == 'facebook':
+            invoice_facebook = Common.BASE_URL + invoice_data.icon.url
+
+    print(invoice_x, 'invoice x')
+    
     file_response = html_to_pdf('email-templates/merge-pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoices,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'invoice_x':invoice_x,
+                                                            'invoice_youtube':invoice_youtube,
+                                                            'invoice_instagram':invoice_instagram,
+                                                            'invoice_linkedin':invoice_linkedin,
+                                                            'invoice_facebook':invoice_facebook,
                                                             'mobile_number':new_mobile_number,'last_invoice':last_invoice,
                                                             'history_data':history_data, 'invoice_date':invoice_date,
                                                             'amount':amount, 'discount':discount, 'grand_total':grand_total,

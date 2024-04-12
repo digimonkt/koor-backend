@@ -82,20 +82,19 @@
               </table>
             </td>
           </tr>
-          <tr>
             <td>
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style=" border-collapse: collapse; width: 100%;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tbody>
-                  
-                    <tr>
-                      <td valign="top" style="padding: 5px 15px;">
+                  <tr style="text-align: center">
+                    <td valign="top" style="padding: 5px 15px; text-align: center" colspan="2">
                         <p style=" text-align: center; line-height: 15px; font-weight: 400;">
                             <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Thank you for using Koor!</b>
                         </p>
-                      </td>
-                    </tr>
+                    </td>
+                  </tr>               
                     <tr>
                       <td valign="top" style="padding: 5px 15px;">
+
                         <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                           <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">koorjobs.com</b><br>
                           <b>admin@koorjobs.com <br>
@@ -105,25 +104,25 @@
                         </p>
                       </td>
                       <td valign="top" style="padding: 5px 15px;">
-                        <p style=" text-align: left; line-height: 15px; font-weight: 400;">
-                          {% if invoice_x %}
-                            <img src="{{invoice_x}}" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
-                          {% endif %}
-                          {% if invoice_youtube %}
-                            <img src="{{invoice_youtube}}be.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
-                          {% endif %}
-                          {% if invoice_instagram %}
-                            <img src="{{invoice_instagram}}gram.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
-                          {% endif %}
-                          {% if invoice_linkedin %}
-                            <img src="{{invoice_linkedin}}din.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
-                          {% endif %}
-                          {% if invoice_facebook %}
-                            <img src="{{invoice_facebook}}ook.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
-                          {% endif %}
-
-
-                          <b>@koorjobs <br>
+                        <p style=" text-align: left; line-height: 15px; font-weight: 400;"><br><br>
+                        </p>
+                        <p style=" text-align: right; line-height: 15px; font-weight: 400; font-size:16px;">
+                        {% if invoice_x %}
+                        <img src="{{invoice_x}}" style="margin: 0px; height:15px; width:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_youtube %}
+                        <img src="{{invoice_youtube}}" style="margin: 0px; width:15px; height:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_instagram %}
+                        <img src="{{invoice_instagram}}" style="margin: 0px; height:15px; width:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_linkedin %}
+                        <img src="{{invoice_linkedin}}" style="margin: 0px; height:15px; width:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_facebook %}
+                        <img src="{{invoice_facebook}}" style="margin: 0px; height:15px; width:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                          <b>@koorjobs</b><br>
                         </p>
                       </td>
                     </tr>
