@@ -6,7 +6,7 @@ from django.template.loader import get_template
 
 from koor.config.common import Common
 
-from superadmin.models import SMTPSetting
+from superadmin.models import SMTPSetting, InvoiceIcon
 
 
 def get_email_object(subject, email_template_name, context, to_email, content_subtype="html", **kwargs):
@@ -35,15 +35,40 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
 
     try:
         smtp_setting = SMTPSetting.objects.last()
+        invoice_icons = InvoiceIcon.objects.all()
         host = smtp_setting.smtp_host
         host_user = smtp_setting.smtp_user
         host_password = smtp_setting.smtp_password
         host_port = smtp_setting.smtp_port
+        
+        invoice_x = ""
+        invoice_youtube = ""
+        invoice_instagram = ""
+        invoice_linkedin = ""
+        invoice_facebook = ""
+        for invoice_data in invoice_icons:
+            if invoice_data.type == 'x':
+                invoice_x = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'youtube':
+                invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'instagram':
+                invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'linkedin':
+                invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+            if invoice_data.type == 'facebook':
+                invoice_facebook = Common.BASE_URL + invoice_data.icon.url
         context.update({
             'FOOTER': 'Koor Admin, Thanks',
             'FOOTER_TEXT': 'Unsubscribe from the newsletter',
             'BASE_URL': Common.BASE_URL,
-            'LOGO': Common.BASE_URL + smtp_setting.logo.url
+            'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+            'invoice_x': invoice_x,
+            'invoice_youtube': invoice_youtube,
+            'invoice_instagram': invoice_instagram,
+            'invoice_linkedin': invoice_linkedin,
+            'invoice_facebook': invoice_facebook,
+            
+            
         })
         mail_obj = EmailBackend(host=host, port=host_port, password=host_password, username=host_user, use_tls=True,
                                 timeout=10)

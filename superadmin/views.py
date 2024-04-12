@@ -1,6 +1,6 @@
 import csv, io, os, pathlib
 import calendar
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, time
 
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.signals import request_finished
@@ -12,6 +12,10 @@ from rest_framework import (
     response, permissions, filters
 )
 from uuid import UUID
+from superadmin.models import (
+    Invoice, PointDetection, 
+    SMTPSetting, RechargeHistory, InvoiceIcon
+)
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
@@ -1705,6 +1709,9 @@ class CandidatesListView(generics.ListAPIView):
         if self.request.user.is_staff:
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
+            if end_date:
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     Q(role="job_seeker") | Q(role="vendor")
@@ -1790,6 +1797,9 @@ class EmployerListView(generics.ListAPIView):
         if self.request.user.is_staff:
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
+            if end_date:
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
                     role="employer",
@@ -1983,6 +1993,9 @@ class JobsListView(generics.ListAPIView):
             action = request.GET.get('action', None)
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
+            if end_date:
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
@@ -2152,6 +2165,8 @@ class UsersCountView(generics.GenericAPIView):
                 period = self.request.GET.get('period', None)
                 start_date = self.request.GET.get('start-date', date.today())
                 end_date = self.request.GET.get('end-date', date.today())
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
                 if period == "this week":
                     start_date = start_date - timedelta(days=start_date.weekday())
                 elif period == "last week":
@@ -2394,6 +2409,8 @@ class DashboardView(generics.GenericAPIView):
                 period = self.request.GET.get('period', None)
                 start_date = self.request.GET.get('start-date', date.today())
                 end_date = self.request.GET.get('end-date', date.today())
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
                 if period == "this week":
                     start_date = start_date - timedelta(days=start_date.weekday())
                 elif period == "last week":
@@ -3476,6 +3493,9 @@ class TenderListView(generics.ListAPIView):
             action = request.GET.get('action', None)
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
+            if end_date:
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 filter_type = self.request.GET.get('filterType', None)
                 if filter_type == 'closed':
@@ -6067,6 +6087,8 @@ class GenerateInvoiceView(generics.ListAPIView):
                 )
             
             end_date = self.request.GET.get('to', datetime.now())
+            end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+            end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             # Apply filtering based on start_date and end_date
             is_send = self.request.GET.get('send', None)
             if start_date:
@@ -6431,7 +6453,7 @@ class DownloadInvoiceView(generics.GenericAPIView):
                 invoice_month = calendar.month_name[invoice_data.created.month]
             smtp_setting = SMTPSetting.objects.last()
             mobile_number = invoice_data.user.mobile_number
-            new_mobile_number = " "
+            new_mobile_number = ""
             history_data = None
             if mobile_number:
                 for i in range(0, len(mobile_number), 5):
@@ -6443,10 +6465,32 @@ class DownloadInvoiceView(generics.GenericAPIView):
                     user=invoice_data.user, created__gte=invoice_data.start_date,
                     created__lte=invoice_data.end_date
                 )
+            invoice_icons = InvoiceIcon.objects.all()
+            invoice_x = ""
+            invoice_youtube = ""
+            invoice_instagram = ""
+            invoice_linkedin = ""
+            invoice_facebook = ""
+            for get_invoice_data in invoice_icons:
+                if get_invoice_data.type == 'x':
+                    invoice_x = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'youtube':
+                    invoice_youtube = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'instagram':
+                    invoice_instagram = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'linkedin':
+                    invoice_linkedin = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'facebook':
+                    invoice_facebook = Common.BASE_URL + get_invoice_data.icon.url
             file_response = html_to_pdf(
                 'email-templates/pdf-invoice.html', {
                     'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
                     'invoice_month':invoice_month, 'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                    'invoice_x':invoice_x,
+                    'invoice_youtube':invoice_youtube,
+                    'invoice_instagram':invoice_instagram,
+                    'invoice_linkedin':invoice_linkedin,
+                    'invoice_facebook':invoice_facebook,
                     'mobile_number':new_mobile_number, 'history_data':history_data
                 }
             )
@@ -6589,6 +6633,8 @@ class FinancialCountView(generics.GenericAPIView):
                 period = self.request.GET.get('period', None)
                 start_date = self.request.GET.get('start-date', date.today())
                 end_date = self.request.GET.get('end-date', date.today())
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
+                end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
                 if period == "this week":
                     start_date = start_date - timedelta(days=start_date.weekday())
                 elif period == "last week":
