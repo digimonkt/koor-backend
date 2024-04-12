@@ -6471,17 +6471,17 @@ class DownloadInvoiceView(generics.GenericAPIView):
             invoice_instagram = ""
             invoice_linkedin = ""
             invoice_facebook = ""
-            for invoice_data in invoice_icons:
-                if invoice_data.type == 'x':
-                    invoice_x = Common.BASE_URL + invoice_data.icon.url
-                if invoice_data.type == 'youtube':
-                    invoice_youtube = Common.BASE_URL + invoice_data.icon.url
-                if invoice_data.type == 'instagram':
-                    invoice_instagram = Common.BASE_URL + invoice_data.icon.url
-                if invoice_data.type == 'linkedin':
-                    invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
-                if invoice_data.type == 'facebook':
-                    invoice_facebook = Common.BASE_URL + invoice_data.icon.url
+            for get_invoice_data in invoice_icons:
+                if get_invoice_data.type == 'x':
+                    invoice_x = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'youtube':
+                    invoice_youtube = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'instagram':
+                    invoice_instagram = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'linkedin':
+                    invoice_linkedin = Common.BASE_URL + get_invoice_data.icon.url
+                if get_invoice_data.type == 'facebook':
+                    invoice_facebook = Common.BASE_URL + get_invoice_data.icon.url
             file_response = html_to_pdf(
                 'email-templates/pdf-invoice.html', {
                     'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
