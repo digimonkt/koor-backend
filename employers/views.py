@@ -104,7 +104,7 @@ def generate_pdf_file(invoice_id):
         invoice_month = calendar.month_name[invoice_data.created.month]
     smtp_setting = SMTPSetting.objects.last()
     mobile_number = invoice_data.user.mobile_number
-    new_mobile_number = " "
+    new_mobile_number = ""
     history_data = None
     if mobile_number:
         for i in range(0, len(mobile_number), 5):
@@ -142,7 +142,7 @@ def generate_merge_pdf_file(invoice_list, employer_data):
     grand_total = amount - discount
     smtp_setting = SMTPSetting.objects.last()
     mobile_number = last_invoice.user.mobile_number
-    new_mobile_number = " "
+    new_mobile_number = ""
     history_data = None
     if mobile_number:
         for i in range(0, len(mobile_number), 5):
