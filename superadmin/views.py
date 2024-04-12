@@ -12,6 +12,10 @@ from rest_framework import (
     response, permissions, filters
 )
 from uuid import UUID
+from superadmin.models import (
+    Invoice, PointDetection, 
+    SMTPSetting, RechargeHistory, InvoiceIcon
+)
 
 from core.middleware import JWTMiddleware
 from core.pagination import CustomPagination
@@ -6449,7 +6453,7 @@ class DownloadInvoiceView(generics.GenericAPIView):
                 invoice_month = calendar.month_name[invoice_data.created.month]
             smtp_setting = SMTPSetting.objects.last()
             mobile_number = invoice_data.user.mobile_number
-            new_mobile_number = " "
+            new_mobile_number = ""
             history_data = None
             if mobile_number:
                 for i in range(0, len(mobile_number), 5):
@@ -6461,10 +6465,32 @@ class DownloadInvoiceView(generics.GenericAPIView):
                     user=invoice_data.user, created__gte=invoice_data.start_date,
                     created__lte=invoice_data.end_date
                 )
+            invoice_icons = InvoiceIcon.objects.all()
+            invoice_x = ""
+            invoice_youtube = ""
+            invoice_instagram = ""
+            invoice_linkedin = ""
+            invoice_facebook = ""
+            for invoice_data in invoice_icons:
+                if invoice_data.type == 'x':
+                    invoice_x = Common.BASE_URL + invoice_data.icon.url
+                if invoice_data.type == 'youtube':
+                    invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+                if invoice_data.type == 'instagram':
+                    invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+                if invoice_data.type == 'linkedin':
+                    invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+                if invoice_data.type == 'facebook':
+                    invoice_facebook = Common.BASE_URL + invoice_data.icon.url
             file_response = html_to_pdf(
                 'email-templates/pdf-invoice.html', {
                     'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
                     'invoice_month':invoice_month, 'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                    'invoice_x':invoice_x,
+                    'invoice_youtube':invoice_youtube,
+                    'invoice_instagram':invoice_instagram,
+                    'invoice_linkedin':invoice_linkedin,
+                    'invoice_facebook':invoice_facebook,
                     'mobile_number':new_mobile_number, 'history_data':history_data
                 }
             )
