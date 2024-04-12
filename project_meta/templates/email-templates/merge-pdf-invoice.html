@@ -21,7 +21,9 @@
               </p>
               <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                 <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Bill To</b><br>
+                {% if last_invoice.user.name %}
                 <b>Client Name</b>: {{last_invoice.user.name}} <br>
+                {% endif %}
                 {% if mobile_number %}
                 <b>Mobile Number</b>: {{mobile_number}} <br>
                 {% endif %}
