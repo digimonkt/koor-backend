@@ -21,15 +21,13 @@
               </p>
               <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                 <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Bill To</b><br>
-                {% if  invoice_data.user.name  %}
-                <b>Client Name</b>: {{invoice_data.user.name}} <br>
+                {% if last_invoice.user.name %}
+                <b>Client Name</b>: {{last_invoice.user.name}} <br>
                 {% endif %}
-                {% if invoice_data.user.mobile_number %}
-                <b>Mobile Number</b>: {{invoice_data.user.mobile_number }} <br>
+                {% if mobile_number %}
+                <b>Mobile Number</b>: {{mobile_number}} <br>
                 {% endif %}
-                {% if  invoice_data.user.email %}
                 <b>Email</b>: {{invoice_data.user.email}} <br>
-                {% endif %}
               </p>
             </td>
           </tr>
@@ -41,7 +39,7 @@
                     <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Date</th>
                     <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Job Id</th>
                     <th align="left" style="margin: 0px;width: 360px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Job Title</th>
-                    <th align="left" style="margin: 0px; width: 110px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Amount</th>
+                    <th align="left" style="margin: 0px; width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Amount</th>
                   </tr>
                   {% if invoice_data %}
                       <tr>   
@@ -82,39 +80,53 @@
             </td>
           </tr>
           <tr>
+            <td valign="top" style="padding: 5px 15px;">
+                <p style=" text-align: center; line-height: 15px; font-weight: 400;">
+                    <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Thank you for using Koor!</b>
+                </p>
+            </td>
+          </tr>
+          <tr>
             <td>
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style=" border-collapse: collapse; width: 100%;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tbody>
-                  
-                      <tr>
-                        <td valign="top" style="padding: 5px 15px;">
-                          <p style=" text-align: center; line-height: 15px; font-weight: 400;">
-                              <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Thank you for using Koor!</b>
-                          </p>
+                                      
+                    <tr>
+                      <td valign="top" style="padding: 5px 15px;">
+
                         <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                           <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">koorjobs.com</b><br>
                           <b>admin@koorjobs.com <br>
-                            +25261611459000 or +25261611450002<br>
-                            Trepiano, Maka Almukarma road, Mogadishu<br>
-                            - Somalia.<br>
+                          +25261611459000 or +25261611450002<br>
+                          Trepiano, Maka Almukarma road, Mogadishu<br>
+                          - Somalia.<br>
                         </p>
                       </td>
-                        <td valign="top" style="padding: 5px 15px;">
-                          <p style=" text-align: center; line-height: 15px; font-weight: 400;">
-                              <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Thank you for using Koor!</b>
-                          </p>
-                        <p style=" text-align: left; line-height: 15px; font-weight: 400;">
-                          <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">koorjobs.com</b><br>
-                          <b>admin@koorjobs.com <br>
-                            +25261611459000 or +25261611450002<br>
-                            Trepiano, Maka Almukarma road, Mogadishu<br>
-                            - Somalia.<br>
+                      <td valign="top" style="padding: 5px 15px;">
+                        <p style=" text-align: left; line-height: 15px; font-weight: 400;"><br><br>
+                        </p>
+                        <p style=" text-align: right; line-height: 15px; font-weight: 400; font-size:16px;">
+                        {% if invoice_x %}
+                        <img src="{{invoice_x}}" style="margin: 0px; height:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_youtube %}
+                        <img src="{{invoice_youtube}}" style="margin: 0px; height:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_instagram %}
+                        <img src="{{invoice_instagram}}" style="margin: 0px; height:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_linkedin %}
+                        <img src="{{invoice_linkedin}}" style="margin: 0px; height:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                      {% if invoice_facebook %}
+                        <img src="{{invoice_facebook}}" style="margin: 0px; height:15px; background: #fff; padding:15px 15px; text-align: center; color: #000; text-transform: uppercase; ">
+                      {% endif %}
+                          <b>@koorjobs</b><br>
                         </p>
                       </td>
-                      </tr>
+                    </tr>
                 </tbody>
               </table>
-
             </td>
           </tr>
         </tbody>
