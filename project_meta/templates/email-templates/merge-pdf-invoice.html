@@ -106,12 +106,22 @@
                       </td>
                       <td valign="top" style="padding: 5px 15px;">
                         <p style=" text-align: left; line-height: 15px; font-weight: 400;">
-                          <img src="{{BASE_URL}}/static/image_for_mail/invoice_x.png">
-                          <img src="{{BASE_URL}}/static/image_for_mail/invoice_youtube.png">
-                          <img src="{{BASE_URL}}/static/image_for_mail/invoice_instagram.png">
-                          <img src="{{BASE_URL}}/static/image_for_mail/invoice_linkedin.png">
-                          <img src="{{BASE_URL}}/static/image_for_mail/invoice_facebook.png">
-                          
+                          {% if invoice_x %}
+                            <img src="{{invoice_x}}" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
+                          {% endif %}
+                          {% if invoice_youtube %}
+                            <img src="{{invoice_youtube}}be.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
+                          {% endif %}
+                          {% if invoice_instagram %}
+                            <img src="{{invoice_instagram}}gram.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
+                          {% endif %}
+                          {% if invoice_linkedin %}
+                            <img src="{{invoice_linkedin}}din.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
+                          {% endif %}
+                          {% if invoice_facebook %}
+                            <img src="{{invoice_facebook}}ook.png" style="margin: 0px; background: #fff; padding:2px 5px; text-align: center; color: #000; text-transform: uppercase; ">
+                          {% endif %}
+
 
                           <b>@koorjobs <br>
                         </p>
