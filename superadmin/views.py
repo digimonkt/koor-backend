@@ -1706,7 +1706,7 @@ class CandidatesListView(generics.ListAPIView):
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
             if end_date:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
@@ -1794,7 +1794,7 @@ class EmployerListView(generics.ListAPIView):
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
             if end_date:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 queryset = self.filter_queryset(self.get_queryset().filter(
@@ -1990,7 +1990,7 @@ class JobsListView(generics.ListAPIView):
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
             if end_date:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 filter_type = self.request.GET.get('filterType', None)
@@ -2161,7 +2161,7 @@ class UsersCountView(generics.GenericAPIView):
                 period = self.request.GET.get('period', None)
                 start_date = self.request.GET.get('start-date', date.today())
                 end_date = self.request.GET.get('end-date', date.today())
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
                 if period == "this week":
                     start_date = start_date - timedelta(days=start_date.weekday())
@@ -2405,7 +2405,7 @@ class DashboardView(generics.GenericAPIView):
                 period = self.request.GET.get('period', None)
                 start_date = self.request.GET.get('start-date', date.today())
                 end_date = self.request.GET.get('end-date', date.today())
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
                 if period == "this week":
                     start_date = start_date - timedelta(days=start_date.weekday())
@@ -3490,7 +3490,7 @@ class TenderListView(generics.ListAPIView):
             start_date = self.request.GET.get('from', None)
             end_date = self.request.GET.get('to', None)
             if end_date:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             if start_date:
                 filter_type = self.request.GET.get('filterType', None)
@@ -6083,7 +6083,7 @@ class GenerateInvoiceView(generics.ListAPIView):
                 )
             
             end_date = self.request.GET.get('to', datetime.now())
-            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
             end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
             # Apply filtering based on start_date and end_date
             is_send = self.request.GET.get('send', None)
@@ -6607,7 +6607,7 @@ class FinancialCountView(generics.GenericAPIView):
                 period = self.request.GET.get('period', None)
                 start_date = self.request.GET.get('start-date', date.today())
                 end_date = self.request.GET.get('end-date', date.today())
-                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+                end_date = datetime.strptime(str(end_date), '%Y-%m-%d')
                 end_date = datetime.combine(end_date.date(), time(hour=23, minute=59, second=59))
                 if period == "this week":
                     start_date = start_date - timedelta(days=start_date.weekday())
