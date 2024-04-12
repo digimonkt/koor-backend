@@ -17,6 +17,37 @@ from users.models import (
 from project_meta.models import Media
 
 
+class InvoiceIcon(BaseModel, models.Model):
+    TYPE_CHOICE = (
+        ('x', "X"),
+        ('youtube', "Youtube"),
+        ('instagram', "Instagram"),
+        ('linkedin', "Linkedin"),
+        ('facebook', "Facebook"),
+    )
+    type = models.CharField(
+        verbose_name=_('Type'),
+        max_length=250,
+        db_column="type",
+        choices=TYPE_CHOICE
+    )
+    icon = models.FileField(
+        verbose_name=_('Icon'),
+        unique=True,
+        upload_to=upload_directory_path,
+        db_column="icon",
+    )
+
+    def __str__(self):
+        return str(self.type)
+
+    class Meta:
+        verbose_name = "Invoice Icon"
+        verbose_name_plural = "Invoice Icons"
+        db_table = "InvoiceIcon"
+
+
+
 class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
     smtp_host = models.CharField(
         verbose_name=_('SMTP Host'),
