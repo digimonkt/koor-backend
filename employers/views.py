@@ -272,8 +272,9 @@ class UpdateAboutView(generics.GenericAPIView):
                         )
             if serializer.update(profile_instance, serializer.validated_data):
                 if self.request.user.role == "admin":
-                    profile_instance.email = request.data['email']
-                    profile_instance.save()
+                    profile_instance.user.email = request.data['email']
+                    profile_instance.user.save()
+                    
                 context['message'] = "Updated Successfully"
                 return response.Response(
                     data=context,

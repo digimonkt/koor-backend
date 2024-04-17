@@ -6806,6 +6806,36 @@ class GenerateMergedInvoiceView(generics.GenericAPIView):
                             employer_list.append(get_invoices.user)
                     email_context = dict()
                     for employer_data in employer_list:
+                        today_date = date.today()
+                        direct_url = 'media/invoice/pdf'
+                        directry_path_check = pathlib.Path(direct_url)
+                        date_folder = str(today_date.day) + "_" + str(today_date.month) + "_" + str(today_date.year)
+
+                        if directry_path_check.exists():
+                            direct_url = direct_url + "/" + date_folder
+                            directry_path_check = pathlib.Path(direct_url)
+                            if directry_path_check.exists():
+                                direct_url = direct_url
+                            else:
+                                os.makedirs(direct_url)
+                                direct_url = direct_url
+
+                        else:
+                            os.makedirs('media/invoice/pdf')
+                            direct_url = 'media/invoice/pdf' + "/" + date_folder
+                            os.makedirs(direct_url)
+                            direct_url = direct_url
+                        if employer_data.name:
+                            pdf_name = employer_data.name
+                        else:
+                            fragments = str(employer_data.email).split("@")  # Split the text with "@"
+
+                            # Remove "." from each fragment and join them with "@"
+                            pdf_name = fragments[0].replace(".", "")
+                        file_name = direct_url + "/" + str(pdf_name)+ ".pdf"
+                        if os.path.exists(file_name):
+                            os.remove(file_name)
+                        # ---------------------------------------------
                         invoices = Invoice.objects.filter(invoice_id__in=invoice_list).filter(user=employer_data).order_by('created')
                         
                         email_context["yourname"] = employer_data.name
@@ -6825,6 +6855,77 @@ class GenerateMergedInvoiceView(generics.GenericAPIView):
                             )
                 return response.Response(
                     data=context,
+                    status=status.HTTP_200_OK
+                )
+            except Exception as e:
+                context["message"] = str(e)
+                return response.Response(
+                    data=context,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            context['message'] = "You do not have permission to perform this action."
+            return response.Response(
+                data=context,
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+
+class DownloadMergedInvoiceView(generics.GenericAPIView):
+    
+    serializer_class = InvoiceDetailSerializers
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        
+        context = dict()
+        if self.request.user.is_staff:
+            try:
+                if 'invoiceId' in request.data:
+                    invoice_list = request.data.getlist('invoiceId')
+                    invoices = Invoice.objects.filter(invoice_id__in=invoice_list)
+                    employer_list = []
+                    for get_invoices in invoices:
+                        if get_invoices.user in employer_list:
+                            pass
+                        else:
+                            employer_list.append(get_invoices.user)
+                    pdf_context = dict()
+                    for employer_data in employer_list:
+                        invoices = Invoice.objects.filter(invoice_id__in=invoice_list).filter(user=employer_data).order_by('created')
+                        pdf = generate_merge_pdf_file(invoice_list, employer_data)
+                        today_date = date.today()
+                        direct_url = 'media/invoice/pdf'
+                        directry_path_check = pathlib.Path(direct_url)
+                        date_folder = str(today_date.day) + "_" + str(today_date.month) + "_" + str(today_date.year)
+
+                        if directry_path_check.exists():
+                            direct_url = direct_url + "/" + date_folder
+                            directry_path_check = pathlib.Path(direct_url)
+                            if directry_path_check.exists():
+                                direct_url = direct_url
+                            else:
+                                os.makedirs(direct_url)
+                                direct_url = direct_url
+
+                        else:
+                            os.makedirs('media/invoice/pdf')
+                            direct_url = 'media/invoice/pdf' + "/" + date_folder
+                            os.makedirs(direct_url)
+                            direct_url = direct_url
+                        if employer_data.name:
+                            pdf_name = employer_data.name
+                        else:
+                            fragments = str(employer_data.email).split("@")  # Split the text with "@"
+
+                            # Remove "." from each fragment and join them with "@"
+                            pdf_name = fragments[0].replace(".", "")
+                        file_name = direct_url + "/" + str(pdf_name)+ ".pdf"
+                        pdf_context[pdf_name] = Common.BASE_URL + "/" + file_name
+                        with open(file_name, 'wb') as f:
+                            f.write(pdf)
+                return response.Response(
+                    data=pdf_context,
                     status=status.HTTP_200_OK
                 )
             except Exception as e:
