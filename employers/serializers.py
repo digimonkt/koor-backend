@@ -73,6 +73,11 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         write_only=True,
         allow_blank=False
     )
+    email = serializers.CharField(
+        style={"input_type": "text"},
+        write_only=True,
+        allow_blank=False
+    )
     country_code = serializers.CharField(
         style={"input_type": "text"},
         write_only=True,
@@ -88,7 +93,7 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         model = EmployerProfile
         fields = ['organization_name', 'mobile_number', 'country_code', 'organization_type',
                   'market_information_notification', 'other_notification', 'license_id', 'license',
-                  'description', 'address', 'website', 'country',  'city']
+                  'description', 'address', 'website', 'country',  'city', 'email']
 
     def validate_license_id(self, license_id):
         if license_id == '':
@@ -96,6 +101,12 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         else:
             return license_id
 
+    def validate_email(self, email):
+        if email != '':
+            return email
+        else:
+            raise serializers.ValidationError('Email can not be blank', code='email')
+        
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
             if mobile_number.isdigit():
@@ -116,6 +127,9 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
         return data
 
     def update(self, instance, validated_data):
+        email = None
+        if 'email' in self.validated_data:
+            email = self.validated_data.pop('email')
         super().update(instance, validated_data)
         if 'organization_name' in validated_data:
             instance.user.name = validated_data['organization_name']
