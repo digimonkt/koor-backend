@@ -57,13 +57,14 @@ from django.utils.html import strip_tags
 def process_description(description):
     # Remove HTML tags from the description
     description = strip_tags(description)
-
-    # Check if description is greater than 30 characters
-    if len(description) > 30:
-        truncated_description = description[:30] + "..."  # Truncate the description
-        return truncated_description
-    else:
-        return description
+    
+    return description
+    # # Check if description is greater than 30 characters
+    # if len(description) > 30:
+    #     truncated_description = description[:30] + "..."  # Truncate the description
+    #     return truncated_description
+    # else:
+    #     return description
 
 
 def generate_pdf_file(invoice_id):
@@ -270,6 +271,9 @@ class UpdateAboutView(generics.GenericAPIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
             if serializer.update(profile_instance, serializer.validated_data):
+                if self.request.user.role == "admin":
+                    profile_instance.email = request.data['email']
+                    profile_instance.save()
                 context['message'] = "Updated Successfully"
                 return response.Response(
                     data=context,

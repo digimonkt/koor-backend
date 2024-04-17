@@ -5374,6 +5374,9 @@ class JobsCreateView(generics.ListAPIView):
                 if EmployerProfile.objects.filter(user=user_instance).exists():
                     employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
                 else:
+                    description = ""
+                    if 'company_about' in request.data:
+                        description=request.data['company_about']
                     employer_profile_instance = EmployerProfile(
                                         user=user_instance, description=description, is_verified=True
                     )
