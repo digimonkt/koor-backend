@@ -161,7 +161,7 @@ def generate_merge_pdf_file(invoice_list, employer_data):
     for get_invoices in invoices:
         amount = amount + float(get_invoices.total)
         
-    discount = amount
+    # discount = amount
     grand_total = amount - discount
     smtp_setting = SMTPSetting.objects.last()
     invoice_icons = InvoiceIcon.objects.all()
