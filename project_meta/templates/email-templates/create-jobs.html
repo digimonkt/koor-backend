@@ -46,27 +46,67 @@
           <h2 style="font-size: 27px; font-weight: 600; margin: 0;">Hello {{yourname}},
           </h2>
           <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
-            Koor jobs create a {{type}}.</p>
+            Greetings from Koor! We are excited to share the details of your latest publication on our platform.</p>
         </td>
       </tr>
 
       <tr style="border-bottom: 1px solid #CACACA;">
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
-          <h2 style="font-size: 27px; font-weight: 600; margin: 0; text-align: center;">
+          {% comment %} <h2 style="font-size: 27px; font-weight: 600; margin: 0; text-align: center;">
             Here is your job details:
-          </h2>
+          </h2> {% endcomment %}
           {% if job_id %}
           <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
-            {{Ctype}} Id: <a href="{{job_link}}" target="_blank"><b>{{job_id}}</b></a></p>
+            Id: <a href="{{job_link}}" target="_blank"><b>{{job_id}}</b></a></p>
           {% endif %}
             {% if title %}
             <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
-                {{Ctype}} Title: <a href="{{job_link}}" target="_blank"><b>{{title}}</b></a></p>
+                Title: <a href="{{job_link}}" target="_blank"><b>{{title}}</b></a></p>
             {% endif %}
             {% if discription %}
             <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
                 {{Ctype}} Description: {{discription}}</p>
             {% endif %}
+        </td>
+      </tr>
+      <tr style="border-bottom: 1px solid #CACACA;">
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            Enjoy these exclusive benefits on Koor:
+          </p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+              - Register and buy our subscription.
+          </p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+              - Post job or tender anytime 
+          </p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+              - Access talented candidate & supplier pool
+          </p>
+
+        </td>
+      </tr>
+        <tr style="border-bottom: 1px solid #CACACA;">
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            Contact with Koor:
+          </p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            +252 611 459 000
+          </p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            admin@koorjobs.com 
+          </p>
+        </td>
+      </tr>
+      <tr style="border-bottom: 1px solid #CACACA;">
+        <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            Best regards,
+          </p>
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            The Koor Team
+          </p>
         </td>
       </tr>
 
