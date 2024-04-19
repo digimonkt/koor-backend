@@ -58,13 +58,13 @@ def process_description(description):
     # Remove HTML tags from the description
     description = strip_tags(description)
     
-    return description
-    # # Check if description is greater than 30 characters
-    # if len(description) > 30:
-    #     truncated_description = description[:30] + "..."  # Truncate the description
-    #     return truncated_description
-    # else:
-    #     return description
+    # return description
+    # Check if description is greater than 30 characters
+    if len(description) > 30:
+        truncated_description = description[:30] + "..."  # Truncate the description
+        return truncated_description
+    else:
+        return description
 
 
 def generate_pdf_file(invoice_id):
