@@ -16,7 +16,7 @@
 
 <body>
   <table
-    style="width: 600px; margin: auto; border-collapse: collapse; font-family: arial, sans-serif; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;background: #FFFFFF; border-radius: 5px;">
+    style="width: 600px; margin: auto; font-family: arial, sans-serif; box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;background: #FFFFFF; border-radius: 5px;">
     <!-- TABLE HEADER START -->
     <thead style="height: 93px;">
       <tr>
@@ -43,7 +43,7 @@
     <tbody>
       <tr>
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
-          <h2 style="font-size: 27px; font-weight: 600; margin: 0;">Hello {{yourname}},
+          <h2 style="font-size: 27px; font-weight: 600; margin: 0;">Dear {% if yourname %}{{yourname}}{% else %}Employer{% endif %},
           </h2>
           <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
             Greetings from Koor! We are excited to share the details of your latest publication on our platform.</p>
@@ -56,31 +56,31 @@
             Here is your job details:
           </h2> {% endcomment %}
           {% if job_id %}
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
             Id: <a href="{{job_link}}" target="_blank"><b>{{job_id}}</b></a></p>
           {% endif %}
             {% if title %}
-            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
                 Title: <a href="{{job_link}}" target="_blank"><b>{{title}}</b></a></p>
             {% endif %}
             {% if discription %}
-            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+            <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
                 {{Ctype}} Description: {{discription}}</p>
             {% endif %}
         </td>
       </tr>
       <tr style="border-bottom: 1px solid #CACACA;">
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
             Enjoy these exclusive benefits on Koor:
           </p>
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
               - Register and buy our subscription.
           </p>
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
               - Post job or tender anytime 
           </p>
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
               - Access talented candidate & supplier pool
           </p>
 
@@ -88,23 +88,23 @@
       </tr>
         <tr style="border-bottom: 1px solid #CACACA;">
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
             Contact with Koor:
           </p>
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
             +252 611 459 000
           </p>
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 0 !important; margin-bottom: 0 !important">
             admin@koorjobs.com 
           </p>
         </td>
       </tr>
       <tr style="border-bottom: 1px solid #CACACA;">
         <td colspan="3" style="padding-left: 30px; padding-right: 30px;">
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;margin-top: 0 !important; margin-bottom: 0 !important">
             Best regards,
           </p>
-          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400; margin-top: 30px;">
+          <p style="color: #848484; font-size: 16px; line-height: 24px; font-weight: 400;margin-top: 0 !important; margin-bottom: 0 !important">
             The Koor Team
           </p>
         </td>
