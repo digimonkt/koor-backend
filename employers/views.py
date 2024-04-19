@@ -58,13 +58,13 @@ def process_description(description):
     # Remove HTML tags from the description
     description = strip_tags(description)
     
-    return description
-    # # Check if description is greater than 30 characters
-    # if len(description) > 30:
-    #     truncated_description = description[:30] + "..."  # Truncate the description
-    #     return truncated_description
-    # else:
-    #     return description
+    # return description
+    # Check if description is greater than 30 characters
+    if len(description) > 30:
+        truncated_description = description[:30] + "..."  # Truncate the description
+        return truncated_description
+    else:
+        return description
 
 
 def generate_pdf_file(invoice_id):
@@ -161,7 +161,7 @@ def generate_merge_pdf_file(invoice_list, employer_data):
     for get_invoices in invoices:
         amount = amount + float(get_invoices.total)
         
-    discount = amount
+    # discount = amount
     grand_total = amount - discount
     smtp_setting = SMTPSetting.objects.last()
     invoice_icons = InvoiceIcon.objects.all()
@@ -381,7 +381,7 @@ class JobsView(generics.ListAPIView):
             
             if employer_profile_instance.user.email:
                 get_email_object(
-                    subject=f'Created a new job in Koor Jobs',
+                    subject=f'Koor Published: ' + str(request.data['title']),
                     email_template_name='email-templates/create-jobs.html',
                     context=email_context,
                     to_email=[employer_profile_instance.user.email, ]
@@ -694,7 +694,7 @@ class TendersView(generics.ListAPIView):
                 email_context["discription"] = process_description(tender_instance.description)
                 if self.request.user.email:
                     get_email_object(
-                        subject=f'Created a new tender in Koor Jobs',
+                        subject=f'Koor Published: '+ str(request.data['title']),
                         email_template_name='email-templates/create-jobs.html',
                         context=email_context,
                         to_email=[self.request.user.email, ]

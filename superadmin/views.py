@@ -5308,7 +5308,7 @@ class JobsCreateView(generics.ListAPIView):
                         
                         if employer_profile_instance.user.email:
                             get_email_object(
-                                subject=f'Koor jobs create a job for you',
+                                subject=f'Koor Published: ' + str(request.data['title']),
                                 email_template_name='email-templates/create-jobs.html',
                                 context=email_context,
                                 to_email=[employer_profile_instance.user.email, ]
@@ -5412,7 +5412,7 @@ class JobsCreateView(generics.ListAPIView):
                     email_context["discription"] = process_description(job_instance.description)
                     if user_instance.email:
                         get_email_object(
-                            subject=f'Koor jobs create a job for you',
+                            subject=f'Koor Published: ' + str(request.data['title']),
                             email_template_name='email-templates/create-jobs.html',
                             context=email_context,
                             to_email=[user_instance.email, ]
@@ -5554,7 +5554,7 @@ class JobsCreateView(generics.ListAPIView):
                     if user_instance.email:
                         if send_email_automatically == 'False':
                             get_email_object(
-                                subject=f'Koor jobs update a job for you',
+                                subject=f'Koor Published: ' + str(request.data['title']),
                                 email_template_name='email-templates/create-jobs.html',
                                 context=email_context,
                                 to_email=[user_instance.email, ]
@@ -5754,7 +5754,7 @@ class TenderCreateView(generics.ListAPIView):
                 if send_email_automatically == 'False':
                     if user_instance.email:
                         get_email_object(
-                            subject=f'Koor jobs create a tender for you',
+                            subject=f'Koor Published: ' + str(request.data['title']),
                             email_template_name='email-templates/create-jobs.html',
                             context=email_context,
                             to_email=[user_instance.email, ]
@@ -5855,7 +5855,7 @@ class TenderCreateView(generics.ListAPIView):
                     if user_instance.email:
                         if send_email_automatically == 'False':
                             get_email_object(
-                                subject=f'Koor jobs create a tender for you',
+                                subject=f'Koor Published: ' + str(request.data['title']),
                                 email_template_name='email-templates/create-jobs.html',
                                 context=email_context,
                                 to_email=[user_instance.email, ]
