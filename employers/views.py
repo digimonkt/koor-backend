@@ -32,7 +32,7 @@ from tenders.models import TenderDetails
 from tenders.serializers import TendersSerializers
 
 from superadmin.models import (
-    Invoice, PointDetection, 
+    Invoice, PointDetection, InvoiceFooter,
     SMTPSetting, RechargeHistory, InvoiceIcon
 )
 from superadmin.process import html_to_pdf
@@ -134,9 +134,14 @@ def generate_pdf_file(invoice_id):
             invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
         if invoice_data.type == 'facebook':
             invoice_facebook = Common.BASE_URL + invoice_data.icon.url
+    invoice_footer_icon = InvoiceFooter.objects.last()
+    stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
+    sign = Common.BASE_URL + invoice_footer_icon.signature.url
     file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'stamp':stamp,
+                                                            'sign':sign,
                                                             'invoice_x':invoice_x,
                                                             'invoice_youtube':invoice_youtube,
                                                             'invoice_instagram':invoice_instagram,
@@ -191,12 +196,15 @@ def generate_merge_pdf_file(invoice_list, employer_data):
         if invoice_data.type == 'facebook':
             invoice_facebook = Common.BASE_URL + invoice_data.icon.url
 
-    print(invoice_x, 'invoice x')
-    
+    invoice_footer_icon = InvoiceFooter.objects.last()
+    stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
+    sign = Common.BASE_URL + invoice_footer_icon.signature.url
     file_response = html_to_pdf('email-templates/merge-pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoices,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
                                                             'invoice_x':invoice_x,
+                                                            'stamp':stamp,
+                                                            'sign':sign,
                                                             'invoice_youtube':invoice_youtube,
                                                             'invoice_instagram':invoice_instagram,
                                                             'invoice_linkedin':invoice_linkedin,

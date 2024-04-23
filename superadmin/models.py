@@ -47,6 +47,28 @@ class InvoiceIcon(BaseModel, models.Model):
         db_table = "InvoiceIcon"
 
 
+class InvoiceFooter(BaseModel, models.Model):
+    
+    stamp = models.FileField(
+        verbose_name=_('Stamp'),
+        unique=True,
+        upload_to=upload_directory_path,
+        db_column="stamp",
+    )
+    
+    signature = models.FileField(
+        verbose_name=_('Signature'),
+        unique=True,
+        upload_to=upload_directory_path,
+        db_column="signature",
+    )
+
+    class Meta:
+        verbose_name = "Invoice Footer"
+        verbose_name_plural = "Invoice Footers"
+        db_table = "InvoiceFooter"
+
+
 
 class SMTPSetting(BaseModel, SoftDeleteModel, models.Model):
     smtp_host = models.CharField(
