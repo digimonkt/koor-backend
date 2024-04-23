@@ -6489,7 +6489,6 @@ class DownloadInvoiceView(generics.GenericAPIView):
             invoice_footer_icon = InvoiceFooter.objects.last()
             stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
             sign = Common.BASE_URL + invoice_footer_icon.signature.url
-            print(stamp, sign, 'praveen')
             file_response = html_to_pdf(
                 'email-templates/pdf-invoice.html', {
                     'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
