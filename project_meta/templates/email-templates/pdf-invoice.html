@@ -21,8 +21,8 @@
               </p>
               <p style=" text-align: left; line-height: 15px; font-weight: 400;">
                 <b style="margin-top:-500px;text-transform: uppercase; font-size:16px">Bill To</b><br>
-                {% if last_invoice.user.name %}
-                <b>Client Name</b>: {{last_invoice.user.name}} <br>
+                {% if invoice_data.user.name %}
+                <b>Client Name</b>: {{invoice_data.user.name}} <br>
                 {% endif %}
                 {% if mobile_number %}
                 <b>Mobile Number</b>: {{mobile_number}} <br>
@@ -37,9 +37,9 @@
                 <tbody>
                   <tr>
                     <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Date</th>
-                    <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Job Id</th>
-                    <th align="left" style="margin: 0px;width: 360px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Job Title</th>
-                    <th align="left" style="margin: 0px; width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Amount</th>
+                    <th align="left" style="margin: 0px;width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">ID#</th>
+                    <th align="left" style="margin: 0px;width: 360px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Title</th>
+                    <th align="right" style="margin: 0px; width: 180px;background: #fff;padding:2px 15px;text-align: center;color: #000;">Amount</th>
                   </tr>
                   {% if invoice_data %}
                       <tr>   
@@ -47,7 +47,7 @@
                         {% comment %} <td align="left" style="padding:2px 15px;font-weight: 400;">{{invoice_data.created.date}} {{invoice_data.created.time}}</td> {% endcomment %}
                         <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.job_id}}{% else %}N/A{% endif %}</td>
                         <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.title}}{% else %}N/A{% endif %}</td>
-                        <td align="left" style="padding:2px 15px;font-weight: 400;">${{invoice_data.total}}</td>
+                        <td align="right" style="padding:2px 15px;font-weight: 400;">${{invoice_data.total}}</td>
                       </tr>
                       {% endif %}
                     <tr>

@@ -50,7 +50,8 @@ from .models import (
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
     RechargeHistory, Packages, Invoice, SMTPSetting,
-    GoogleAddSenseCode, Rights, UserSubRights, UserRights
+    GoogleAddSenseCode, Rights, UserSubRights, UserRights,
+    InvoiceFooter
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -6485,11 +6486,17 @@ class DownloadInvoiceView(generics.GenericAPIView):
                     invoice_linkedin = Common.BASE_URL + get_invoice_data.icon.url
                 if get_invoice_data.type == 'facebook':
                     invoice_facebook = Common.BASE_URL + get_invoice_data.icon.url
+            invoice_footer_icon = InvoiceFooter.objects.last()
+            stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
+            sign = Common.BASE_URL + invoice_footer_icon.signature.url
+            print(stamp, sign, 'praveen')
             file_response = html_to_pdf(
                 'email-templates/pdf-invoice.html', {
                     'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
                     'invoice_month':invoice_month, 'LOGO': Common.BASE_URL + smtp_setting.logo.url,
                     'invoice_x':invoice_x,
+                    'stamp':stamp,
+                    'sign':sign,
                     'invoice_youtube':invoice_youtube,
                     'invoice_instagram':invoice_instagram,
                     'invoice_linkedin':invoice_linkedin,
