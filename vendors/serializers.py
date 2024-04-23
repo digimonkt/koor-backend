@@ -81,43 +81,43 @@ class UpdateAboutSerializers(serializers.ModelSerializer):
             'country', 'city',
         ]
 
-    def validate_license_id(self, license_id):
-        """
-        A validation method for the `license_id` field.
+    # def validate_license_id(self, license_id):
+    #     """
+    #     A validation method for the `license_id` field.
 
-        Raises a `serializers.ValidationError` if the field is empty.
+    #     Raises a `serializers.ValidationError` if the field is empty.
 
-        Parameters:
-            - `license_id (str)`: the value of the `license_id` field.
+    #     Parameters:
+    #         - `license_id (str)`: the value of the `license_id` field.
 
-        Returns:
-            - `license_id (str)`: the validated `license_id` field.
+    #     Returns:
+    #         - `license_id (str)`: the validated `license_id` field.
 
-        """
+    #     """
 
-        if license_id == '':
-            raise serializers.ValidationError('License id can not be blank.', code='license_id')
-        else:
-            return license_id
+    #     if license_id == '':
+    #         raise serializers.ValidationError('License id can not be blank.', code='license_id')
+    #     else:
+    #         return license_id
 
-    def validate_registration_number(self, registration_number):
-        """
-        A validation method for the `registration_number` field.
+    # def validate_registration_number(self, registration_number):
+    #     """
+    #     A validation method for the `registration_number` field.
 
-        Raises a `serializers.ValidationError` if the field is empty.
+    #     Raises a `serializers.ValidationError` if the field is empty.
 
-        Parameters:
-            - `registration_number (str)`: the value of the `registration_number` field.
+    #     Parameters:
+    #         - `registration_number (str)`: the value of the `registration_number` field.
 
-        Returns:
-            - `registration_number (str)`: the validated `registration_number` field.
+    #     Returns:
+    #         - `registration_number (str)`: the validated `registration_number` field.
 
-        """
+    #     """
 
-        if registration_number == '':
-            raise serializers.ValidationError('Registration number can not be blank.', code='registration_number')
-        else:
-            return registration_number
+    #     if registration_number == '':
+    #         raise serializers.ValidationError('Registration number can not be blank.', code='registration_number')
+    #     else:
+    #         return registration_number
 
     def validate_mobile_number(self, mobile_number):
         if mobile_number != '':
