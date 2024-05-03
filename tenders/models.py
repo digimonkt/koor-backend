@@ -2,7 +2,7 @@ from random import randint
 
 from django.db import models
 from django.utils.translation import gettext as _
-
+from autoslug import AutoSlugField
 from core.models import (
     SlugBaseModel, BaseModel, SoftDeleteModel
 )
@@ -75,6 +75,13 @@ class TenderDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         null=True,
         blank=True,
         related_name='%(app_label)s_%(class)s_user'
+    )
+    slug = AutoSlugField(
+        populate_from='title', 
+        always_update=True, 
+        unique_with='created__month', 
+        null=True,
+        blank=True
     )
     title = models.CharField(
         verbose_name=_('Title'),

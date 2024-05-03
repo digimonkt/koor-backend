@@ -5304,7 +5304,7 @@ class JobsCreateView(generics.ListAPIView):
                         email_context['Ctype'] = 'Job'
                         email_context["title"] = request.data['title']
                         email_context["job_id"] = job_instance.job_id
-                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                         email_context["discription"] = process_description(job_instance.description)
                         
                         if employer_profile_instance.user.email:
@@ -5409,7 +5409,7 @@ class JobsCreateView(generics.ListAPIView):
                     email_context['Ctype'] = 'Job'
                     email_context["title"] = request.data['title']
                     email_context["job_id"] = job_instance.job_id
-                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                     email_context["discription"] = process_description(job_instance.description)
                     if user_instance.email:
                         get_email_object(
@@ -5530,7 +5530,7 @@ class JobsCreateView(generics.ListAPIView):
                         email_context["youremail"] = request.data['company_email']
                         email_context['Ctype'] = 'Job'
                         email_context["job_id"] = job_instance.job_id
-                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                         email_context["discription"] = process_description(job_instance.description)
                         if user_instance.email:
                             if send_email_automatically == 'False':
@@ -5550,7 +5550,7 @@ class JobsCreateView(generics.ListAPIView):
                     email_context["youremail"] = str(user_instance.email)
                     email_context['Ctype'] = 'Job'
                     email_context["job_id"] = job_instance.job_id
-                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                     email_context["discription"] = process_description(job_instance.description)
                     if user_instance.email:
                         if send_email_automatically == 'False':
@@ -5750,7 +5750,7 @@ class TenderCreateView(generics.ListAPIView):
                 email_context["title"] = request.data['title']
                 email_context['Ctype'] = 'Tender'
                 email_context["job_id"] = tender_instance.tender_id
-                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                 email_context["discription"] = process_description(tender_instance.description)
                 if send_email_automatically == 'False':
                     if user_instance.email:
@@ -5828,7 +5828,7 @@ class TenderCreateView(generics.ListAPIView):
                         email_context["title"] = request.data['title']
                         email_context['Ctype'] = 'Tender'
                         email_context["job_id"] = tender_instance.tender_id
-                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                         email_context["discription"] = process_description(tender_instance.description)
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
@@ -5850,7 +5850,7 @@ class TenderCreateView(generics.ListAPIView):
                     email_context["title"] = request.data['title']
                     email_context['Ctype'] = 'Tender'
                     email_context["job_id"] = tender_instance.tender_id
-                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                     email_context["discription"] = process_description(tender_instance.description)
                     email_context["youremail"] = str(user_instance.email)
                     if user_instance.email:

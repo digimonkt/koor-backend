@@ -213,7 +213,7 @@ class JobDetailView(generics.GenericAPIView):
             if request.user.is_authenticated:
                 context = {"user": request.user}
             if jobId:
-                job_data = JobDetails.objects.get(id=jobId)
+                job_data = JobDetails.objects.get(slug=jobId)
                 get_data = self.serializer_class(job_data, context=context)
                 response_context = get_data.data
             return response.Response(

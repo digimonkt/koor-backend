@@ -172,7 +172,7 @@ class TenderDetailView(generics.GenericAPIView):
             if request.user.is_authenticated:
                 context = {"user": request.user}
             if tenderId:
-                tender_data = TenderDetails.objects.get(id=tenderId)
+                tender_data = TenderDetails.objects.get(slug=tenderId)
                 get_data = self.serializer_class(tender_data, context=context)
                 response_context = get_data.data
             return response.Response(
