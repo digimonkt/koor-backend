@@ -518,7 +518,6 @@ def my_callback():
         - Creates Notification instances for each matching JobFilters instance.
         - Disconnects this callback function from the request_finished signal after execution.
     """
-
     job_instance = JobDetails.objects.first()
     job_filter_data = JobFilters.objects.filter(
         is_notification=True
@@ -542,18 +541,19 @@ def my_callback():
     ).filter(
         Q(duration=job_instance.duration) | Q(duration=None)
     )
-    if job_filter.user.get_notification:
-        Notification.objects.bulk_create(
-            [
-                Notification(
-                    user=job_filter.user,
-                    job_filter=job_filter,
-                    job=job_instance,
-                    notification_type='advance_filter',
-                    created_by=job_instance.user
-                ) for job_filter in job_filter_data
-            ]
-        )
+    for job_filter in job_filter_data:
+        if job_filter.user.get_notification:
+            Notification.objects.bulk_create(
+                [
+                    Notification(
+                        user=job_filter.user,
+                        job_filter=job_filter,
+                        job=job_instance,
+                        notification_type='advance_filter',
+                        created_by=job_instance.user
+                    )
+                ]
+            )
         for job_filter in job_filter_data:
             if job_filter.user.email:
                 context = dict()
