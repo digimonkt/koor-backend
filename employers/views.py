@@ -3,7 +3,7 @@ from django.core.signals import request_finished
 from django.db.models import Q, Count
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
-
+import threading
 from datetime import datetime, date
 
 from rest_framework import (
@@ -408,7 +408,13 @@ class JobsView(generics.ListAPIView):
 
             context["message"] = "Job added successfully."
             context["remaining_points"] = remaining_points
-            request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+            # Create a new thread for the background task
+            background_thread = threading.Thread(target=my_callback)
+
+            # Start the background thread
+            background_thread.start()
+            
+            # request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         else:
             context['message'] = "You do not have permission to perform this action."
@@ -493,7 +499,7 @@ class JobsView(generics.ListAPIView):
             )
 
 
-def my_callback(sender, **kwargs):
+def my_callback():
     """
     A callback function that generates notifications for job filters matching the job details of a recently finished
     request.
@@ -565,7 +571,7 @@ def my_callback(sender, **kwargs):
                         context=context,
                         to_email=[job_filter.user.email, ]
                     )
-    request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+    # request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
 
 
 class TendersView(generics.ListAPIView):
