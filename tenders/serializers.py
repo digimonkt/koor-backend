@@ -68,7 +68,7 @@ class TendersSerializers(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'tender_category', 'sector',
             'created', 'deadline','start_date', 'is_applied', 'is_saved', 'user', 'vendor',
-            'status', 'address', 'company', 'company_logo', 'post_by_admin'
+            'status', 'address', 'company', 'company_logo', 'post_by_admin', 'slug'
         ]
         
     def get_company_logo(self, obj):
@@ -279,7 +279,7 @@ class TendersDetailSerializers(serializers.ModelSerializer):
             'is_applied', 'is_saved', 'is_editable', 'application', 'address', 'company', 'company_logo',
             'contact_email', 'cc1', 'cc2', 'contact_whatsapp', 'apply_through_koor', 
             'apply_through_email', 'apply_through_website', 'application_instruction', 
-            'website_link',
+            'website_link', 'slug'
 
         ]
     def get_company_logo(self, obj):
@@ -701,7 +701,7 @@ class TendersSuggestionSerializers(serializers.ModelSerializer):
         model = TenderDetails
         fields = [
             'id', 'title', 'budget_amount', 'budget_currency', 'country', 'city',
-            'created', 'address'
+            'created', 'address', 'slug'
         ] 
     
     def get_country(self, obj):
