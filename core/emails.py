@@ -40,6 +40,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
         host_user = smtp_setting.smtp_user
         host_password = smtp_setting.smtp_password
         host_port = smtp_setting.smtp_port
+        from_email = f"Koortech <{host_user}>"
         
         invoice_x = ""
         invoice_youtube = ""
@@ -79,7 +80,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
             email_msg = mail.EmailMessage(
                 subject=subject,
                 body=email_template,
-                from_email=host_user,
+                from_email=from_email,
                 to=to_email
             )
             email_msg.attach(kwargs['filename'], kwargs['file'], 'application/pdf')
@@ -87,7 +88,7 @@ def get_email_object(subject, email_template_name, context, to_email, content_su
             email_msg = mail.EmailMessage(
                 subject=subject,
                 body=email_template,
-                from_email=host_user,
+                from_email=from_email,
                 to=to_email,
             )
         email_msg.content_subtype = content_subtype

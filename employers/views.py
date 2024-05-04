@@ -3,7 +3,7 @@ from django.core.signals import request_finished
 from django.db.models import Q, Count
 from django.db.models.functions import TruncMonth
 from django.shortcuts import get_object_or_404
-
+import threading
 from datetime import datetime, date
 
 from rest_framework import (
@@ -32,7 +32,7 @@ from tenders.models import TenderDetails
 from tenders.serializers import TendersSerializers
 
 from superadmin.models import (
-    Invoice, PointDetection, 
+    Invoice, PointDetection, InvoiceFooter,
     SMTPSetting, RechargeHistory, InvoiceIcon
 )
 from superadmin.process import html_to_pdf
@@ -134,9 +134,14 @@ def generate_pdf_file(invoice_id):
             invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
         if invoice_data.type == 'facebook':
             invoice_facebook = Common.BASE_URL + invoice_data.icon.url
+    invoice_footer_icon = InvoiceFooter.objects.last()
+    stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
+    sign = Common.BASE_URL + invoice_footer_icon.signature.url
     file_response = html_to_pdf('email-templates/pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoice_data,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
+                                                            'stamp':stamp,
+                                                            'sign':sign,
                                                             'invoice_x':invoice_x,
                                                             'invoice_youtube':invoice_youtube,
                                                             'invoice_instagram':invoice_instagram,
@@ -191,12 +196,15 @@ def generate_merge_pdf_file(invoice_list, employer_data):
         if invoice_data.type == 'facebook':
             invoice_facebook = Common.BASE_URL + invoice_data.icon.url
 
-    print(invoice_x, 'invoice x')
-    
+    invoice_footer_icon = InvoiceFooter.objects.last()
+    stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
+    sign = Common.BASE_URL + invoice_footer_icon.signature.url
     file_response = html_to_pdf('email-templates/merge-pdf-invoice.html', {'pagesize': 'A4', 'invoice_data': invoices,
                                                             'Page_title': Page_title, 'invoice_month':invoice_month,
                                                             'LOGO': Common.BASE_URL + smtp_setting.logo.url,
                                                             'invoice_x':invoice_x,
+                                                            'stamp':stamp,
+                                                            'sign':sign,
                                                             'invoice_youtube':invoice_youtube,
                                                             'invoice_instagram':invoice_instagram,
                                                             'invoice_linkedin':invoice_linkedin,
@@ -376,7 +384,7 @@ class JobsView(generics.ListAPIView):
             email_context['Ctype'] = 'Job'
             email_context["title"] = request.data['title']
             email_context["job_id"] = job_instance.job_id
-            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
             email_context["discription"] = process_description(job_instance.description)
             
             if employer_profile_instance.user.email:
@@ -400,7 +408,13 @@ class JobsView(generics.ListAPIView):
 
             context["message"] = "Job added successfully."
             context["remaining_points"] = remaining_points
-            request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+            # Create a new thread for the background task
+            background_thread = threading.Thread(target=my_callback)
+
+            # Start the background thread
+            background_thread.start()
+            
+            # request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         else:
             context['message'] = "You do not have permission to perform this action."
@@ -485,7 +499,7 @@ class JobsView(generics.ListAPIView):
             )
 
 
-def my_callback(sender, **kwargs):
+def my_callback():
     """
     A callback function that generates notifications for job filters matching the job details of a recently finished
     request.
@@ -504,7 +518,6 @@ def my_callback(sender, **kwargs):
         - Creates Notification instances for each matching JobFilters instance.
         - Disconnects this callback function from the request_finished signal after execution.
     """
-
     job_instance = JobDetails.objects.first()
     job_filter_data = JobFilters.objects.filter(
         is_notification=True
@@ -528,18 +541,19 @@ def my_callback(sender, **kwargs):
     ).filter(
         Q(duration=job_instance.duration) | Q(duration=None)
     )
-    if job_filter.user.get_notification:
-        Notification.objects.bulk_create(
-            [
-                Notification(
-                    user=job_filter.user,
-                    job_filter=job_filter,
-                    job=job_instance,
-                    notification_type='advance_filter',
-                    created_by=job_instance.user
-                ) for job_filter in job_filter_data
-            ]
-        )
+    for job_filter in job_filter_data:
+        if job_filter.user.get_notification:
+            Notification.objects.bulk_create(
+                [
+                    Notification(
+                        user=job_filter.user,
+                        job_filter=job_filter,
+                        job=job_instance,
+                        notification_type='advance_filter',
+                        created_by=job_instance.user
+                    )
+                ]
+            )
         for job_filter in job_filter_data:
             if job_filter.user.email:
                 context = dict()
@@ -557,7 +571,7 @@ def my_callback(sender, **kwargs):
                         context=context,
                         to_email=[job_filter.user.email, ]
                     )
-    request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+    # request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
 
 
 class TendersView(generics.ListAPIView):
@@ -690,7 +704,7 @@ class TendersView(generics.ListAPIView):
                 email_context["title"] = request.data['title']
                 email_context['Ctype'] = 'Tender'
                 email_context["job_id"] = tender_instance.tender_id
-                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                 email_context["discription"] = process_description(tender_instance.description)
                 if self.request.user.email:
                     get_email_object(

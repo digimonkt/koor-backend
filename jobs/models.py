@@ -12,6 +12,7 @@ from users.models import (
 from project_meta.models import (
     EducationLevel, Country, City, Language, Skill, Media
 )
+from autoslug import AutoSlugField
 
 class JobCategory(SlugBaseModel, TimeStampedModel, models.Model):
     """
@@ -115,6 +116,13 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         null=True,
         blank=True,
         related_name='%(app_label)s_%(class)s_user'
+    )
+    slug = AutoSlugField(
+        populate_from='title', 
+        always_update=True, 
+        unique_with='created__month', 
+        null=True,
+        blank=True
     )
     title = models.CharField(
         verbose_name=_('Title'),

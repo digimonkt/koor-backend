@@ -50,7 +50,8 @@ from .models import (
     AboutUs, FaqCategory, FAQ, CategoryLogo,
     Testimonial, NewsletterUser, PointDetection,
     RechargeHistory, Packages, Invoice, SMTPSetting,
-    GoogleAddSenseCode, Rights, UserSubRights, UserRights
+    GoogleAddSenseCode, Rights, UserSubRights, UserRights,
+    InvoiceFooter
 )
 from .serializers import (
     CountrySerializers, CitySerializers, JobCategorySerializers,
@@ -5303,7 +5304,7 @@ class JobsCreateView(generics.ListAPIView):
                         email_context['Ctype'] = 'Job'
                         email_context["title"] = request.data['title']
                         email_context["job_id"] = job_instance.job_id
-                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                         email_context["discription"] = process_description(job_instance.description)
                         
                         if employer_profile_instance.user.email:
@@ -5408,7 +5409,7 @@ class JobsCreateView(generics.ListAPIView):
                     email_context['Ctype'] = 'Job'
                     email_context["title"] = request.data['title']
                     email_context["job_id"] = job_instance.job_id
-                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                     email_context["discription"] = process_description(job_instance.description)
                     if user_instance.email:
                         get_email_object(
@@ -5529,7 +5530,7 @@ class JobsCreateView(generics.ListAPIView):
                         email_context["youremail"] = request.data['company_email']
                         email_context['Ctype'] = 'Job'
                         email_context["job_id"] = job_instance.job_id
-                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                         email_context["discription"] = process_description(job_instance.description)
                         if user_instance.email:
                             if send_email_automatically == 'False':
@@ -5549,7 +5550,7 @@ class JobsCreateView(generics.ListAPIView):
                     email_context["youremail"] = str(user_instance.email)
                     email_context['Ctype'] = 'Job'
                     email_context["job_id"] = job_instance.job_id
-                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.id)
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                     email_context["discription"] = process_description(job_instance.description)
                     if user_instance.email:
                         if send_email_automatically == 'False':
@@ -5749,7 +5750,7 @@ class TenderCreateView(generics.ListAPIView):
                 email_context["title"] = request.data['title']
                 email_context['Ctype'] = 'Tender'
                 email_context["job_id"] = tender_instance.tender_id
-                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                 email_context["discription"] = process_description(tender_instance.description)
                 if send_email_automatically == 'False':
                     if user_instance.email:
@@ -5827,7 +5828,7 @@ class TenderCreateView(generics.ListAPIView):
                         email_context["title"] = request.data['title']
                         email_context['Ctype'] = 'Tender'
                         email_context["job_id"] = tender_instance.tender_id
-                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                        email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                         email_context["discription"] = process_description(tender_instance.description)
                         email_context["password"] = password
                         email_context["youremail"] = request.data['company_email']
@@ -5849,7 +5850,7 @@ class TenderCreateView(generics.ListAPIView):
                     email_context["title"] = request.data['title']
                     email_context['Ctype'] = 'Tender'
                     email_context["job_id"] = tender_instance.tender_id
-                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.id)
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                     email_context["discription"] = process_description(tender_instance.description)
                     email_context["youremail"] = str(user_instance.email)
                     if user_instance.email:
@@ -6485,11 +6486,16 @@ class DownloadInvoiceView(generics.GenericAPIView):
                     invoice_linkedin = Common.BASE_URL + get_invoice_data.icon.url
                 if get_invoice_data.type == 'facebook':
                     invoice_facebook = Common.BASE_URL + get_invoice_data.icon.url
+            invoice_footer_icon = InvoiceFooter.objects.last()
+            stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
+            sign = Common.BASE_URL + invoice_footer_icon.signature.url
             file_response = html_to_pdf(
                 'email-templates/pdf-invoice.html', {
                     'pagesize': 'A4', 'invoice_data': invoice_data, 'Page_title': Page_title,
                     'invoice_month':invoice_month, 'LOGO': Common.BASE_URL + smtp_setting.logo.url,
                     'invoice_x':invoice_x,
+                    'stamp':stamp,
+                    'sign':sign,
                     'invoice_youtube':invoice_youtube,
                     'invoice_instagram':invoice_instagram,
                     'invoice_linkedin':invoice_linkedin,

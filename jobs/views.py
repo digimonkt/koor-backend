@@ -213,7 +213,7 @@ class JobDetailView(generics.GenericAPIView):
             if request.user.is_authenticated:
                 context = {"user": request.user}
             if jobId:
-                job_data = JobDetails.objects.get(id=jobId)
+                job_data = JobDetails.objects.get(slug=jobId)
                 get_data = self.serializer_class(job_data, context=context)
                 response_context = get_data.data
             return response.Response(
@@ -577,7 +577,7 @@ class JobSuggestionView(generics.ListAPIView):
             context = {"user": request.user}
         queryset = self.filter_queryset(self.get_queryset())
         try:
-            job_instance = JobDetails.objects.get(id=jobId)
+            job_instance = JobDetails.objects.get(slug=jobId)
             annotated_job_details = JobDetails.objects.filter(deadline__gte=date.today(), is_removed=False, status="active").filter(~Q(id=job_instance.id)).annotate(
                 matches=Value(0)
             ).annotate(

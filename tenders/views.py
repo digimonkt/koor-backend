@@ -172,7 +172,7 @@ class TenderDetailView(generics.GenericAPIView):
             if request.user.is_authenticated:
                 context = {"user": request.user}
             if tenderId:
-                tender_data = TenderDetails.objects.get(id=tenderId)
+                tender_data = TenderDetails.objects.get(slug=tenderId)
                 get_data = self.serializer_class(tender_data, context=context)
                 response_context = get_data.data
             return response.Response(
@@ -415,7 +415,7 @@ class TenderSuggestionView(generics.ListAPIView):
             context = {"user": request.user}
         queryset = self.filter_queryset(self.get_queryset())
         try:
-            tender_instance = TenderDetails.objects.get(id=tenderId)
+            tender_instance = TenderDetails.objects.get(slug=tenderId)
             annotated_tender_details = TenderDetails.objects.filter(~Q(id=tender_instance.id)).annotate(
                 matches=Value(0)
             ).annotate(

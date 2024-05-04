@@ -8,7 +8,8 @@ from .models import (
     ResourcesContent, SocialUrl, AboutUs,
     FaqCategory, PointDetection, RechargeHistory,
     UserRights, UserSubRights, Rights,
-    GoogleAddSenseCode, Invoice, InvoiceIcon
+    GoogleAddSenseCode, Invoice, InvoiceIcon,
+    InvoiceFooter
 )
 
 admin.site.register(EducationLevel)
@@ -18,6 +19,7 @@ admin.site.register(Content)
 admin.site.register(GooglePlaceApi)
 admin.site.register(AllCountry)
 admin.site.register(InvoiceIcon)
+admin.site.register(InvoiceFooter)
 
 class AllCityAdmin(admin.ModelAdmin):
     list_display = ('id', 'title')
