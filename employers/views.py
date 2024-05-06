@@ -1159,6 +1159,32 @@ class ActiveJobsView(generics.ListAPIView):
         return response.Response(serializer.data)
 
 
+class ActiveTendersView(generics.ListAPIView):
+
+    serializer_class = TendersSerializers
+    permission_classes = [permissions.AllowAny]
+    queryset = TenderDetails.objects.filter(status='active')
+    filter_backends = [filters.SearchFilter]
+    search_fields = [
+        'title', 'description',
+        'tag__title', 'tender_type__title', 'sector__title',
+        'tender_category__title', 'country__title',
+        'city__title'
+    ]
+    pagination_class = CustomPagination
+
+    def list(self, request, employerId):
+        context = dict()
+        user_instance = User.objects.get(id=employerId)
+        queryset = self.filter_queryset(self.get_queryset().filter(user=user_instance))
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True, context={"user": user_instance})
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True, context={"user": user_instance})
+        return response.Response(serializer.data)
+
+
 class UnblockUserView(generics.GenericAPIView):
     
     serializer_class = UpdateAboutSerializers
