@@ -172,7 +172,16 @@ class TenderDetailView(generics.GenericAPIView):
             if request.user.is_authenticated:
                 context = {"user": request.user}
             if tenderId:
-                tender_data = TenderDetails.objects.get(slug=tenderId)
+                try:
+                    tender_data = TenderDetails.objects.get(slug=tenderId)
+                except TenderDetails.DoesNotExist:
+                    try:
+                        tender_data = TenderDetails.objects.get(id=tenderId)
+                    except TenderDetails.DoesNotExist:
+                        return response.Response(
+                            data={"tender": "Does Not Exist"},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
                 get_data = self.serializer_class(tender_data, context=context)
                 response_context = get_data.data
             return response.Response(

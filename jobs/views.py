@@ -213,7 +213,16 @@ class JobDetailView(generics.GenericAPIView):
             if request.user.is_authenticated:
                 context = {"user": request.user}
             if jobId:
-                job_data = JobDetails.objects.get(slug=jobId)
+                try:
+                    job_data = JobDetails.objects.get(slug=jobId)
+                except JobDetails.DoesNotExist:
+                    try:
+                        job_data = JobDetails.objects.get(id=jobId)
+                    except JobDetails.DoesNotExist:
+                        return response.Response(
+                            data={"job": "Does Not Exist"},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
                 get_data = self.serializer_class(job_data, context=context)
                 response_context = get_data.data
             return response.Response(
