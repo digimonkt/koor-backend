@@ -1,7 +1,7 @@
 import csv, io, os, pathlib
 import calendar
 from datetime import datetime, date, timedelta, time
-
+import threading
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.signals import request_finished
 from django.db.models import Exists, OuterRef, Q
@@ -5334,7 +5334,12 @@ class JobsCreateView(generics.ListAPIView):
                             )
                     context["message"] = "Job added successfully."
                     context["remaining_points"] = remaining_points
-                    request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
+                    # Create a new thread for the background task
+                    background_thread = threading.Thread(target=my_callback)
+
+                    # Start the background thread
+                    background_thread.start()
+                    # request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
                     return response.Response(data=context, status=status.HTTP_201_CREATED)
                 else:
                     context['message'] = "This company have not permission to create a new job."
