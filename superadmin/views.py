@@ -6488,19 +6488,19 @@ class DownloadInvoiceView(generics.GenericAPIView):
             for get_invoice_data in invoice_icons:
                 if get_invoice_data.type == 'x':
                     invoice_x = Common.BASE_URL + get_invoice_data.icon.url
-                    invoice_link_x = Common.BASE_URL + get_invoice_data.link
+                    invoice_link_x = get_invoice_data.link
                 if get_invoice_data.type == 'youtube':
                     invoice_youtube = Common.BASE_URL + get_invoice_data.icon.url
-                    invoice_link_youtube = Common.BASE_URL + get_invoice_data.link
+                    invoice_link_youtube = get_invoice_data.link
                 if get_invoice_data.type == 'instagram':
                     invoice_instagram = Common.BASE_URL + get_invoice_data.icon.url
-                    invoice_link_instagram = Common.BASE_URL + get_invoice_data.link
+                    invoice_link_instagram = get_invoice_data.link
                 if get_invoice_data.type == 'linkedin':
                     invoice_linkedin = Common.BASE_URL + get_invoice_data.icon.url
-                    invoice_link_linkedin = Common.BASE_URL + get_invoice_data.link
+                    invoice_link_linkedin = get_invoice_data.link
                 if get_invoice_data.type == 'facebook':
                     invoice_facebook = Common.BASE_URL + get_invoice_data.icon.url
-                    invoice_link_facebook = Common.BASE_URL + get_invoice_data.link
+                    invoice_link_facebook = get_invoice_data.link
             invoice_footer_icon = InvoiceFooter.objects.last()
             stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
             sign = Common.BASE_URL + invoice_footer_icon.signature.url
