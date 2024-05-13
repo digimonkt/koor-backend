@@ -31,6 +31,13 @@ class InvoiceIcon(BaseModel, models.Model):
         db_column="type",
         choices=TYPE_CHOICE
     )
+    link = models.CharField(
+        verbose_name=_('Link'),
+        max_length=250,
+        db_column="link",
+        null=True,
+        blank=True
+    )
     icon = models.FileField(
         verbose_name=_('Icon'),
         unique=True,

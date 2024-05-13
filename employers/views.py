@@ -123,17 +123,27 @@ def generate_pdf_file(invoice_id):
     invoice_instagram = ""
     invoice_linkedin = ""
     invoice_facebook = ""
+    invoice_link_x = ""
+    invoice_link_youtube = ""
+    invoice_link_instagram = ""
+    invoice_link_linkedin = ""
+    invoice_link_facebook = ""
     for invoice_data in invoice_icons:
         if invoice_data.type == 'x':
             invoice_x = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_x = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'youtube':
             invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_youtube = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'instagram':
             invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_instagram = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'linkedin':
             invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_linkedin = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'facebook':
             invoice_facebook = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_facebook = Common.BASE_URL + invoice_data.link
     invoice_footer_icon = InvoiceFooter.objects.last()
     stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
     sign = Common.BASE_URL + invoice_footer_icon.signature.url
@@ -147,6 +157,11 @@ def generate_pdf_file(invoice_id):
                                                             'invoice_instagram':invoice_instagram,
                                                             'invoice_linkedin':invoice_linkedin,
                                                             'invoice_facebook':invoice_facebook,
+                                                            'invoice_link_x':invoice_link_x,
+                                                            'invoice_link_youtube':invoice_link_youtube,
+                                                            'invoice_link_instagram':invoice_link_instagram,
+                                                            'invoice_link_linkedin':invoice_link_linkedin,
+                                                            'invoice_link_facebook':invoice_link_facebook,
                                                             'mobile_number':new_mobile_number,
                                                             'history_data':history_data
                                                         }, raw=True
@@ -184,18 +199,27 @@ def generate_merge_pdf_file(invoice_list, employer_data):
     invoice_instagram = ""
     invoice_linkedin = ""
     invoice_facebook = ""
+    invoice_link_x = ""
+    invoice_link_youtube = ""
+    invoice_link_instagram = ""
+    invoice_link_linkedin = ""
+    invoice_link_facebook = ""
     for invoice_data in invoice_icons:
         if invoice_data.type == 'x':
             invoice_x = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_x = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'youtube':
             invoice_youtube = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_youtube = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'instagram':
             invoice_instagram = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_instagram = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'linkedin':
             invoice_linkedin = Common.BASE_URL + invoice_data.icon.url
+            invoice_link_linkedin = Common.BASE_URL + invoice_data.link
         if invoice_data.type == 'facebook':
             invoice_facebook = Common.BASE_URL + invoice_data.icon.url
-
+            invoice_link_facebook = Common.BASE_URL + invoice_data.link
     invoice_footer_icon = InvoiceFooter.objects.last()
     stamp = Common.BASE_URL + invoice_footer_icon.stamp.url
     sign = Common.BASE_URL + invoice_footer_icon.signature.url
@@ -209,6 +233,11 @@ def generate_merge_pdf_file(invoice_list, employer_data):
                                                             'invoice_instagram':invoice_instagram,
                                                             'invoice_linkedin':invoice_linkedin,
                                                             'invoice_facebook':invoice_facebook,
+                                                            'invoice_link_x':invoice_link_x,
+                                                            'invoice_link_youtube':invoice_link_youtube,
+                                                            'invoice_link_instagram':invoice_link_instagram,
+                                                            'invoice_link_linkedin':invoice_link_linkedin,
+                                                            'invoice_link_facebook':invoice_link_facebook,
                                                             'mobile_number':new_mobile_number,'last_invoice':last_invoice,
                                                             'history_data':history_data, 'invoice_date':invoice_date,
                                                             'amount':amount, 'discount':discount, 'grand_total':grand_total,
