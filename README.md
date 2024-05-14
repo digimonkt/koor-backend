@@ -15,7 +15,7 @@ Overall, KOOR is a platform that brings together employers, job seekers, and ven
 - [Home]() 
 - [Github Repo](#github-repo-🔗)
 - [Figma Design](https://www.figma.com/file/HKjAWx3CbMTTKwPzuzJiUZ/Koor?node-id=124%3A9630)
-- [Database Design](https://dbdocs.io/keval.rajpal/Koor)
+- [Database Design](https://dbdocs.io/Sanskar%20Sahu/koor)
 - [API Docs](./docs/index.md)
 
 ## Github Repo [🔗](https://github.com/digimonkt/koor-backend/)
