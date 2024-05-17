@@ -76,7 +76,7 @@ class JobSearchView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter, django_filters.DjangoFilterBackend]
     filterset_class = JobDetailsFilter
     search_fields = [
-        'title', 'description',
+        'title'
     ]
     # search_fields = [
     #     'title', 'description',
