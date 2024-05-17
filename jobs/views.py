@@ -77,10 +77,13 @@ class JobSearchView(generics.ListAPIView):
     filterset_class = JobDetailsFilter
     search_fields = [
         'title', 'description',
-        'skill__title', 'highest_education__title',
-        'job_category__title', 'job_sub_category__title',
-        'country__title', 'city__title', 'user__name'
     ]
+    # search_fields = [
+    #     'title', 'description',
+    #     'skill__title', 'highest_education__title',
+    #     'job_category__title', 'job_sub_category__title',
+    #     'country__title', 'city__title', 'user__name'
+    # ]
     pagination_class = CustomPagination
 
     def list(self, request):
