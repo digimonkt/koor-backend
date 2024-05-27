@@ -2479,14 +2479,24 @@ class InvoiceSerializers(serializers.ModelSerializer):
     """
 
     user = serializers.SerializerMethodField()
+    type = serializers.SerializerMethodField()
+    
     class Meta:
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date','invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'created', 'user'
+            'grand_total', 'points', 'is_send', 'created', 'user', 'type'
         ]
         read_only_fields = ['id']
         
+    def get_type(self, obj):
+        if obj.job:
+            return 'Job'
+        elif obj.tender:
+            return 'Tender'
+        else:
+            return None
+            
     def get_user(self, obj):
         """
         Retrieves the serialized data for the user related to a Invoice object.
@@ -2536,15 +2546,27 @@ class InvoiceDetailSerializers(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     job_title = serializers.SerializerMethodField()
     job_id = serializers.SerializerMethodField()
+    tender_title = serializers.SerializerMethodField()
+    tender_id = serializers.SerializerMethodField()
     
     class Meta:
         model = Invoice
         fields = [
             'id', 'start_date', 'end_date', 'invoice_id', 'total', 'discount', 
-            'grand_total', 'points', 'is_send', 'created', 'user', 'job_title',
-            'job_id'
+            'grand_total', 'points', 'is_send', 'created', 'user', 'job_title', 
+            'tender_title', 'tender_id', 'job_id'
         ]
         
+    
+    def get_tender_title(self, obj):
+        if obj.tender:
+            return obj.tender.title
+        return None
+    
+    def get_tender_id(self, obj):
+        if obj.tender:
+            return obj.tender.tender_id
+        return None
     
     def get_job_title(self, obj):
         if obj.job:

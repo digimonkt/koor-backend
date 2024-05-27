@@ -45,8 +45,8 @@
                       <tr>   
                         <td align="left" style="padding:2px 15px;font-weight: 400;">{{invoice_data.created.date}}</td>
                         {% comment %} <td align="left" style="padding:2px 15px;font-weight: 400;">{{invoice_data.created.date}} {{invoice_data.created.time}}</td> {% endcomment %}
-                        <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.job_id}}{% else %}N/A{% endif %}</td>
-                        <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.title}}{% else %}N/A{% endif %}</td>
+                        <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.job_id}}{% elif invoice_data.tender %}{{invoice_data.tender.tender_id}}{% else %}N/A{% endif %}</td>
+                        <td align="left" style="padding:2px 15px;font-weight: 400;">{% if invoice_data.job %}{{invoice_data.job.title}}{% elif invoice_data.tender %}{{invoice_data.tender.title}}{% else %}N/A{% endif %}</td>
                         <td align="right" style="padding:2px 15px;font-weight: 400;">${{invoice_data.total}}</td>
                       </tr>
                       {% endif %}

@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import ArrayField
 
 from random import randint
 from jobs.models import JobDetails
+from tenders.models import TenderDetails
 from core.models import (
     BaseModel, SlugBaseModel, SoftDeleteModel, upload_directory_path
 )
@@ -757,6 +758,15 @@ class Invoice(BaseModel, TimeStampedModel, models.Model):
         blank=True,
         db_column="job",
         related_name='%(app_label)s_%(class)s_job'
+    )
+    tender = models.ForeignKey(
+        TenderDetails,
+        verbose_name=_('Tender'),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_column="tender",
+        related_name='%(app_label)s_%(class)s_tender'
     )
     invoice_id = models.CharField(
         verbose_name=_('Invoice Id'),
