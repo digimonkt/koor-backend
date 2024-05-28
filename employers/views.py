@@ -725,9 +725,27 @@ class TendersView(generics.ListAPIView):
         serializer = CreateTendersSerializers(data=request.data)
         try:
             employer_profile_instance = get_object_or_404(EmployerProfile, user=self.request.user)
+            point_data = PointDetection.objects.first()
             if self.request.user.role == "employer" and employer_profile_instance.is_verified:
                 serializer.is_valid(raise_exception=True)
+                if employer_profile_instance.points < point_data.points:
+                    context["message"] = "You do not have enough points to create a new job."
+                    return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+                
                 tender_instance = serializer.save(self.request.user)
+                remaining_points = employer_profile_instance.points - point_data.points
+                employer_profile_instance.points = remaining_points
+                employer_profile_instance.save()
+                            
+                total = float(point_data.points)
+                discount = float(point_data.points)
+                grand_total = float(point_data.points) - discount
+                
+                invoice_instance = Invoice.objects.create(
+                    user=request.user, tender=tender_instance, points=point_data.points,
+                    total=total, discount=discount, grand_total=grand_total
+                )               
+                
                 email_context["yourname"] = self.request.user.name
                 email_context["type"] = 'tender'
                 email_context["title"] = request.data['title']
@@ -741,6 +759,17 @@ class TendersView(generics.ListAPIView):
                         email_template_name='email-templates/create-jobs.html',
                         context=email_context,
                         to_email=[self.request.user.email, ]
+                    )
+                    
+                    pdf = generate_pdf_file(invoice_instance.invoice_id)
+                    get_email_object(
+                        subject=f'Mail for Invoice',
+                        email_template_name='email-templates/mail-for-invoice.html',
+                        context=email_context,
+                        to_email=[employer_profile_instance.user.email, ],
+                        type="attachment",
+                        filename="Invoice.pdf", 
+                        file=pdf
                     )
                 
                 context["message"] = "Tender added successfully."

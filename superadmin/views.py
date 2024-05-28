@@ -5708,6 +5708,9 @@ class TenderCreateView(generics.ListAPIView):
         email_context = dict()
         try:
             user_instance = None
+            send_invoice_automatically= None
+            if 'send_invoice_automatically' in request.data:
+                send_invoice_automatically = request.data['send_invoice_automatically']
             send_email_automatically= None
             if 'send_email_automatically' in request.data:
                 send_email_automatically = request.data['send_email_automatically']
@@ -5747,25 +5750,63 @@ class TenderCreateView(generics.ListAPIView):
                                 )
                 
             serializer = CreateTendersSerializers(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            tender_instance = serializer.save(user_instance)
-            if user_instance:
-                email_context["yourname"] = user_instance.name
-                email_context["type"] = 'tender'
-                email_context["title"] = request.data['title']
-                email_context['Ctype'] = 'Tender'
-                email_context["job_id"] = tender_instance.tender_id
-                email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
-                email_context["discription"] = process_description(tender_instance.description)
-                if send_email_automatically == 'False':
-                    if user_instance.email:
+            employer_profile_instance = get_object_or_404(EmployerProfile, user=user_instance)
+            point_data = PointDetection.objects.first()
+            if user_instance.role == "employer":
+                serializer.is_valid(raise_exception=True)
+                if employer_profile_instance.points < point_data.points:
+                    context["message"] = "This company have not enough points to create a new job."
+                    return response.Response(data=context, status=status.HTTP_400_BAD_REQUEST)
+
+                
+                tender_instance = serializer.save(user_instance)
+                remaining_points = employer_profile_instance.points - point_data.points
+                employer_profile_instance.points = remaining_points
+                employer_profile_instance.save()
+                
+                total = float(point_data.points)
+                discount = float(point_data.points)
+                grand_total = float(point_data.points) - discount
+            
+                invoice_instance = Invoice.objects.create(
+                    user=user_instance, tender=tender_instance, points=point_data.points,
+                    total=total, discount=discount, grand_total=grand_total
+                )
+                
+                if user_instance:
+                    email_context["yourname"] = user_instance.name
+                    email_context["type"] = 'tender'
+                    email_context["title"] = request.data['title']
+                    email_context['Ctype'] = 'Tender'
+                    email_context["job_id"] = tender_instance.tender_id
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
+                    email_context["discription"] = process_description(tender_instance.description)
+                    if send_email_automatically == 'False':
+                        if user_instance.email:
+                            get_email_object(
+                                subject=f'Koor Published: ' + str(request.data['title']),
+                                email_template_name='email-templates/create-jobs.html',
+                                context=email_context,
+                                to_email=[user_instance.email, ]
+                            )
+                    if send_invoice_automatically == 'True':
+                        if invoice_instance.start_date:
+                            invoice_month = calendar.month_name[invoice_instance.start_date.month]
+                        else:
+                            invoice_month = calendar.month_name[invoice_instance.created.month]
+                        email_context["invoice_month"] = invoice_month
+                        # Send the email
+                        pdf = generate_pdf_file(invoice_instance.invoice_id)
                         get_email_object(
-                            subject=f'Koor Published: ' + str(request.data['title']),
-                            email_template_name='email-templates/create-jobs.html',
+                            subject=f'Mail for Invoice',
+                            email_template_name='email-templates/mail-for-invoice.html',
                             context=email_context,
-                            to_email=[user_instance.email, ]
+                            to_email=[employer_profile_instance.user.email, ],
+                            type="attachment",
+                            filename="Invoice.pdf", 
+                            file=pdf
                         )
-            context["message"] = "Tender added successfully."
+                context["message"] = "Tender added successfully."
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:
             return response.Response(
