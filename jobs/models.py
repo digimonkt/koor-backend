@@ -120,6 +120,7 @@ class JobDetails(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
     slug = AutoSlugField(
         populate_from='title', 
         always_update=True, 
+        max_length=355,
         unique_with='created__month', 
         null=True,
         blank=True
