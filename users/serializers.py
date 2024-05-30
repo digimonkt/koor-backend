@@ -25,7 +25,7 @@ from employers.models import BlackList
 
 from .backends import MobileOrEmailBackend as cb
 from .models import User
-
+from notification.models import Notification
 from vendors.models import VendorSector, VendorTag, AppliedTender
 
 
@@ -496,13 +496,14 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
     profile_completed = serializers.SerializerMethodField()
     ready_for_chat = serializers.SerializerMethodField()
+    notification_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 'name', 'image', 'role', 'profile',
             'education_record', 'work_experience', 'resume', 'languages', 'skills', 'job_preferences',
-            'is_online', 'profile_completed', 'ready_for_chat'
+            'is_online', 'profile_completed', 'ready_for_chat', 'notification_count'
         ]
         
     
@@ -599,6 +600,11 @@ class JobSeekerDetailSerializers(serializers.ModelSerializer):
         if get_data.data:
             context = get_data.data
         return context
+
+
+    def get_notification_count(self, obj):
+
+        return Notification.objects.filter(user=obj, seen=False).count()
 
 
 class EmployerProfileSerializer(serializers.ModelSerializer):
@@ -725,16 +731,22 @@ class EmployerDetailSerializers(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
     image = serializers.SerializerMethodField()
     profile_completed = serializers.SerializerMethodField()
+    notification_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 
-            'get_notification', 'profile', 'is_online', 'profile_completed'
+            'get_notification', 'profile', 'is_online', 'profile_completed',
+            'notification_count'
         ]
     
     
+    def get_notification_count(self, obj):
+
+        return Notification.objects.filter(user=obj, seen=False).count()
+
     def get_profile_completed(self, obj):
         context = False
         if obj.name and obj.user_profile_employerprofile_user.organization_type and obj.user_profile_employerprofile_user.description and obj.user_profile_employerprofile_user.license_id and obj.user_profile_employerprofile_user.license_id_file and obj.user_profile_employerprofile_user.address and obj.user_profile_employerprofile_user.country and obj.user_profile_employerprofile_user.city:
@@ -1020,6 +1032,7 @@ class VendorDetailSerializers(serializers.ModelSerializer):
     tag = serializers.SerializerMethodField()
     ready_for_chat = serializers.SerializerMethodField()
     profile_completed = serializers.SerializerMethodField()
+    notification_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -1027,10 +1040,14 @@ class VendorDetailSerializers(serializers.ModelSerializer):
             'id', 'email', 'mobile_number', 'country_code', 
             'name', 'image', 'role', 'get_email', 'get_notification', 
             'profile', 'sector', 'tag', 'is_online', 'ready_for_chat',
-            'profile_completed'
+            'profile_completed', 'notification_count'
         ]
         
     
+    def get_notification_count(self, obj):
+
+        return Notification.objects.filter(user=obj, seen=False).count()
+
     def get_profile_completed(self, obj):
         context = False
         if VendorProfile.objects.filter(user=obj).exists():
