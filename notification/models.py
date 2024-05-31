@@ -46,6 +46,7 @@ class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
         ('planned_interviews', "Planned Interviews"),
         ('message', "Message"),
         ('advance_filter', "Advance Filter"),
+        ('job_preference', "Job Preference"),
         ('expired_save_job', "Expired Save Job"),
         ('message', "Message"),
     )

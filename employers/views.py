@@ -18,7 +18,7 @@ from jobs.models import JobDetails, JobFilters
 from vendors.models import AppliedTender
 from vendors.serializers import GetAppliedTenderSerializers
 
-from job_seekers.models import AppliedJob
+from job_seekers.models import AppliedJob, Categories
 from jobs.serializers import (
     GetJobsSerializers, AppliedJobSerializers
 )
@@ -570,6 +570,42 @@ def my_callback():
     ).filter(
         Q(duration=job_instance.duration) | Q(duration=None)
     )
+    
+    if job_instance.job_sub_category.all():
+        users = Categories.objects.filter(category__in=job_instance.job_sub_category.all()).values_list('user', flat=True).order_by('user').distinct('user')
+    else:
+        users = Categories.objects.filter(category__category__in=job_instance.job_category.all()).values_list('user', flat=True).order_by('user').distinct('user')
+    for get_user_data in users:
+        user_instance = User.objects.get(id=get_user_data)
+        if user_instance.get_notification:
+            Notification.objects.bulk_create(
+                [
+                    Notification(
+                        user=user_instance,
+                        job=job_instance,
+                        notification_type='job_preference',
+                        created_by=job_instance.user
+                    )
+                ]
+            )
+        if user_instance.email:
+            context = dict()
+            if user_instance.name:
+                user_name = user_instance.name
+            else:
+                user_name = user_instance.email
+            context["yourname"] = user_name
+            context["notification_type"] = "Job Preference"
+            context["job_instance"] = job_instance
+            if user_instance.get_email:
+                get_email_object(
+                    subject=f'Notification for job preference',
+                    email_template_name='email-templates/send-notification.html',
+                    context=context,
+                    to_email=[user_instance.email, ]
+                )
+        
+    
     for job_filter in job_filter_data:
         if job_filter.user.get_notification:
             Notification.objects.bulk_create(
@@ -600,6 +636,8 @@ def my_callback():
                         context=context,
                         to_email=[job_filter.user.email, ]
                     )
+    
+    
     # request_finished.disconnect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
 
 
