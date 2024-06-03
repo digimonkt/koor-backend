@@ -45,17 +45,20 @@ class GetNotificationSerializers(serializers.ModelSerializer):
         
     def get_message_sender(self, obj):
         if obj.message_sender:
-            user_instance = User.objects.get(id=obj.message_sender)
-            user = dict()
-            user['id'] = user_instance.id
-            user['name'] = user_instance.name
-            user['email'] = user_instance.email
-            if user_instance.image:
-                if user_instance.image.title == "profile image":
-                    user['image'] = str(user_instance.image.file_path)
-                else:
-                    user['image'] = user_instance.image.file_path.url
-            return user
+            try:
+                user_instance = User.objects.get(id=obj.message_sender)
+                user = dict()
+                user['id'] = user_instance.id
+                user['name'] = user_instance.name
+                user['email'] = user_instance.email
+                if user_instance.image:
+                    if user_instance.image.title == "profile image":
+                        user['image'] = str(user_instance.image.file_path)
+                    else:
+                        user['image'] = user_instance.image.file_path.url
+                return user
+            except User.DoesNotExist:
+                return None
         return None
 
     def get_application(self, obj):
