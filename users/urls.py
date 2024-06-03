@@ -37,7 +37,7 @@ urlpatterns = [
     path('/notification', NotificationView.as_view(), name="get_notification"),
     path('/notification/settings', GetNotificationSettingsView.as_view(), name="get_notification_settings"),
     path('/notification/settings/<str:notificationType>', NotificationSettingsView.as_view(), name="notification_settings"),
-    
+    path('/notification/<str:notificationId>', NotificationView.as_view(), name="get_notification"),
     path('/email-verification/<str:otp>', VerificationView.as_view(), name="verification"),
     
     path('/search/<str:role>', SearchView.as_view(), name="search"),

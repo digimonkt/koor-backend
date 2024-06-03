@@ -82,6 +82,30 @@ class NotificationView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return response.Response(serializer.data)
 
+    def put(self, request, notificationId):
+        context = dict()
+        try:
+            notification_instance = Notification.objects.get(id=notificationId)
+            notification_instance.seen = True
+            notification_instance.save()
+            
+            context['notification_count'] = Notification.objects.filter(user=request.user, seen=False).count()
+            context['message'] = "Notification seen successfully"
+            return response.Response(
+                data=context,
+                status=status.HTTP_200_OK
+            )
+        except Notification.DoesNotExist:
+            return response.Response(
+                data={"notificationId": "Does Not Exist"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            context["message"] = str(e)
+            return response.Response(
+                data=context,
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 def ExpiredSavedJobs():
     """

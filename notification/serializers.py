@@ -3,6 +3,7 @@ from rest_framework import serializers
 from job_seekers.serializers import GetAppliedJobsNotificationSerializers
 from vendors.serializers import GetAppliedTenderNotificationSerializers
 from notification.models import Notification
+from users.models import User
 
 
 class GetNotificationSerializers(serializers.ModelSerializer):
@@ -30,15 +31,35 @@ class GetNotificationSerializers(serializers.ModelSerializer):
     tender = serializers.SerializerMethodField()
     job = serializers.SerializerMethodField()
     job_filter = serializers.SerializerMethodField()
-    sender = serializers.SerializerMethodField()
+    receiver = serializers.SerializerMethodField()
+    message_sender = serializers.SerializerMethodField()
     
     class Meta:
         model = Notification
         fields = [
             'id', 'notification_type', 'message', 'application', 'job', 
             'tender_application', 'tender', 'job_filter', 'seen', 'created', 
-            'message_sender', 'message_id', 'conversation_id', 'sender'
+            'message_sender', 'message_id', 'conversation_id', 'receiver'
         ]
+
+        
+    def get_message_sender(self, obj):
+        if obj.message_sender:
+            try:
+                user_instance = User.objects.get(id=obj.message_sender)
+                user = dict()
+                user['id'] = user_instance.id
+                user['name'] = user_instance.name
+                user['email'] = user_instance.email
+                if user_instance.image:
+                    if user_instance.image.title == "profile image":
+                        user['image'] = str(user_instance.image.file_path)
+                    else:
+                        user['image'] = user_instance.image.file_path.url
+                return user
+            except User.DoesNotExist:
+                return None
+        return None
 
     def get_application(self, obj):
         """
@@ -107,7 +128,7 @@ class GetNotificationSerializers(serializers.ModelSerializer):
             return {"id": obj.job.id, "title": obj.job.title, "company": obj.job.company, "company_logo": company_logo, 'user': user}
         return None
     
-    def get_sender(self, obj):
+    def get_receiver(self, obj):
         if obj.user:
             user = dict()
             user['id'] = obj.user.id
