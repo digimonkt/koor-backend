@@ -88,6 +88,8 @@ class NotificationView(generics.ListAPIView):
             notification_instance = Notification.objects.get(id=notificationId)
             notification_instance.seen = True
             notification_instance.save()
+            
+            context['notification_count'] = Notification.objects.filter(user=request.user, seen=False).count()
             context['message'] = "Notification seen successfully"
             return response.Response(
                 data=context,
