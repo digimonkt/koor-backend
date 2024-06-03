@@ -16,7 +16,7 @@ from users.models import (
 from vendors.models import AppliedTender, TenderDetails
 
 
-class Notification(BaseModel, SoftDeleteModel, TimeStampedModel, models.Model):
+class Notification(BaseModel, TimeStampedModel, models.Model):
     """
     A model that represents a notification sent to a user.
 
