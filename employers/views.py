@@ -595,7 +595,7 @@ def my_callback():
             else:
                 user_name = user_instance.email
             context["yourname"] = user_name
-            context["notification_type"] = "Job Preference"
+            context["notification_type"] = "job"
             context["job_instance"] = job_instance
             if user_instance.get_email:
                 get_email_object(
