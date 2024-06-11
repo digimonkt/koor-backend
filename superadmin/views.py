@@ -23,7 +23,7 @@ from core.emails import get_email_object
 from core.tokens import (
     SessionTokenObtainPairSerializer
 )
-from employers.views import my_callback, process_description, generate_pdf_file, generate_merge_pdf_file
+from employers.views import my_callback, process_description, generate_pdf_file, generate_merge_pdf_file, tender_callback
 from jobs.filters import JobDetailsFilter
 from jobs.models import (
     JobCategory, JobDetails,
@@ -5811,6 +5811,12 @@ class TenderCreateView(generics.ListAPIView):
                             file=pdf
                         )
                 context["message"] = "Tender added successfully."
+                # Create a new thread for the background task
+                background_thread = threading.Thread(target=tender_callback)
+
+                # Start the background thread
+                background_thread.start()
+                
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         except serializers.ValidationError:
             return response.Response(
