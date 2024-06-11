@@ -450,10 +450,11 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                     email_context["yourname"] = user_name
                                     email_context["notification_type"] = "shortlisted jobs"
                                     email_context["job_instance"] = application_status.job
+                                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(application_status.job.slug)
                                     if application_status.user.get_email:
                                         get_email_object(
                                             subject=f'Notification for shortlisted job',
-                                            email_template_name='email-templates/send-notification.html',
+                                            email_template_name='email-templates/send-notification-old.html',
                                             context=email_context,
                                             to_email=[application_status.user.email, ]
                                         )
@@ -479,10 +480,11 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                     email_context["yourname"] = user_name
                                     email_context["notification_type"] = "rejected job"
                                     email_context["job_instance"] = application_status.rejected_at
+                                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(application_status.rejected_at.slug)
                                     if application_status.user.get_email:
                                         get_email_object(
                                             subject=f'Notification for rejected job',
-                                            email_template_name='email-templates/send-notification.html',
+                                            email_template_name='email-templates/send-notification-old.html',
                                             context=email_context,
                                             to_email=[application_status.user.email, ]
                                         )
@@ -536,11 +538,12 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                             email_context["yourname"] = user_name
                                             email_context["notification_type"] = "interview planned"
                                             email_context["job_instance"] = application_status.job
+                                            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(application_status.job.slug)
                                             if application_status.user.get_email:
                                                 get_email_object(
                                                     subject=f'Notification for interview planned',
                                                     email_template_name='email-templates/new/notification.html',
-                                                    # email_template_name='email-templates/send-notification.html',
+                                                    # email_template_name='email-templates/send-notification-old.html',
                                                     context=email_context,
                                                     to_email=[application_status.user.email, ]
                                                 )

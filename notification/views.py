@@ -6,7 +6,7 @@ from rest_framework import (
     generics, response, status,
     permissions, filters
 )
-
+from koor.config.common import Common
 from core.emails import get_email_object
 from core.pagination import CustomPagination
 
@@ -157,10 +157,11 @@ def ExpiredSavedJobs():
             email_context["yourname"] = user_name
             email_context["notification_type"] = "expired save job"
             email_context["job_instance"] = saved_job.job
+            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(saved_job.job.slug)
             if job_filter.user.get_email:
                 get_email_object(
                     subject=f'Notification for expired save job',
-                    email_template_name='email-templates/send-notification.html',
+                    email_template_name='email-templates/send-notification-old.html',
                     context=email_context,
                     to_email=[job_filter.user.email, ]
                 )

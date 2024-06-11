@@ -15,7 +15,7 @@ from core.pagination import CustomPagination
 from core.emails import get_email_object
 
 from jobs.models import JobDetails, JobFilters
-from vendors.models import AppliedTender
+from vendors.models import AppliedTender, VendorSector
 from vendors.serializers import GetAppliedTenderSerializers
 
 from job_seekers.models import AppliedJob, Categories
@@ -30,6 +30,7 @@ from users.models import User
 
 from tenders.models import TenderDetails
 from tenders.serializers import TendersSerializers
+
 
 from superadmin.models import (
     Invoice, PointDetection, InvoiceFooter,
@@ -444,7 +445,6 @@ class JobsView(generics.ListAPIView):
             # Start the background thread
             background_thread.start()
             
-            # request_finished.connect(my_callback, sender=WSGIHandler, dispatch_uid='notification_trigger_callback')
             return response.Response(data=context, status=status.HTTP_201_CREATED)
         else:
             context['message'] = "You do not have permission to perform this action."
@@ -601,7 +601,7 @@ def my_callback():
             context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
             if user_instance.get_email:
                 get_email_object(
-                    subject=f'Notification for job preference',
+                    subject=f'New job alert - ' + str(job_instance.title),
                     email_template_name='email-templates/send-notification.html',
                     context=context,
                     to_email=[user_instance.email, ]
@@ -629,11 +629,12 @@ def my_callback():
                 else:
                     user_name = job_filter.user.email
                 context["yourname"] = user_name
-                context["notification_type"] = "advance filter"
+                context["notification_type"] = "job"
                 context["job_instance"] = job_instance
+                context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
                 if job_filter.user.get_email:
                     get_email_object(
-                        subject=f'Notification for advance filter job',
+                        subject=f'New job alert - ' + str(job_instance.title),
                         email_template_name='email-templates/send-notification.html',
                         context=context,
                         to_email=[job_filter.user.email, ]
@@ -815,6 +816,11 @@ class TendersView(generics.ListAPIView):
                     )
                 
                 context["message"] = "Tender added successfully."
+                # Create a new thread for the background task
+                background_thread = threading.Thread(target=tender_callback)
+
+                # Start the background thread
+                background_thread.start()
                 return response.Response(
                     data=context,
                     status=status.HTTP_201_CREATED
@@ -891,6 +897,33 @@ class TendersView(generics.ListAPIView):
                 data=context,
                 status=status.HTTP_404_NOT_FOUND
             )
+
+
+def tender_callback():
+    
+    tender_instance = TenderDetails.objects.first()
+    
+    tender_filter_data = VendorSector.objects.filter(sector=tender_instance.sector)
+    
+    for tender_filter in tender_filter_data:
+        if tender_filter.user.email:
+            context = dict()
+            if tender_filter.user.name:
+                user_name = tender_filter.user.name
+            else:
+                user_name = tender_filter.user.email
+            context["yourname"] = user_name
+            context["notification_type"] = "tender"
+            context["job_instance"] = tender_instance
+            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(tender_instance.slug)
+            if tender_filter.user.get_email:
+                get_email_object(
+                    subject=f'New tender alert - ' + str(tender_instance.title),
+                    email_template_name='email-templates/send-notification.html',
+                    context=context,
+                    to_email=[tender_filter.user.email, ]
+                )
+
 
 
 class JobsStatusView(generics.GenericAPIView):
