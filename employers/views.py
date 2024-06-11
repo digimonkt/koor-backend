@@ -597,6 +597,7 @@ def my_callback():
             context["yourname"] = user_name
             context["notification_type"] = "job"
             context["job_instance"] = job_instance
+            context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
             if user_instance.get_email:
                 get_email_object(
                     subject=f'Notification for job preference',
