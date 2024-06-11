@@ -413,6 +413,7 @@ class JobsView(generics.ListAPIView):
             email_context['Ctype'] = 'Job'
             email_context["title"] = request.data['title']
             email_context["job_id"] = job_instance.job_id
+            email_context["job_instance"] = job_instance
             email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(job_instance.slug)
             email_context["discription"] = process_description(job_instance.description)
             
@@ -790,6 +791,8 @@ class TendersView(generics.ListAPIView):
                 email_context["title"] = request.data['title']
                 email_context['Ctype'] = 'Tender'
                 email_context["job_id"] = tender_instance.tender_id
+                email_context["job_instance"] = tender_instance
+                
                 email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
                 email_context["discription"] = process_description(tender_instance.description)
                 if self.request.user.email:
