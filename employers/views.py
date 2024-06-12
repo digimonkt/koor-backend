@@ -911,7 +911,6 @@ def tender_callback():
         filtered_data = VendorSector.objects.filter(sector=sector)
         tender_filter_data.extend(filtered_data)
         
-    print(tender_filter_data, 'jojoj')
     for tender_filter in tender_filter_data:
         if tender_filter.user.email:
             context = dict()
