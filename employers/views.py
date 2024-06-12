@@ -915,7 +915,7 @@ def tender_callback():
             context["yourname"] = user_name
             context["notification_type"] = "tender"
             context["job_instance"] = tender_instance
-            email_context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(tender_instance.slug)
+            context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(tender_instance.slug)
             if tender_filter.user.get_email:
                 get_email_object(
                     subject=f'New tender alert - ' + str(tender_instance.title),
