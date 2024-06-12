@@ -902,9 +902,16 @@ class TendersView(generics.ListAPIView):
 def tender_callback():
     
     tender_instance = TenderDetails.objects.first()
-    
-    tender_filter_data = VendorSector.objects.filter(sector=tender_instance.sector)
-    
+    sectors = tender_instance.sector.all()
+    # Initialize an empty list to store filtered VendorSector objects
+    tender_filter_data = []
+
+    # Iterate over each sector and filter VendorSector objects
+    for sector in sectors:
+        filtered_data = VendorSector.objects.filter(sector=sector)
+        tender_filter_data.extend(filtered_data)
+        
+    print(tender_filter_data, 'jojoj')
     for tender_filter in tender_filter_data:
         if tender_filter.user.email:
             context = dict()
