@@ -911,7 +911,6 @@ def tender_callback():
         filtered_data = VendorSector.objects.filter(sector=sector)
         tender_filter_data.extend(filtered_data)
         
-    print(tender_filter_data, 'jojoj')
     for tender_filter in tender_filter_data:
         if tender_filter.user.email:
             context = dict()
@@ -922,7 +921,7 @@ def tender_callback():
             context["yourname"] = user_name
             context["notification_type"] = "tender"
             context["job_instance"] = tender_instance
-            context["job_link"] = Common.FRONTEND_BASE_URL + "/jobs/details/" + str(tender_instance.slug)
+            context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instance.slug)
             if tender_filter.user.get_email:
                 get_email_object(
                     subject=f'New tender alert - ' + str(tender_instance.title),
