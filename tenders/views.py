@@ -4,7 +4,7 @@ from django.db.models import (
 )
 
 from datetime import date, datetime
-
+from koor.config.common import Common
 from django_filters import rest_framework as django_filters
 
 from rest_framework import (
@@ -556,10 +556,11 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                     email_context["yourname"] = user_name
                                     email_context["notification_type"] = "shortlisted tender"
                                     email_context["job_instance"] = application_status.shortlisted_at
+                                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(application_status.shortlisted_at.slug)
                                     if application_status.user.get_email:
                                         get_email_object(
                                             subject=f'Notification for shortlisted tender',
-                                            email_template_name='email-templates/send-notification.html',
+                                            email_template_name='email-templates/send-notification-old.html',
                                             context=email_context,
                                             to_email=[application_status.user.email, ]
                                         )
@@ -585,10 +586,11 @@ class ApplicationsDetailView(generics.GenericAPIView):
                                     email_context["yourname"] = user_name
                                     email_context["notification_type"] = "rejected tender"
                                     email_context["job_instance"] = application_status.rejected_at
+                                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(application_status.rejected_at.slug)
                                     if application_status.user.get_email:
                                         get_email_object(
                                             subject=f'Notification for rejected tender',
-                                            email_template_name='email-templates/send-notification.html',
+                                            email_template_name='email-templates/send-notification-old.html',
                                             context=email_context,
                                             to_email=[application_status.user.email, ]
                                         )

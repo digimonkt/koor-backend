@@ -6,7 +6,7 @@ from tenders.models import TenderDetails
 from users.models import User
 from user_profile.models import VendorProfile
 from users.serializers import UserSerializer, ApplicantDetailSerializers
-
+from koor.config.common import Common
 from tenders.serializers import (
     TendersDetailSerializers
 )
@@ -410,10 +410,11 @@ class AppliedTenderSerializers(serializers.ModelSerializer):
                     email_context["yourname"] = user_name
                     email_context["notification_type"] = "applied tender"
                     email_context["tender_instance"] = tender_instace
+                    email_context["job_link"] = Common.FRONTEND_BASE_URL + "/tender/details/" + str(tender_instace.slug)
                     if tender_instace.user.get_email:
                         get_email_object(
                             subject=f'Notification for applied tender',
-                            email_template_name='email-templates/send-notification.html',
+                            email_template_name='email-templates/send-notification-old.html',
                             context=email_context,
                             to_email=[tender_instace.user.email, ]
                         )

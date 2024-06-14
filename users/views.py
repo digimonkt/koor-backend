@@ -599,7 +599,7 @@ class ChangePasswordView(generics.GenericAPIView):
                 email_context["job_instance"] = "update password"
                 get_email_object(
                     subject=f'Notification for update password',
-                    email_template_name='email-templates/send-notification.html',
+                    email_template_name='email-templates/send-notification-old.html',
                     context=email_context,
                     to_email=[user_instance.email, ]
                 )
